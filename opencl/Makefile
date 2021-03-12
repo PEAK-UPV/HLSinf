@@ -71,7 +71,7 @@ LDFLAGS += $(opencl_LDFLAGS)
 ############################## Setting up Host Variables ##############################
 #Include Required Host Source Files
 CXXFLAGS += -I$(ABS_COMMON_REPO)/common/includes/xcl2
-HOST_SRCS += $(ABS_COMMON_REPO)/common/includes/xcl2/xcl2.cpp ../src/opencl_test_conv2D.cpp
+HOST_SRCS += $(ABS_COMMON_REPO)/common/includes/xcl2/xcl2.cpp ./src/test_conv2D.cpp
 # Host compiler global settings
 CXXFLAGS += -fmessage-length=0
 LDFLAGS += -lrt -lstdc++
@@ -86,6 +86,8 @@ CLFLAGS += -t $(TARGET) --platform $(DEVICE) --save-temps --config ./cfg_conv2D.
 ifneq ($(TARGET), hw)
 	CLFLAGS += -g
 endif
+
+
 
 EXECUTABLE = ./test_conv2D
 CMD_ARGS = $(BUILD_DIR)/kernel_conv2D.xclbin
@@ -112,16 +114,10 @@ build: check-vitis $(BINARY_CONTAINERS)
 xclbin: build
 
 ############################## Setting Rules for Binary Containers (Building Kernels) ##############################
-$(TEMP_DIR)/kernel_conv2D.xo: ../src/k_conv2D.cpp ../src/serialization.cpp ../src/read.cpp
-
+$(TEMP_DIR)/kernel_conv2D.xo: src/kernel_conv2D.cpp
 	mkdir -p $(TEMP_DIR)
-	$(VPP) -c -k k_conv2D $(CLFLAGS) --temp_dir $(TEMP_DIR)  -I'$(<D)' -o'$@' '$<' 
+	$(VPP) -c -k k_conv2D $(CLFLAGS) --temp_dir $(TEMP_DIR)  -I'$(<D)' -o'$@' '$<'
 $(BUILD_DIR)/kernel_conv2D.xclbin: $(BINARY_CONTAINER_kernel_conv2D_OBJS)
-	$(VPP) -c -k read $(CLFLAGS) --temp_dir $(TEMP_DIR)  -I'$(<D)' -o'$@' '$<'
-$(BUILD_DIR)/kernel_conv2D.xclbin: $(BINARY_CONTAINER_kernel_conv2D_OBJS)
-
-
-
 	mkdir -p $(BUILD_DIR)
 ifeq ($(HOST_ARCH), x86)
 	$(VPP) -l $(LDCLFLAGS) $(CLFLAGS) --temp_dir $(BUILD_DIR)  -o'$(BUILD_DIR)/kernel_conv2D.link.xclbin' $(+)
@@ -182,7 +178,7 @@ endif
 clean:
 	-$(RMDIR) $(EXECUTABLE) $(XCLBIN)/{*sw_emu*,*hw_emu*}
 	-$(RMDIR) profile_* TempConfig system_estimate.xtxt *.rpt *.csv
-	-$(RMDIR) ../src/*.ll *v++* .Xil emconfig.json dltmp* xmltmp* *.log *.jou *.wcfg *.wdb
+	-$(RMDIR) src/*.ll *v++* .Xil emconfig.json dltmp* xmltmp* *.log *.jou *.wcfg *.wdb
 
 cleanall: clean
 	-$(RMDIR) build_dir* sd_card*
