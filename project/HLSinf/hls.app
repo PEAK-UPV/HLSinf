@@ -9,6 +9,7 @@
     <file name="../src/read.cpp" sc="0" tb="false" cflags="" blackbox="false" csimflags=""/>
     <file name="../src/padding.cpp" sc="0" tb="false" cflags="" blackbox="false" csimflags=""/>
     <file name="../src/mul.cpp" sc="0" tb="false" cflags="" blackbox="false" csimflags=""/>
+    <file name="../src/maxpooling.cpp" sc="0" tb="false" cflags="" blackbox="false" csimflags=""/>
     <file name="../src/k_conv2D.cpp" sc="0" tb="false" cflags="" blackbox="false" csimflags=""/>
     <file name="../src/join_split.cpp" sc="0" tb="false" cflags="" blackbox="false" csimflags=""/>
     <file name="../src/dws_convolution.cpp" sc="0" tb="false" cflags="" blackbox="false" csimflags=""/>
