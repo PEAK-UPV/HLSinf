@@ -59,8 +59,6 @@
                                     									
                                     <listOptionValue builtIn="false" value="/opt/Xilinx/Vitis/2020.1/lnx64/tools/systemc/include"/>
                                     									
-                                    <listOptionValue builtIn="false" value="/home/jflich/git/HLSinf/project"/>
-                                    									
                                     <listOptionValue builtIn="false" value="/opt/Xilinx/Vitis/2020.1/lnx64/tools/auto_cc/include"/>
                                     								
                                 </option>
@@ -94,8 +92,6 @@
                                     <listOptionValue builtIn="false" value="/opt/Xilinx/Vitis/2020.1/include"/>
                                     									
                                     <listOptionValue builtIn="false" value="/opt/Xilinx/Vitis/2020.1/lnx64/tools/systemc/include"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="/home/jflich/git/HLSinf/project"/>
                                     									
                                     <listOptionValue builtIn="false" value="/opt/Xilinx/Vitis/2020.1/lnx64/tools/auto_cc/include"/>
                                     								
@@ -160,6 +156,36 @@
                         </toolChain>
                         					
                     </folderInfo>
+                    					
+                    <fileInfo id="cdt.managedbuild.config.gnu.exe.debug.1525637778.2087492500" name="test_conv2D.cpp" rcbsApplicability="disable" resourcePath="testbench/test_conv2D.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.113628454.2132452846">
+                        						
+                        <tool id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.113628454.2132452846" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.113628454">
+                            							
+                            <option id="gnu.cpp.compiler.option.preprocessor.def.1356050566" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def"/>
+                            							
+                            <option id="gnu.cpp.compiler.option.include.paths.1899871569" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+                                								
+                                <listOptionValue builtIn="false" value="/opt/Xilinx/Vitis/2020.1/include/etc"/>
+                                								
+                                <listOptionValue builtIn="false" value="/opt/Xilinx/Vitis/2020.1/include/ap_sysc"/>
+                                								
+                                <listOptionValue builtIn="false" value="/opt/Xilinx/Vitis/2020.1/include"/>
+                                								
+                                <listOptionValue builtIn="false" value="/opt/Xilinx/Vitis/2020.1/lnx64/tools/systemc/include"/>
+                                								
+                                <listOptionValue builtIn="false" value="/home/jflich/git/HLSinf/project"/>
+                                								
+                                <listOptionValue builtIn="false" value="/opt/Xilinx/Vitis/2020.1/lnx64/tools/auto_cc/include"/>
+                                							
+                            </option>
+                            							
+                            <option id="gnu.cpp.compiler.option.other.other.1908538986" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wno-unknown-pragmas -c -fmessage-length=0" valueType="string"/>
+                            							
+                            <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.49894070" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
+                            						
+                        </tool>
+                        					
+                    </fileInfo>
                     					
                     <sourceEntries>
                         						
@@ -231,8 +257,6 @@
                                     									
                                     <listOptionValue builtIn="false" value="/opt/Xilinx/Vitis/2020.1/lnx64/tools/systemc/include"/>
                                     									
-                                    <listOptionValue builtIn="false" value="/home/jflich/git/HLSinf/project"/>
-                                    									
                                     <listOptionValue builtIn="false" value="/opt/Xilinx/Vitis/2020.1/lnx64/tools/auto_cc/include"/>
                                     								
                                 </option>
@@ -256,8 +280,6 @@
                                     <listOptionValue builtIn="false" value="/opt/Xilinx/Vitis/2020.1/include"/>
                                     									
                                     <listOptionValue builtIn="false" value="/opt/Xilinx/Vitis/2020.1/lnx64/tools/systemc/include"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="/home/jflich/git/HLSinf/project"/>
                                     									
                                     <listOptionValue builtIn="false" value="/opt/Xilinx/Vitis/2020.1/lnx64/tools/auto_cc/include"/>
                                     								
@@ -312,6 +334,36 @@
                         </toolChain>
                         					
                     </folderInfo>
+                    					
+                    <fileInfo id="cdt.managedbuild.config.gnu.exe.release.666884459.1445313918" name="test_conv2D.cpp" rcbsApplicability="disable" resourcePath="testbench/test_conv2D.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.523332505.2116937415">
+                        						
+                        <tool id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.523332505.2116937415" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.523332505">
+                            							
+                            <option id="gnu.cpp.compiler.option.preprocessor.def.1963059116" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def"/>
+                            							
+                            <option id="gnu.cpp.compiler.option.include.paths.2050540441" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+                                								
+                                <listOptionValue builtIn="false" value="/opt/Xilinx/Vitis/2020.1/include/etc"/>
+                                								
+                                <listOptionValue builtIn="false" value="/opt/Xilinx/Vitis/2020.1/include/ap_sysc"/>
+                                								
+                                <listOptionValue builtIn="false" value="/opt/Xilinx/Vitis/2020.1/include"/>
+                                								
+                                <listOptionValue builtIn="false" value="/opt/Xilinx/Vitis/2020.1/lnx64/tools/systemc/include"/>
+                                								
+                                <listOptionValue builtIn="false" value="/home/jflich/git/HLSinf/project"/>
+                                								
+                                <listOptionValue builtIn="false" value="/opt/Xilinx/Vitis/2020.1/lnx64/tools/auto_cc/include"/>
+                                							
+                            </option>
+                            							
+                            <option id="gnu.cpp.compiler.option.other.other.817372655" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wno-unknown-pragmas -c -fmessage-length=0" valueType="string"/>
+                            							
+                            <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.794949235" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
+                            						
+                        </tool>
+                        					
+                    </fileInfo>
                     					
                     <sourceEntries>
                         						
