@@ -42,10 +42,10 @@ extern "C" {
 
 void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int I_ITER, int O_ITER, int enable_relu,
               data_type *ptr_kernel, pixel_out_t *ptr_bias, ap_uint<512> *ptr_out, int global_offset, int enable_upper_padding, int enable_lower_padding) {
-	#pragma HLS INTERFACE m_axi port=ptr_data   depth=512 offset=slave bundle=gmem
-	#pragma HLS INTERFACE m_axi port=ptr_kernel depth=512 offset=slave bundle=gmem1
-	#pragma HLS INTERFACE m_axi port=ptr_bias   depth=512 offset=slave bundle=gmem2
-	#pragma HLS INTERFACE m_axi port=ptr_out    depth=512 offset=slave bundle=gmem3
+	#pragma HLS INTERFACE m_axi port=ptr_data   depth=1024 offset=slave bundle=gmem
+	#pragma HLS INTERFACE m_axi port=ptr_kernel depth=1024 offset=slave bundle=gmem1
+	#pragma HLS INTERFACE m_axi port=ptr_bias   depth=1024 offset=slave bundle=gmem2
+	#pragma HLS INTERFACE m_axi port=ptr_out    depth=1024 offset=slave bundle=gmem3
 
   #ifdef DEBUG_VERBOSE
   printf("kernel starts...\n");
