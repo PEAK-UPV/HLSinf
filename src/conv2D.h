@@ -11,8 +11,8 @@
 // Select only one type of convolution
 // -----------------------------------------------------------------------------------------------------------
 //#define DIRECT_CONV
-//#define WINOGRAD_CONV
-#define DWS_CONV
+#define WINOGRAD_CONV
+//#define DWS_CONV
 
 // -----------------------------------------------------------------------------------------------------------
 // data type. Defines the basic data type of the kernel
@@ -46,6 +46,10 @@
 #define LOG2_CPO		  2   // number of bits for CPO (if you change CPO please change LOG2_CPO accordingly)
 #define KW                3   // Convolutional kernel width
 #define KH                3   // Convolutional kernel height
+#define KWmpool 		  2   // Convolutional kernel width maxpool
+#define KHmpool 		  2	  // Convolutional kernel height maxpool
+#define SWmpool 		  2
+#define SHmpool 		  2
 
 // -----------------------------------------------------------------------------------------------------------
 // Defines for latency estimation
@@ -81,6 +85,11 @@ struct pixel_in_t {
 struct pixel_out_t {
   data_type pixel[CPO];
 };
+// -----------------------------------------------------------------------------------------------------------
+// Data type for output data from the conv_winograd module
+struct pixel_in_t2 {           // pixel in
+  data_type pixel[CPI/2];
+};
 
 // -----------------------------------------------------------------------------------------------------------
 // frames struct (KWxKH)
@@ -88,6 +97,22 @@ struct frame_t {
   pixel_in_t pixel[9];
 };
 
+// -----------------------------------------------------------------------------------------------------------
+// frames struct (4x4) winograd
+struct frame_d {
+  pixel_in_t pixel[16];
+};
+
+// -----------------------------------------------------------------------------------------------------------
+// frames struct (4x4) winograd
+struct frame_d_2 {
+  pixel_in_t2 pixel[16];
+};
+// -----------------------------------------------------------------------------------------------------------
+// frames struct maxpool
+struct frame_m {
+  pixel_in_t pixel[KWmpool * KHmpool];
+};
 // -----------------------------------------------------------------------------------------------------------
 // kernel struct
 struct kernel_t {
