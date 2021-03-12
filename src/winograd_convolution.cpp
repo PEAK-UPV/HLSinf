@@ -20,6 +20,7 @@ static void cvt_winograd(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, 
 
   cvt_i_iter_loop:
   for(int i_iter = 0; i_iter < I_ITER; i_iter++){
+	DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE/CPI)
 	printf("ITERACION %d:\n", i_iter);
     // Now we process the input data and convert the data into frames
     // buffers (keep three rows) , necesitamos 3 filas para leer un trozo de 3x3, aqui se guardan las filas
@@ -39,8 +40,10 @@ static void cvt_winograd(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, 
     // We loop for every incoming pixel
     cvt_loop_1:
     for (int pin_row=0; pin_row < H+2; pin_row++) {
+      DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE+2)
       cvt_loop_2:
       for (int pin_col=0; pin_col < W+2; pin_col++) {
+    	  DO_PRAGMA(HLS loop_tripcount min=1 max=W_REFERENCE+2)
         // get the pixel
         pixel_in_t pixel;
         pixel = in.read();
@@ -151,8 +154,10 @@ static void mulData(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls:
 	//#pragma HLS allocation instances=fadd limit=50 operation
 	int cont = 0;
 	for( int i_iter = 0; i_iter < I_ITER; i_iter++){
+		DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE/CPI)
 		 #pragma HLS loop_flatten off
 		for (int i = 0; i < (H/2 * W); i++){
+			DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE/2 * W_REFERENCE)
 			#pragma HLS PIPELINE II=1
 			data = d_in.read();
 		    //multiplicamos Ct x data
@@ -241,6 +246,7 @@ static void mulKernels(int H, int W, int I_ITER, hls::stream<kernel_t> &k_in, hl
   // Reading the kernels
   mul_i_iter_loop:
   for(int i_iter = 0; i_iter < I_ITER; i_iter++){
+	DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE/CPI)
 	printf("ITERACION %d:\n", i_iter);
     loop_mul_kernels_load_cpo:
     for (int cpo=0; cpo<CPO; cpo++) {
@@ -326,12 +332,12 @@ static void mulKernels(int H, int W, int I_ITER, hls::stream<kernel_t> &k_in, hl
 static void mulWise(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls::stream<frame_d> &k_in, hls::stream<frame_d> &out) {
   //printf("mulwise: starts\n");
   frame_d kernel[CPO];
-  DO_PRAGMA(HLS ARRAY_PARTITION variable=kernel dim=0)
+  DO_PRAGMA(HLS ARRAY_PARTITION variable=kernel dim=0 complete)
   frame_d res;
-  DO_PRAGMA(HLS ARRAY_PARTITION variable=res dim=0)
+  DO_PRAGMA(HLS ARRAY_PARTITION variable=res dim=0 complete)
 
   frame_d_2 data;
-  DO_PRAGMA(HLS ARRAY_PARTITION variable=data dim=0)
+  DO_PRAGMA(HLS ARRAY_PARTITION variable=data dim=0 complete)
 
 
 	for(int i = 0; i<16; i++){
@@ -344,9 +350,10 @@ static void mulWise(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls:
   int cpif = 0;
   mul_i_iter_loop:
   for(int i_iter = 0; i_iter < I_ITER; i_iter++){
+	DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE/CPI)
 	int even = 0;
 	// Reading the kernels
-	#pragma HLS loop_flatten off
+	#pragma HLS PIPELINE II=1
 	loop_mul_kernels_load_cpo_kernels_wise:
     for (int cpo=0; cpo<CPO; cpo++) {
 	  #pragma HLS PIPELINE II=1
@@ -355,15 +362,15 @@ static void mulWise(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls:
 	   // Reading data
 	loop_mul_kernels_load_cpo_data_wise:
     for (int i = 0; i < (H/2 * W/2 * 2); i++) {
-
-	  #pragma HLS loop_flatten off
+      DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE/2*W_REFERENCE)
+	  #pragma HLS UNROLL
       data = d_in.read();
 		for (int cpo=0; cpo<CPO; cpo++) {
-		  #pragma HLS PIPELINE II=1
+			#pragma HLS UNROLL
 		  for(int pos = 0; pos < 16; pos++){
-			  #pragma HLS UNROLL
+				#pragma HLS UNROLL
 			  for (int cpi=0; cpi < CPI/2; cpi++) {
-				  #pragma HLS UNROLL
+					#pragma HLS UNROLL
 				  if(!even){
 					  cpif=cpi;
 				  }else{
@@ -414,11 +421,12 @@ static void mult_A_AT(int H, int W, int I_ITER, hls::stream<frame_d> &d_in, hls:
   DO_PRAGMA(HLS ARRAY_PARTITION variable=resMULT dim=0)
   DO_PRAGMA(HLS ARRAY_PARTITION variable=data dim=0)
   DO_PRAGMA(HLS ARRAY_PARTITION variable=res dim=0)
-
 	// Reading data
 	loop_mul_kernels_load_cpo_A_AT:
     for (int i_iter = 0; i_iter < I_ITER; i_iter++) {
+    	DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE/CPI)
 		for (int p = 0; p < (H/2 * W/2); p++) {
+			DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE/2)
 
 			#pragma HLS PIPELINE II=1
 			data = d_in.read();
@@ -517,7 +525,9 @@ static void add_winograd(int H, int W, int I_ITER, hls::stream<pixel_out_t> &b_i
 
 	add_copy_bias_loop:
 	for (int h = 0; h < H; h++) {
+		DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE)
 		for (int w=0; w < W; w++) {
+			DO_PRAGMA(HLS loop_tripcount min=1 max=W_REFERENCE)
 			#pragma HLS PIPELINE II=1
 			for (int cpo=0; cpo < CPO; cpo++) {
 				#pragma HLS UNROLL
@@ -536,7 +546,9 @@ static void add_winograd(int H, int W, int I_ITER, hls::stream<pixel_out_t> &b_i
 	#pragma HLS loop_flatten off
 	loop_add_read_data:
     for (int h = 0; h < H; h+=2) { // de dos en dos, los bucles con iteracions H Y W no pueden ser unrolling o flatterns porque no son constantes, entonces pipeline en el bucle superior falla
-		for (int w=0; w < W; w+=2) {	 //2
+    	DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE)
+    	for (int w=0; w < W; w+=2) {	 //2
+    		DO_PRAGMA(HLS loop_tripcount min=1 max=W_REFERENCE)
 			#pragma HLS PIPELINE II=1
 			data = in.read();
 			for (int cpi=0; cpi < CPI; cpi++) {
