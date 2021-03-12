@@ -11,15 +11,6 @@ void set_write_enables(int enable_write[CPO], int o_channel, int O) {
   }
 }
 
-void set_read_enables(int enable_read[CPI], int I) {
-   set_read_enables_loop:
-   for (int i = 0; i <CPI; i++) {
-     DO_PRAGMA(HLS loop_tripcount min=1 max=CPI)
-     #pragma HLS UNROLL
-     enable_read[i] = (I >= i+1);
-   }
-}
-
 void set_reading_channel_offsets(int offset_read_data_channel_i[CPI], int offset_read_data_channel, int channel_offset) {
  set_reading_channel_offsets_loop:
  for(int i=0; i<CPI; i++){
@@ -51,10 +42,10 @@ extern "C" {
 
 void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int I_ITER, int O_ITER, int enable_relu,
               data_type *ptr_kernel, pixel_out_t *ptr_bias, ap_uint<512> *ptr_out, int global_offset, int enable_upper_padding, int enable_lower_padding) {
-	#pragma HLS INTERFACE m_axi port=ptr_data   offset=slave bundle=gmem
-	#pragma HLS INTERFACE m_axi port=ptr_kernel depth=10 offset=slave bundle=gmem1
-	#pragma HLS INTERFACE m_axi port=ptr_bias   offset=slave bundle=gmem2
-	#pragma HLS INTERFACE m_axi port=ptr_out    offset=slave bundle=gmem3
+	#pragma HLS INTERFACE m_axi port=ptr_data   depth=1024 offset=slave bundle=gmem
+	#pragma HLS INTERFACE m_axi port=ptr_kernel depth=1024 offset=slave bundle=gmem1
+	#pragma HLS INTERFACE m_axi port=ptr_bias   depth=1024 offset=slave bundle=gmem2
+	#pragma HLS INTERFACE m_axi port=ptr_out    depth=1024 offset=slave bundle=gmem3
 
   #ifdef DEBUG_VERBOSE
   printf("kernel starts...\n");
@@ -90,7 +81,6 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
     static hls::stream<write_block_t> out_write_channel[CPO];
 
     // variables
-    int enable_read[CPI];
     int enable_write[CPO];
     int offset_read_data_channel_i[CPI];
     int offset_write_data_channel_i[CPO];
@@ -105,15 +95,12 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
     int channel_blocks           = (read_pixels + READ_BLOCK_SIZE - 1) / READ_BLOCK_SIZE;
     int res_blocks               = channel_size % READ_BLOCK_SIZE;
     int offset_bias              = o_iter;
-    int offset_kernel            = o_iter * (I < CPI ? CPI : I) * CPO * 9;
+    int offset_kernel            = o_iter * ((I + CPI - 1) / CPI) * CPI * CPO * 9;
     #pragma HLS array_partition variable=enable_read dim=0 complete
     #pragma HLS array_partition variable=enable_write dim=0 complete
     DO_PRAGMA(HLS ARRAY_PARTITION variable=offset_read_data_channel_i dim=0 complete)
     DO_PRAGMA(HLS ARRAY_PARTITION variable=offset_write_data_channel_i dim=0 complete)
 	DO_PRAGMA(HLS ARRAY_PARTITION variable=num_channel_write_blocks dim=0 complete)
-
-    // we compute the enable_read signals
-    set_read_enables(enable_read, I);
 
     // we compute the enable_write signals
     set_write_enables(enable_write, o_channel, O);
@@ -138,8 +125,8 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
     dws_read_kernel(I_ITER, offset_kernel, ptr_kernel, str_dw_kernel, str_pw_kernel);
 #endif
 
-    read_data_channels(H, W, rows, I_ITER, ptr_data, offset_read_data_channel, num_extra_rows, channel_blocks, stream_data_ch_0, enable_read);
-    ch_serialize_and_filter<CPI>(I_ITER, read_pixels, channel_blocks, channel_size, offset_read_data_channel_i, stream_data_ch_0, stream_data_ch_1, enable_read);
+    read_data_channels(H, W, rows, I_ITER, ptr_data, offset_read_data_channel, num_extra_rows, channel_blocks, stream_data_ch_0, I);
+    ch_serialize_and_filter<CPI>(I_ITER, read_pixels, channel_blocks, channel_size, offset_read_data_channel_i, stream_data_ch_0, stream_data_ch_1, I);
     join(rows, W, I_ITER, num_extra_rows, stream_data_ch_1,  out_read_data);
 #ifdef DIRECT_CONV
     direct_conv(rows, W, I_ITER, enable_upper_padding, enable_lower_padding, out_read_data, out_read_kernel, out_read_bias, out_conv);

@@ -1,5 +1,5 @@
-//#ifndef _CONV2D_H_
-//#define _CONV2D_H_
+#ifndef _CONV2D_H_
+#define _CONV2D_H_
 
 #include <stdio.h>
 #include <ap_fixed.h>
@@ -10,9 +10,9 @@
 // Convolution type (direct, winograd, deepwise separable)
 // Select only one type of convolution
 // -----------------------------------------------------------------------------------------------------------
-//#define DIRECT_CONV
+#define DIRECT_CONV
 //#define WINOGRAD_CONV
-#define DWS_CONV
+//#define DWS_CONV
 
 // -----------------------------------------------------------------------------------------------------------
 // data type. Defines the basic data type of the kernel
@@ -80,7 +80,7 @@
 //#define DEBUG_MUL
 //#define DEBUG_SPLIT
 //#define DEBUG_WRITE_DATA
-#define DEBUG_CPU
+//#define DEBUG_CPU
 
 // What follows is the definition of data types (do not change)
 
@@ -143,20 +143,21 @@ struct write_block_t {
 // -----------------------------------------------------------------------------------------------------------
 // function prototypes
 extern "C" void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int I_ITER, int O_ITER, int enable_relu, data_type *ptr_kernel, pixel_out_t *ptr_bias, ap_uint<512> *ptr_out, int global_offset, int enable_upper_padding, int enable_lower_padding);
-void serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int channel_size, int offset, hls::stream<read_block_t> &in, hls::stream<data_type> &out, int enable);
-template <int LEVELS> void ch_serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int channel_size, int *offset_read_data_channel_i, hls::stream<read_block_t> stream_data_ch_0[LEVELS], hls::stream<data_type> stream_data_ch_1[LEVELS], int *enable_read){
+
+void serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int channel_size, int offset, hls::stream<read_block_t> &in, hls::stream<data_type> &out, int first_channel, int I);
+template <int LEVELS> void ch_serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int channel_size, int *offset_read_data_channel_i, hls::stream<read_block_t> stream_data_ch_0[LEVELS], hls::stream<data_type> stream_data_ch_1[LEVELS], int I){
 #pragma HLS inline
 ch_serialize_and_filter:
   for (int i = 0; i < LEVELS; i++) {
     #pragma HLS UNROLL
-    serialize_and_filter(I_ITER, num_pixels, channel_blocks, channel_size, offset_read_data_channel_i[i], stream_data_ch_0[i], stream_data_ch_1[i], enable_read[i]);
+    serialize_and_filter(I_ITER, num_pixels, channel_blocks, channel_size, offset_read_data_channel_i[i], stream_data_ch_0[i], stream_data_ch_1[i], i, I);
   }
 }
 
 // read functions
 void read_bias(int offset_bias, pixel_out_t *b_ptr, hls::stream<pixel_out_t> &out);
 void read_kernel(int I_ITER, int offset_kernel, data_type *k_ptr, hls::stream<kernel_t> &k_out);
-void read_data_channels(int H, int W, int rows, int I_ITER, ap_uint<512> *ptr, int offset, int num_extra_rows, int channel_blocks, hls::stream<read_block_t> out[CPI], int *enable_read_channel);
+void read_data_channels(int H, int W, int rows, int I_ITER, ap_uint<512> *ptr, int offset, int num_extra_rows, int channel_blocks, hls::stream<read_block_t> out[CPI], int I);
 
 // write functions
 void write_data_channels(int num_pixels, ap_uint<512> *ptr, int *offset_i, hls::stream<write_block_t> in[CPO], int *enable_write);
@@ -194,4 +195,4 @@ void cvt(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<fram
 #define PRAGMA_SUB(x) _Pragma (#x)
 #define DO_PRAGMA(x) PRAGMA_SUB(x)
 
-//#endif
+#endif
