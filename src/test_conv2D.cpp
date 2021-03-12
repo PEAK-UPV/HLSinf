@@ -114,14 +114,14 @@ void deallocate_buffers() {
 
 // init_arguments. Initializes the arguments
 void init_arguments() {
-  W = 12;
-  H = 12;
-  I = 1;
-  O = 1;
-  I_kernel = 4;
-  O_kernel = 4;
-  i_iter = I < CPI ? 1 : I / CPI;
-  o_iter = O < CPO ? 1 : O / CPO;
+  W = 4;
+  H = 4;
+  I = 8;
+  O = 5;
+  I_kernel = 8;
+  O_kernel = 8;
+  i_iter = (I + CPI - 1) / CPI;
+  o_iter = (O + CPO - 1) / CPO;
   enable_upper_padding = 1;
   enable_lower_padding = 1;
   rows = H;
@@ -335,7 +335,7 @@ void init_data() {
   for (int i=0; i<I; i++) {
     for (int h=0; h<H; h++) {
       for (int w=0; w<W; w++) {
-        data_in[addr] = addr+1; //dist(gen);
+        data_in[addr] = i+1; //dist(gen);
         addr++;
       }
     }
@@ -357,10 +357,11 @@ void init_data() {
                        (ki * KH * KW) +
                        (kh * KW) +
                        kw;
-          if ((i<I) && (o<O)) kernel[addr_k] = dist(gen);
+          if ((i<I) && (o<O)) kernel[addr_k] = kernel_id; //  dist(gen);
           else kernel[addr_k] = 0;
 	    }
 	  }
+      kernel_id++;
     }
   }
 #endif
@@ -386,7 +387,7 @@ void init_data() {
   }
 #endif
 
-  for (int cout=0; cout<O; cout++) bias[cout] = dist(gen);
+  for (int cout=0; cout<O; cout++) bias[cout] = cout; //dist(gen);
 }
 
 int main() {
@@ -396,7 +397,6 @@ int main() {
  init_arguments();
  print_configuration();
  allocate_buffers();
- printf("allocated buffers\n");
  init_data();
 
 #ifdef DEBUG_CPU

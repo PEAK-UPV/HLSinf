@@ -182,7 +182,7 @@ void dws_read_kernel(int I_ITER, int offset_kernel, data_type *k_ptr, hls::strea
 //   out                 : output streams for each channel
 //   enable_read_channel : enables for each channel. If not set the module produces just zeros and does not read memory
 //
-void read_data_channels(int H, int W, int rows, int I_ITER, ap_uint<512> *ptr, int offset, int num_extra_rows, int channel_blocks, hls::stream<read_block_t> out[CPI], int *enable_read_channel) {
+void read_data_channels(int H, int W, int rows, int I_ITER, ap_uint<512> *ptr, int offset, int num_extra_rows, int channel_blocks, hls::stream<read_block_t> out[CPI], int I) {
 
   #ifdef DEBUG_READ_DATA
   printf("READ_DATA: starts\n");
@@ -191,17 +191,22 @@ void read_data_channels(int H, int W, int rows, int I_ITER, ap_uint<512> *ptr, i
   int num_pixels = (num_extra_rows + rows) * W;
   int channel_size = H * W;
   read_block_t bx[CPI];
-  int enable[CPI];
-  DO_PRAGMA(HLS ARRAY_PARTITION variable=bx complete dim=0)
-
-  for (int cpi=0; cpi<CPI; cpi++) {
-    DO_PRAGMA(HLS UNROLL)
-    enable[cpi] = enable_read_channel[cpi];
-  }
+  int current_input_channel[CPI];					// input channel being processed
+  int enable[CPI];									// whether the input channel is enabled for reading
+  DO_PRAGMA(HLS ARRAY_PARTITION variable=current_input_channel complete dim=0)
+  DO_PRAGMA(HLS ARRAY_PARTITION variable=enable complete dim=0)
 
     read_data_channels_loop_I_ITER:
     for (int i_iter = 0; i_iter < I_ITER; i_iter++) {
       DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE/CPI)
+
+      // Set current input channel
+	  read_data_channels_loop_init:
+	  for (int cpi=0; cpi<CPI; cpi++) {
+	    DO_PRAGMA(HLS UNROLL)
+	    current_input_channel[cpi] = (i_iter * CPI) + cpi;
+	    enable[cpi] = current_input_channel[cpi] < I;
+	  }
 
       // each channel has its first block
       int offset_[CPI];
@@ -237,7 +242,7 @@ void read_data_channels(int H, int W, int rows, int I_ITER, ap_uint<512> *ptr, i
                 data_type datum = *(data_type*)(&tmp);
                 bx[i].pixel[p] = datum;
               }
-              if (enable[i] && channel_blocks_remaining_[i]) out[i] << bx[i];
+              if (channel_blocks_remaining_[i]) out[i] << bx[i];
               if (channel_blocks_remaining_[i]) channel_blocks_remaining_[i] = channel_blocks_remaining_[i] - 1;
               first_block_[i] = first_block_[i] + 1;
           }

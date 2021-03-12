@@ -77,6 +77,11 @@
 			<location>/home/jflich/git/HLSinf/src/k_conv2D.cpp</location>
 		</link>
 		<link>
+			<name>source/maxpooling.cpp</name>
+			<type>1</type>
+			<location>/home/jflich/git/HLSinf/src/maxpooling.cpp</location>
+		</link>
+		<link>
 			<name>source/mul.cpp</name>
 			<type>1</type>
 			<location>/home/jflich/git/HLSinf/src/mul.cpp</location>
