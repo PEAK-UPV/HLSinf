@@ -16,7 +16,7 @@
 // num_pixels parameter indicates how many pixels (items) need to be forwarded
 // offset indicates the first item offset within a block in order to filter out first items
 //
-void serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int channel_size, int offset, hls::stream<read_block_t> &in, hls::stream<data_type> &out, int enable) {
+void serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int channel_size, int offset, hls::stream<read_block_t> &in, hls::stream<data_type> &out, int first_channel, int I) {
 
   #ifdef DEBUG_SERIALIZE
   printf("SERIALIZE: starts (num_pixels = %d)\n", num_pixels);
@@ -36,6 +36,7 @@ void serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int ch
   int p = 0;
   int iter = 0;
   int offset_ch = 0;
+  int current_channel = first_channel;
   for (int i_iter=0; i_iter < iters; i_iter++) {
 	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE/CPI * READ_BLOCK_SIZE * (W_REFERENCE * H_REFERENCE / READ_BLOCK_SIZE))
     #pragma HLS pipeline II=1
@@ -47,7 +48,7 @@ void serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int ch
     read_block_t bx;
     DO_PRAGMA(HLS ARRAY_PARTITION variable=bx dim=0 complete)
     if (p==0) {
-      if (enable) bx = in.read(); else bx = data_zeros;
+      if (current_channel < I) bx = in.read(); else bx = data_zeros;
     }
     if ((offset_ch==0) && (num_pixels_cnt !=0)) {
       out << bx.pixel[p];
@@ -65,6 +66,7 @@ void serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int ch
       if (b == channel_blocks) {
         b = 0;
         iter = iter + 1;
+        current_channel = current_channel + CPI;
       }
     }
   }
