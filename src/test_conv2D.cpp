@@ -371,7 +371,7 @@ void init_data() {
     for (int kh=0; kh<KH; kh++) {
       for (int kw=0; kw<KW; kw++) {
     	  int addr_k = (i * KW * KH) + (kh * KW) + kw;
-    	  if (i < I) kernel[addr_k] = kernel_id/*dist(gen)*/; else kernel[addr_k] = 0;
+    	  if (i < I) kernel[addr_k] = dist(gen); else kernel[addr_k] = 0;
       }
     }
     kernel_id++;
@@ -380,13 +380,13 @@ void init_data() {
   for (int i=0; i<I_kernel; i++) {
 	  for (int o=0; o<O_kernel; o++) {
 		  int addr_k = (I_kernel * KW * KH) + (i * O_kernel) + o;
-		  if ((i < I) && (o < O)) kernel[addr_k] = kernel_id /*dist(gen)*/; else kernel[addr_k] = 0;
+		  if ((i < I) && (o < O)) kernel[addr_k] = dist(gen); else kernel[addr_k] = 0;
 	  }
 	  kernel_id++;
   }
 #endif
 
-  for (int cout=0; cout<O; cout++) bias[cout] = cout+1; //dist(gen);
+  for (int cout=0; cout<O; cout++) bias[cout] = dist(gen);
 }
 
 int main() {
@@ -410,6 +410,12 @@ int main() {
  cpu_conv2D();
  retval = check_result();
 
+#ifdef DEBUG_CPU
+ print_output();
+#endif
+
+ deallocate_buffers();
+
  if(retval == 0){
    printf("    *** *** *** *** \n");
    printf("    Results are good \n");
@@ -419,12 +425,6 @@ int main() {
    printf("    Mismatch: retval=%d \n", retval);
    printf("    *** *** *** *** \n");
  }
-
-#ifdef DEBUG_CPU
- print_output();
-#endif
-
- deallocate_buffers();
 
  // Return 0 if outputs are correct
  return retval;
