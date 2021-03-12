@@ -48,6 +48,20 @@
 #define KH                3   // Convolutional kernel height
 
 // -----------------------------------------------------------------------------------------------------------
+// Defines for the added modules to the conv layer
+// -----------------------------------------------------------------------------------------------------------
+#define USE_RELU		      // Enables the use of the ReLU activation after the conv layer
+//#define USE_MAXPOOLING		  // Enables the use of the Maxpooling function after the relu layer
+
+// -----------------------------------------------------------------------------------------------------------
+// Defines for the maxpooling layer (USE_MAXPOOLING must be defined)
+// -----------------------------------------------------------------------------------------------------------
+#define KW_MAXPOOLING	  2	  // Maxpooling kernel width
+#define KH_MAXPOOLING     2   // Maxpooling kernel height
+#define SW_MAXPOOLING     2   // MAxpooling horizontal stride
+#define SH_MAXPOOLING     2   // MAxpooling vertical stride
+
+// -----------------------------------------------------------------------------------------------------------
 // Defines for latency estimation
 // Change those values and run C Synthesis in order to obtain the delay of the kernel
 // -----------------------------------------------------------------------------------------------------------

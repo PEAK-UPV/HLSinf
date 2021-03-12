@@ -82,7 +82,9 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
 #endif
     static hls::stream<pixel_out_t>  out_read_bias;
     static hls::stream<pixel_out_t>  out_conv;
+#ifdef USE_RELU
     static hls::stream<pixel_out_t>  out_relu;
+#endif
     static hls::stream<read_block_t> stream_data_ch_0[CPI];
     static hls::stream<data_type>    stream_data_ch_1[CPI];
     static hls::stream<write_block_t> out_write_channel[CPO];
@@ -148,8 +150,13 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
 #ifdef DWS_CONV
     dws_conv(rows, W, I_ITER, enable_upper_padding, enable_lower_padding, out_read_data, str_dw_kernel, str_pw_kernel, out_read_bias, out_conv);
 #endif
+
+#ifdef USE_RELU
     relu(enable_relu, rows, W, out_conv, out_relu);
     split(rows, W, offset_write_data_channel_i, channel_blocks, out_relu, out_write_channel);
+#else
+    split(rows, W, offset_write_data_channel_i, channel_blocks, out_conv, out_write_channel);
+#endif
     write_data_channels(write_pixels, ptr_out, offset_write_data_channel_i, out_write_channel, enable_write);
 
  }
