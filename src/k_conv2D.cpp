@@ -20,12 +20,13 @@ void set_reading_channel_offsets(int offset_read_data_channel_i[CPI], int offset
  }
 }
 
-void set_writing_channel_offsets(int offset_write_data_channel_i[CPO], int global_offset, int channel_offset, int o_channel) {
+void set_writing_channel_offsets(int offset_write_data_channel_i[CPO], int block_offset_write_data_channel_i[CPO], int global_offset, int channel_offset, int o_channel) {
   set_writing_channel_offsets_loop:
   for(int i=0; i<CPO; i++){
     DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO)
     #pragma HLS UNROLL
     offset_write_data_channel_i[i] = global_offset + (channel_offset * i) + (o_channel * channel_offset);
+    block_offset_write_data_channel_i[i] = offset_write_data_channel_i[i] % WRITE_BLOCK_SIZE;
   }
 }
 
@@ -61,11 +62,15 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
     // input and output streams
     static hls::stream<pixel_in_t>   out_read_data;
     static hls::stream<pixel_in_t>   out_read_data_2;
+    DO_PRAGMA(HLS STREAM variable=out_read_data depth=32)
+    DO_PRAGMA(HLS STREAM variable=out_read_data_2 depth=32)
 #ifdef DIRECT_CONV
     static hls::stream<kernel_t>     out_read_kernel;
+    DO_PRAGMA(HLS STREAM variable=out_read_kernel depth=CPO)
 #endif
 #ifdef WINOGRAD_CONV
     static hls::stream<kernel_t>     out_read_kernel;
+    DO_PRAGMA(HLS STREAM variable=out_read_kernel depth=CPO)
 #endif
 #ifdef DWS_CONV
     static hls::stream<kernel_dw_t>     str_dw_kernel;
@@ -73,17 +78,24 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
 #endif
     static hls::stream<pixel_out_t>  out_read_bias;
     static hls::stream<pixel_out_t>  out_conv;
+    DO_PRAGMA(HLS STREAM variable=out_read_bias depth=CPO)
+    DO_PRAGMA(HLS STREAM variable=out_conv depth=32)
 #ifdef USE_RELU
     static hls::stream<pixel_out_t>  out_relu;
+    DO_PRAGMA(HLS STREAM variable=out_relu depth=32)
 #endif
     static hls::stream<read_block_t> stream_data_ch_0[CPI];
     static hls::stream<data_type>    stream_data_ch_1[CPI];
     static hls::stream<write_block_t> out_write_channel[CPO];
+    DO_PRAGMA(HLS STREAM variable=stream_data_ch_0  depth=32)
+    DO_PRAGMA(HLS STREAM variable=stream_data_ch_1  depth=32)
+    DO_PRAGMA(HLS STREAM variable=out_write_channel depth=32)
 
     // variables
     int enable_write[CPO];
     int offset_read_data_channel_i[CPI];
     int offset_write_data_channel_i[CPO];
+    int block_offset_write_data_channel_i[CPO];
     int num_channel_write_blocks[CPO];
     int corrected_offset         = (enable_upper_padding==0)? W : 0;
     int channel_offset           = (W * H);
@@ -96,10 +108,10 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
     int res_blocks               = channel_size % READ_BLOCK_SIZE;
     int offset_bias              = o_iter;
     int offset_kernel            = o_iter * ((I + CPI - 1) / CPI) * CPI * CPO * 9;
-    #pragma HLS array_partition variable=enable_read dim=0 complete
     #pragma HLS array_partition variable=enable_write dim=0 complete
     DO_PRAGMA(HLS ARRAY_PARTITION variable=offset_read_data_channel_i dim=0 complete)
     DO_PRAGMA(HLS ARRAY_PARTITION variable=offset_write_data_channel_i dim=0 complete)
+    DO_PRAGMA(HLS ARRAY_PARTITION variable=block_offset_write_data_channel_i dim=0 complete)
 	DO_PRAGMA(HLS ARRAY_PARTITION variable=num_channel_write_blocks dim=0 complete)
 
     // we compute the enable_write signals
@@ -109,7 +121,7 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
     set_reading_channel_offsets(offset_read_data_channel_i, offset_read_data_channel, channel_offset);
 
     // channel offsets for writing
-    set_writing_channel_offsets(offset_write_data_channel_i, global_offset, channel_offset, o_channel);
+    set_writing_channel_offsets(offset_write_data_channel_i, block_offset_write_data_channel_i, global_offset, channel_offset, o_channel);
 
     // channel write blocks
     set_channel_write_blocks(num_channel_write_blocks, offset_write_data_channel_i, H, W);
@@ -140,9 +152,9 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
 
 #ifdef USE_RELU
     relu(enable_relu, rows, W, out_conv, out_relu);
-    split(rows, W, offset_write_data_channel_i, channel_blocks, out_relu, out_write_channel);
+    split(rows, W, block_offset_write_data_channel_i, channel_blocks, out_relu, out_write_channel);
 #else
-    split(rows, W, offset_write_data_channel_i, channel_blocks, out_conv, out_write_channel);
+    split(rows, W, block_offset_write_data_channel_i, channel_blocks, out_conv, out_write_channel);
 #endif
     write_data_channels(write_pixels, ptr_out, offset_write_data_channel_i, out_write_channel, enable_write);
 

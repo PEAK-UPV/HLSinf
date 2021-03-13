@@ -77,6 +77,7 @@
 //#define DEBUG_READ_KERNEL
 //#define DEBUG_READ_DATA
 //#define DEBUG_SERIALIZE
+//#define DEBUG_CVT
 //#define DEBUG_MUL
 //#define DEBUG_SPLIT
 //#define DEBUG_WRITE_DATA
@@ -175,7 +176,7 @@ void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<ker
 
 // data reorganization
 void join(int H, int W, int I_ITER, int num_extra_rows, hls::stream<data_type> in[CPI], hls::stream<pixel_in_t> &out);
-void split(int H, int W, int *addr_channel, int num_blocks_channel, hls::stream<pixel_out_t> &in, hls::stream<write_block_t> out[CPO]);
+void split(int H, int W, int *block_offset_channel, int num_blocks_channel, hls::stream<pixel_out_t> &in, hls::stream<write_block_t> out[CPO]);
 
 // activation functions
 void relu(int enable_relu, int H, int W, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &out);
