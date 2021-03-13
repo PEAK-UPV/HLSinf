@@ -188,50 +188,36 @@ void read_data_channels(int H, int W, int rows, int I_ITER, ap_uint<512> *ptr, i
   printf("READ_DATA: starts\n");
   #endif
 
-  int num_pixels = (num_extra_rows + rows) * W;
-  int channel_size = H * W;
-  read_block_t bx[CPI];
-  int current_input_channel[CPI];					// input channel being processed
-  int enable[CPI];									// whether the input channel is enabled for reading
-  DO_PRAGMA(HLS ARRAY_PARTITION variable=current_input_channel complete dim=0)
-  DO_PRAGMA(HLS ARRAY_PARTITION variable=enable complete dim=0)
+  int channel_size = H * W;							// channel size
+  read_block_t bx[CPI];								// buffer for block read from memory
+  int offset_[CPI];									// offset for the channel
+  int first_block_[CPI];							// first block address
 
     read_data_channels_loop_I_ITER:
     for (int i_iter = 0; i_iter < I_ITER; i_iter++) {
       DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE/CPI)
 
-      // Set current input channel
-	  read_data_channels_loop_init:
-	  for (int cpi=0; cpi<CPI; cpi++) {
-	    DO_PRAGMA(HLS UNROLL)
-	    current_input_channel[cpi] = (i_iter * CPI) + cpi;
-	    enable[cpi] = current_input_channel[cpi] < I;
-	  }
-
       // each channel has its first block
-      int offset_[CPI];
-      int first_block_[CPI];
-      // We read in chunks of CHUNK_SIZE blocks
-      int channel_blocks_remaining_[CPI];
       read_data_channels_loop_CPI_init:
-      for(int i = 0; i<CPI; i++){
-        #pragma HLS UNROLL
-        offset_[i] = offset + (channel_size * CPI * i_iter) + (channel_size * i);
-        first_block_[i] = offset_[i] / READ_BLOCK_SIZE;
-        channel_blocks_remaining_[i] = channel_blocks;
+      for(int cpi = 0; cpi<CPI; cpi++){
+        #pragma HLS pipeline
+        offset_[cpi] = offset + (channel_size * CPI * i_iter) + (channel_size * cpi);
+        first_block_[cpi] = offset_[cpi] / READ_BLOCK_SIZE;
         #ifdef DEBUG_READ_DATA
-        printf("READ_DATA: cpi %d -> offset %d first_block %d remaining %d\n", i, offset_[i], first_block_[i], channel_blocks_remaining_[i]);
+        printf("READ_DATA: cpi %d -> offset %d first_block %d\n", cpi, offset_[cpi], first_block_[cpi]);
         #endif
       }
 
-      read_data_channels_loop_CHUNKS:
+      read_data_channels_loop_blocks:
       for (int block = 0; block < channel_blocks; block++) {
     	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=W_REFERENCE*H_REFERENCE/READ_BLOCK_SIZE)
     	read_data_channels_loop_CPI:
         for(int i = 0; i < CPI; i++){
           #pragma HLS pipeline
           ap_uint<512> data_read;
-          if (enable[i]) {
+       	  int current_input_channel = (i_iter * CPI) + i;
+       	  int enable = current_input_channel < I;
+          if (enable) {
         	  data_read = ptr[first_block_[i]];
               read_data_channels_loop_block_pixels:
               for (int p=0; p<READ_BLOCK_SIZE; p++) {
@@ -242,8 +228,7 @@ void read_data_channels(int H, int W, int rows, int I_ITER, ap_uint<512> *ptr, i
                 data_type datum = *(data_type*)(&tmp);
                 bx[i].pixel[p] = datum;
               }
-              if (channel_blocks_remaining_[i]) out[i] << bx[i];
-              if (channel_blocks_remaining_[i]) channel_blocks_remaining_[i] = channel_blocks_remaining_[i] - 1;
+              out[i] << bx[i];
               first_block_[i] = first_block_[i] + 1;
           }
         }
