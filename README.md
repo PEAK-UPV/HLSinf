@@ -3,7 +3,7 @@ High-Level Synthesis inference accelerator for FPGAs
 
 This project targets inference processes on FPGA systems. For this, HLS is used as the main programming language (C++ with HLS pragmas).
 
-It is highly recommended to use vitis_hls (Vitis 2020.1) to work with the project. In order to launch the project you need to first set the environment variables and then launch vitis_hls and open the project (we asume you cloned the repo in HLSinf directory:
+It is highly recommended to use vitis_hls (Vitis 2020.1) to work with the project. In order to launch the project you need to first set the environment variables and then launch vitis_hls and open the project (we asume you cloned the repo in HLSinf directory):
 
 cd HLSinf
   
@@ -73,3 +73,9 @@ unset XCL_EMULATION_MODE
 ./test_conv2D build_dir.hw.xilinx_u200_xdma_201830_2/kernel_conv2D.xclbin 1 1 1 64 64 4 4
 
 good luck!!!
+
+------------------------------------------------------------------------------------------
+Current Versions supported
+------------------------------------------------------------------------------------------
+
+Take a look to solutions folder for details.

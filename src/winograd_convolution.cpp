@@ -1,5 +1,4 @@
 #include "conv2D.h"
-
 // ---------------------------------------------------------------------------------------------------
 // cvt_winograd: reads an input stream with an image of format (H, W, CPI) and writes an output stream
 // in a 2D format based on (KW, KH). (SW=1, SH=1) stride is assumed and (PW=1, PH=1) padding is assumed.
@@ -157,7 +156,7 @@ static void mulData(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls:
 		DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE/CPI)
 		 #pragma HLS loop_flatten off
 		for (int i = 0; i < (H/2 * W); i++){
-			DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE/2 * W_REFERENCE)
+			DO_PRAGMA(HLS loop_tripcount min=1 max=(H_REFERENCE/2) * W_REFERENCE)
 			#pragma HLS PIPELINE II=1
 			data = d_in.read();
 		    //multiplicamos Ct x data
@@ -362,7 +361,7 @@ static void mulWise(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls:
 	   // Reading data
 	loop_mul_kernels_load_cpo_data_wise:
     for (int i = 0; i < (H/2 * W/2 * 2); i++) {
-      DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE/2*W_REFERENCE)
+      DO_PRAGMA(HLS loop_tripcount min=1 max=(H_REFERENCE/2)*W_REFERENCE)
 	  #pragma HLS UNROLL
       data = d_in.read();
 		for (int cpo=0; cpo<CPO; cpo++) {
@@ -426,7 +425,7 @@ static void mult_A_AT(int H, int W, int I_ITER, hls::stream<frame_d> &d_in, hls:
     for (int i_iter = 0; i_iter < I_ITER; i_iter++) {
     	DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE/CPI)
 		for (int p = 0; p < (H/2 * W/2); p++) {
-			DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE/2)
+			DO_PRAGMA(HLS loop_tripcount min=1 max=(H_REFERENCE/2) * (W_REFERENCE/2))
 
 			#pragma HLS PIPELINE II=1
 			data = d_in.read();
@@ -563,7 +562,9 @@ static void add_winograd(int H, int W, int I_ITER, hls::stream<pixel_out_t> &b_i
 
 	if(i_iter ==(I_ITER-1)){
 		for (int h = 0; h < H; h++) {
+			DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE)
 			for (int w=0; w < W; w++) {
+			DO_PRAGMA(HLS loop_tripcount min=1 max=W_REFERENCE)
 			 #pragma HLS PIPELINE II=1
 			  out << buff_o_channels[h][w];
 			}
