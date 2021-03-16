@@ -27,6 +27,11 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>hls_stream_39.h</name>
+			<type>1</type>
+			<location>/opt/Xilinx/Vitis/2020.1/common/technology/autopilot/hls_stream_39.h</location>
+		</link>
+		<link>
 			<name>source</name>
 			<type>2</type>
 			<location>/home/jflich/git/HLSinf/project/HLSinf/.apc/.src</location>
@@ -77,11 +82,6 @@
 			<location>/home/jflich/git/HLSinf/src/k_conv2D.cpp</location>
 		</link>
 		<link>
-			<name>source/maxpooling.cpp</name>
-			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/maxpooling.cpp</location>
-		</link>
-		<link>
 			<name>source/mul.cpp</name>
 			<type>1</type>
 			<location>/home/jflich/git/HLSinf/src/mul.cpp</location>
@@ -115,6 +115,11 @@
 			<name>source/write.cpp</name>
 			<type>1</type>
 			<location>/home/jflich/git/HLSinf/src/write.cpp</location>
+		</link>
+		<link>
+			<name>testbench/input.data</name>
+			<type>1</type>
+			<location>/home/jflich/git/HLSinf/src/input.data</location>
 		</link>
 		<link>
 			<name>testbench/test_conv2D.cpp</name>

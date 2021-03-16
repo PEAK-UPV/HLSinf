@@ -18,19 +18,19 @@
 // data type. Defines the basic data type of the kernel
 // Select only one data type
 // -----------------------------------------------------------------------------------------------------------
-// FP32 (uncomment the next four lines for FP32 support)
+// FP32 (comment out the next four lines for FP32 support)
 #define data_type float
 #define DATA_TYPE_WIDTH  32	  // data type width in bits (32 for float)
 #define READ_BLOCK_SIZE  16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 #define WRITE_BLOCK_SIZE 16   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 
-// APFIXED<8> (uncomment the next four lines for APFIXED<8> support)
+// APFIXED<8> (comment out the next four lines for APFIXED<8> support)
 //#define data_type ap_fixed<8,4,AP_TRN,AP_WRAP>
 //#define DATA_TYPE_WIDTH   8	  // data type width in bits (32 for float)
 //#define READ_BLOCK_SIZE  64   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 //#define WRITE_BLOCK_SIZE 64   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 
-// APINT<8> (uncomment the next four lines for APINT<8> support)
+// APINT<8> (comment out the next four lines for APINT<8> support)
 //#define data_type ap_int<8>
 //#define DATA_TYPE_WIDTH   8	  // data type width in bits (32 for float)
 //#define READ_BLOCK_SIZE  64   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
@@ -42,16 +42,19 @@
 #define WMAX            256   // Maximum image width
 #define HMAX            256   // Maximum image height
 #define CPI               4   // Basic kernel number of input channels
-#define CPO               4   // Basic kernel number of output channels
-#define LOG2_CPO		  2   // number of bits for CPO (if you change CPO please change LOG2_CPO accordingly)
+#define CPO              16   // Basic kernel number of output channels
+#define LOG2_CPO	      4   // number of bits for CPO (if you change CPO please change LOG2_CPO accordingly)
 #define KW                3   // Convolutional kernel width
 #define KH                3   // Convolutional kernel height
 
 // -----------------------------------------------------------------------------------------------------------
 // Defines for the added modules to the conv layer
 // -----------------------------------------------------------------------------------------------------------
-#define USE_RELU		      // Enables the use of the ReLU activation after the conv layer
-//#define USE_MAXPOOLING		  // Enables the use of the Maxpooling function after the relu layer
+#define USE_RELU		      // Enables the use of the ReLU activation
+#define USE_CLIPPING          // Enables the use of the clipping function (implemented in the ReLU module)
+//#define USE_SHIFT             // Enables the use of the shift function (implemented in the ReLU module)
+							  // The shift function must be used only for ap_int data types
+//#define USE_MAXPOOLING		  // Enables the use of the Maxpooling function
 
 // -----------------------------------------------------------------------------------------------------------
 // Defines for the maxpooling layer (USE_MAXPOOLING must be defined)
@@ -66,9 +69,9 @@
 // Change those values and run C Synthesis in order to obtain the delay of the kernel
 // -----------------------------------------------------------------------------------------------------------
 #define I_REFERENCE       4  // I for delay estimation (must be equal or higher than CPI)
-#define O_REFERENCE       4  // O for delay estimation (must be equal or higher than CPO)
+#define O_REFERENCE      16  // O for delay estimation (must be equal or higher than CPO)
 #define W_REFERENCE     256  // W for delay estimation
-#define H_REFERENCE     256  // H for delay estimatipn
+#define H_REFERENCE     256  // H for delay estimation
 
 // -----------------------------------------------------------------------------------------------------------
 // defines for debug
@@ -81,7 +84,12 @@
 //#define DEBUG_MUL
 //#define DEBUG_SPLIT
 //#define DEBUG_WRITE_DATA
+//#define DEBUG_RELU
 //#define DEBUG_CPU
+
+// Defines (do not change)
+#define LEFT_DIRECTION 0	// direction used in ReLU (shift) module
+#define RIGHT_DIRECTION 1   // direction used in ReLU (shift) module
 
 // What follows is the definition of data types (do not change)
 
@@ -179,7 +187,8 @@ void join(int H, int W, int I_ITER, int num_extra_rows, hls::stream<data_type> i
 void split(int H, int W, int *block_offset_channel, int num_blocks_channel, hls::stream<pixel_out_t> &in, hls::stream<write_block_t> out[CPO]);
 
 // activation functions
-void relu(int enable_relu, int H, int W, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &out);
+void relu(int enable_relu, int enable_clipping, int enable_shift, int min_clip, int max_clip, int direction_shift, int pos_shift,
+		  int H, int W, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &out);
 
 // padding functions
 void padding(int H, int W, int I_ITER, int enable_upper_padding, int enable_lower_padding, hls::stream<pixel_in_t> &in, hls::stream<pixel_in_t> &out);
