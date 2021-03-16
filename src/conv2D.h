@@ -57,12 +57,12 @@
 //#define USE_MAXPOOLING		  // Enables the use of the Maxpooling function
 
 // -----------------------------------------------------------------------------------------------------------
-// Defines for the maxpooling layer (USE_MAXPOOLING must be defined)
+// Defines for the POOLING layer (USE_MAXPOOLING or USE_AVGPOOLING must be defined)
 // -----------------------------------------------------------------------------------------------------------
-#define KW_MAXPOOLING	  2	  // Maxpooling kernel width
-#define KH_MAXPOOLING     2   // Maxpooling kernel height
-#define SW_MAXPOOLING     2   // MAxpooling horizontal stride
-#define SH_MAXPOOLING     2   // MAxpooling vertical stride
+#define KW_POOLING	   2	  // Maxpooling kernel width
+#define KH_POOLING     2   // Maxpooling kernel height
+#define SW_POOLING     2   // MAxpooling horizontal stride
+#define SH_POOLING     2   // MAxpooling vertical stride
 
 // -----------------------------------------------------------------------------------------------------------
 // Defines for latency estimation
