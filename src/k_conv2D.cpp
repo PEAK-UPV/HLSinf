@@ -80,10 +80,14 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
     static hls::stream<pixel_out_t>  out_conv;
     DO_PRAGMA(HLS STREAM variable=out_read_bias depth=CPO)
     DO_PRAGMA(HLS STREAM variable=out_conv depth=32)
-#ifdef USE_RELU
+
+	// RELU, CLIPPING, and SHIFT support
+#if defined(USE_RELU) || defined(USE_CLIPPING) || defined(USE_SHIFT)
     static hls::stream<pixel_out_t>  out_relu;
     DO_PRAGMA(HLS STREAM variable=out_relu depth=32)
 #endif
+
+
     static hls::stream<read_block_t> stream_data_ch_0[CPI];
     static hls::stream<data_type>    stream_data_ch_1[CPI];
     static hls::stream<write_block_t> out_write_channel[CPO];
@@ -150,8 +154,14 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
     dws_conv(rows, W, I_ITER, enable_upper_padding, enable_lower_padding, out_read_data, str_dw_kernel, str_pw_kernel, out_read_bias, out_conv);
 #endif
 
-#ifdef USE_RELU
-    relu(enable_relu, rows, W, out_conv, out_relu);
+#if defined(USE_RELU) || defined(USE_CLIPPING) || defined(USE_SHIFT)
+    int enable_clipping = 0;
+    int enable_shift = 0;
+    int min_clip = 0;
+    int max_clip = 0;
+    int direction_shift = 0;
+    int pos_shift = 0;
+    relu(enable_relu, enable_clipping, enable_shift, min_clip, max_clip, direction_shift, pos_shift, rows, W, out_conv, out_relu);
     split(rows, W, block_offset_write_data_channel_i, channel_blocks, out_relu, out_write_channel);
 #else
     split(rows, W, block_offset_write_data_channel_i, channel_blocks, out_conv, out_write_channel);

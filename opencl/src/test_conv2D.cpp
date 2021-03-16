@@ -74,7 +74,7 @@ using std::vector;
 #define WMAX           256  // Maximum image width
 #define HMAX           256  // Maximum image height
 #define CPI              4  // Basic kernel number of input channels
-#define CPO              4  // Basic kernel number of output channels
+#define CPO              8  // Basic kernel number of output channels
 #define KW               3  // Convolutional kernel width
 #define KH               3  // Convolutional kernel height
 #define RELU             0  // Flag for ReLu activation. Active at high level
