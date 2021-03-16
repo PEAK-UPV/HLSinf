@@ -1,8 +1,8 @@
 // --------------------------------------------------------------------------------------------------------------
-// FPGA kernels for EDDL Library - European Distributed Deep Learning Library.
-// Version: 0.6
+// HLSinf kernels
+// Version: 1.0
 // copyright (c) 2020, Universidad Politécnica de Valencia (UPV), GAP research group
-// Date: November 2020
+// Date: March 2021
 // Authors: GAP Research Group (UPV)
 //     José Flich Cardo
 //     Jorge García Martínez
@@ -12,27 +12,8 @@
 // contact: jflich@disca.upv.es
 // All rights reserved
 
-
 //
-// test_conv2D_8x8. Test for the conv2D kernel
-//
-// Constants:
-//
-//  - CPI
-//  - CPO
-//  - KW = 3
-//  - KH = 3
-//  - PW = 1
-//  - PH = 1
-//  - SW = 1
-//  - SH = 1
-//
-//  Arguments:
-//
-//  - W
-//  - H
-//  - I
-//  - O
+// test_conv2D. Test for the conv2D kernel
 //
 //  Data formats:
 //
@@ -71,6 +52,12 @@ int rows;						 // number of rows to compute by the kernel
 int enable_upper_padding;		 // enables the upper row of padding
 int enable_lower_padding;		 // enables the lower row of padding
 int enable_relu;				 // enables applying the relu activation functions
+int enable_shift;				 // enables applying shift to the output
+int direction_shift;			 // shift direction (left or right)
+int pos_shift;					 // positions to shift
+int enable_clipping;			 // enables applying clipping to the output
+data_type min_clip;				 // minimum clip value
+data_type max_clip;				 // maximum clip value
 int i_iter;						 // number of input iterations
 int o_iter;						 // number of output iterations
 int global_offset;				 // global offset for the output data for the kernel
@@ -84,6 +71,8 @@ data_type *kernel;                // Conv kernel buffers (format GO x GI x CPO x
                                   // DWS conv kernel buffers (format I x KW x KH + I x O) [DW + PW]
 data_type *bias;                  // Conv bias buffers (format O)
 data_type *out_cpu;               // Output data buffer for cpu (format O x W x H)
+
+FILE *fp;
 
 // -------------------------------------------------------------------------------------------------
 // Functions
@@ -112,23 +101,39 @@ void deallocate_buffers() {
   free(out_cpu);
 }
 
-// init_arguments. Initializes the arguments
-void init_arguments() {
-  W = 4;
-  H = 4;
-  I = 8;
-  O = 5;
-  I_kernel = 8;
-  O_kernel = 8;
-  i_iter = (I + CPI - 1) / CPI;
-  o_iter = (O + CPO - 1) / CPO;
-  enable_upper_padding = 1;
-  enable_lower_padding = 1;
-  rows = H;
-  enable_relu = 0;
-  global_offset = 0;
-  GI = I_kernel / CPI;
-  GO = O_kernel / CPO;
+int open_test_file() {
+ fp=fopen("input.data","r");
+ if (fp==NULL) {
+   printf("error, input data file not found\n");
+   return 1;
+ }
+ return 0;
+}
+
+int read_test_file(int *enable) {
+ // number of inputs
+ int n = fscanf(fp, "ENABLE %d %dx%dx%dx%d EUP %d ELP %d RELU %d SHIFT %d DIRECTION_SHIFT %d POS_SHIFT %d CLIP %d MINCLIP %d MAXCLIP %d\n",
+            enable, &H, &W, &I, &O, &enable_upper_padding, &enable_lower_padding, &enable_relu, &enable_shift, &direction_shift, &pos_shift,
+	    &enable_clipping, &min_clip, &max_clip);
+
+ if (n != 14) return 1;
+
+ // derived arguments
+ rows = H;
+ I_kernel = ((I + (CPI - 1)) / CPI) * CPI;
+ O_kernel = ((O + (CPO - 1)) / CPO) * CPO;
+ i_iter = (I + (CPI - 1)) / CPI;
+ o_iter = (O + (CPO - 1)) / CPO;
+ global_offset = 0;
+ GI = I_kernel / CPI;
+ GO = O_kernel / CPO;
+
+ return 0;
+}
+
+int close_test_file() {
+  fclose(fp);
+  return 0;
 }
 
 // cpu_conv2d. Performs the convolutions on the cpu
@@ -211,20 +216,25 @@ void cpu_conv2D() {
 }
 
 // check_result function. Checks output produced by the CPU and by the FPGA
-int check_result() {
+int check_result(data_type *max_difference, int *num_elements_differ) {
+  *num_elements_differ = 0;
+  *max_difference = data_type(0);
+  float epsilon = 0.0001;
 
   for (int cout=0; cout < O; cout++) {
     for (int h=0; h<H; h++) {
       for (int w=0; w<W; w++) {
         // data_out pixel position
         int addr_o = (cout * W * H) + (h * W) + w;
-        if (fabs(float(out_cpu[addr_o]) - float(out[addr_o])) > 0.001) {
-          return 1;
+        data_type diff = fabs(float(out_cpu[addr_o]) - float(out[addr_o]));
+        if (diff > epsilon) {
+          (*num_elements_differ)++;
+          if (*max_difference < diff) *max_difference = diff;
         }
       }
     }
   }
-  return 0;
+  return (*num_elements_differ != 0);
 }
 
 void print_bias() {
@@ -316,16 +326,6 @@ void print_output() {
 	}
 }
 
-void print_configuration() {
-  printf("Test:\n");
-  printf("  Input shape            : [%d ch x %d rows x %d cols]\n", I, H, W);
-  printf("  Ouput shape            : [%d ch x %d rows x %d cols]\n", O, H, W);
-  printf("  Kernel size            : %d x %d\n", KW, KH);
-  printf("  Stride                 : 1 x 1\n");
-  printf("  Padding                : 1 x 1\n");
-  printf("  Apply RELU             : %s\n", enable_relu?"Yes":"No");
-}
-
 void init_data() {
   std::random_device rd;
   std::mt19937 gen(rd());
@@ -335,7 +335,7 @@ void init_data() {
   for (int i=0; i<I; i++) {
     for (int h=0; h<H; h++) {
       for (int w=0; w<W; w++) {
-        data_in[addr] = i+1; //dist(gen);
+        data_in[addr] = dist(gen);
         addr++;
       }
     }
@@ -357,7 +357,7 @@ void init_data() {
                        (ki * KH * KW) +
                        (kh * KW) +
                        kw;
-          if ((i<I) && (o<O)) kernel[addr_k] = kernel_id; //  dist(gen);
+          if ((i<I) && (o<O)) kernel[addr_k] = dist(gen);
           else kernel[addr_k] = 0;
 	    }
 	  }
@@ -387,36 +387,54 @@ void init_data() {
   }
 #endif
 
-  for (int cout=0; cout<O; cout++) bias[cout] = cout; //dist(gen);
+  for (int cout=0; cout<O; cout++) bias[cout] = dist(gen);
 }
 
 int main() {
 
  int retval = 0;
+ int global_retval = 0;
+ 
+ if (open_test_file() == 1) return 1;
 
- init_arguments();
- print_configuration();
- allocate_buffers();
- init_data();
+ int enable;
+ while (!read_test_file(&enable)) {
 
-#ifdef DEBUG_CPU
- print_input();
- print_bias();
- print_kernel();
-#endif
+   if (enable) {
+     allocate_buffers();
+     init_data();
 
- k_conv2D((ap_uint<512> *)data_in, H, W, rows, I, O, i_iter, o_iter, enable_relu, kernel, (pixel_out_t *)bias, (ap_uint<512> *)out, global_offset, enable_upper_padding, enable_lower_padding);
+     #ifdef DEBUG_CPU
+     print_input();
+     print_bias();
+     print_kernel();
+     #endif
 
- cpu_conv2D();
- retval = check_result();
+     k_conv2D((ap_uint<512> *)data_in, H, W, rows, I, O, i_iter, o_iter, enable_relu, kernel, (pixel_out_t *)bias, (ap_uint<512> *)out, global_offset, enable_upper_padding, enable_lower_padding);
 
-#ifdef DEBUG_CPU
- print_output();
-#endif
+     cpu_conv2D();
+     int num_differences;
+     data_type max_difference;
+     retval = check_result(&max_difference, &num_differences);
 
- deallocate_buffers();
+     if (retval) printf("  Data=%3d x %3d x %3d x %3d K=%3d x %3d S=%3d x %3d P=%3d x %3d RELU=%s CLIP=%s SHIFT=%s ====> FAIL (max diff %20.18f, num differences %d)\n", H, W, I, O, KH, KW, 1, 1, 1, 1, enable_relu?"Yes":"No",
+    		 	 	 enable_clipping?"Yes":"No", enable_shift?"Yes":"No", max_difference, num_differences);
+     else printf("  Data=%3d x %3d x %3d x %3d K=%3d x %3d S=%3d x %3d P=%3d x %3d RELU=%s CLIP=%s SHIFT=%s ====> SUCCESS\n", H, W, I, O, KH, KW, 1, 1, 1, 1, enable_relu?"Yes":"No",
+    		 	 	 enable_clipping?"Yes":"No", enable_shift?"Yes":"No");
 
- if(retval == 0){
+     #ifdef DEBUG_CPU
+     print_output();
+     #endif
+
+     deallocate_buffers();
+
+     global_retval = global_retval || retval;
+   }
+ }
+
+ close_test_file();
+
+ if(global_retval == 0){
    printf("    *** *** *** *** \n");
    printf("    Results are good \n");
    printf("    *** *** *** *** \n");
@@ -427,5 +445,5 @@ int main() {
  }
 
  // Return 0 if outputs are correct
- return retval;
+ return global_retval;
 }
