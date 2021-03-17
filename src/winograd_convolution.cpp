@@ -11,7 +11,7 @@
 //   in     : input stream (format pixel_in_t)
 //   out    : output stream (format frame_d_2)
 //
-static void cvt_winograd(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<frame_d_2> &out) {
+static void cvt_winograd(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<frame_d> &out) {
 
 	#ifdef DEBUG_CVT
 	printf("cvt: start\n");
@@ -24,7 +24,7 @@ static void cvt_winograd(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, 
 	pixel_in_t buffer1[WMAX+2];
 	pixel_in_t buffer2[WMAX+2];
 	pixel_in_t buffer3[WMAX+2];
-	frame_d_2 frame;
+	frame_d frame;
 	int pin_row;
 	int pin_col;
 	int row0_buffer_write;
@@ -32,17 +32,15 @@ static void cvt_winograd(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, 
 	int row2_buffer_write;
 	int row3_buffer_write;
 	int num_pixels = HH * WW;
+
 	DO_PRAGMA(HLS ARRAY_PARTITION variable=frame complete dim=0)
-    //DO_PRAGMA(HLS ARRAY_PARTITION variable=buffer0 cyclic dim=1 factor=CPI)
-    //DO_PRAGMA(HLS ARRAY_PARTITION variable=buffer1 cyclic dim=1 factor=CPI)
-    //DO_PRAGMA(HLS ARRAY_PARTITION variable=buffer2 cyclic dim=1 factor=CPI)
-	//DO_PRAGMA(HLS ARRAY_PARTITION variable=buffer3 cyclic dim=1 factor=CPI)
+
 
 	// manually flattened loop (for the purposes of getting the expected pipelined design)
 	int p = 0;
 	int num_iters = I_ITER * num_pixels;
 	cvt_loop:
-	for(int i_iter = 0; i_iter < num_iters; i_iter++){
+	for(int i_iter = 0; i_iter <= num_iters; i_iter++){
 	  DO_PRAGMA(HLS loop_tripcount  min=1 max=(I_REFERENCE/CPI) * (H_REFERENCE+2)*(W_REFERENCE+2))
 	  DO_PRAGMA(HLS PIPELINE II=1)
 
@@ -62,6 +60,7 @@ static void cvt_winograd(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, 
 	  // get the pixel
 	  pixel_in_t pixel;
 	  DO_PRAGMA(HLS ARRAY_PARTITION variable=pixel complete dim=0)
+	  if(i_iter != num_iters)
 	  pixel = in.read();
 
 	  // row buffer write (in which buffer row we write the pixel)
@@ -108,31 +107,40 @@ static void cvt_winograd(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, 
 		if (shift_frame) {p13 = p14;} else if (pin_col1) {if (row0) p13 = pixel_b3; else if (row1) p13 = pixel_b0; else if (row2) p13 = pixel_b1; else p13 = pixel_b2;}
 		if (shift_frame) {p14 = p15;} else if (pin_col2) {if (row0) p14 = pixel_b3; else if (row1) p14 = pixel_b0; else if (row2) p14 = pixel_b1; else p14 = pixel_b2;}
 		if (row0) p15 = pixel_b3; else if (row1) p15 = pixel_b0; else if (row2) p15 = pixel_b1; else p15 = pixel_b2;
-		if (send_frame) {
-			int pos = 0;
-			for(int cpi = 0; cpi < CPI; cpi++){
-			  frame.pixel[0].pixel[pos] = p0.pixel[cpi]; frame.pixel[1].pixel[pos] = p1.pixel[cpi]; frame.pixel[2].pixel[pos] = p2.pixel[cpi]; frame.pixel[3].pixel[pos] = p3.pixel[cpi];
-			  frame.pixel[4].pixel[pos] = p4.pixel[cpi]; frame.pixel[5].pixel[pos] = p5.pixel[cpi]; frame.pixel[6].pixel[pos] = p6.pixel[cpi]; frame.pixel[7].pixel[pos] = p7.pixel[cpi];
-			  frame.pixel[8].pixel[pos] = p8.pixel[cpi]; frame.pixel[9].pixel[pos] = p9.pixel[cpi]; frame.pixel[10].pixel[pos] = p10.pixel[cpi]; frame.pixel[11].pixel[pos] = p11.pixel[cpi];
-			  frame.pixel[12].pixel[pos] = p12.pixel[cpi]; frame.pixel[13].pixel[pos] = p13.pixel[cpi]; frame.pixel[14].pixel[pos] = p14.pixel[cpi]; frame.pixel[15].pixel[pos] = p15.pixel[cpi];
 
-			  pos++;
-			  if(pos == CPI/2){
-				 out << frame;
-				 pos=0;
-				 #ifdef DEBUG_VERBOSE
-				  printf("cvt: frame sent:\n");
-				  for (int cpi=0; cpi<CPI/2; cpi++) {
-					printf("  cpi %d:\n", cpi);
-					printf("    %6.4f %6.4f %6.4f %6.4f\n", float(frame.pixel[0].pixel[cpi]), float(frame.pixel[1].pixel[cpi]), float(frame.pixel[2].pixel[cpi]), float(frame.pixel[3].pixel[cpi]));
-					printf("    %6.4f %6.4f %6.4f %6.4f\n", float(frame.pixel[4].pixel[cpi]), float(frame.pixel[5].pixel[cpi]), float(frame.pixel[6].pixel[cpi]), float(frame.pixel[7].pixel[cpi]));
-					printf("    %6.4f %6.4f %6.4f %6.4f\n", float(frame.pixel[8].pixel[cpi]), float(frame.pixel[9].pixel[cpi]), float(frame.pixel[10].pixel[cpi]), float(frame.pixel[11].pixel[cpi]));
-					printf("    %6.4f %6.4f %6.4f %6.4f\n", float(frame.pixel[12].pixel[cpi]), float(frame.pixel[13].pixel[cpi]), float(frame.pixel[14].pixel[cpi]),  float(frame.pixel[15].pixel[cpi]));
-				  }
-				 #endif
-			 }
+		if (send_frame) {
+			for(int cpi= 0; cpi < CPI; cpi++){
+				frame.pixel[0].pixel[cpi] = p0.pixel[cpi];
+				frame.pixel[1].pixel[cpi] = p1.pixel[cpi];
+				frame.pixel[2].pixel[cpi] = p2.pixel[cpi];
+				frame.pixel[3].pixel[cpi] = p3.pixel[cpi];
+				frame.pixel[4].pixel[cpi] = p4.pixel[cpi];
+				frame.pixel[5].pixel[cpi] = p5.pixel[cpi];
+				frame.pixel[6].pixel[cpi] = p6.pixel[cpi];
+				frame.pixel[7].pixel[cpi] = p7.pixel[cpi];
+				frame.pixel[8].pixel[cpi] = p8.pixel[cpi];
+				frame.pixel[9].pixel[cpi] = p9.pixel[cpi];
+				frame.pixel[10].pixel[cpi] = p10.pixel[cpi];
+				frame.pixel[11].pixel[cpi] = p11.pixel[cpi];
+				frame.pixel[12].pixel[cpi] = p12.pixel[cpi];
+				frame.pixel[13].pixel[cpi] = p13.pixel[cpi];
+				frame.pixel[14].pixel[cpi] = p14.pixel[cpi];
+				frame.pixel[15].pixel[cpi] = p15.pixel[cpi];
 			}
+		 out << frame;
+
+		// #ifdef DEBUG_VERBOSE
+		  printf("cvt: frame sent1 %d:\n", i_iter);
+		  for (int cpi=0; cpi<CPI/2; cpi++) {
+			printf("  cpi %d:\n", cpi);
+			printf("    %6.4f %6.4f %6.4f %6.4f\n", float(frame.pixel[0].pixel[cpi]), float(frame.pixel[1].pixel[cpi]), float(frame.pixel[2].pixel[cpi]), float(frame.pixel[3].pixel[cpi]));
+			printf("    %6.4f %6.4f %6.4f %6.4f\n", float(frame.pixel[4].pixel[cpi]), float(frame.pixel[5].pixel[cpi]), float(frame.pixel[6].pixel[cpi]), float(frame.pixel[7].pixel[cpi]));
+			printf("    %6.4f %6.4f %6.4f %6.4f\n", float(frame.pixel[8].pixel[cpi]), float(frame.pixel[9].pixel[cpi]), float(frame.pixel[10].pixel[cpi]), float(frame.pixel[11].pixel[cpi]));
+			printf("    %6.4f %6.4f %6.4f %6.4f\n", float(frame.pixel[12].pixel[cpi]), float(frame.pixel[13].pixel[cpi]), float(frame.pixel[14].pixel[cpi]),  float(frame.pixel[15].pixel[cpi]));
+		  }
+		 //#endif
 		}
+
 	  if (pin_col_curr == WW) {
 		pin_col = 0;
 		pin_row++;
@@ -155,9 +163,103 @@ static void cvt_winograd(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, 
 	  if (p == num_pixels) p = 0;
 	} //i_iter
 
+
 	#ifdef DEBUG_CVT
 	printf("cvt: end\n");
 	#endif
+}
+
+
+
+static void frameConvert(int H, int W, int I_ITER, hls::stream<frame_d> &d_in, hls::stream<frame_d_2> &out){
+	frame_d_2 subframe1;
+	frame_d_2 subframe2;
+	int send1 = 0;
+	int enable2=0;
+	frame_d frame;
+	DO_PRAGMA(HLS ARRAY_PARTITION variable=frame complete dim=0)
+	DO_PRAGMA(HLS ARRAY_PARTITION variable=subframe1 complete dim=0)
+	DO_PRAGMA(HLS ARRAY_PARTITION variable=subframe2 complete dim=0)
+
+	// Reading data
+	loop_i_iter_frameConvert:
+    for (int i_iter = 0; i_iter < I_ITER; i_iter++) {
+    	DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE/CPI)
+		loop_frames_frameConvert:
+		for (int p = 0; p < (H/2 * W/2 * 2); p++) {
+			DO_PRAGMA(HLS loop_tripcount min=1 max=(H_REFERENCE/2) * (W_REFERENCE/2))
+
+			if(p%2==0){
+
+				frame = d_in.read();
+				for(int cpi= 0; cpi < CPI/2; cpi++){
+					subframe1.pixel[0].pixel[cpi] = frame.pixel[0].pixel[cpi];
+					subframe1.pixel[1].pixel[cpi] = frame.pixel[1].pixel[cpi];
+					subframe1.pixel[2].pixel[cpi] = frame.pixel[2].pixel[cpi];
+					subframe1.pixel[3].pixel[cpi] = frame.pixel[3].pixel[cpi];
+					subframe1.pixel[4].pixel[cpi] = frame.pixel[4].pixel[cpi];
+					subframe1.pixel[5].pixel[cpi] = frame.pixel[5].pixel[cpi];
+					subframe1.pixel[6].pixel[cpi] = frame.pixel[6].pixel[cpi];
+					subframe1.pixel[7].pixel[cpi] = frame.pixel[7].pixel[cpi];
+					subframe1.pixel[8].pixel[cpi] = frame.pixel[8].pixel[cpi];
+					subframe1.pixel[9].pixel[cpi] = frame.pixel[9].pixel[cpi];
+					subframe1.pixel[10].pixel[cpi] = frame.pixel[10].pixel[cpi];
+					subframe1.pixel[11].pixel[cpi] = frame.pixel[11].pixel[cpi];
+					subframe1.pixel[12].pixel[cpi] = frame.pixel[12].pixel[cpi];
+					subframe1.pixel[13].pixel[cpi] = frame.pixel[13].pixel[cpi];
+					subframe1.pixel[14].pixel[cpi] = frame.pixel[14].pixel[cpi];
+					subframe1.pixel[15].pixel[cpi] = frame.pixel[15].pixel[cpi];
+				}
+				for(int cpi2= CPI/2; cpi2 < CPI; cpi2++){
+					subframe2.pixel[0].pixel[cpi2-CPI/2] = frame.pixel[0].pixel[cpi2];
+					subframe2.pixel[1].pixel[cpi2-CPI/2] = frame.pixel[1].pixel[cpi2];
+					subframe2.pixel[2].pixel[cpi2-CPI/2] = frame.pixel[2].pixel[cpi2];
+					subframe2.pixel[3].pixel[cpi2-CPI/2] = frame.pixel[3].pixel[cpi2];
+					subframe2.pixel[4].pixel[cpi2-CPI/2] = frame.pixel[4].pixel[cpi2];
+					subframe2.pixel[5].pixel[cpi2-CPI/2] = frame.pixel[5].pixel[cpi2];
+					subframe2.pixel[6].pixel[cpi2-CPI/2] = frame.pixel[6].pixel[cpi2];
+					subframe2.pixel[7].pixel[cpi2-CPI/2] = frame.pixel[7].pixel[cpi2];
+					subframe2.pixel[8].pixel[cpi2-CPI/2] = frame.pixel[8].pixel[cpi2];
+					subframe2.pixel[9].pixel[cpi2-CPI/2] = frame.pixel[9].pixel[cpi2];
+					subframe2.pixel[10].pixel[cpi2-CPI/2] = frame.pixel[10].pixel[cpi2];
+					subframe2.pixel[11].pixel[cpi2-CPI/2] = frame.pixel[11].pixel[cpi2];
+					subframe2.pixel[12].pixel[cpi2-CPI/2] = frame.pixel[12].pixel[cpi2];
+					subframe2.pixel[13].pixel[cpi2-CPI/2] = frame.pixel[13].pixel[cpi2];
+					subframe2.pixel[14].pixel[cpi2-CPI/2] = frame.pixel[14].pixel[cpi2];
+					subframe2.pixel[15].pixel[cpi2-CPI/2] = frame.pixel[15].pixel[cpi2];
+				}
+				out << subframe1;
+
+				// #ifdef DEBUG_VERBOSE
+				  printf("cvt: frame sent1 %d:\n", i_iter);
+				  for (int cpi=0; cpi<CPI/2; cpi++) {
+					printf("  cpi %d:\n", cpi);
+					printf("    %6.4f %6.4f %6.4f %6.4f\n", float(subframe1.pixel[0].pixel[cpi]), float(subframe1.pixel[1].pixel[cpi]), float(subframe1.pixel[2].pixel[cpi]), float(subframe1.pixel[3].pixel[cpi]));
+					printf("    %6.4f %6.4f %6.4f %6.4f\n", float(subframe1.pixel[4].pixel[cpi]), float(subframe1.pixel[5].pixel[cpi]), float(subframe1.pixel[6].pixel[cpi]), float(subframe1.pixel[7].pixel[cpi]));
+					printf("    %6.4f %6.4f %6.4f %6.4f\n", float(subframe1.pixel[8].pixel[cpi]), float(subframe1.pixel[9].pixel[cpi]), float(subframe1.pixel[10].pixel[cpi]), float(subframe1.pixel[11].pixel[cpi]));
+					printf("    %6.4f %6.4f %6.4f %6.4f\n", float(subframe1.pixel[12].pixel[cpi]), float(subframe1.pixel[13].pixel[cpi]), float(subframe1.pixel[14].pixel[cpi]),  float(subframe1.pixel[15].pixel[cpi]));
+				  }
+				 //#endif
+
+			}
+
+			if (p%2==1) {
+				 out << subframe2;
+				 //#ifdef DEBUG_VERBOSE
+				  printf("cvt: frame sent2 %d:\n", i_iter);
+				  for (int cpi=0; cpi<CPI/2; cpi++) {
+					printf("  cpi %d:\n", cpi);
+					printf("    %6.4f %6.4f %6.4f %6.4f\n", float(subframe2.pixel[0].pixel[cpi]), float(subframe2.pixel[1].pixel[cpi]), float(subframe2.pixel[2].pixel[cpi]), float(subframe2.pixel[3].pixel[cpi]));
+					printf("    %6.4f %6.4f %6.4f %6.4f\n", float(subframe2.pixel[4].pixel[cpi]), float(subframe2.pixel[5].pixel[cpi]), float(subframe2.pixel[6].pixel[cpi]), float(subframe2.pixel[7].pixel[cpi]));
+					printf("    %6.4f %6.4f %6.4f %6.4f\n", float(subframe2.pixel[8].pixel[cpi]), float(subframe2.pixel[9].pixel[cpi]), float(subframe2.pixel[10].pixel[cpi]), float(subframe2.pixel[11].pixel[cpi]));
+					printf("    %6.4f %6.4f %6.4f %6.4f\n", float(subframe2.pixel[12].pixel[cpi]), float(subframe2.pixel[13].pixel[cpi]), float(subframe2.pixel[14].pixel[cpi]),  float(subframe2.pixel[15].pixel[cpi]));
+				  }
+				 //#endif
+			}
+
+		}
+    }
+
 }
 
 // ----------------------------------------------------------------------------------------
@@ -632,22 +734,24 @@ void winograd_conv(int H, int W, int I_ITER, int enable_upper_padding, int enabl
 
   // streams
   static hls::stream<pixel_in_t>  str_pad_cvt;  // padding->cvt
+  static hls::stream<frame_d>   cvt_frameConvert;  // cvt->mul para obtener CtDC
   static hls::stream<frame_d_2>   str_cvt_mul_cTc;  // cvt->mul para obtener CtDC
   static hls::stream<frame_d>     kernels_multWise;  // GgGt con los kernels -> mult wise con CtDC
   static hls::stream<frame_d_2>   mult_data_res;  // CtD -> mult wise
   static hls::stream<frame_d>     mult_wise_res;  // GgGt con los kernels -> mult wise con CtDC
   static hls::stream<frame_m> 	  str_mul_add;  // mul->add
   DO_PRAGMA(HLS stream variable=str_pad_cvt depth=CPI)
-  DO_PRAGMA(HLS stream variable=str_cvt_mul_cTc depth=CPI/2)
+  DO_PRAGMA(HLS stream variable=str_cvt_mul_cTc depth=CPI)
   DO_PRAGMA(HLS stream variable=kernels_multWise depth=CPI)
-  DO_PRAGMA(HLS stream variable=mult_data_res depth=CPO/2)
+  DO_PRAGMA(HLS stream variable=mult_data_res depth=CPO)
   DO_PRAGMA(HLS stream variable=mult_wise_res depth=CPO)
   DO_PRAGMA(HLS stream variable=str_mul_add depth=CPO)
 
   // topology
   #pragma HLS dataflow
   padding(H, W, I_ITER, enable_upper_padding, enable_lower_padding, in, str_pad_cvt);   // padding
-  cvt_winograd(H, W, I_ITER, str_pad_cvt, str_cvt_mul_cTc);       							// cvt
+  cvt_winograd(H, W, I_ITER, str_pad_cvt, cvt_frameConvert);       							// cvt
+  frameConvert(H, W, I_ITER, cvt_frameConvert, str_cvt_mul_cTc);
   mulKernels(H, W, I_ITER, k_in, kernels_multWise); // mulkernels
   mulData(H, W, I_ITER, str_cvt_mul_cTc, mult_data_res); // mul
   mulWise(H, W, I_ITER, mult_data_res, kernels_multWise, mult_wise_res); // mul
