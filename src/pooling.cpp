@@ -22,151 +22,159 @@ struct frame_pool_t {
 * The output data format is (KH, KW, CPI)
 * 
 * Parameters:
-* 	H   	: Height of the input image
-* 	W		: Width of the input image
-*	I_ITER 	: Input iterations (I / CPI)
-* 	in		: Input stream (pixel_out_t) 
-*	out 	: Output stream (frame_pool_t)
+* 	H   	       : Height of the input image
+* 	W		       : Width of the input image
+* 	enable_pooling : Activates pooling
+* 	in		       : Input stream (pixel_out_t)
+*	out 	       : Output stream (frame_pool_t)
+*
+*	In case enable_pooling is not set, the module bypasses the input
+*	to the output, sending the pixel on the first position of the output frame.
 */
-static void cvt_pooling(int H, int W, int I_ITER, hls::stream<pixel_out_t> &in, hls::stream<frame_pool_t> &out) {
+static void pool_cvt(int H, int W, int enable_pooling, hls::stream<pixel_out_t> &in, hls::stream<frame_pool_t> &out) {
 
 	frame_pool_t kernel;
-	pixel_out_t buffer[KH][WMAX];
-	int row0_write;
-	int row0;
-	int shift_frame, send_frame;
-	int p, pin_row, pin_col;
+	pixel_out_t  buffer0[WMAX];
+	pixel_out_t  buffer1[WMAX];
+	int          row0;
+	int          shift_frame;
+	int          send_frame;
+	int          odd_col = 0;       // whether we are in an odd col (so to be able to send a frame)
+	int          pin_row = 0;
+	int          pin_col = 0;
+	int          row_write;			// either 0 or 1 (we assume 2x2 kernel)
+	int          size_channel = H * W;
+	int          iterations = size_channel;
+	pixel_out_t  pixel;
+	pixel_out_t  p0, p1, p2, p3;
+	pixel_out_t  pix_b0, pix_b1;
+    //DO_PRAGMA(HLS AGGREGATE variable=pixel)
 
-	pixel_out_t p0, p1, p2, p3;
-	pixel_out_t pix_b0, pix_b1;
-
-	/* These pragmas were not tested */
-	DO_PRAGMA(HLS data_pack variable=p0);
-	DO_PRAGMA(HLS data_pack variable=p1);
-	DO_PRAGMA(HLS data_pack variable=p2);
-	DO_PRAGMA(HLS data_pack variable=p3);
-
-	DO_PRAGMA(HLS data_pack variable=kernel);
-	DO_PRAGMA(HLS data_pack variable=buffer);
-	DO_PRAGMA(HLS ARRAY_PARTITION variable=buffer cyclic dim=2 factor=CPI);
-	DO_PRAGMA(HLS ARRAY_PARTITION variable=buffer cyclic dim=1 factor=KH);
-
-	int size_channel = H * W;
-	int iterations = I_ITER * size_channel;
-
+	cvt_pooling_iterations:
 	for (int i=0; i < iterations; i++) {
+		DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=(I_REFERENCE/CPI) * W_REFERENCE * H_REFERENCE)
 		#pragma HLS PIPELINE II=1
 
-		if (!p) {
-			pin_row = 0;
-			pin_col = 0;
-		}
-
-		pixel_out_t pixel;
+		// Let's read CPI pixels
 		pixel = in.read();
 
-		row0_write = (pin_row % KH_POOLING) == 0;
-		row0 = (pin_row <= 1) | ((pin_row % KH_POOLING) == 1);
+		if (enable_pooling) {
 
-		buffer[row0_write][pin_col] = pixel;
+		  row_write = pin_row % 2;
 
-		shift_frame = (pin_row > 0) & (pin_col > 1);
-		send_frame = (pin_row > 0) & (pin_col > 0);
-		send_frame &= ((pin_row & SH_POOLING == 1) && (pin_col % SW_POOLING == 1));
+  		  // Let's compute shift and send flag variables
+		  shift_frame = (pin_row > 0) & (pin_col > 1);
+		  send_frame = row_write & odd_col;
+		  row0 = (row_write == 0);
 
-		pix_b0 = buffer[0][pin_col];
-		pix_b1 = buffer[1][pin_col];
+		  // Let's write on the buffer and at the same time
+		  // we set the two pixels pix_b0 and pix_b1
+	      if (row_write==0) {
+	    	  buffer0[pin_col] = pixel;
+	    	  pix_b0 = pixel;
+	    	  pix_b1 = buffer1[pin_col];
+	      } else {
+	    	  buffer1[pin_col] = pixel;
+	    	  pix_b0 = buffer0[pin_col];
+	    	  pix_b1 = pixel;
+	      }
 
-		/* p0 p1 */
-		if (shift_frame) {p0 = p1; } else if (!pin_col) {if (row0) p0 = pix_b0; else p0 = pix_b1; }
-		if (row0) p1 = pix_b0; else p1 = pix_b1;
+		  /* p0 p1 */
+		  if (shift_frame) {p0 = p1;} else if (pin_col == 0) p0 = pix_b0;
+		  p1 = pix_b0;
 
-		/* p2 p3 */
-		if (shift_frame) {p2 = p3; } else if (!pin_col) {if (row0) p2 = pix_b1; else p1 = pix_b0; }
-		if (row0) p3 = pix_b1; else p2 = pix_b0;
+		  /* p2 p3 */
+		  if (shift_frame) {p2 = p3;} else if (!pin_col) p2 = pix_b1;
+		  p3 = pix_b1;
 
-		if (send_frame) {
-			kernel.pixel[0] = p0; kernel.pixel[1] = p1;
-			kernel.pixel[2] = p2; kernel.pixel[3] = p3;
-
-			out << kernel;
-		}
-
-		/* Control the iteration count */
-		if (pin_col == W) {
+  		  /* Control the iteration count */
+		  pin_col++;
+		  odd_col = (odd_col + 1) % 2;
+		  if (pin_col == W) {
 			pin_col = 0;
 			pin_row++;
+			if (pin_row == H) pin_row = 0;
+		  }
+
+		  if (send_frame) {
+     	    kernel.pixel[0] = p0; kernel.pixel[1] = p1;
+			kernel.pixel[2] = p2; kernel.pixel[3] = p3;
+			out << kernel;
+		  }
+		} else {
+          kernel.pixel[0] = pixel;
+          out << kernel;
 		}
-		
-		p++;
-		if (p == size_channel) p = 0;
 	}
 }
 
 /*
 * Pooling operation of the layer
-* If USE_MAXPOOLING defined, the MaxPooling is done.
-* If USE_AVGPOOLING defined, the AvgPooling is done.
 *
 * Parameters:
-* 	HO		: Height of the output image
-*	WO		: Width of the output image
-*   I_ITER 	: Input iterations (I / CPO) CPI if CPI=CPO
-*   in		: Input stream (frame_pool_t) from the cvt module
-*   out		: Output stream (pixel_out_t)
+* 	HO		          : Height of the output image
+*	WO		          : Width of the output image
+*	enable_maxpooling : Activates maxpooling operation
+*	enable_avgpooling : Activates avgpooling operation
+*   in		          : Input stream (frame_pool_t) from the cvt module
+*   out		          : Output stream (pixel_out_t)
+*
+*   If no enable is active then the module bypasses the first pixel of the incomming frame to the output stream
 */
-static void fn_pooling(int HO, int WO, int I_ITER, hls::stream<frame_pool_t> &in, hls::stream<pixel_out_t> &out) {
+static void pool_pooling(int HO, int WO, int enable_maxpooling, int enable_avgpooling, hls::stream<frame_pool_t> &in, hls::stream<pixel_out_t> &out) {
 	
 	frame_pool_t kernel;
 	pixel_out_t out_pix;
 	
 	int size_out = HO * WO;
 	int size_kernel = KH_POOLING * KW_POOLING;
-	int iterations = I_ITER * size_out;
+	int iterations = size_out;
+	int enable_pooling = enable_maxpooling | enable_avgpooling;
 
+	pooling_loop_iter:
 	for (int i=0; i < iterations; i++) {
+		DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=((I_REFERENCE / CPI) * W_REFERENCE * H_REFERENCE) / 4)
 		#pragma HLS PIPELINE II=1
 
+		// Let's read the input frame
 		kernel = in.read();
 
-		for (int cpo=0; cpo < CPO; cpo++) { /* We assume that CPI=CPO */
-			data_type pool_value;
+        pooling_loop_cpo:
+		for (int cpo=0; cpo < CPO; cpo++) {
+          #pragma HLS UNROLL
 
-			for (int k=0; k < size_kernel; k++) {
-				data_type value = kernel.pixel[k].pixel[cpo];
+		  data_type maxpool_value = -99999;
+		  data_type avgpool_value = 0;
 
-				#ifdef USE_MAXPOOLING
-					pool_value = (value > pool_value) ? value;
-				#endif
-				#ifdef USE_AVGPOOLING
-					pool_value += value;
-				#endif
-			}
-			#ifdef USE_AVGPOOLING
-				pool_value /= size_kernel;
-			#endif
+		  pooling_loop_kernel:
+		  for (int k=0; k < size_kernel; k++) {
+			DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=W_REFERENCE * H_REFERENCE)
 
-			out_pix.pixel[cpo] = pool_value;
+			data_type value = kernel.pixel[k].pixel[cpo];
+
+			if (value > maxpool_value) maxpool_value = value;
+			avgpool_value += value;
+		  }
+		  avgpool_value /= size_kernel;
+
+		  out_pix.pixel[cpo] = enable_maxpooling ? maxpool_value : enable_avgpooling ? avgpool_value : kernel.pixel[0].pixel[cpo];
 		}
+
 		out << out_pix;
 	}
 }
 
-void pooling(int H, int W, int I_ITER, hls::stream<pixel_out_t> &input, hls::stream<pixel_out_t> &output) {
-	#pragma HLS INTERFACE s_axilite port=H bundle=control
-	#pragma HLS INTERFACE s_axilite port=W bundle=control
-	#pragma HLS INTERFACE s_axilite port=I_ITER bundle=control
-	#pragma HLS INTERFACE ap_fifo port=input
-	#pragma HLS INTERFACE ap_fifo port=output
+void pooling(int H, int W, int enable_maxpooling, int enable_avgpooling, hls::stream<pixel_out_t> &input, hls::stream<pixel_out_t> &output) {
 
-	static hls::stream<frame_pool_t> stream_pool ("stream_pool");
+	static hls::stream<frame_pool_t> stream_pool;
+    DO_PRAGMA(HLS STREAM variable=stream_pool depth=32)
 
-	#pragma HLS STREAM variable=str_pool
+	int enable_pooling = enable_maxpooling | enable_avgpooling;
 
-	int WO = (int) ((W - KW_POOLING)/SW_POOLING + 1);
-	int HO = (int) ((H - KH_POOLING)/SH_POOLING + 1);
+	int WO = enable_pooling ? ((W - KW_POOLING)/SW_POOLING + 1) : W;
+	int HO = enable_pooling ? ((H - KH_POOLING)/SH_POOLING + 1) : H;
 
 	#pragma HLS DATAFLOW
-	cvt_pooling(H, W, I_ITER, input, stream_pool);
-	fn_pooling(HO, WO, I_ITER, stream_pool, output);
+	pool_cvt(H, W, enable_pooling, input, stream_pool);
+	pool_pooling(HO, WO, enable_maxpooling, enable_avgpooling, stream_pool, output);
 }

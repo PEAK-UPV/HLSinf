@@ -42,24 +42,24 @@
 #define WMAX            256   // Maximum image width
 #define HMAX            256   // Maximum image height
 #define CPI               4   // Basic kernel number of input channels
-#define CPO              16   // Basic kernel number of output channels
-#define LOG2_CPO	      4   // number of bits for CPO (if you change CPO please change LOG2_CPO accordingly)
+#define CPO               4   // Basic kernel number of output channels
+#define LOG2_CPO	      2   // number of bits for CPO (if you change CPO please change LOG2_CPO accordingly)
 #define KW                3   // Convolutional kernel width
 #define KH                3   // Convolutional kernel height
 
 // -----------------------------------------------------------------------------------------------------------
 // Defines for the added modules to the conv layer
 // -----------------------------------------------------------------------------------------------------------
-#define USE_RELU		      // Enables the use of the ReLU activation
-#define USE_CLIPPING          // Enables the use of the clipping function (implemented in the ReLU module)
-//#define USE_SHIFT             // Enables the use of the shift function (implemented in the ReLU module)
-							  // The shift function must be used only for ap_int data types
-//#define USE_MAXPOOLING		  // Enables the use of the Maxpooling function
+#define USE_RELU		   // Enables the use of the ReLU activation
+//#define USE_CLIPPING     // Enables the use of the clipping function (implemented in the ReLU module)
+//#define USE_SHIFT        // Enables the use of the shift function (implemented in the ReLU module)
+						   // The shift function must be used only for ap_int data types
+#define USE_POOLING		   // Enables the use of the Pooling function (maxpooling or avgpooling)
 
 // -----------------------------------------------------------------------------------------------------------
 // Defines for the POOLING layer (USE_MAXPOOLING or USE_AVGPOOLING must be defined)
 // -----------------------------------------------------------------------------------------------------------
-#define KW_POOLING	   2	  // Maxpooling kernel width
+#define KW_POOLING	   2   // Maxpooling kernel width
 #define KH_POOLING     2   // Maxpooling kernel height
 #define SW_POOLING     2   // MAxpooling horizontal stride
 #define SH_POOLING     2   // MAxpooling vertical stride
@@ -69,7 +69,7 @@
 // Change those values and run C Synthesis in order to obtain the delay of the kernel
 // -----------------------------------------------------------------------------------------------------------
 #define I_REFERENCE       4  // I for delay estimation (must be equal or higher than CPI)
-#define O_REFERENCE      16  // O for delay estimation (must be equal or higher than CPO)
+#define O_REFERENCE       4  // O for delay estimation (must be equal or higher than CPO)
 #define W_REFERENCE     256  // W for delay estimation
 #define H_REFERENCE     256  // H for delay estimation
 
@@ -151,7 +151,7 @@ struct write_block_t {
 
 // -----------------------------------------------------------------------------------------------------------
 // function prototypes
-extern "C" void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int I_ITER, int O_ITER, int enable_relu, data_type *ptr_kernel, pixel_out_t *ptr_bias, ap_uint<512> *ptr_out, int global_offset, int enable_upper_padding, int enable_lower_padding);
+extern "C" void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int I_ITER, int O_ITER, int enable_relu, data_type *ptr_kernel, pixel_out_t *ptr_bias, ap_uint<512> *ptr_out, int global_offset, int enable_upper_padding, int enable_lower_padding, int enable_maxpooling, int enable_avgpooling);
 
 void serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int channel_size, int offset, hls::stream<read_block_t> &in, hls::stream<data_type> &out, int first_channel, int I);
 template <int LEVELS> void ch_serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int channel_size, int *offset_read_data_channel_i, hls::stream<read_block_t> stream_data_ch_0[LEVELS], hls::stream<data_type> stream_data_ch_1[LEVELS], int I){
@@ -189,6 +189,9 @@ void split(int H, int W, int *block_offset_channel, int num_blocks_channel, hls:
 // activation functions
 void relu(int enable_relu, int enable_clipping, int enable_shift, int min_clip, int max_clip, int direction_shift, int pos_shift,
 		  int H, int W, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &out);
+
+// pooling function
+void pooling(int H, int W, int enable_maxpooling, int enable_avgpooling, hls::stream<pixel_out_t> &input, hls::stream<pixel_out_t> &output);
 
 // padding functions
 void padding(int H, int W, int I_ITER, int enable_upper_padding, int enable_lower_padding, hls::stream<pixel_in_t> &in, hls::stream<pixel_in_t> &out);
