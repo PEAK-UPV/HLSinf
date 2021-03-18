@@ -1,0 +1,16 @@
+ - Solve the timing violation at write module for CPO>4. 
+   Suggestion: Flatten the write_data_channels_loop_blocks and write_data_channels_loop_cpo loops manually
+   Suggestion: block_offset does not need to be partitioned as the loop is pipelined
+
+ - 8x8 FP32 does not converge in block-level synthesis (try Vitis 2020.2)
+   Suggestion, reduce HMAX to 128 and try
+   Target SLR0 (larger than SLR1) - PEAK6 (4x8)
+   Unbound design to SLR and check performance
+
+ - Install OpenCL in peak7 (and in peak1?)
+
+ - IMPLEMENTATION & VALIDATION
+
+    - DIRECT_CONV 4x4 FP32 : on peak6
+    - DIRECT_CONV 4x4 APF8 : on peak7
+    - DIRECT_CONV 4x4 API8 : on peak1

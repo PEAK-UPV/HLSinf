@@ -74,7 +74,7 @@ void read_kernel(int I_ITER, int offset_kernel, data_type *k_ptr, hls::stream<ke
 	  for (int cpo=0; cpo<CPO; cpo++) {
 		  for (int cpi=0; cpi<CPI; cpi++) {
 		      printf("READ_KERNEL: Kernel read for cpi=%d cpo=%d : ", cpi, cpo);
-		      for (int p=0;p<9; p++) printf(" %6.4f ", k.pixel[cpo][cpi][p]);
+		      for (int p=0;p<9; p++) printf(" %6.4f ", float(k.pixel[cpo][cpi][p]));
 		      printf("\n");
 		  }
 	  }

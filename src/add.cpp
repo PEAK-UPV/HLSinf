@@ -34,7 +34,7 @@ void add(int H, int W, int I_ITER, hls::stream<pixel_out_t> &in, hls::stream<pix
 
   #ifdef DEBUG_ADD
   for (int b=0; b<CPO; b++) {
-    printf("Bias[%d] = %6.4f \n", b, float(bias[b]));
+    printf("Bias[%d] = %6.4f \n", b, float(bias.pixel[b]));
   }
   printf("add: bias received\n");
   for(int cpo = 0; cpo<CPO; cpo++){

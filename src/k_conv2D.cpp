@@ -42,7 +42,8 @@ void set_channel_write_blocks(int num_channel_write_blocks[CPO], int addr[CPO], 
 extern "C" {
 
 void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int I_ITER, int O_ITER, int enable_relu,
-              data_type *ptr_kernel, pixel_out_t *ptr_bias, ap_uint<512> *ptr_out, int global_offset, int enable_upper_padding, int enable_lower_padding, int enable_maxpooling, int enable_avgpooling) {
+              data_type *ptr_kernel, pixel_out_t *ptr_bias, ap_uint<512> *ptr_out, int global_offset, int enable_upper_padding, int enable_lower_padding, int enable_maxpooling, int enable_avgpooling,
+			  int enable_clipping, int enable_shift, data_type min_clip, data_type max_clip, int dir_shift, int pos_shift) {
 	#pragma HLS INTERFACE m_axi port=ptr_data   depth=1024 offset=slave bundle=gmem
 	#pragma HLS INTERFACE m_axi port=ptr_kernel depth=1024 offset=slave bundle=gmem1
 	#pragma HLS INTERFACE m_axi port=ptr_bias   depth=1024 offset=slave bundle=gmem2
@@ -183,13 +184,7 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
 
     // Relu, Clipping, shift
     #if defined(USE_RELU) || defined(USE_CLIPPING) || defined(USE_SHIFT)
-    int enable_clipping = 0;
-    int enable_shift = 0;
-    int min_clip = 0;
-    int max_clip = 0;
-    int direction_shift = 0;
-    int pos_shift = 0;
-    relu(enable_relu, enable_clipping, enable_shift, min_clip, max_clip, direction_shift, pos_shift, rows, W, out_conv, out_relu);
+    relu(enable_relu, enable_clipping, enable_shift, min_clip, max_clip, dir_shift, pos_shift, rows, W, out_conv, out_relu);
 
       // Pooling: avgpooling or maxpooling
       #ifdef USE_POOLING

@@ -50,13 +50,24 @@ static void pool_cvt(int H, int W, int enable_pooling, hls::stream<pixel_out_t> 
 	pixel_out_t  pix_b0, pix_b1;
     //DO_PRAGMA(HLS AGGREGATE variable=pixel)
 
+    #ifdef DEBUG_POOL
+	printf("DEBUG_POOL: starts (cvt)\n");
+    #endif
+
+
 	cvt_pooling_iterations:
 	for (int i=0; i < iterations; i++) {
 		DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=(I_REFERENCE/CPI) * W_REFERENCE * H_REFERENCE)
-		#pragma HLS PIPELINE II=1
+		#pragma HLS PIPELINE
 
 		// Let's read CPI pixels
 		pixel = in.read();
+
+        #ifdef DEBUG_POOL
+		printf("DEBUG_POOL: pixel read: ");
+		for (int x=0; x<CPO; x++) printf(" %f ", float(pixel.pixel[x]));
+		printf("\n");
+        #endif
 
 		if (enable_pooling) {
 
@@ -100,12 +111,21 @@ static void pool_cvt(int H, int W, int enable_pooling, hls::stream<pixel_out_t> 
      	    kernel.pixel[0] = p0; kernel.pixel[1] = p1;
 			kernel.pixel[2] = p2; kernel.pixel[3] = p3;
 			out << kernel;
+            #ifdef DEBUG_POOL
+			printf("DEBUG_POOL: Send Frame:\n");
+			for (int x=0; x<CPO; x++) printf(" cpo %d: %f %f %f %f\n", x, float(p0.pixel[x]), float(p1.pixel[x]), float(p2.pixel[x]), float(p3.pixel[x]));
+            #endif
 		  }
 		} else {
           kernel.pixel[0] = pixel;
           out << kernel;
 		}
 	}
+
+    #ifdef DEBUG_POOL
+    printf("DEBUG_POOL: ends (cvt)\n");
+    #endif
+
 }
 
 /*
@@ -131,6 +151,10 @@ static void pool_pooling(int HO, int WO, int enable_maxpooling, int enable_avgpo
 	int iterations = size_out;
 	int enable_pooling = enable_maxpooling | enable_avgpooling;
 
+    #ifdef DEBUG_POOL
+	printf("DEBUG_POOL: Starts (pooling)\n");
+    #endif
+
 	pooling_loop_iter:
 	for (int i=0; i < iterations; i++) {
 		DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=((I_REFERENCE / CPI) * W_REFERENCE * H_REFERENCE) / 4)
@@ -139,11 +163,20 @@ static void pool_pooling(int HO, int WO, int enable_maxpooling, int enable_avgpo
 		// Let's read the input frame
 		kernel = in.read();
 
+        #ifdef DEBUG_POOL
+		printf("DEBUG_POOL: read ");
+		for (int x=0; x<CPO; x++) {
+			printf("cpo %d: ", x);
+			for (int xx=0; xx<size_kernel; xx++) printf(" %f", float(kernel.pixel[xx].pixel[x]));
+			printf("\n");
+		}
+        #endif
+
         pooling_loop_cpo:
 		for (int cpo=0; cpo < CPO; cpo++) {
           #pragma HLS UNROLL
 
-		  data_type maxpool_value = -99999;
+		  data_type maxpool_value = MIN_DATA_TYPE_VALUE;
 		  data_type avgpool_value = 0;
 
 		  pooling_loop_kernel:
@@ -161,7 +194,15 @@ static void pool_pooling(int HO, int WO, int enable_maxpooling, int enable_avgpo
 		}
 
 		out << out_pix;
+        #ifdef DEBUG_POOL
+		printf("DEBUG_POOL: send pixel: ");
+		for (int x=0; x<CPO; x++) printf(" %f", float(out_pix.pixel[x]));
+        #endif
 	}
+
+    #ifdef DEBUG_POOL
+    printf("DEBUG_POOL: Ends (pooling)\n");
+    #endif
 }
 
 void pooling(int H, int W, int enable_maxpooling, int enable_avgpooling, hls::stream<pixel_out_t> &input, hls::stream<pixel_out_t> &output) {

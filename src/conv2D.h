@@ -7,34 +7,20 @@
 #include <hls_stream.h>
 
 // -----------------------------------------------------------------------------------------------------------
-// Convolution type (direct, winograd, deepwise separable)
-// Select only one type of convolution
+// Convolution type
+// Select only one type
 // -----------------------------------------------------------------------------------------------------------
-#define DIRECT_CONV
-//#define WINOGRAD_CONV
-//#define DWS_CONV
+#define DIRECT_CONV			// Direct convolution
+//#define WINOGRAD_CONV		// Winograd convolution
+//#define DWS_CONV			// DeepWise Separable convolution
 
 // -----------------------------------------------------------------------------------------------------------
 // data type. Defines the basic data type of the kernel
-// Select only one data type
+// Select only one data type (fp32, apf8, api8)
 // -----------------------------------------------------------------------------------------------------------
-// FP32 (comment out the next four lines for FP32 support)
-#define data_type float
-#define DATA_TYPE_WIDTH  32	  // data type width in bits (32 for float)
-#define READ_BLOCK_SIZE  16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
-#define WRITE_BLOCK_SIZE 16   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
-
-// APFIXED<8> (comment out the next four lines for APFIXED<8> support)
-//#define data_type ap_fixed<8,4,AP_TRN,AP_WRAP>
-//#define DATA_TYPE_WIDTH   8	  // data type width in bits (32 for float)
-//#define READ_BLOCK_SIZE  64   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
-//#define WRITE_BLOCK_SIZE 64   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
-
-// APINT<8> (comment out the next four lines for APINT<8> support)
-//#define data_type ap_int<8>
-//#define DATA_TYPE_WIDTH   8	  // data type width in bits (32 for float)
-//#define READ_BLOCK_SIZE  64   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
-//#define WRITE_BLOCK_SIZE 64   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define FP32_DATA_TYPE
+//#define APF8_DATA_TYPE
+//#define API8_DATA_TYPE
 
 // -----------------------------------------------------------------------------------------------------------
 // Defines for the kernel
@@ -44,17 +30,85 @@
 #define CPI               4   // Basic kernel number of input channels
 #define CPO               4   // Basic kernel number of output channels
 #define LOG2_CPO	      2   // number of bits for CPO (if you change CPO please change LOG2_CPO accordingly)
-#define KW                3   // Convolutional kernel width
-#define KH                3   // Convolutional kernel height
 
 // -----------------------------------------------------------------------------------------------------------
-// Defines for the added modules to the conv layer
+// Defines for the added modules to the conv layer (clipping and shift must be used only for API8 data type)
 // -----------------------------------------------------------------------------------------------------------
 #define USE_RELU		   // Enables the use of the ReLU activation
-//#define USE_CLIPPING     // Enables the use of the clipping function (implemented in the ReLU module)
-//#define USE_SHIFT        // Enables the use of the shift function (implemented in the ReLU module)
-						   // The shift function must be used only for ap_int data types
+//#define USE_CLIPPING       // Enables the use of the clipping function (implemented in the ReLU module)
+//#define USE_SHIFT          // Enables the use of the shift function (implemented in the ReLU module)
 #define USE_POOLING		   // Enables the use of the Pooling function (maxpooling or avgpooling)
+
+// -----------------------------------------------------------------------------------------------------------
+// Defines for latency estimation
+// Change those values and run C Synthesis in order to obtain the delay of the kernel
+// -----------------------------------------------------------------------------------------------------------
+#define I_REFERENCE     CPI  // I for delay estimation (must be equal or higher than CPI)
+#define O_REFERENCE     CPO  // O for delay estimation (must be equal or higher than CPO)
+#define W_REFERENCE    WMAX  // W for delay estimation
+#define H_REFERENCE    HMAX  // H for delay estimation
+
+// -----------------------------------------------------------------------------------------------------------
+// defines for debug (DEBUG_ALL activates all debug defines)
+// -----------------------------------------------------------------------------------------------------------
+//#define DEBUG_ALL
+
+//#define DEBUG_READ_BIAS
+//#define DEBUG_READ_KERNEL
+//#define DEBUG_READ_DATA
+//#define DEBUG_SERIALIZE
+//#define DEBUG_CVT
+//#define DEBUG_MUL
+//#define DEBUG_ADD
+//#define DEBUG_SPLIT
+//#define DEBUG_WRITE_DATA
+//#define DEBUG_RELU
+//#define DEBUG_POOL
+//#define DEBUG_CPU
+
+// ***********************************************************************************************************
+// ***********************************************************************************************************
+// ***********************************************************************************************************
+// What follows is the definition of data types (do not change!!!!!!)
+// ***********************************************************************************************************
+// ***********************************************************************************************************
+// ***********************************************************************************************************
+
+#define LEFT_DIRECTION 0	// direction used in ReLU (shift) module
+#define RIGHT_DIRECTION 1   // direction used in ReLU (shift) module
+
+// -----------------------------------------------------------------------------------------------------------
+// data type, read and write block parameters
+// -----------------------------------------------------------------------------------------------------------
+#ifdef FP32_DATA_TYPE
+#define data_type float
+#define DATA_TYPE_WIDTH  32	  // data type width in bits (32 for float)
+#define READ_BLOCK_SIZE  16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define WRITE_BLOCK_SIZE 16   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define MIN_DATA_TYPE_VALUE -99999
+#endif
+
+#ifdef APF8_DATA_TYPE
+#define data_type ap_fixed<8,4,AP_TRN,AP_WRAP>
+#define DATA_TYPE_WIDTH   8	  // data type width in bits (32 for float)
+#define READ_BLOCK_SIZE  64   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define WRITE_BLOCK_SIZE 64   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define MIN_DATA_TYPE_VALUE  -99999
+#endif
+
+#ifdef API8_DATA_TYPE
+#define data_type ap_int<8>
+#define DATA_TYPE_WIDTH   8	  // data type width in bits (32 for float)
+#define READ_BLOCK_SIZE  64   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define WRITE_BLOCK_SIZE 64   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define MIN_DATA_TYPE_VALUE  -127
+#endif
+
+// -----------------------------------------------------------------------------------------------------------
+// Defines for the CONV layer
+// -----------------------------------------------------------------------------------------------------------
+#define KW             3   // Convolutional kernel width
+#define KH             3   // Convolutional kernel height
 
 // -----------------------------------------------------------------------------------------------------------
 // Defines for the POOLING layer (USE_MAXPOOLING or USE_AVGPOOLING must be defined)
@@ -64,34 +118,27 @@
 #define SW_POOLING     2   // MAxpooling horizontal stride
 #define SH_POOLING     2   // MAxpooling vertical stride
 
-// -----------------------------------------------------------------------------------------------------------
-// Defines for latency estimation
-// Change those values and run C Synthesis in order to obtain the delay of the kernel
-// -----------------------------------------------------------------------------------------------------------
-#define I_REFERENCE       4  // I for delay estimation (must be equal or higher than CPI)
-#define O_REFERENCE       4  // O for delay estimation (must be equal or higher than CPO)
-#define W_REFERENCE     256  // W for delay estimation
-#define H_REFERENCE     256  // H for delay estimation
+#if !defined(API8_DATA_TYPE) && (defined(USE_SHIFT) || defined(USE_CLIPPING))
+#error "USE_SHIFT and USE_CLIPPING can be used only with API8 data type"
+#endif
 
 // -----------------------------------------------------------------------------------------------------------
-// defines for debug
+// Defines for debug
 // -----------------------------------------------------------------------------------------------------------
-//#define DEBUG_READ_BIAS
-//#define DEBUG_READ_KERNEL
-//#define DEBUG_READ_DATA
-//#define DEBUG_SERIALIZE
-//#define DEBUG_CVT
-//#define DEBUG_MUL
-//#define DEBUG_SPLIT
-//#define DEBUG_WRITE_DATA
-//#define DEBUG_RELU
-//#define DEBUG_CPU
-
-// Defines (do not change)
-#define LEFT_DIRECTION 0	// direction used in ReLU (shift) module
-#define RIGHT_DIRECTION 1   // direction used in ReLU (shift) module
-
-// What follows is the definition of data types (do not change)
+#ifdef DEBUG_ALL
+#define DEBUG_READ_BIAS
+#define DEBUG_READ_KERNEL
+#define DEBUG_READ_DATA
+#define DEBUG_SERIALIZE
+#define DEBUG_CVT
+#define DEBUG_MUL
+#define DEBUG_ADD
+#define DEBUG_SPLIT
+#define DEBUG_WRITE_DATA
+#define DEBUG_RELU
+#define DEBUG_POOL
+#define DEBUG_CPU
+#endif
 
 // -----------------------------------------------------------------------------------------------------------
 // Data type for input data to the conv module
@@ -151,7 +198,10 @@ struct write_block_t {
 
 // -----------------------------------------------------------------------------------------------------------
 // function prototypes
-extern "C" void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int I_ITER, int O_ITER, int enable_relu, data_type *ptr_kernel, pixel_out_t *ptr_bias, ap_uint<512> *ptr_out, int global_offset, int enable_upper_padding, int enable_lower_padding, int enable_maxpooling, int enable_avgpooling);
+extern "C" void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int I_ITER, int O_ITER, int enable_relu,
+                         data_type *ptr_kernel, pixel_out_t *ptr_bias, ap_uint<512> *ptr_out, int global_offset, int enable_upper_padding,
+						 int enable_lower_padding, int enable_maxpooling, int enable_avgpooling,
+						 int enable_clipping, int enable_shift, data_type min_clip, data_type max_clip, int dir_shift, int pos_shift);
 
 void serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int channel_size, int offset, hls::stream<read_block_t> &in, hls::stream<data_type> &out, int first_channel, int I);
 template <int LEVELS> void ch_serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int channel_size, int *offset_read_data_channel_i, hls::stream<read_block_t> stream_data_ch_0[LEVELS], hls::stream<data_type> stream_data_ch_1[LEVELS], int I){

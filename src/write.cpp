@@ -56,7 +56,7 @@ write_block_t bx[CPO];
     	}
         ptr[block_offset[cpo]+p] = data_out;
         #ifdef DEBUG_WRITE_DATA
-        printf("WRITE_DATA: writting block cpo %d\n", cpo);
+        printf("WRITE_DATA: writing block cpo %d\n", cpo);
         #endif
       }
     }

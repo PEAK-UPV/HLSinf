@@ -140,12 +140,12 @@ void split(int H, int W, int *block_offset_channel, int num_blocks_channel, hls:
 	  if (fpa_[cpo]) {
 		  cb_[cpo].pixel[offset] = datum;
 		  #ifdef DEBUG_SPLIT
-		  printf("writing on cb: cpo %d offset %d pixel %f\n", cpo, offset_[cpo], data.pixel[cpo]);
+		  printf("writing on cb: cpo %d offset %d pixel %f\n", cpo, offset_[cpo], float(data.pixel[cpo]));
           #endif
 	  } else {
 		  lb_[cpo].pixel[offset] = datum;
           #ifdef DEBUG_SPLIT
-          printf("writing on lb: cpo %d offset %d pixel %f\n", cpo, offset_[cpo], data.pixel[cpo]);
+          printf("writing on lb: cpo %d offset %d pixel %f\n", cpo, offset_[cpo], float(data.pixel[cpo]));
           #endif
 	  }
 
@@ -159,7 +159,7 @@ void split(int H, int W, int *block_offset_channel, int num_blocks_channel, hls:
 			  current_block_[cpo] = current_block_[cpo] + 1;
               #ifdef DEBUG_SPLIT
               printf("sending block: cpo %d -> ", cpo);
-              for (int pp=0; pp<WRITE_BLOCK_SIZE; pp++) printf("%6.4f ", cb_[cpo].pixel[pp]);
+              for (int pp=0; pp<WRITE_BLOCK_SIZE; pp++) printf("%6.4f ", float(cb_[cpo].pixel[pp]));
               printf("\n");
               #endif
 		  }

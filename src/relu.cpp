@@ -82,17 +82,24 @@ void relu(int enable_relu, int enable_clipping, int enable_shift, int min_clip, 
     	  if (v_clipping < 0) {
     		  v_relu = 0;
     	  } else {
-    		  v_relu = v_shift;
+    		  v_relu = v_clipping;
     	  }
       } else {
-    	  v_relu = v_shift;
+    	  v_relu = v_clipping;
       }
 #else
-      v_relu = v_shift;
+      v_relu = v_clipping;
 #endif
       data_out.pixel[cpo] = v_relu;
 
     }
+
+    #ifdef DEBUG_RELU
+    printf("RELU: ");
+    for (int x=0; x<CPI; x++) {
+    	printf("cpi %d : in %f out %f\n", data_in.pixel[x], data_out.pixel[x]);
+    }
+    #endif
 
     out << data_out;
 }
