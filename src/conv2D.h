@@ -18,8 +18,8 @@
 // data type. Defines the basic data type of the kernel
 // Select only one data type (fp32, apf8, api8)
 // -----------------------------------------------------------------------------------------------------------
-#define FP32_DATA_TYPE
-//#define APF8_DATA_TYPE
+//#define FP32_DATA_TYPE
+#define APF8_DATA_TYPE
 //#define API8_DATA_TYPE
 
 // -----------------------------------------------------------------------------------------------------------
@@ -86,6 +86,7 @@
 #define READ_BLOCK_SIZE  16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 #define WRITE_BLOCK_SIZE 16   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 #define MIN_DATA_TYPE_VALUE -99999
+#define EPSILON_VALUE 0.000001
 #endif
 
 #ifdef APF8_DATA_TYPE
@@ -94,6 +95,7 @@
 #define READ_BLOCK_SIZE  64   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 #define WRITE_BLOCK_SIZE 64   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 #define MIN_DATA_TYPE_VALUE  -99999
+#define EPSILON_VALUE 0.0001
 #endif
 
 #ifdef API8_DATA_TYPE
@@ -102,6 +104,7 @@
 #define READ_BLOCK_SIZE  64   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 #define WRITE_BLOCK_SIZE 64   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 #define MIN_DATA_TYPE_VALUE  -127
+#define EPSILON_VALUE 0
 #endif
 
 // -----------------------------------------------------------------------------------------------------------
@@ -196,12 +199,15 @@ struct write_block_t {
 
 // What follows is the function prototypes
 
+// Function prototypes protected with the no-definition of OPENCL_TEST to avoid warnings when compiling for OpenCL
+#ifndef OPENCL_TEST
+
 // -----------------------------------------------------------------------------------------------------------
 // function prototypes
 extern "C" void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int I_ITER, int O_ITER, int enable_relu,
                          data_type *ptr_kernel, pixel_out_t *ptr_bias, ap_uint<512> *ptr_out, int global_offset, int enable_upper_padding,
 						 int enable_lower_padding, int enable_maxpooling, int enable_avgpooling,
-						 int enable_clipping, int enable_shift, data_type min_clip, data_type max_clip, int dir_shift, int pos_shift);
+						 int enable_clipping, int enable_shift, int min_clip, int max_clip, int dir_shift, int pos_shift);
 
 void serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int channel_size, int offset, hls::stream<read_block_t> &in, hls::stream<data_type> &out, int first_channel, int I);
 template <int LEVELS> void ch_serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int channel_size, int *offset_read_data_channel_i, hls::stream<read_block_t> stream_data_ch_0[LEVELS], hls::stream<data_type> stream_data_ch_1[LEVELS], int I){
@@ -257,5 +263,7 @@ void cvt(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<fram
 // To allow using defines inside Xilinx pragmas
 #define PRAGMA_SUB(x) _Pragma (#x)
 #define DO_PRAGMA(x) PRAGMA_SUB(x)
+
+#endif
 
 #endif

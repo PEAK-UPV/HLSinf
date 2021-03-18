@@ -57,8 +57,8 @@ int pos_shift;					 // positions to shift
 int enable_clipping;			 // enables applying clipping to the output
 int enable_maxpooling;			 // enables the maxpooling layer
 int enable_avgpooling;			 // enables the avgpooling layer
-data_type min_clip;				 // minimum clip value
-data_type max_clip;				 // maximum clip value
+int min_clip;					 // minimum clip value
+int max_clip;					 // maximum clip value
 int i_iter;						 // number of input iterations
 int o_iter;						 // number of output iterations
 int global_offset;				 // global offset for the output data for the kernel
@@ -117,13 +117,13 @@ int main(int argc, char **argv) {
   while (!read_test_file(&enable)) {
 
     if (enable) {
-	   printf("%3d x %3d x %3d x %3d K=%1dx%1d S=%1dx%1d P=%1dx%1d RELU=%s MAXP=%s AVGP=%s CLIP=%s (%f:%f) SHIFT=%s (%s,%d) ===> ",
-	   		 	 	 H, W, I, O, KH, KW, 1, 1, 1, 1, enable_relu?"Yes":"No ", enable_maxpooling?"Yes":"No ", enable_avgpooling?"Yes":"No ", enable_clipping?"Yes":"No ", float(min_clip), float(max_clip), enable_shift?"Yes":"No ",
+	   printf("%3d x %3d x %3d x %3d K=%1dx%1d S=%1dx%1d P=%1dx%1d RELU=%s MAXP=%s AVGP=%s CLIP=%s (%d:%d) SHIFT=%s (%s,%d) ===> ",
+	   		 	 	 H, W, I, O, KH, KW, 1, 1, 1, 1, enable_relu?"Yes":"No ", enable_maxpooling?"Yes":"No ", enable_avgpooling?"Yes":"No ", enable_clipping?"Yes":"No ", min_clip, max_clip, enable_shift?"Yes":"No ",
 	   		 	 			 dir_shift==LEFT_DIRECTION?"LEFT":"RIGHT", pos_shift);
 
        #ifndef USE_POOLING
 	   if (enable_maxpooling | enable_avgpooling) {
-	     printf("Pooling not supported (disabled)\n");
+	     printf("Pooling not supported (disabled)");
 	     enable_maxpooling = 0; enable_avgpooling = 0;
 	   }
 	   #endif

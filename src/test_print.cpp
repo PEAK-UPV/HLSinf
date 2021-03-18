@@ -7,7 +7,7 @@
 
 void print_bias() {
   printf("Bias: ");
-  for (int o=0; o<O; o++) printf("%6.4f ", bias[o]);
+  for (int o=0; o<O; o++) printf("%6.4f ", float(bias[o]));
   printf("\n");
 }
 

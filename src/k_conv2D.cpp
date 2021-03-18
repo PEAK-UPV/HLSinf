@@ -43,7 +43,7 @@ extern "C" {
 
 void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int I_ITER, int O_ITER, int enable_relu,
               data_type *ptr_kernel, pixel_out_t *ptr_bias, ap_uint<512> *ptr_out, int global_offset, int enable_upper_padding, int enable_lower_padding, int enable_maxpooling, int enable_avgpooling,
-			  int enable_clipping, int enable_shift, data_type min_clip, data_type max_clip, int dir_shift, int pos_shift) {
+			  int enable_clipping, int enable_shift, int min_clip, int max_clip, int dir_shift, int pos_shift) {
 	#pragma HLS INTERFACE m_axi port=ptr_data   depth=1024 offset=slave bundle=gmem
 	#pragma HLS INTERFACE m_axi port=ptr_kernel depth=1024 offset=slave bundle=gmem1
 	#pragma HLS INTERFACE m_axi port=ptr_bias   depth=1024 offset=slave bundle=gmem2

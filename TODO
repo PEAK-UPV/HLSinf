@@ -11,6 +11,6 @@
 
  - IMPLEMENTATION & VALIDATION
 
-    - DIRECT_CONV 4x4 FP32 : on peak6
-    - DIRECT_CONV 4x4 APF8 : on peak7
-    - DIRECT_CONV 4x4 API8 : on peak1
+    - DIRECT_CONV 4x4 FP32 :
+    - DIRECT_CONV 4x4 APF8 :
+    - DIRECT_CONV 4x4 API8 : en peak7

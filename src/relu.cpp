@@ -19,6 +19,7 @@
 //   out             : output data stream
 //
 //
+
 void relu(int enable_relu, int enable_clipping, int enable_shift, int min_clip, int max_clip, int direction_shift, int pos_shift,
 		  int H, int W, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &out) {
 

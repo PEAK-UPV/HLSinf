@@ -116,7 +116,7 @@ void cpu_conv2D() {
       for (int h=0; h<H; h++) {
         for (int w=0; w<W; w++) {
           int addr_o = (cout * W * H) + (h * W) + w;
-          if (out_conv_cpu[addr_o] < 0.f) out_relu_cpu[addr_o] = 0.f; else out_relu_cpu[addr_o] = out_conv_cpu[addr_o];
+          if (float(out_conv_cpu[addr_o]) < float(0)) out_relu_cpu[addr_o] = 0.f; else out_relu_cpu[addr_o] = out_conv_cpu[addr_o];
         }
       }
     }

@@ -16,7 +16,6 @@ int open_test_file() {
 }
 
 int read_test_file(int *enable) {
- // number of inputs
  int n = fscanf(fp, "ENABLE %d %dx%dx%dx%d EUP %d ELP %d RELU %d MAXPOOL %d AVGPOOL %d SHIFT %d DIRECTION_SHIFT %d POS_SHIFT %d CLIP %d MINCLIP %d MAXCLIP %d\n",
             enable, &H, &W, &I, &O, &enable_upper_padding, &enable_lower_padding, &enable_relu, &enable_maxpooling, &enable_avgpooling, &enable_shift, &dir_shift, &pos_shift,
 	    &enable_clipping, &min_clip, &max_clip);
@@ -33,10 +32,6 @@ int read_test_file(int *enable) {
  GI = I_kernel / CPI;
  GO = O_kernel / CPO;
  if (enable_maxpooling || enable_avgpooling) {HO = H / 2; WO = W / 2;} else {HO = H; WO = W;}
- #ifndef API8_DATA_TYPE
- min_clip = 0;
- max_clip = 0;
- #endif
 
  return 0;
 }

@@ -8,7 +8,7 @@
 int check_result(data_type *max_difference, int *num_elements_differ) {
   *num_elements_differ = 0;
   *max_difference = data_type(0);
-  float epsilon = 0.0001;
+  float epsilon = EPSILON_VALUE;
 
   if ((enable_maxpooling) || (enable_avgpooling)) {
 
@@ -18,7 +18,7 @@ int check_result(data_type *max_difference, int *num_elements_differ) {
           // data_out pixel position
           int addr_o = (cout * W/2 * H/2) + (h * W/2) + w;
           data_type diff = data_type(fabs(float(out_pool_cpu[addr_o]) - float(out[addr_o])));
-          if (diff > epsilon) {
+          if (float(diff) > float(epsilon)) {
             (*num_elements_differ)++;
             if (*max_difference < diff) *max_difference = diff;
           }
@@ -37,7 +37,7 @@ int check_result(data_type *max_difference, int *num_elements_differ) {
           data_type diff;
           if (enable_relu) diff = data_type(fabs(float(out_relu_cpu[addr_o]) - float(out[addr_o])));
           else diff = fabs(float(out_conv_cpu[addr_o]) - float(out[addr_o]));
-          if (diff > epsilon) {
+          if (float(diff) > float(epsilon)) {
             (*num_elements_differ)++;
             if (*max_difference < diff) *max_difference = diff;
           }

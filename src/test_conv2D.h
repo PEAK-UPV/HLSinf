@@ -44,8 +44,8 @@ extern int pos_shift;					 // positions to shift
 extern int enable_clipping;			     // enables applying clipping to the output
 extern int enable_maxpooling;			 // enables the maxpooling layer
 extern int enable_avgpooling;			 // enables the avgpooling layer
-extern data_type min_clip;				 // minimum clip value
-extern data_type max_clip;				 // maximum clip value
+extern int min_clip;				 	 // minimum clip value
+extern int max_clip;				 	 // maximum clip value
 extern int i_iter;						 // number of input iterations
 extern int o_iter;						 // number of output iterations
 extern int global_offset;				 // global offset for the output data for the kernel
