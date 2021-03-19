@@ -95,10 +95,16 @@ void print_kernel();
 int check_result(data_type *max_difference, int *num_elements_differ);
 void init_data();
 int open_test_file();
-int read_test_file(int *enable);
+int read_test_file(int *enable, int *cpu);
 int close_test_file();
 void run_kernel();
 void run_kernel_opencl();
+void parse_arguments(int argc, char **argv);
+void print_configuration();
+void print_timings(unsigned long long time, unsigned long long time_per_iteration, unsigned long long expected_time, float efficiency);
+void print_check(int result, float max_difference, int num_differences);
+void print_message(const char *str);
+
 #ifdef OPENCL_TEST
 void parse_arguments(int argc, char **argv);
 void allocate_buffers_opencl();

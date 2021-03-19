@@ -7,10 +7,3 @@
    Target SLR0 (larger than SLR1) - PEAK6 (4x8)
    Unbound design to SLR and check performance
 
- - Install OpenCL in peak7 (and in peak1?)
-
- - IMPLEMENTATION & VALIDATION
-
-    - DIRECT_CONV 4x4 FP32 :
-    - DIRECT_CONV 4x4 APF8 :
-    - DIRECT_CONV 4x4 API8 : en peak7

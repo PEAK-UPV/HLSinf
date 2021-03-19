@@ -104,38 +104,36 @@ int main(int argc, char **argv) {
   int retval = 0;
   int global_retval = 0;
 
-  input_data_file = argv[1];
+  parse_arguments(argc, argv);
 
   #ifdef OPENCL_TEST
-  binaryFile = argv[2];
   fn_init_fpga();
   #endif
 
   if (open_test_file() == 1) return 1;
 
   int enable;
-  while (!read_test_file(&enable)) {
+  int cpu;
+  while (!read_test_file(&enable, &cpu)) {
 
     if (enable) {
-	   printf("%3d x %3d x %3d x %3d K=%1dx%1d S=%1dx%1d P=%1dx%1d RELU=%s MAXP=%s AVGP=%s CLIP=%s (%d:%d) SHIFT=%s (%s,%d) ===> ",
-	   		 	 	 H, W, I, O, KH, KW, 1, 1, 1, 1, enable_relu?"Yes":"No ", enable_maxpooling?"Yes":"No ", enable_avgpooling?"Yes":"No ", enable_clipping?"Yes":"No ", min_clip, max_clip, enable_shift?"Yes":"No ",
-	   		 	 			 dir_shift==LEFT_DIRECTION?"LEFT":"RIGHT", pos_shift);
+       print_configuration();
 
        #ifndef USE_POOLING
 	   if (enable_maxpooling | enable_avgpooling) {
-	     printf("Pooling not supported (disabled)");
+	     print_message("Pooling not supported (disabled)");
 	     enable_maxpooling = 0; enable_avgpooling = 0;
 	   }
 	   #endif
 
 	   if (enable_maxpooling && enable_avgpooling) {
-	   	 printf("MaxPooling and AvgPooling cannot be active at the same time (skipped)\n");
+	   	 print_message("MaxPooling and AvgPooling cannot be active at the same time (skipped)");
 	   	 enable = 0;
 	   }
 
        #ifndef API8_DATA_TYPE
 	   if (enable_clipping || enable_shift) {
-		 printf("Clipping/shift only for API8 (disabled)");
+		 print_message("Clipping/shift only for API8 (disabled)");
 		 enable_clipping = 0; enable_shift = 0;
 	   }
        #endif
@@ -143,7 +141,7 @@ int main(int argc, char **argv) {
 	   // Check, output must be at least as large as one write block
 
 	   if (HO * WO * O < WRITE_BLOCK_SIZE) {
-		 printf("Output too small (skipped)\n");
+		 print_message("Output too small (skipped)");
 		 enable = 0;
 	   }
 
@@ -172,18 +170,29 @@ int main(int argc, char **argv) {
          struct timeval prof_t2;
 	     gettimeofday(&prof_t2, NULL);
 	     prof_time = ((prof_t2.tv_sec - prof_t1.tv_sec) * 1000000) + (prof_t2.tv_usec - prof_t1.tv_usec);
+	     unsigned long long time = prof_time;
+	     unsigned long long time_per_iteration = prof_time / i_iter / o_iter;
+	     unsigned long long expected_time_one_iteration = (W * H * 333) / 100000;
+         unsigned long long expected_time = expected_time_one_iteration * i_iter * o_iter;
+         float efficiency = ((float)expected_time / (float)time);
 
-         #ifdef OPENCL_TEST
-	     copy_from_fpga();
-         #endif
+         print_timings(time, time_per_iteration, expected_time, efficiency);
 
-	     cpu_conv2D();
 
-	     int num_differences;
-	     data_type max_difference;
-	     retval = check_result(&max_difference, &num_differences);
-         if (retval) printf(" Time %8lld usec - FAIL (max diff %20.18f, num differences %d)\n", prof_time, float(max_difference), num_differences);
-	     else        printf(" Time %8lld usec - SUCCESS\n", prof_time);
+	     if (cpu) {
+	       cpu_conv2D();
+           #ifdef OPENCL_TEST
+           copy_from_fpga();
+           #endif
+	       int num_differences;
+	       data_type max_difference;
+	       retval = check_result(&max_difference, &num_differences);
+
+	       print_check(retval, float(max_difference), num_differences);
+
+	     } else {
+	    	 printf("\n");
+	     }
 
          #ifdef DEBUG_CPU
 	     print_output();

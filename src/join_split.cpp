@@ -149,12 +149,11 @@ void split(int H, int W, int *block_offset_channel, int num_blocks_channel, hls:
           #endif
 	  }
 
-	  int last_block = current_block_[cpo] == num_blocks_channel-1;
       offset_[cpo] = offset_[cpo] + 1;
 	  if (offset_[cpo] == WRITE_BLOCK_SIZE) {
 		  offset_[cpo] = 0;
 
-		  if (fpa_[cpo] && (!last_block)) {
+		  if (fpa_[cpo]) {
 			  out[cpo] << cb_[cpo];
 			  current_block_[cpo] = current_block_[cpo] + 1;
               #ifdef DEBUG_SPLIT
@@ -181,13 +180,13 @@ void split(int H, int W, int *block_offset_channel, int num_blocks_channel, hls:
 			DO_PRAGMA(HLS PIPELINE II=1)
 			cb_[cpo].pixel[p] = lb_[cpo_prev].pixel[p];
 		}
+        out[cpo] << cb_[cpo];
+        #ifdef DEBUG_SPLIT
+        printf("sending block: cpo %d -> ", cpo);
+        for (int pp=0; pp<WRITE_BLOCK_SIZE; pp++) printf("%6.4f ", lb_[cpo].pixel[pp]);
+        printf("\n");
+        #endif
 	}
-    out[cpo] << cb_[cpo];
-    #ifdef DEBUG_SPLIT
-    printf("sending block: cpo %d -> ", cpo);
-    for (int pp=0; pp<WRITE_BLOCK_SIZE; pp++) printf("%6.4f ", lb_[cpo].pixel[pp]);
-    printf("\n");
-    #endif
   }
 
 }
