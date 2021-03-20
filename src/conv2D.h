@@ -19,8 +19,8 @@
 // Select only one data type (fp32, apf8, api8)
 // -----------------------------------------------------------------------------------------------------------
 //#define FP32_DATA_TYPE
-#define APF8_DATA_TYPE
-//#define API8_DATA_TYPE
+//#define APF8_DATA_TYPE
+#define API8_DATA_TYPE
 
 // -----------------------------------------------------------------------------------------------------------
 // Defines for the kernel
@@ -35,8 +35,8 @@
 // Defines for the added modules to the conv layer (clipping and shift must be used only for API8 data type)
 // -----------------------------------------------------------------------------------------------------------
 #define USE_RELU		   // Enables the use of the ReLU activation
-//#define USE_CLIPPING       // Enables the use of the clipping function (implemented in the ReLU module)
-//#define USE_SHIFT          // Enables the use of the shift function (implemented in the ReLU module)
+#define USE_CLIPPING       // Enables the use of the clipping function (implemented in the ReLU module)
+#define USE_SHIFT          // Enables the use of the shift function (implemented in the ReLU module)
 #define USE_POOLING		   // Enables the use of the Pooling function (maxpooling or avgpooling)
 
 // -----------------------------------------------------------------------------------------------------------
@@ -86,7 +86,7 @@
 #define READ_BLOCK_SIZE  16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 #define WRITE_BLOCK_SIZE 16   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 #define MIN_DATA_TYPE_VALUE -99999
-#define EPSILON_VALUE 0.000001
+#define EPSILON_VALUE 0.00001
 #endif
 
 #ifdef APF8_DATA_TYPE
@@ -195,6 +195,7 @@ typedef struct {
 // Write block struct
 struct write_block_t {
   data_type pixel[WRITE_BLOCK_SIZE];
+  int block_offset;
 };
 
 // What follows is the function prototypes
@@ -225,7 +226,7 @@ void read_kernel(int I_ITER, int offset_kernel, data_type *k_ptr, hls::stream<ke
 void read_data_channels(int H, int W, int rows, int I_ITER, ap_uint<512> *ptr, int offset, int num_extra_rows, int channel_blocks, hls::stream<read_block_t> out[CPI], int I);
 
 // write functions
-void write_data_channels(int num_pixels, ap_uint<512> *ptr, int *offset_i, hls::stream<write_block_t> in[CPO], int *enable_write);
+void write_data_channels(int num_pixels, ap_uint<512> *ptr, hls::stream<write_block_t> in[CPO], int *enable_write);
 
 // direct conv functions
 void direct_conv(int H, int W, int I_ITER, int enable_upper_padding, int enable_lower_padding, hls::stream<pixel_in_t> &in, hls::stream<kernel_t> &k_in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out);
@@ -240,7 +241,7 @@ void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<ker
 
 // data reorganization
 void join(int H, int W, int I_ITER, int num_extra_rows, hls::stream<data_type> in[CPI], hls::stream<pixel_in_t> &out);
-void split(int H, int W, int *block_offset_channel, int num_blocks_channel, hls::stream<pixel_out_t> &in, hls::stream<write_block_t> out[CPO]);
+void split(int H, int W, int *offset_channel, int *block_offset_channel, hls::stream<pixel_out_t> &in, hls::stream<write_block_t> out[CPO]);
 
 // activation functions
 void relu(int enable_relu, int enable_clipping, int enable_shift, int min_clip, int max_clip, int direction_shift, int pos_shift,
