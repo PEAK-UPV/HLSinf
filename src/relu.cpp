@@ -30,6 +30,8 @@ void relu(int enable_relu, int enable_clipping, int enable_shift, int min_clip, 
   pixel_out_t data_in;
   pixel_out_t data_out;
   int data_size = W * H;
+  DO_PRAGMA(HLS ARRAY_PARTITION variable=data_in complete dim=0)
+  DO_PRAGMA(HLS ARRAY_PARTITION variable=data_out complete dim=0)
 
   loop_relu_pixels:
   for (int i=0; i < data_size; i++) {
@@ -50,11 +52,10 @@ void relu(int enable_relu, int enable_clipping, int enable_shift, int min_clip, 
 
       // shift
 #ifdef USE_SHIFT
+      v_shift = v_in;
       if (enable_shift) {
     	  if (direction_shift == LEFT_DIRECTION) v_shift = v_in << pos_shift;
     	  if (direction_shift == RIGHT_DIRECTION) v_shift = v_in >> pos_shift;
-      } else {
-    	  v_shift = v_in;
       }
 #else
       v_shift = v_in;
@@ -62,16 +63,13 @@ void relu(int enable_relu, int enable_clipping, int enable_shift, int min_clip, 
 
       // clipping
 #ifdef USE_CLIPPING
+      v_clipping = v_shift;
       if (enable_clipping) {
     	  if (v_shift < min_clip) {
     		  v_clipping = min_clip;
     	  } else if (v_shift > max_clip) {
     		  v_clipping = max_clip;
-    	  } else {
-    		  v_clipping = v_shift;
     	  }
-      } else {
-    	  v_clipping = v_shift;
       }
 #else
       v_clipping = v_shift;
@@ -79,15 +77,8 @@ void relu(int enable_relu, int enable_clipping, int enable_shift, int min_clip, 
 
       // relu
 #ifdef USE_RELU
-      if(enable_relu) {
-    	  if (v_clipping < 0) {
-    		  v_relu = 0;
-    	  } else {
-    		  v_relu = v_clipping;
-    	  }
-      } else {
-    	  v_relu = v_clipping;
-      }
+      v_relu = v_clipping;
+      if(enable_relu && (v_relu < 0)) v_relu = 0;
 #else
       v_relu = v_clipping;
 #endif
@@ -96,9 +87,9 @@ void relu(int enable_relu, int enable_clipping, int enable_shift, int min_clip, 
     }
 
     #ifdef DEBUG_RELU
-    printf("RELU: ");
+    printf("RELU (pixel %d):\n", i);
     for (int x=0; x<CPI; x++) {
-    	printf("cpi %d : in %f out %f\n", data_in.pixel[x], data_out.pixel[x]);
+    	printf("  cpi %d : in %f out %f\n", x, float(data_in.pixel[x]), float(data_out.pixel[x]));
     }
     #endif
 
