@@ -113,10 +113,10 @@ void copy_to_fpga() {
   OCL_CHECK(err, err = write_events[0].wait());
 #endif
 #ifdef DWS_CONV
-  OCL_CHECK(err, err = q.enqueueMigrateMemObjects( {*dw_buffer_k[0]}, 0 /*0 means from host*/, NULL, &write_events[0]));
+  OCL_CHECK(err, err = q.enqueueMigrateMemObjects( {*buffer_k_dw[0]}, 0 /*0 means from host*/, NULL, &write_events[0]));
   set_callback(write_events[0], "ooo_queue");
   OCL_CHECK(err, err = write_events[0].wait());
-  OCL_CHECK(err, err = q.enqueueMigrateMemObjects( {*pw_buffer_k[0]}, 0 /*0 means from host*/, NULL, &write_events[0]));
+  OCL_CHECK(err, err = q.enqueueMigrateMemObjects( {*buffer_k_pw[0]}, 0 /*0 means from host*/, NULL, &write_events[0]));
   set_callback(write_events[0], "ooo_queue");
   OCL_CHECK(err, err = write_events[0].wait());
 #endif

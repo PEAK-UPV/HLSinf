@@ -18,8 +18,8 @@
 // data type. Defines the basic data type of the kernel
 // Select only one data type (fp32, apf8, api8)
 // -----------------------------------------------------------------------------------------------------------
-#define FP32_DATA_TYPE
-//#define APF8_DATA_TYPE
+//#define FP32_DATA_TYPE
+#define APF8_DATA_TYPE
 //#define API8_DATA_TYPE
 
 // -----------------------------------------------------------------------------------------------------------
