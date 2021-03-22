@@ -116,10 +116,10 @@ void deallocate_buffers() {
 void init_arguments() {
   W = 4;
   H = 4;
-  I = 8;
-  O = 5;
-  I_kernel = 8;
-  O_kernel = 8;
+  I = 4;
+  O = 4;
+  I_kernel = 4;
+  O_kernel = 4;
   i_iter = (I + CPI - 1) / CPI;
   o_iter = (O + CPO - 1) / CPO;
   enable_upper_padding = 1;
