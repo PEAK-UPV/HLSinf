@@ -52,11 +52,11 @@ void init_data() {
 
 #ifdef DWS_CONV
   int kernel_id = 1;
-  for (int i=0; i<I_kernel; i++) {
+  for (int i=0; i<I; i++) {
     for (int kh=0; kh<KH; kh++) {
       for (int kw=0; kw<KW; kw++) {
     	  int addr_k = (i * KW * KH) + (kh * KW) + kw;
-    	  if (i < I) kernel[addr_k] = dist(gen); else kernel[addr_k] = 0;
+    	  if (i < I) dw_kernel[addr_k] = dist(gen); else dw_kernel[addr_k] = 0;
       }
     }
     kernel_id++;
@@ -64,8 +64,12 @@ void init_data() {
   kernel_id = 1;
   for (int i=0; i<I_kernel; i++) {
 	  for (int o=0; o<O_kernel; o++) {
-		  int addr_k = (I_kernel * KW * KH) + (i * O_kernel) + o;
-		  if ((i < I) && (o < O)) kernel[addr_k] = dist(gen); else kernel[addr_k] = 0;
+		  int gi = i / CPI;
+		  int ki = i % CPI;
+		  int go = o / CPO;
+		  int ko = o % CPO;
+		  int addr_k = (go * GI * CPO * CPI) + (gi * CPO * CPI) + (ko * CPI) + ki;
+		  if ((i < I) && (o < O)) pw_kernel[addr_k] = dist(gen); else pw_kernel[addr_k] = 0;
 	  }
 	  kernel_id++;
   }

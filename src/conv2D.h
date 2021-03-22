@@ -10,17 +10,17 @@
 // Convolution type
 // Select only one type
 // -----------------------------------------------------------------------------------------------------------
-#define DIRECT_CONV			// Direct convolution
+//#define DIRECT_CONV		// Direct convolution
 //#define WINOGRAD_CONV		// Winograd convolution
-//#define DWS_CONV			// DeepWise Separable convolution
+#define DWS_CONV			// DeepWise Separable convolution
 
 // -----------------------------------------------------------------------------------------------------------
 // data type. Defines the basic data type of the kernel
 // Select only one data type (fp32, apf8, api8)
 // -----------------------------------------------------------------------------------------------------------
-//#define FP32_DATA_TYPE
+#define FP32_DATA_TYPE
 //#define APF8_DATA_TYPE
-#define API8_DATA_TYPE
+//#define API8_DATA_TYPE
 
 // -----------------------------------------------------------------------------------------------------------
 // Defines for the kernel
@@ -35,8 +35,8 @@
 // Defines for the added modules to the conv layer (clipping and shift must be used only for API8 data type)
 // -----------------------------------------------------------------------------------------------------------
 #define USE_RELU		   // Enables the use of the ReLU activation
-#define USE_CLIPPING       // Enables the use of the clipping function (implemented in the ReLU module)
-#define USE_SHIFT          // Enables the use of the shift function (implemented in the ReLU module)
+//#define USE_CLIPPING       // Enables the use of the clipping function (implemented in the ReLU module)
+//#define USE_SHIFT          // Enables the use of the shift function (implemented in the ReLU module)
 #define USE_POOLING		   // Enables the use of the Pooling function (maxpooling or avgpooling)
 
 // -----------------------------------------------------------------------------------------------------------
@@ -206,7 +206,13 @@ struct write_block_t {
 // -----------------------------------------------------------------------------------------------------------
 // function prototypes
 extern "C" void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int I_ITER, int O_ITER, int enable_relu,
-                         data_type *ptr_kernel, pixel_out_t *ptr_bias, ap_uint<512> *ptr_out, int global_offset, int enable_upper_padding,
+#if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
+                         data_type *ptr_kernel,
+#endif
+#ifdef DWS_CONV
+						 data_type *ptr_dw_kernel, data_type *ptr_pw_kernel,
+#endif
+						 pixel_out_t *ptr_bias, ap_uint<512> *ptr_out, int global_offset, int enable_upper_padding,
 						 int enable_lower_padding, int enable_maxpooling, int enable_avgpooling,
 						 int enable_clipping, int enable_shift, int min_clip, int max_clip, int dir_shift, int pos_shift);
 
@@ -236,7 +242,7 @@ void winograd_conv(int H, int W, int I_ITER, int enable_upper_padding, int enabl
 
 // dws functions
 void dws_conv(int H, int W, int I_ITER, int enable_upper_padding, int enable_lower_padding, hls::stream<pixel_in_t> &in, hls::stream<kernel_dw_t> &k_dw_in, hls::stream<kernel_pw_t> &k_pw_in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out);
-void dws_read_kernel(int I_ITER, int offset_kernel, data_type *k_ptr, hls::stream<kernel_dw_t> &k_dw_out, hls::stream<kernel_pw_t> &k_pw_out);
+void dws_read_kernel(int I_ITER, int offset_dw_kernel, int offset_pw_kernel, data_type *k_dw_ptr, data_type *k_pw_ptr, hls::stream<kernel_dw_t> &k_dw_out, hls::stream<kernel_pw_t> &k_pw_out);
 void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<kernel_dw_t> &k_dw_in, hls::stream<kernel_pw_t> &k_pw_in, hls::stream<pixel_out_t> &out);
 
 // data reorganization

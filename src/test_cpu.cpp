@@ -19,6 +19,19 @@ int filter_address_direct_conv(int i, int o, int kh, int kw) {
     return addr_k;
 }
 
+int filter_address_dws_conv(int i, int o) {
+    int gi = i / CPI;
+    int ki = i % CPI;
+    int go = o / CPO;
+    int ko = o % CPO;
+    // addr_k for direct convs or winograd convs
+    int addr_k = (go * GI * CPO * CPI) +
+                 (gi * CPO * CPI) +
+                 (ko * CPI) +
+                  ki;
+    return addr_k;
+}
+
 // cpu_conv2d. Performs the convolutions on the cpu
 void cpu_conv2D() {
 
@@ -45,7 +58,7 @@ void cpu_conv2D() {
 			  #ifdef DWS_CONV
               // addr_dw_k and addr_pw_k for dws convs
               int addr_dw_k = (c * KH * KW) + (kh * KW) + kw;
-              int addr_pw_k = (I_kernel * KH * KW) + (c * O_kernel) + cout;
+              int addr_pw_k = filter_address_dws_conv(c, cout);
               #endif
 
               // data_in pixel position
@@ -59,7 +72,7 @@ void cpu_conv2D() {
               if (!padding) out_conv_cpu[addr_o] += din * kernel[addr_k];
 			  #endif
               #ifdef DWS_CONV
-              if (!padding) out_conv_cpu[addr_o] += din * kernel[addr_dw_k] * kernel[addr_pw_k];
+              if (!padding) out_conv_cpu[addr_o] += din * dw_kernel[addr_dw_k] * pw_kernel[addr_pw_k];
               #endif
             }
           }

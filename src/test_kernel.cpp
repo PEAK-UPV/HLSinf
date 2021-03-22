@@ -18,7 +18,13 @@ void run_kernel() {
   OCL_CHECK(err, err = kernel_conv2d[0].setArg(arg++, i_iter));
   OCL_CHECK(err, err = kernel_conv2d[0].setArg(arg++, o_iter));
   OCL_CHECK(err, err = kernel_conv2d[0].setArg(arg++, enable_relu));
+#if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
   OCL_CHECK(err, err = kernel_conv2d[0].setArg(arg++, *buffer_k[0]));
+#endif
+#ifdef DWS_CONV
+  OCL_CHECK(err, err = kernel_conv2d[0].setArg(arg++, *buffer_k_dw[0]));
+  OCL_CHECK(err, err = kernel_conv2d[0].setArg(arg++, *buffer_k_pw[0]));
+#endif
   OCL_CHECK(err, err = kernel_conv2d[0].setArg(arg++, *buffer_bias[0]));
   OCL_CHECK(err, err = kernel_conv2d[0].setArg(arg++, *buffer_o[0]));
   OCL_CHECK(err, err = kernel_conv2d[0].setArg(arg++, global_offset));
@@ -37,7 +43,14 @@ void run_kernel() {
   set_callback(kernel_events[0], "ooo_queue");
   OCL_CHECK(err, err = kernel_events[0].wait());
 #else
-  k_conv2D((ap_uint<512> *)data_in, H, W, rows, I, O, i_iter, o_iter, enable_relu, kernel, (pixel_out_t *)bias, (ap_uint<512> *)out, global_offset,
+  k_conv2D((ap_uint<512> *)data_in, H, W, rows, I, O, i_iter, o_iter, enable_relu,
+#if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
+		  kernel,
+#endif
+#ifdef DWS_CONV
+		  dw_kernel, pw_kernel,
+#endif
+		  (pixel_out_t *)bias, (ap_uint<512> *)out, global_offset,
 		   enable_upper_padding, enable_lower_padding, enable_maxpooling, enable_avgpooling,
 		   enable_clipping, enable_shift, min_clip, max_clip, dir_shift, pos_shift);
 #endif

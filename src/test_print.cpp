@@ -48,16 +48,20 @@ void print_kernel() {
       for (int kw=0; kw<KW; kw++) {
         // kernel position
         int addr_k = (c * KW * KH) + (kh * KW) + kw;
-        printf(" %6.4f ", float(kernel[addr_k]));
+        printf(" %6.4f ", float(dw_kernel[addr_k]));
       }
       printf("\n");
     }
   }
-  printf("Kernels (pw): ");
+  printf("Kernels (pw):\n");
   for (int c=0; c<I; c++) {
 	for (int o=0; o<O; o++) {
-	  int addr_k = (I_kernel * KW * KH) + (c * O) + o;
-      printf("i=%d o=%d: %6.4f\n", c, o, float(kernel[addr_k]));
+	  int gi = c / CPI;
+	  int ki = c % CPI;
+	  int go = o / CPO;
+	  int ko = o % CPO;
+	  int addr_k = (go * GI * CPO * CPI) + (gi * CPO * CPI) + (ko * CPI) + ki;
+      printf(" i=%d o=%d: %6.4f\n", c, o, float(pw_kernel[addr_k]));
     }
   }
 }

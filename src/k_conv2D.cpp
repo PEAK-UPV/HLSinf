@@ -42,10 +42,22 @@ void set_channel_write_blocks(int num_channel_write_blocks[CPO], int addr[CPO], 
 extern "C" {
 
 void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int I_ITER, int O_ITER, int enable_relu,
-              data_type *ptr_kernel, pixel_out_t *ptr_bias, ap_uint<512> *ptr_out, int global_offset, int enable_upper_padding, int enable_lower_padding, int enable_maxpooling, int enable_avgpooling,
+#if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
+                         data_type *ptr_kernel,
+#endif
+#ifdef DWS_CONV
+						 data_type *ptr_dw_kernel, data_type *ptr_pw_kernel,
+#endif
+              pixel_out_t *ptr_bias, ap_uint<512> *ptr_out, int global_offset, int enable_upper_padding, int enable_lower_padding, int enable_maxpooling, int enable_avgpooling,
 			  int enable_clipping, int enable_shift, int min_clip, int max_clip, int dir_shift, int pos_shift) {
 	#pragma HLS INTERFACE m_axi port=ptr_data   depth=1024 offset=slave bundle=gmem
+#if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
 	#pragma HLS INTERFACE m_axi port=ptr_kernel depth=1024 offset=slave bundle=gmem1
+#endif
+#ifdef DWS_CONV
+    #pragma HLS INTERFACE m_axi port=ptr_dw_kernel depth=1024 offset=slave bundle=gmem1
+    #pragma HLS INTERFACE m_axi port=ptr_pw_kernel depth=1024 offset=slave bundle=gmem1
+#endif
 	#pragma HLS INTERFACE m_axi port=ptr_bias   depth=1024 offset=slave bundle=gmem2
 	#pragma HLS INTERFACE m_axi port=ptr_out    depth=1024 offset=slave bundle=gmem3
 
@@ -78,6 +90,8 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
     #ifdef DWS_CONV
     static hls::stream<kernel_dw_t>     str_dw_kernel;
     static hls::stream<kernel_pw_t>     str_pw_kernel;
+    DO_PRAGMA(HLS STREAM variable=str_dw_kernel depth=CPO)
+    DO_PRAGMA(HLS STREAM variable=str_pw_kernel depth=CPO)
     #endif
 
     static hls::stream<pixel_out_t>  out_read_bias;
@@ -136,7 +150,13 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
 
     int read_channel_blocks      = (read_pixels + READ_BLOCK_SIZE - 1) / READ_BLOCK_SIZE;
     int offset_bias              = o_iter;
+#if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
     int offset_kernel            = o_iter * ((I + CPI - 1) / CPI) * CPI * CPO * 9;
+#endif
+#ifdef DWS_CONV
+    int offset_dw_kernel         = 0;
+    int offset_pw_kernel         = o_iter * ((I + CPI - 1) / CPI) * CPI * CPO;
+#endif
     #pragma HLS array_partition variable=enable_write dim=0 complete
     DO_PRAGMA(HLS ARRAY_PARTITION variable=offset_read_data_channel_i dim=0 complete)
     DO_PRAGMA(HLS ARRAY_PARTITION variable=offset_write_data_channel_i dim=0 complete)
@@ -165,7 +185,7 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
     read_kernel(I_ITER, offset_kernel, ptr_kernel, out_read_kernel);
     #endif
     #ifdef DWS_CONV
-    dws_read_kernel(I_ITER, offset_kernel, ptr_kernel, str_dw_kernel, str_pw_kernel);
+    dws_read_kernel(I_ITER, offset_dw_kernel, offset_pw_kernel, ptr_dw_kernel, ptr_pw_kernel, str_dw_kernel, str_pw_kernel);
     #endif
 
     read_data_channels(H, W, rows, I_ITER, ptr_data, offset_read_data_channel, num_extra_rows, read_channel_blocks, stream_data_ch_0, I);

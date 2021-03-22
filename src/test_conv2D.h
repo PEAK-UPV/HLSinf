@@ -54,7 +54,8 @@ extern int GO;							 // number of groups for output channels
 extern data_type *data_in;               // Input data buffer (format I x W x H)
 extern data_type *out;                   // Output data buffer (format O x W x H)
 extern data_type *kernel;                // Conv kernel buffers (format GO x GI x CPO x CPI x KW x KH) - for DirectConv and WinogradConv
-                                         // DWS conv kernel buffers (format I x KW x KH + I x O) [DW + PW]
+extern data_type *dw_kernel;             // DW kernel (format I x KH x KW) - for DWS
+extern data_type *pw_kernel;             // PW kernel (format GO x GI x CPO x CPI) - for DWS
 extern data_type *bias;                  // Conv bias buffers (format O)
 extern data_type *out_conv_cpu;          // Output data buffer for cpu (format O x W x H)
 extern data_type *out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
@@ -69,12 +70,14 @@ extern cl::CommandQueue q;                           // Command queue
 extern cl::Program program;                          // Program
 extern std::string binaryFile;                       // Binary file
 extern cl::Kernel kernel_conv2d[MAX_KERNELS];        // FPGA kernels
-extern vector<cl::Event> kernel_events; // Kernel events (completion)
-extern vector<cl::Event> read_events;             // Read events
-extern vector<cl::Event> write_events;            // Write events
+extern vector<cl::Event> kernel_events;              // Kernel events (completion)
+extern vector<cl::Event> read_events;                // Read events
+extern vector<cl::Event> write_events;               // Write events
 extern cl::Buffer *buffer_i;                         // input buffer
 extern cl::Buffer *buffer_o[MAX_CONVS];              // output buffers
 extern cl::Buffer *buffer_k[MAX_CONVS];              // Conv kernel buffers
+extern cl::Buffer *buffer_k_dw[MAX_CONVS];           // Conv kernel buffers (deepwise)
+extern cl::Buffer *buffer_k_pw[MAX_CONVS];           // Conv kernel buffers (pointwise)
 extern cl::Buffer *buffer_bias[MAX_CONVS];           // Conv bias buffers
 // DDR assignment
 extern cl_mem_ext_ptr_t data_in_ddr;                 // input data buffer

@@ -69,8 +69,9 @@ char *input_data_file;           // input data file with configurations to test
 // buffers
 data_type *data_in;               // Input data buffer (format I x W x H)
 data_type *out;                   // Output data buffer (format O x W x H)
-data_type *kernel;                // Conv kernel buffers (format GO x GI x CPO x CPI x KW x KH) - for DirectConv and WinogradConv
-                                  // DWS conv kernel buffers (format I x KW x KH + I x O) [DW + PW]
+data_type *kernel;                // Conv kernel buffers (format GO x GI x CPO x CPI x KH x KW) - for DirectConv and WinogradConv
+data_type *dw_kernel;             // DW kernel (format I x KH x KW) - for DWS
+data_type *pw_kernel;             // PW kernel (format GO x GI x CPO x CPI) - for DWS
 data_type *bias;                  // Conv bias buffers (format O)
 data_type *out_conv_cpu;          // Output data buffer for cpu (format O x W x H)
 data_type *out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
@@ -92,6 +93,8 @@ cl::Buffer *buffer_i;                         // input buffer
 cl::Buffer *buffer_o[MAX_CONVS];              // output buffers
 cl::Buffer *buffer_k[MAX_CONVS];              // Conv kernel buffers
 cl::Buffer *buffer_bias[MAX_CONVS];           // Conv bias buffers
+cl::Buffer *buffer_k_dw[MAX_CONVS];           // Conv kernel buffers (deepwise)
+cl::Buffer *buffer_k_pw[MAX_CONVS];           // Conv kernel buffers (pointwise)
 // DDR assignment
 cl_mem_ext_ptr_t data_in_ddr;                 // input data buffer
 cl_mem_ext_ptr_t out_ddr[MAX_CONVS];          // output data buffers

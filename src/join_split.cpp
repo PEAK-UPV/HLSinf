@@ -170,18 +170,18 @@ void split(int H, int W, int *offset_channel, int *block_offset_channel, hls::st
   for (int cpo=0; cpo<CPO; cpo++) {
 	DO_PRAGMA(HLS UNROLL)
 	if (offset_[cpo] != 0) {
-		int cpo_prev = (cpo + CPO - 1) % CPO;
+		int cpo_next = (cpo + 1) % CPO;
   	    split_loop_last_block_p:
 		for (int p=offset_[cpo]; p<WRITE_BLOCK_SIZE; p++) {
 			DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=WRITE_BLOCK_SIZE)
 			DO_PRAGMA(HLS PIPELINE II=1)
-			cb_[cpo].pixel[p] = lb_[cpo_prev].pixel[p];
+			cb_[cpo].pixel[p] = lb_[cpo_next].pixel[p];
 		}
 		cb_[cpo].block_offset = block_addr_[cpo];
         out[cpo] << cb_[cpo];
         #ifdef DEBUG_SPLIT
         printf("sending block: cpo %d (block address %d) -> ", cpo, block_addr_[cpo]);
-        for (int pp=0; pp<WRITE_BLOCK_SIZE; pp++) printf("%6.4f ", lb_[cpo].pixel[pp]);
+        for (int pp=0; pp<WRITE_BLOCK_SIZE; pp++) printf("%6.4f ", cb_[cpo].pixel[pp]);
         printf("\n");
         #endif
 	}
