@@ -61,9 +61,20 @@ void allocate_buffers() {
   out_ddr[0].flags  = 0 | XCL_MEM_TOPOLOGY;
   out_ddr[0].obj = out;
   out_ddr[0].param = 0;
+#if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
   kernel_ddr[0].flags  = 0 | XCL_MEM_TOPOLOGY;
   kernel_ddr[0].obj = kernel;
   kernel_ddr[0].param = 0;
+#endif
+#ifdef DWS_CONV
+  kernel_dw_ddr[0].flags  = 0 | XCL_MEM_TOPOLOGY;
+  kernel_dw_ddr[0].obj = dw_kernel;
+  kernel_dw_ddr[0].param = 0;
+  kernel_pw_ddr[0].flags  = 0 | XCL_MEM_TOPOLOGY;
+  kernel_pw_ddr[0].obj = pw_kernel;
+  kernel_pw_ddr[0].param = 0;
+#endif
+
   bias_ddr[0].flags  = 0 | XCL_MEM_TOPOLOGY;
   bias_ddr[0].obj = bias;
   bias_ddr[0].param = 0;
@@ -73,8 +84,8 @@ void allocate_buffers() {
   OCL_CHECK(err, buffer_k[0]    = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_kernel_in_bytes, &kernel_ddr[0], &err));
 #endif
 #ifdef DWS_CONV
-  OCL_CHECK(err, buffer_k_dw[0]    = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_kernel_dw_in_bytes, &kernel_ddr[0], &err));
-  OCL_CHECK(err, buffer_k_pw[0]    = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_kernel_pw_in_bytes, &kernel_ddr[0], &err));
+  OCL_CHECK(err, buffer_k_dw[0]    = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_kernel_dw_in_bytes, &kernel_dw_ddr[0], &err));
+  OCL_CHECK(err, buffer_k_pw[0]    = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_kernel_pw_in_bytes, &kernel_pw_ddr[0], &err));
 #endif
   OCL_CHECK(err, buffer_bias[0] = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_bias_in_bytes, &bias_ddr[0], &err));
 #endif

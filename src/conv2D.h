@@ -19,8 +19,8 @@
 // Select only one data type (fp32, apf8, api8)
 // -----------------------------------------------------------------------------------------------------------
 //#define FP32_DATA_TYPE
-#define APF8_DATA_TYPE
-//#define API8_DATA_TYPE
+//#define APF8_DATA_TYPE
+#define API8_DATA_TYPE
 
 // -----------------------------------------------------------------------------------------------------------
 // Defines for the kernel
@@ -35,8 +35,8 @@
 // Defines for the added modules to the conv layer (clipping and shift must be used only for API8 data type)
 // -----------------------------------------------------------------------------------------------------------
 #define USE_RELU		   // Enables the use of the ReLU activation
-//#define USE_CLIPPING       // Enables the use of the clipping function (implemented in the ReLU module)
-//#define USE_SHIFT          // Enables the use of the shift function (implemented in the ReLU module)
+#define USE_CLIPPING       // Enables the use of the clipping function (implemented in the ReLU module)
+#define USE_SHIFT          // Enables the use of the shift function (implemented in the ReLU module)
 #define USE_POOLING		   // Enables the use of the Pooling function (maxpooling or avgpooling)
 
 // -----------------------------------------------------------------------------------------------------------

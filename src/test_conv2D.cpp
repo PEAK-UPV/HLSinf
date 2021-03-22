@@ -99,6 +99,8 @@ cl::Buffer *buffer_k_pw[MAX_CONVS];           // Conv kernel buffers (pointwise)
 cl_mem_ext_ptr_t data_in_ddr;                 // input data buffer
 cl_mem_ext_ptr_t out_ddr[MAX_CONVS];          // output data buffers
 cl_mem_ext_ptr_t kernel_ddr[MAX_CONVS];       // Conv kernel buffers
+cl_mem_ext_ptr_t kernel_pw_ddr[MAX_CONVS];    // DeepWise conv kernel buffers
+cl_mem_ext_ptr_t kernel_dw_ddr[MAX_CONVS];    // PointWise conv kernel buffers
 cl_mem_ext_ptr_t bias_ddr[MAX_CONVS];         // Conv bias buffers
 #endif
 
