@@ -15,50 +15,67 @@
 // On every cycle the module receives BLOCK_SIZE pixels to write into memory
 //
 
-void write_data_channels(int num_pixels, ap_uint<512> *ptr, int *offset_i, hls::stream<write_block_t> in[CPO], int *enable_write) {
+void write_data_channels(int num_pixels, ap_uint<512> *ptr, hls::stream<write_block_t> in[CPO], int *enable_write) {
 
   int num_blocks = (num_pixels + WRITE_BLOCK_SIZE - 1) / WRITE_BLOCK_SIZE;
+  int num_blocks_channel[CPO];
+  write_block_t bx;
+  DO_PRAGMA(HLS ARRAY_PARTITION variable=num_blocks_channel dim=1)
+
+  write_data_channels_loop_init:
+  for (int cpo = 0; cpo < CPO; cpo++) {
+	  DO_PRAGMA(HLS UNROLL)
+    //  block_offset[cpo] = offset_i[cpo] / WRITE_BLOCK_SIZE;
+	  int channel_is_block_aligned = ((num_pixels * cpo) % WRITE_BLOCK_SIZE) == 0;
+	  if (channel_is_block_aligned)
+		num_blocks_channel[cpo] = num_blocks;
+	  else
+		num_blocks_channel[cpo] = num_blocks-1;
+  }
 
   #ifdef DEBUG_WRITE_DATA
   printf("WRITE_DATA: starts\n");
   printf("WRITE_DATA: num_pixels %d, num_blocks %d\n", num_pixels, num_blocks);
+  for (int cpo=0; cpo<CPO; cpo++) printf("WRITE:DATA num_blocks_channel %d: %d\n", cpo, num_blocks_channel[cpo]);
   #endif
 
-write_block_t bx[CPO];
-  int block_offset[CPO];
-  DO_PRAGMA(HLS ARRAY_PARTITION variable=bx complete)
-  DO_PRAGMA(HLS ARRAY_PARTITION variable=block_offset complete)
+  int cpo = 0;
+  int num_its = num_blocks * CPO;
+  int num_blocks_ch;
+  int read, write;
+  int offset;
 
-  write_data_channels_loop_init:
-  for (int cpo=0; cpo<CPO; cpo++) {
-	DO_PRAGMA(HLS UNROLL)
-	block_offset[cpo] = offset_i[cpo] / WRITE_BLOCK_SIZE;
-    #ifdef DEBUG_WRITE_DATA
-	printf("WRITE_DATA: cpo %d -> offset %d\n", cpo, block_offset[cpo]);
-    #endif
-  }
+  write_data_channels_loop_its:
+  for (int it = 0; it < num_its; it++) {
+	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=(W_REFERENCE*H_REFERENCE/WRITE_BLOCK_SIZE) * CPO)
+    #pragma HLS pipeline
 
-  write_data_channels_loop_blocks:
-  for (int p = 0; p < num_blocks; p++) {
-	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=W_REFERENCE*H_REFERENCE/WRITE_BLOCK_SIZE)
-	write_data_channels_loop_cpo:
-	for (int cpo=0; cpo<CPO; cpo++) {
-      #pragma HLS pipeline II=1
-      bx[cpo] = in[cpo].read();
-      if (enable_write[cpo]) {
-    	ap_uint<512> data_out;
-    	for (int x = 0; x < WRITE_BLOCK_SIZE; x++) {
-    		DO_PRAGMA(HLS UNROLL)
-    		int first = x * DATA_TYPE_WIDTH;
-    		int last = first + DATA_TYPE_WIDTH - 1;
-    		data_type datum = bx[cpo].pixel[x];
-    		data_out.range(last, first) = *(ap_uint<DATA_TYPE_WIDTH>*)(&datum);
-    	}
-        ptr[block_offset[cpo]+p] = data_out;
-        #ifdef DEBUG_WRITE_DATA
-        printf("WRITE_DATA: writting block cpo %d\n", cpo);
-        #endif
-      }
+	num_blocks_ch = (num_blocks_channel[cpo] > 0);
+	read = num_blocks_ch;
+	write = enable_write[cpo] && num_blocks_ch;
+
+	if (read) bx = in[cpo].read();
+
+	offset = bx.block_offset;
+
+    ap_uint<512> data_out;
+    for (int x = 0; x < WRITE_BLOCK_SIZE; x++) {
+      DO_PRAGMA(HLS UNROLL)
+      int first = x * DATA_TYPE_WIDTH;
+      int last = first + DATA_TYPE_WIDTH - 1;
+      data_type datum = bx.pixel[x];
+      data_out.range(last, first) = *(ap_uint<DATA_TYPE_WIDTH>*)(&datum);
     }
+
+    if (write) ptr[offset] = data_out;
+    num_blocks_channel[cpo]--;
+
+    #ifdef DEBUG_WRITE_DATA
+    if (write) printf("WRITE_DATA: writing block cpo %d on block address %d\n", cpo, offset);
+    #endif
+
+    cpo = (cpo + 1) % CPO;
+
   }
+
 }

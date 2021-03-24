@@ -17,9 +17,9 @@ vitis_hls
 First try: Configure the accelerator
 --------------------------------------------------------------
 
-Within vitis_hls edit the conv2D.h file and select the data type of the accelerator (float, ap_fixed, ap_int) and the accelerator width (CPI and CPO). Recommendation is to test first float and 4x4 configuration (data_type set to float and CPI CPO set both to 4).
+Within vitis_hls edit the conv2D.h file and select the data type of the accelerator (float, ap_fixed, ap_int) and the accelerator width (CPI and CPO). Recommendation is to test first float and 4x4 configuration (data_type set to float and CPI CPO set both to 4). You can also select whether using ReLU activation function and a pooling layer (maxpool and avgpool supported). Enable the use of ReLU only.
 
-Once done, launch C Simulation process (Project|Run C Simulation) and select "Build Only". The simulator will be built. You can find the binary for the simulator at HLSinf/project/HLSinf/AlveoU200/csim/build folder. Run ./csim.exe there. The input and output matrices for a convolution process will be shown and the test will tell you whether results are ok or not.
+Once done, launch C Simulation process (Project|Run C Simulation) and select "Build Only". The simulator will be built. You can find the binary for the simulator at HLSinf/project/HLSinf/AlveoU200/csim/build folder. Run ./csim.exe there. Several tests are launched, indicating for each one whether it succeeded or failed. Some tests may be skipped as some specific support (e.g. pooling) has not been activated.
   
 --------------------------------------------------------------
 Second try: Launch C synthesis
@@ -78,4 +78,4 @@ good luck!!!
 Current Versions supported
 ------------------------------------------------------------------------------------------
 
-Take a look to solutions folder for details.
+For a list of achieved configurations and performance see solutions/achieved_solutions.txt

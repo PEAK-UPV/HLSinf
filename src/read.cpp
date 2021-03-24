@@ -74,7 +74,7 @@ void read_kernel(int I_ITER, int offset_kernel, data_type *k_ptr, hls::stream<ke
 	  for (int cpo=0; cpo<CPO; cpo++) {
 		  for (int cpi=0; cpi<CPI; cpi++) {
 		      printf("READ_KERNEL: Kernel read for cpi=%d cpo=%d : ", cpi, cpo);
-		      for (int p=0;p<9; p++) printf(" %6.4f ", k.pixel[cpo][cpi][p]);
+		      for (int p=0;p<9; p++) printf(" %6.4f ", float(k.pixel[cpo][cpi][p]));
 		      printf("\n");
 		  }
 	  }
@@ -102,7 +102,7 @@ void read_kernel(int I_ITER, int offset_kernel, data_type *k_ptr, hls::stream<ke
 // kernels in the same order they are read through the output stream.
 // kernels are sent in frame structures (3x3 grid)
 //
-void dws_read_kernel(int I_ITER, int offset_kernel, data_type *k_ptr, hls::stream<kernel_dw_t> &k_dw_out, hls::stream<kernel_pw_t> &k_pw_out){
+void dws_read_kernel(int I_ITER, int offset_dw_kernel, int offset_pw_kernel, data_type *k_dw_ptr, data_type *k_pw_ptr, hls::stream<kernel_dw_t> &k_dw_out, hls::stream<kernel_pw_t> &k_pw_out){
 
   #ifdef DEBUG_READ_KERNEL
   printf("READ_KERNEL: start\n");
@@ -114,11 +114,13 @@ void dws_read_kernel(int I_ITER, int offset_kernel, data_type *k_ptr, hls::strea
   kernel_pw_t kernel_pw;
   #pragma HLS ARRAY_PARTITION variable=kernel_pw complete dim=0
 
-  dws_read_kernel_loop_i_iter:
+  int cnt_dw = 0;
+  int cnt_pw = 0;
+
+	dws_read_kernel_loop_i_iter:
   for (int i_iter=0; i_iter<I_ITER; i_iter++) {
 	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE/CPI)
 
-	int cnt = 0;
 
 	// deep-wise
     dws_read_kernel_loop_dw_cpi:
@@ -126,8 +128,8 @@ void dws_read_kernel(int I_ITER, int offset_kernel, data_type *k_ptr, hls::strea
       dws_read_kernel_loop_dw_p:
 	  for (int p=0; p<9; p++) {
 		#pragma HLS pipeline II=1
-		kernel_dw.pixel[cpi][p] = k_ptr[offset_kernel+cnt];
-	    cnt = cnt + 1;
+		kernel_dw.pixel[cpi][p] = k_dw_ptr[offset_dw_kernel+cnt_dw];
+	    cnt_dw = cnt_dw + 1;
 	  }
 	}
 	k_dw_out << kernel_dw;
@@ -142,13 +144,13 @@ void dws_read_kernel(int I_ITER, int offset_kernel, data_type *k_ptr, hls::strea
     #endif
 
     // point-wise
-    dws_read_kernel_loop_pw_cpi:
-    for (int cpi=0; cpi<CPI; cpi++) {
-      dws_read_kernel_loop_pw_cpo:
-      for (int cpo=0; cpo<CPO; cpo++) {
+    dws_read_kernel_loop_pw_cpo:
+    for (int cpo=0; cpo<CPO; cpo++) {
+      dws_read_kernel_loop_pw_cpi:
+      for (int cpi=0; cpi<CPI; cpi++) {
 		#pragma HLS pipeline II=1
-        kernel_pw.pixel[cpo][cpi] = k_ptr[offset_kernel+cnt];
-        cnt++;
+        kernel_pw.pixel[cpo][cpi] = k_pw_ptr[offset_pw_kernel+cnt_pw];
+        cnt_pw = cnt_pw + 1;
       }
     }
     k_pw_out << kernel_pw;

@@ -4,7 +4,7 @@
 #include "../../src/direct_convolution.cpp"
 #include "../../src/dws_convolution.cpp"
 #include "../../src/join_split.cpp"
-#include "../../src/maxpooling.cpp"
+#include "../../src/pooling.cpp"
 #include "../../src/mul.cpp"
 #include "../../src/padding.cpp"
 #include "../../src/read.cpp"
