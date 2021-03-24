@@ -75,7 +75,7 @@ unset XCL_EMULATION_MODE
 good luck!!!
 
 ------------------------------------------------------------------------------------------
-Supported configurations and achieved performance
+Current Versions supported
 ------------------------------------------------------------------------------------------
 
 For a list of achieved configurations and performance see solutions/achieved_solutions.txt
