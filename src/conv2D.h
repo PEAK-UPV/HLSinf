@@ -27,9 +27,9 @@
 // -----------------------------------------------------------------------------------------------------------
 #define WMAX            256   // Maximum image width
 #define HMAX            256   // Maximum image height
-#define CPI              16   // Basic kernel number of input channels
-#define CPO               8   // Basic kernel number of output channels
-#define LOG2_CPO          3   // number of bits for CPO (if you change CPO please change LOG2_CPO accordingly)
+#define CPI               4   // Basic kernel number of input channels
+#define CPO               4   // Basic kernel number of output channels
+#define LOG2_CPO          2   // number of bits for CPO (if you change CPO please change LOG2_CPO accordingly)
 
 // -----------------------------------------------------------------------------------------------------------
 // Defines for the added modules to the conv layer (clipping and shift must be used only for API8 data type)
@@ -74,12 +74,6 @@
 #define I_SIM I_REFERENCE
 #define O_SIM O_REFERENCE
 #define INSTANCES_SIM 2
-#define DATA_IN_PORT_DEPTH W_SIM*H_SIM*I_SIM*4/64
-#define DATA_OUT_PORT_DEPTH W_SIM*H_SIM*O_SIM*4/64
-#define KERNEL_PORT_DEPTH 3*3*I_SIM*O_SIM*4/4
-#define DW_KERNEL_PORT_DEPTH 2048
-#define PW_KERNEL_PORT_DEPTH 2048
-#define BIAS_PORT_DEPTH (O_SIM*4)/(CPO*4)
 
 // ***********************************************************************************************************
 // ***********************************************************************************************************
@@ -121,6 +115,16 @@
 #define MIN_DATA_TYPE_VALUE  -127
 #define EPSILON_VALUE 0
 #endif
+
+// -----------------------------------------------------------------------------------------------------------
+// depth of pointers for co-simulation support
+// -----------------------------------------------------------------------------------------------------------
+#define DATA_IN_PORT_DEPTH   W_SIM * H_SIM * I_SIM * (DATA_TYPE_WIDTH / 8) / 64
+#define DATA_OUT_PORT_DEPTH  W_SIM * H_SIM * O_SIM * (DATA_TYPE_WIDTH / 8) / 64
+#define KERNEL_PORT_DEPTH    3 * 3 * I_SIM * O_SIM
+#define DW_KERNEL_PORT_DEPTH 3 * 3 * I_SIM
+#define PW_KERNEL_PORT_DEPTH I_SIM * O_SIM
+#define BIAS_PORT_DEPTH      O_SIM / CPO
 
 // -----------------------------------------------------------------------------------------------------------
 // Defines for the CONV layer

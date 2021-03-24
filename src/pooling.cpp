@@ -181,7 +181,7 @@ static void pool_pooling(int HO, int WO, int enable_maxpooling, int enable_avgpo
 
 		  pooling_loop_kernel:
 		  for (int k=0; k < size_kernel; k++) {
-			DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=KW_POOLING * KH_POOLING)
+			DO_PRAGMA(HLS LOOP_TRIPCOUNT min=(KW_POOLING * KH_POOLING) max=(KW_POOLING * KH_POOLING))
 
 			data_type value = kernel.pixel[k].pixel[cpo];
 

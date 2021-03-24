@@ -52,15 +52,15 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
 			  int enable_clipping, int enable_shift, int min_clip, int max_clip, int dir_shift, int pos_shift) {
 
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
-	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_kernel depth=KERNEL_PORT_DEPTH offset=slave bundle=gmem1)
+	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_kernel    depth=KERNEL_PORT_DEPTH    offset=slave bundle=gmem1)
 #endif
 #ifdef DWS_CONV
     DO_PRAGMA(HLS INTERFACE m_axi port=ptr_dw_kernel depth=DW_KERNEL_PORT_DEPTH offset=slave bundle=gmem1)
     DO_PRAGMA(HLS INTERFACE m_axi port=ptr_pw_kernel depth=PW_KERNEL_PORT_DEPTH offset=slave bundle=gmem1)
 #endif
-	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_data depth=DATA_IN_PORT_DEPTH num_read_outstanding=CPI offset=slave bundle=gmem)
-	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_bias   depth=BIAS_PORT_DEPTH offset=slave bundle=gmem2)
-	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_out    depth=DATA_OUT_PORT_DEPTH offset=slave bundle=gmem3)
+	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_data      depth=DATA_IN_PORT_DEPTH   num_read_outstanding=CPI offset=slave bundle=gmem)
+	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_bias      depth=BIAS_PORT_DEPTH      offset=slave bundle=gmem2)
+	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_out       depth=DATA_OUT_PORT_DEPTH  offset=slave bundle=gmem3)
 
   #ifdef DEBUG_VERBOSE
   printf("kernel starts...\n");

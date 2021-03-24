@@ -19,7 +19,7 @@ void init_data() {
   for (int i=0; i<I; i++) {
     for (int h=0; h<H; h++) {
       for (int w=0; w<W; w++) {
-        data_in[addr] = deterministic_input_values?addr:dist(gen);
+        data_in[addr] = deterministic_input_values?i:dist(gen);
         addr++;
       }
     }
