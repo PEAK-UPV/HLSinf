@@ -17,3 +17,4 @@ void parse_arguments(int argc, char **argv) {
   input_data_file = argv[1];
 #endif
 }
+

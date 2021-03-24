@@ -61,6 +61,8 @@ extern data_type *out_conv_cpu;          // Output data buffer for cpu (format O
 extern data_type *out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
 extern data_type *out_pool_cpu;		     // Output data fuffer for pool for cpu (format O x W/2 x H/2)
 extern char *input_data_file;            // file with input parameters
+extern int deterministic_input_values;   // whether input data is randomly generated or not (deterministic needed in co-simulation)
+
 extern FILE *fp;
 
 #ifdef OPENCL_TEST

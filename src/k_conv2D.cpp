@@ -38,7 +38,6 @@ void set_channel_write_blocks(int num_channel_write_blocks[CPO], int addr[CPO], 
   }
 }
 
-
 extern "C" {
 
 void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int I_ITER, int O_ITER, int enable_relu,
@@ -48,18 +47,20 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
 #ifdef DWS_CONV
 						 data_type *ptr_dw_kernel, data_type *ptr_pw_kernel,
 #endif
-              pixel_out_t *ptr_bias, ap_uint<512> *ptr_out, int global_offset, int enable_upper_padding, int enable_lower_padding, int enable_maxpooling, int enable_avgpooling,
+              pixel_out_t *ptr_bias, ap_uint<512> *ptr_out, int global_offset, int enable_upper_padding,
+			  int enable_lower_padding, int enable_maxpooling, int enable_avgpooling,
 			  int enable_clipping, int enable_shift, int min_clip, int max_clip, int dir_shift, int pos_shift) {
-	#pragma HLS INTERFACE m_axi port=ptr_data   depth=1024 offset=slave bundle=gmem
+
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
-	#pragma HLS INTERFACE m_axi port=ptr_kernel depth=1024 offset=slave bundle=gmem1
+	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_kernel depth=KERNEL_PORT_DEPTH offset=slave bundle=gmem1)
 #endif
 #ifdef DWS_CONV
-    #pragma HLS INTERFACE m_axi port=ptr_dw_kernel depth=1024 offset=slave bundle=gmem1
-    #pragma HLS INTERFACE m_axi port=ptr_pw_kernel depth=1024 offset=slave bundle=gmem1
+    DO_PRAGMA(HLS INTERFACE m_axi port=ptr_dw_kernel depth=DW_KERNEL_PORT_DEPTH offset=slave bundle=gmem1)
+    DO_PRAGMA(HLS INTERFACE m_axi port=ptr_pw_kernel depth=PW_KERNEL_PORT_DEPTH offset=slave bundle=gmem1)
 #endif
-	#pragma HLS INTERFACE m_axi port=ptr_bias   depth=1024 offset=slave bundle=gmem2
-	#pragma HLS INTERFACE m_axi port=ptr_out    depth=1024 offset=slave bundle=gmem3
+	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_data depth=DATA_IN_PORT_DEPTH num_read_outstanding=CPI offset=slave bundle=gmem)
+	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_bias   depth=BIAS_PORT_DEPTH offset=slave bundle=gmem2)
+	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_out    depth=DATA_OUT_PORT_DEPTH offset=slave bundle=gmem3)
 
   #ifdef DEBUG_VERBOSE
   printf("kernel starts...\n");
@@ -111,9 +112,9 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
     DO_PRAGMA(HLS STREAM variable=out_pooling depth=32)
     #endif
 
-    /*static*/ hls::stream<read_block_t> stream_data_ch_0[CPI];
-    /*static*/ hls::stream<data_type>    stream_data_ch_1[CPI];
-    /*static*/ hls::stream<write_block_t> out_write_channel[CPO];
+    hls::stream<read_block_t> stream_data_ch_0[CPI];
+    hls::stream<data_type>    stream_data_ch_1[CPI];
+    hls::stream<write_block_t> out_write_channel[CPO];
     DO_PRAGMA(HLS STREAM variable=stream_data_ch_0  depth=32)
     DO_PRAGMA(HLS STREAM variable=stream_data_ch_1  depth=32)
     DO_PRAGMA(HLS STREAM variable=out_write_channel depth=32)
