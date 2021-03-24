@@ -27,6 +27,11 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>ap_int_base.h</name>
+			<type>1</type>
+			<location>/opt/Xilinx/Vitis/2020.1/common/technology/autopilot/ap_int_base.h</location>
+		</link>
+		<link>
 			<name>hls_stream_39.h</name>
 			<type>1</type>
 			<location>/opt/Xilinx/Vitis/2020.1/common/technology/autopilot/hls_stream_39.h</location>
@@ -92,6 +97,11 @@
 			<location>/home/jflich/git/HLSinf/src/padding.cpp</location>
 		</link>
 		<link>
+			<name>source/pooling.cpp</name>
+			<type>1</type>
+			<location>/home/jflich/git/HLSinf/src/pooling.cpp</location>
+		</link>
+		<link>
 			<name>source/read.cpp</name>
 			<type>1</type>
 			<location>/home/jflich/git/HLSinf/src/read.cpp</location>
@@ -117,14 +127,64 @@
 			<location>/home/jflich/git/HLSinf/src/write.cpp</location>
 		</link>
 		<link>
+			<name>testbench/data_test.cpp</name>
+			<type>1</type>
+			<location>/home/jflich/git/HLSinf/src/data_test.cpp</location>
+		</link>
+		<link>
 			<name>testbench/input.data</name>
 			<type>1</type>
 			<location>/home/jflich/git/HLSinf/src/input.data</location>
 		</link>
 		<link>
+			<name>testbench/opencl.cpp</name>
+			<type>1</type>
+			<location>/home/jflich/git/HLSinf/src/opencl.cpp</location>
+		</link>
+		<link>
+			<name>testbench/test_arguments.cpp</name>
+			<type>1</type>
+			<location>/home/jflich/git/HLSinf/src/test_arguments.cpp</location>
+		</link>
+		<link>
+			<name>testbench/test_buffers.cpp</name>
+			<type>1</type>
+			<location>/home/jflich/git/HLSinf/src/test_buffers.cpp</location>
+		</link>
+		<link>
+			<name>testbench/test_check.cpp</name>
+			<type>1</type>
+			<location>/home/jflich/git/HLSinf/src/test_check.cpp</location>
+		</link>
+		<link>
 			<name>testbench/test_conv2D.cpp</name>
 			<type>1</type>
 			<location>/home/jflich/git/HLSinf/src/test_conv2D.cpp</location>
+		</link>
+		<link>
+			<name>testbench/test_conv2D.h</name>
+			<type>1</type>
+			<location>/home/jflich/git/HLSinf/src/test_conv2D.h</location>
+		</link>
+		<link>
+			<name>testbench/test_cpu.cpp</name>
+			<type>1</type>
+			<location>/home/jflich/git/HLSinf/src/test_cpu.cpp</location>
+		</link>
+		<link>
+			<name>testbench/test_file.cpp</name>
+			<type>1</type>
+			<location>/home/jflich/git/HLSinf/src/test_file.cpp</location>
+		</link>
+		<link>
+			<name>testbench/test_kernel.cpp</name>
+			<type>1</type>
+			<location>/home/jflich/git/HLSinf/src/test_kernel.cpp</location>
+		</link>
+		<link>
+			<name>testbench/test_print.cpp</name>
+			<type>1</type>
+			<location>/home/jflich/git/HLSinf/src/test_print.cpp</location>
 		</link>
 		<link>
 			<name>AlveoU200/constraints/.xml.directive</name>
