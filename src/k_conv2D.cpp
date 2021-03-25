@@ -20,21 +20,12 @@ void set_reading_channel_offsets(int offset_read_data_channel_i[CPI], int offset
  }
 }
 
-void set_writing_channel_offsets(int offset_write_data_channel_i[CPO], int block_offset_write_data_channel_i[CPO], int global_offset, int channel_offset, int o_channel) {
-  set_writing_channel_offsets_loop:
-  for(int i=0; i<CPO; i++){
-    DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO)
-    #pragma HLS UNROLL
-    offset_write_data_channel_i[i] = global_offset + (channel_offset * i) + (o_channel * channel_offset);
-    block_offset_write_data_channel_i[i] = offset_write_data_channel_i[i] % WRITE_BLOCK_SIZE;
-  }
-}
 
-void set_channel_write_blocks(int num_channel_write_blocks[CPO], int addr[CPO], int H, int W) {
+void set_channel_write_blocks(int num_channel_write_blocks[CPO], int H, int W) {
   set_channel_write_blocks_loop:
   for(int i=0; i<CPO; i++) {
     #pragma HLS UNROLL
-	num_channel_write_blocks[i] = ((H * W) + (addr[i] % WRITE_BLOCK_SIZE) + WRITE_BLOCK_SIZE - 1) / WRITE_BLOCK_SIZE;
+	num_channel_write_blocks[i] = ((H * W) + WRITE_BLOCK_SIZE - 1) / WRITE_BLOCK_SIZE;
   }
 }
 
@@ -114,16 +105,16 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
 
     hls::stream<read_block_t> stream_data_ch_0[CPI];
     hls::stream<data_type>    stream_data_ch_1[CPI];
-    hls::stream<write_block_t> out_write_channel[CPO];
+    hls::stream<data_type> out_write_channel[CPO];
+    hls::stream<write_block_t> out_block_write_channel[CPO];
     DO_PRAGMA(HLS STREAM variable=stream_data_ch_0  depth=32)
     DO_PRAGMA(HLS STREAM variable=stream_data_ch_1  depth=32)
     DO_PRAGMA(HLS STREAM variable=out_write_channel depth=32)
+    DO_PRAGMA(HLS STREAM variable=out_block_write_channel depth=32)
 
     // variables
     int enable_write[CPO];
     int offset_read_data_channel_i[CPI];
-    int offset_write_data_channel_i[CPO];
-    int block_offset_write_data_channel_i[CPO];
     int num_channel_write_blocks[CPO];
     int corrected_offset         = (enable_upper_padding==0)? W : 0;
     int num_extra_rows           = (enable_lower_padding == 0) + (enable_upper_padding == 0);
@@ -131,22 +122,21 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
     int channel_size             = H * W;
     int read_pixels              = W * (rows + num_extra_rows);
     int enable_pooling           = enable_maxpooling | enable_avgpooling;
-    DO_PRAGMA(HLS ARRAY_PARTITION variable=offset_write_data_channel_i complete dim=0)
 
     int read_channel_offset      = (W * H);
 
     #ifdef USE_POOLING
     int write_pixels             = enable_pooling ? (rows * W / 4) : (rows * W);
-    //int write_channel_blocks     = (write_pixels + WRITE_BLOCK_SIZE - 1) / WRITE_BLOCK_SIZE;
     int write_rows               = enable_pooling ? rows/2 : rows;
     int write_cols               = enable_pooling ? W/2 : W;
     int write_channel_offset     = enable_pooling ? (W * H) / 4 : (W * H);
+    int o_iter_write_offset      = (global_offset + (o_channel * write_channel_offset)) / WRITE_BLOCK_SIZE;
     #else
     int write_pixels             = rows * W;
-    //int write_channel_blocks     = (write_pixels + WRITE_BLOCK_SIZE - 1) / WRITE_BLOCK_SIZE;
     int write_rows               = rows;
     int write_cols               = W;
     int write_channel_offset     = (W * H);
+    int o_iter_write_offset      = (global_offset + (o_channel * write_channel_offset)) / WRITE_BLOCK_SIZE;
     #endif
 
     int read_channel_blocks      = (read_pixels + READ_BLOCK_SIZE - 1) / READ_BLOCK_SIZE;
@@ -170,11 +160,8 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
     // channel offsets for reading
     set_reading_channel_offsets(offset_read_data_channel_i, offset_read_data_channel, read_channel_offset);
 
-    // channel offsets for writing
-    set_writing_channel_offsets(offset_write_data_channel_i, block_offset_write_data_channel_i, global_offset, write_channel_offset, o_channel);
-
     // channel write blocks
-    set_channel_write_blocks(num_channel_write_blocks, offset_write_data_channel_i, H, W);
+    set_channel_write_blocks(num_channel_write_blocks, H, W);
 
     read_bias(offset_bias, ptr_bias, out_read_bias);
 
@@ -211,22 +198,26 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
       // Pooling: avgpooling or maxpooling
       #ifdef USE_POOLING
       pooling(H, W, enable_maxpooling, enable_avgpooling, out_relu, out_pooling);
-      split(write_rows, write_cols, offset_write_data_channel_i, block_offset_write_data_channel_i, out_pooling, out_write_channel);
+      split(write_rows, write_cols, out_pooling, out_write_channel);
+      ch_block_generate<CPO>(write_rows, write_cols, out_write_channel, out_block_write_channel);
       #else
-      split(write_rows, write_cols, offset_write_data_channel_i, block_offset_write_data_channel_i, out_relu, out_write_channel);
+      split(write_rows, write_cols, out_relu, out_write_channel);
+      ch_block_generate<CPO>(write_rows, write_cols, out_write_channel, out_block_write_channel);
       #endif
 
     #else
       // Pooling: avgpooling or maxpooling
       #ifdef USE_POOLING
       pooling(H, W, enable_maxpooling, enable_avgpooling, out_conv, out_pooling);
-      split(write_rows, write_cols, offset_write_data_channel_i, block_offset_write_data_channel_i, out_pooling, out_write_channel);
+      split(write_rows, write_cols, out_pooling, out_write_channel);
+      ch_block_generate<CPO>(write_rows, write_cols, out_write_channel, out_block_write_channel);
       #else
-      split(write_rows, write_cols, offset_write_data_channel_i, block_offset_write_data_channel_i, out_conv, out_write_channel);
+      split(write_rows, write_cols, out_conv, out_write_channel);
+      ch_block_generate<CPO>(write_rows, write_cols, out_write_channel, out_block_write_channel);
       #endif
     #endif
 
-    write_data_channels(write_pixels, ptr_out, out_write_channel, enable_write);
+    write_data_channels(write_pixels, o_iter_write_offset, ptr_out, out_block_write_channel, enable_write);
 
  }
 

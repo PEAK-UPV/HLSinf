@@ -216,21 +216,12 @@ void read_data_channels(int H, int W, int rows, int I_ITER, ap_uint<512> *ptr, i
     	read_data_channels_loop_CPI:
         for(int i = 0; i < CPI; i++){
           #pragma HLS pipeline
-          ap_uint<512> data_read;
+          read_block_t data_read;
        	  int current_input_channel = (i_iter * CPI) + i;
        	  int enable = current_input_channel < I;
           if (enable) {
         	  data_read = ptr[first_block_[i]];
-              read_data_channels_loop_block_pixels:
-              for (int p=0; p<READ_BLOCK_SIZE; p++) {
-                DO_PRAGMA(HLS UNROLL)
-                int first = p * DATA_TYPE_WIDTH;
-                int last = first + DATA_TYPE_WIDTH-1;
-                unsigned int tmp = data_read.range(last, first);
-                data_type datum = *(data_type*)(&tmp);
-                bx[i].pixel[p] = datum;
-              }
-              out[i] << bx[i];
+              out[i] << data_read;
               first_block_[i] = first_block_[i] + 1;
           }
         }

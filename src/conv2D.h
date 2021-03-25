@@ -27,9 +27,9 @@
 // -----------------------------------------------------------------------------------------------------------
 #define WMAX            256   // Maximum image width
 #define HMAX            256   // Maximum image height
-#define CPI               4   // Basic kernel number of input channels
-#define CPO               4   // Basic kernel number of output channels
-#define LOG2_CPO          2   // number of bits for CPO (if you change CPO please change LOG2_CPO accordingly)
+#define CPI              16   // Basic kernel number of input channels
+#define CPO               8   // Basic kernel number of output channels
+#define LOG2_CPO          3   // number of bits for CPO (if you change CPO please change LOG2_CPO accordingly)
 
 // -----------------------------------------------------------------------------------------------------------
 // Defines for the added modules to the conv layer (clipping and shift must be used only for API8 data type)
@@ -61,6 +61,7 @@
 //#define DEBUG_MUL
 //#define DEBUG_ADD
 //#define DEBUG_SPLIT
+//#define DEBUG_BLOCK
 //#define DEBUG_WRITE_DATA
 //#define DEBUG_RELU
 //#define DEBUG_POOL
@@ -156,6 +157,7 @@
 #define DEBUG_MUL
 #define DEBUG_ADD
 #define DEBUG_SPLIT
+#define DEBUG_BLOCK
 #define DEBUG_WRITE_DATA
 #define DEBUG_RELU
 #define DEBUG_POOL
@@ -196,11 +198,7 @@ struct frame_d {
 struct frame_d_2 {
   pixel_in_t2 pixel[16];
 };
-// -----------------------------------------------------------------------------------------------------------
-// frames struct maxpool
-struct frame_m {
-  pixel_in_t pixel[KWmpool * KHmpool];
-};
+
 // -----------------------------------------------------------------------------------------------------------
 // kernel struct
 struct kernel_t {
@@ -227,16 +225,11 @@ struct kernel_pw_t {
 
 // -----------------------------------------------------------------------------------------------------------
 // Read block struct
-typedef struct {
-  data_type pixel[READ_BLOCK_SIZE];
-} read_block_t;
+#define read_block_t ap_int<512>
 
 // -----------------------------------------------------------------------------------------------------------
 // Write block struct
-struct write_block_t {
-  data_type pixel[WRITE_BLOCK_SIZE];
-  int block_offset;
-};
+#define write_block_t ap_int<512>
 
 // What follows is the function prototypes
 
@@ -272,7 +265,7 @@ void read_kernel(int I_ITER, int offset_kernel, data_type *k_ptr, hls::stream<ke
 void read_data_channels(int H, int W, int rows, int I_ITER, ap_uint<512> *ptr, int offset, int num_extra_rows, int channel_blocks, hls::stream<read_block_t> out[CPI], int I);
 
 // write functions
-void write_data_channels(int num_pixels, ap_uint<512> *ptr, hls::stream<write_block_t> in[CPO], int *enable_write);
+void write_data_channels(int num_pixels, int channel_offset, ap_uint<512> *ptr, hls::stream<write_block_t> in[CPO], int *enable_write);
 
 // direct conv functions
 void direct_conv(int H, int W, int I_ITER, int enable_upper_padding, int enable_lower_padding, hls::stream<pixel_in_t> &in, hls::stream<kernel_t> &k_in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out);
@@ -287,7 +280,16 @@ void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<ker
 
 // data reorganization
 void join(int H, int W, int I_ITER, int num_extra_rows, hls::stream<data_type> in[CPI], hls::stream<pixel_in_t> &out);
-void split(int H, int W, int *offset_channel, int *block_offset_channel, hls::stream<pixel_out_t> &in, hls::stream<write_block_t> out[CPO]);
+void split(int H, int W, hls::stream<pixel_out_t> &in, hls::stream<data_type> out[CPO]);
+void block_generate(int H, int W, hls::stream<data_type> &in, hls::stream<write_block_t> &out);
+template <int LEVELS> void ch_block_generate(int H, int W, hls::stream<data_type> in[LEVELS], hls::stream<write_block_t> out[LEVELS]){
+#pragma HLS inline
+ch_block_generate:
+  for (int i = 0; i < LEVELS; i++) {
+    #pragma HLS UNROLL
+    block_generate(H, W, in[i], out[i]);
+  }
+}
 
 // activation functions
 void relu(int enable_relu, int enable_clipping, int enable_shift, int min_clip, int max_clip, int direction_shift, int pos_shift,

@@ -75,54 +75,17 @@ void join(int H, int W, int I_ITER, int num_extra_rows, hls::stream<data_type> i
 // every output data item to be sent. After those cycles the out data items are
 // sent through the corresponding output stream
 //
-void split(int H, int W, int *offset_channel, int *block_offset_channel, hls::stream<pixel_out_t> &in, hls::stream<write_block_t> out[CPO]) {
+void split(int H, int W, hls::stream<pixel_out_t> &in, hls::stream<data_type> out[CPO]) {
 
   #ifdef DEBUG_SPLIT
   printf("DEBUG_SPLIT: starts\n");
-
   #endif
 
   int num_pixels = H * W;                                       // pixels to receive per channel
-  write_block_t cb_[CPO];										// current block buffer
-  write_block_t lb_[CPO];										// last block buffer
-  int offset_[CPO];												// block offset for incoming pixel
-  int block_addr_[CPO];											// block address for incoming pixel
-  int current_block_[CPO];										// current block id being built
-  int fpa_[CPO];												// first pixel aligned flag
   pixel_out_t data;												// received pixels
-  DO_PRAGMA(HLS ARRAY_PARTITION variable=cb_         complete dim=0)
-  DO_PRAGMA(HLS ARRAY_PARTITION variable=lb_         complete dim=0)
-  DO_PRAGMA(HLS ARRAY_PARTITION variable=curr_block_ complete dim=0)
-  DO_PRAGMA(HLS ARRAY_PARTITION variable=fpa_        complete dim=0)
   DO_PRAGMA(HLS ARRAY_PARTITION variable=data        complete dim=0)
-  DO_PRAGMA(HLS ARRAY_PARTITION variable=offset_     complete dim=0)
-  DO_PRAGMA(HLS ARRAY_PARTITION variable=block_addr_ complete dim=0)
 
-  // structs initialization
-  for (int cpo=0; cpo<CPO; cpo++) {
-	  DO_PRAGMA(HLS UNROLL)
-	  offset_[cpo] = block_offset_channel[cpo];
-	  block_addr_[cpo] = offset_channel[cpo] / WRITE_BLOCK_SIZE;
-	  fpa_[cpo] = (offset_[cpo] == 0);
-	  current_block_[cpo] = 0;
-      #ifdef DEBUG_SPLIT
-	  printf("DEBUG_SPLIT: cpo %d -> offset %d fpa %d current_block %d\n", cpo, offset_[cpo], fpa_[cpo], current_block_[cpo]);
-      #endif
-  }
-
-  // buffers initialization
-  split_loop_init_cpo:
-  for (int cpo=0; cpo<CPO; cpo++) {
-	DO_PRAGMA(HLS UNROLL)
-	split_loop_init_p:
-	for (int p=0; p<WRITE_BLOCK_SIZE; p++) {
-	  DO_PRAGMA(HLS PIPELINE II=1)
-	  lb_[cpo].pixel[p] = 0;
-	  cb_[cpo].pixel[p] = 0;
-	}
-  }
-
-  // Now we read input pixels and forward blocks
+  // We read input pixels and forward blocks
   split_loop_pixels:
   for (int r=0; r<num_pixels; r++) {
     DO_PRAGMA(HLS loop_tripcount  min=1 max=W_REFERENCE * H_REFERENCE)
@@ -132,59 +95,58 @@ void split(int H, int W, int *offset_channel, int *block_offset_channel, hls::st
     data = in.read();
 
     split_loop_cpo_1:
-    for(int cpo=0; cpo<CPO; cpo++){
+    for(int cpo=0; cpo<CPO; cpo++) {
       DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO)
       #pragma HLS UNROLL
 
-  	  int offset = offset_[cpo];
   	  data_type datum = data.pixel[cpo];
 
-	  if (fpa_[cpo]) {
-		  cb_[cpo].pixel[offset] = datum;
-	  } else {
-		  lb_[cpo].pixel[offset] = datum;
-	  }
-
-	  if (offset == WRITE_BLOCK_SIZE-1) {
-
-		  if (fpa_[cpo]) {
-			  cb_[cpo].block_offset = block_addr_[cpo];
-			  out[cpo] << cb_[cpo];
-			  current_block_[cpo] = current_block_[cpo] + 1;
-              #ifdef DEBUG_SPLIT
-              printf("sending block: cpo %d (block address %d) -> ", cpo, block_addr_[cpo]);
-              for (int pp=0; pp<WRITE_BLOCK_SIZE; pp++) printf("%6.4f ", float(cb_[cpo].pixel[pp]));
-              printf("\n");
-              #endif
-		  }
-		  fpa_[cpo] = 1;
-		  block_addr_[cpo] = block_addr_[cpo] + 1;
-	  }
-      offset_[cpo] = (offset_[cpo] + 1) % WRITE_BLOCK_SIZE;
+      out[cpo] << datum;
     }
   }
 
-  // we send last block for each output channel, taking into account
-  // possible overlaps between consecutive channels
-  split_loop_last_block_cpo:
-  for (int cpo=0; cpo<CPO; cpo++) {
-	DO_PRAGMA(HLS UNROLL)
-	if (offset_[cpo] != 0) {
-		int cpo_next = (cpo + 1) % CPO;
-  	    split_loop_last_block_p:
-		for (int p=offset_[cpo]; p<WRITE_BLOCK_SIZE; p++) {
-			DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=WRITE_BLOCK_SIZE)
-			DO_PRAGMA(HLS PIPELINE II=1)
-			cb_[cpo].pixel[p] = lb_[cpo_next].pixel[p];
-		}
-		cb_[cpo].block_offset = block_addr_[cpo];
-        out[cpo] << cb_[cpo];
-        #ifdef DEBUG_SPLIT
-        printf("sending block: cpo %d (block address %d) -> ", cpo, block_addr_[cpo]);
-        for (int pp=0; pp<WRITE_BLOCK_SIZE; pp++) printf("%6.4f ", cb_[cpo].pixel[pp]);
-        printf("\n");
-        #endif
-	}
+  #ifdef DEBUG_SPLIT
+  printf("DEBUG_SPLIT: starts\n");
+  #endif
+
+}
+
+void block_generate(int H, int W, hls::stream<data_type> &in, hls::stream<write_block_t> &out) {
+
+#ifdef DEBUG_BLOCK
+printf("DEBUG_BLOCK: starts\n");
+#endif
+
+  write_block_t bx;
+  DO_PRAGMA(HLS ARRAY_PARTITION variable=bx complete dim=0)
+
+  int offset = 0;
+  int num_pixels = H * W;
+  int num_blocks = (num_pixels + WRITE_BLOCK_SIZE - 1) / WRITE_BLOCK_SIZE;
+  block_generate_blocks:
+  for (int b=0; b < num_blocks; b++) {
+	DO_PRAGMA(HLS loop_tripcount min=1 max=(W_REFERENCE * H_REFERENCE) / WRITE_BLOCK_SIZE)
+    block_generate_pixels:
+    for (int p=0; p < WRITE_BLOCK_SIZE; p++) {
+	  DO_PRAGMA(HLS PIPELINE)
+	  data_type dx;
+#ifdef DEBUG_BLOCK
+	  printf("to read pixel, pending %d\n", num_pixels);
+#endif
+	  if (num_pixels) dx = in.read();
+#ifdef DEBUG_BLOCK
+	  printf("read pixel, pending %d\n", num_pixels);
+#endif
+      int first = p * DATA_TYPE_WIDTH;
+      int last = first + DATA_TYPE_WIDTH - 1;
+      bx.range(last, first) = *(ap_uint<DATA_TYPE_WIDTH>*)(&dx);
+	  if (num_pixels) num_pixels--;
+    }
+    out << bx;
   }
+
+#ifdef DEBUG_BLOCK
+printf("DEBUG_BLOCK: ends\n");
+#endif
 
 }

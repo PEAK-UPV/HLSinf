@@ -26,10 +26,7 @@ void serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int ch
 
   // Zero block initialization
   read_block_t data_zeros;
-  for (int b=0; b<READ_BLOCK_SIZE; b++) {
-    #pragma HLS UNROLL
-    data_zeros.pixel[b] = 0;
-  }
+  data_zeros = 0;
 
   int iters = I_ITER * channel_blocks * READ_BLOCK_SIZE;
   int b = 0;
@@ -51,10 +48,13 @@ void serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int ch
       if (current_channel < I) bx = in.read(); else bx = data_zeros;
     }
     if ((offset_ch==0) && (num_pixels_cnt !=0)) {
-      out << bx.pixel[p];
+      int first = p * DATA_TYPE_WIDTH;
+      int last = first + DATA_TYPE_WIDTH - 1;
+      data_type bx2 = bx.range(last, first);
+      out << bx2;
       num_pixels_cnt = num_pixels_cnt - 1;
       #ifdef DEBUG_SERIALIZE
-      printf("SERIALIZE: pixel forwarded %f\n", (float)bx.pixel[p]);
+      //printf("SERIALIZE: pixel forwarded %f\n", (float)bx.pixel[p]);
       #endif
     } else {
       offset_ch = offset_ch - 1;

@@ -136,6 +136,16 @@ void compute(int *enable, int *cpu, int *retval) {
 		 *enable = 0;
 	   }
 
+	   if (((H * W * (DATA_TYPE_WIDTH / 8)) % READ_BLOCK_SIZE) != 0) {
+		 print_message("Input channel size must be multiple of read block size (skipped)");
+		 *enable = 0;
+	   }
+
+	   if (((HO * WO * (DATA_TYPE_WIDTH / 8)) % WRITE_BLOCK_SIZE) != 0) {
+		 print_message("Output channel size must be multiple of write block size (skipped)");
+		 *enable = 0;
+	   }
+
 	   if (*enable) {
 	     allocate_buffers();
 	     init_data();

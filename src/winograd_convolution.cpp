@@ -1,4 +1,11 @@
 #include "conv2D.h"
+
+// -----------------------------------------------------------------------------------------------------------
+// frames struct winograd
+struct frame_winograd {
+  pixel_in_t pixel[2 * 2];
+};
+
 // ---------------------------------------------------------------------------------------------------
 // cvt_winograd: reads an input stream with an image of format (H, W, CPI) and writes an output stream
 // in a 2D format based on (KW, KH). (SW=2, SH=2) stride is assumed and (PW=1, PH=1) padding is assumed.
@@ -129,7 +136,7 @@ static void cvt_winograd(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, 
 			}
 		 out << frame;
 
-		// #ifdef DEBUG_VERBOSE
+		 #ifdef DEBUG_CVT
 		  printf("cvt: frame sent1 %d:\n", i_iter);
 		  for (int cpi=0; cpi<CPI/2; cpi++) {
 			printf("  cpi %d:\n", cpi);
@@ -138,7 +145,7 @@ static void cvt_winograd(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, 
 			printf("    %6.4f %6.4f %6.4f %6.4f\n", float(frame.pixel[8].pixel[cpi]), float(frame.pixel[9].pixel[cpi]), float(frame.pixel[10].pixel[cpi]), float(frame.pixel[11].pixel[cpi]));
 			printf("    %6.4f %6.4f %6.4f %6.4f\n", float(frame.pixel[12].pixel[cpi]), float(frame.pixel[13].pixel[cpi]), float(frame.pixel[14].pixel[cpi]),  float(frame.pixel[15].pixel[cpi]));
 		  }
-		 //#endif
+		 #endif
 		}
 
 		if (pin_col_curr == WW) {
@@ -374,7 +381,7 @@ static void mulData(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls:
 //   k_in  : input stream with kernels
 //   out   : output stream
 //
-static void mulKernels(int H, int W, int I_ITER, hls::stream<kernel_t> &k_in, hls::stream<frame_d> &out) {
+static void mulKernels(int I_ITER, hls::stream<kernel_t> &k_in, hls::stream<frame_d> &out) {
 
 	#ifdef DEBUG_VERBOSE
 	printf("mul: start\n");
@@ -550,13 +557,13 @@ static void mulWise(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls:
 //   d_in  : input stream with data frames
 //   out   : output stream
 //
-static void mult_A_AT(int H, int W, int I_ITER, hls::stream<frame_d> &d_in, hls::stream<frame_m> &out) {
+static void mult_A_AT(int H, int W, int I_ITER, hls::stream<frame_d> &d_in, hls::stream<frame_winograd> &out) {
 
 	#ifdef DEBUG_VERBOSE
 	printf("mult_A_AT: starts\n");
 	#endif
 	frame_d data;
-	frame_m res;
+	frame_winograd res;
 	
 	data_type ATxWise_mult[CPI][2][4];
 	data_type resMULT[CPI][2][2];
@@ -623,7 +630,7 @@ static void mult_A_AT(int H, int W, int I_ITER, hls::stream<frame_d> &d_in, hls:
 //   b_in  : input stream bias
 //   out   : output stream
 //
-static void add_winograd(int H, int W, int I_ITER, hls::stream<pixel_out_t> &b_in, hls::stream<frame_m> &in, hls::stream<pixel_out_t> &out) {
+static void add_winograd(int H, int W, int I_ITER, hls::stream<pixel_out_t> &b_in, hls::stream<frame_winograd> &in, hls::stream<pixel_out_t> &out) {
 
 	#ifdef DEBUG_VERBOSE
 	printf("add: start\n");
@@ -677,7 +684,7 @@ static void add_winograd(int H, int W, int I_ITER, hls::stream<pixel_out_t> &b_i
 		}
 	}
 
-	frame_m data;
+	frame_winograd data;
 	DO_PRAGMA(HLS ARRAY_PARTITION variable=data dim=0 complete)
 
 
@@ -685,13 +692,15 @@ static void add_winograd(int H, int W, int I_ITER, hls::stream<pixel_out_t> &b_i
 	add_i_iter_loop:
 	for (int i_iter = 0; i_iter < I_ITER; i_iter++){
 		DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE/CPI)
-		#pragma HLS loop_flatten off
-		loop_add_read_data:
-		for (int h = 0; h < H; h+=2){ 
+		//#pragma HLS loop_flatten off
+		add_loop_h:
+		for (int h = 0; h<H; h=h+2) {
 			DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE)
-			for (int w=0; w < W; w+=2){
+			//#pragma HLS loop_flatten off
+			add_loop_w:
+			for (int w = 0; w < W; w=w+2){
 				DO_PRAGMA(HLS loop_tripcount min=1 max=W_REFERENCE)
-				#pragma HLS PIPELINE II=1
+				#pragma HLS PIPELINE
 				data = in.read();
 				for (int cpi=0; cpi < CPI; cpi++) {
 					#pragma HLS UNROLL
@@ -742,13 +751,13 @@ static void add_winograd(int H, int W, int I_ITER, hls::stream<pixel_out_t> &b_i
 void winograd_conv(int H, int W, int I_ITER, int enable_upper_padding, int enable_lower_padding, hls::stream<pixel_in_t> &in, hls::stream<kernel_t> &k_in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out) {
 
 	// streams
-	static hls::stream<pixel_in_t>  str_pad_cvt;  	 	// padding 	-> 	cvt
-	static hls::stream<frame_d>   	cvt_frameConvert; 	// cvt 		-> 	frameConvert 
-	static hls::stream<frame_d_2>   str_cvt_mul_cTc;    // cvt 		-> 	mulData 
-	static hls::stream<frame_d>     kernels_multWise;  	// mulKernels -> mulWise
-	static hls::stream<frame_d_2>   mult_data_res;  	// mulData 	-> 	mult wise
-	static hls::stream<frame_d>     mult_wise_res;  	// mulWise 	-> 	mult_A_AT
-	static hls::stream<frame_m> 	str_mul_add;  		// mult_A_AT -> add_winograd
+	static hls::stream<pixel_in_t>      str_pad_cvt;  	 	// padding 	-> 	cvt
+	static hls::stream<frame_d>   	    cvt_frameConvert; 	// cvt 		-> 	frameConvert
+	static hls::stream<frame_d_2>       str_cvt_mul_cTc;    // cvt 		-> 	mulData
+	static hls::stream<frame_d>         kernels_multWise;  	// mulKernels -> mulWise
+	static hls::stream<frame_d_2>       mult_data_res;  	// mulData 	-> 	mult wise
+	static hls::stream<frame_d>         mult_wise_res;  	// mulWise 	-> 	mult_A_AT
+	static hls::stream<frame_winograd> 	str_mul_add;  		// mult_A_AT -> add_winograd
 	DO_PRAGMA(HLS stream variable=str_pad_cvt depth=CPI)
 	DO_PRAGMA(HLS stream variable=str_cvt_mul_cTc depth=CPI)
 	DO_PRAGMA(HLS stream variable=kernels_multWise depth=CPI)
@@ -761,7 +770,7 @@ void winograd_conv(int H, int W, int I_ITER, int enable_upper_padding, int enabl
 	padding(H, W, I_ITER, enable_upper_padding, enable_lower_padding, in, str_pad_cvt); 
 	cvt_winograd(H, W, I_ITER, str_pad_cvt, cvt_frameConvert);		
 	frameConvert(H, W, I_ITER, cvt_frameConvert, str_cvt_mul_cTc);
-	mulKernels(H, W, I_ITER, k_in, kernels_multWise);
+	mulKernels(I_ITER, k_in, kernels_multWise);
 	mulData(H, W, I_ITER, str_cvt_mul_cTc, mult_data_res);
 	mulWise(H, W, I_ITER, mult_data_res, kernels_multWise, mult_wise_res);
 	mult_A_AT(H, W, I_ITER, mult_wise_res, str_mul_add);

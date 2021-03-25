@@ -52,7 +52,7 @@ void init_data() {
 
 #ifdef DWS_CONV
   int kernel_id = 1;
-  for (int i=0; i<I; i++) {
+  for (int i=0; i<I_kernel; i++) {
     for (int kh=0; kh<KH; kh++) {
       for (int kw=0; kw<KW; kw++) {
     	  int addr_k = (i * KW * KH) + (kh * KW) + kw;
