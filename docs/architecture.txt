@@ -1,0 +1,274 @@
+Introduction
+============
+
+This document describes the HLSinf kernel architecture. Before the architecture is described, this document introduces the main operations 
+the kernel is able to perform and some aspects about parameters, alignment requirements and specific design constraints. This information 
+is needed to fully understand the HLSinf architecture.
+
+Operations supported
+====================
+
+The HLSinf kernel is designed to perform the following operations:
+  - 2D Direct convolutions (DIRECT_CONV)
+  - 2D Winograd convolutions (WINOGRAD_CONV)
+  - 2D DeepWise Separable convolutions (DWS_CONV)
+  - 2D MaxPooling 
+  - 2D AvgPooling
+  - ReLU activation
+  - Clipping
+  - Shift
+
+Those operations can be implemented in the kernel and perform sequentially and in a streamed/pipelined fashion on the input data, therefore, 
+maximizing performance.
+
+Precision formats supported
+===========================
+
+The HLSinf kernel is able to operate in multiple data type precision formats. Current formats supported are:
+ - FP32 (32-bit floating point)
+ - APF8 (8-bit fixed point)
+ - API8 (8-bit integer)
+ 
+The current supported precision formats can not be mixed within the kernel. This means, the kernel will work in one of these precision formats.
+The kernel needs to be re-implemented in order to use a different precision format.
+
+Although other precision formats can be easily added they could affect the expected performance of the kernel. Therefore, adding a new precision
+format needs to be carefully analyzed. The three listed formats have been validated and they do not affect the performance of the kernel.
+
+Current Restrictions on the supported operations
+================================================
+
+Some limitations or restrictions exist on the supported operations. They are the following:
+
+ - DIRECT, WINOGRAD and DWS convolutions:
+   - The filter size is fixed to KH x KW = 3 x 3
+   - The stride is fixed to SH x SW = 1 x 1
+   - The padding is fixed to PH x PW = 1 x 1
+ - MaxPooling and AvgPooling:
+   - The filter size is fixed to KH x KW = 2 x 2
+   - The stride is fixed to SH x SW = 2 x 2
+   - No padding is supported
+ - Clipping and shift:
+   - Can be used only in API8
+   
+Kernel geometries and parameters
+================================
+
+In order to better understand the architecture, we define a set of parameters:
+
+ - For data:
+   - I = number of input channels to process
+   - H = height of the channel (sometimes we refer to HI and HO for the height of input and output channels when they differ)
+   - W = width of the channel (sometimes we refer to WI and WO for the width of the input and output channels when they differ)
+   - O = number of output channels produced
+ - For convolution filters:
+   - KH = height of the filter
+   - KW = width of the filter
+   - SH = vertical stride of the filter (along the height)
+   - SW = horizontal stride of the filter (along the width)
+   - PH = upper and lower padding
+   - PW = left and right padding
+   
+ - For the kernel geometry
+   - CPI = Number of input channels processed in parallel by the kernel
+   - CPO = Number of output channels produced in parallel by the kernel
+   
+Memory alignment requirements
+=============================
+
+For performance issues, the kernel expects some specific alignment and storage formats of input data, output data, filters and bias. Next we describe
+those alignments and storage formats.
+
+Input data and output data
+--------------------------
+Input data is stored in a buffer consecutively in memory and addressed by a single memory pointer. Output data is stored in a buffer consecutively in
+memory and addressed by a single memory pointer. Both buffers are 512-bit word aligned in memory. 
+
+Channels inside any of the two buffers are stored consecutively in memory and each channel is 512-bit aligned. This means that channels with sizes not
+multiple of 512-bits must be padded. Input data in memory follows the format I x H x W. Output data in memory follows the format O x H xW. This means 
+that all items of the same input or output channel are stored consecutively in memory. Also, items of the same row for the same channel are also stored 
+consecutively in memory.
+ 
+DIRECT and WINOGRAD Convolution filters
+---------------------------------------
+
+Filters are stored in memory in the GO x GI x CPO x CPI x KH x KW format.
+ 
+KH and KW define the filter height and width, respectively. GO and GI define the groups of filter of size CPO and CPI, respectively. For a given number 
+of input I and output O channels, GI and GO are computed as follows:
+  GI = I / CPI
+  GO = O / CPO
+  
+GI must be set to 1 if I < CPI
+GO must be set to 1 if O < CPO
+ 
+This method of storing filters in memory is motivated by the efficient read of filters performed by the module. Indeed, as the HLSinf kernel performs
+operations in groups of CPI and CPO, the way the filters are stored enable the module to simply read the memory sequentially.
+
+One memory pointer is provided to the HLSinf kernel to access the filters.
+
+DWS Convolution filters
+-----------------------
+
+For this type of convolutions two groups of filters are used: deepwise (DW) and pointwise (PW)
+DW filters are stored following the format I x KH x KW.
+
+PW filters are stored following the format GO x GI x CPO x CPI. In this case, the filter size is 1 (KH = 1, KW = 1). GI and GO parameters follow the same
+rules defined for the DIRECT and WINOGRAD convolutions.
+    
+Two different memory pointers are provided to the HLSinf kernel to access both type of filters.
+
+Convolution bias
+----------------
+
+Bias are stored in memory in one single buffer with O items. There is one bias item per output channel. A single memory pointer is provided to the HLSinf
+kernel to access bias.
+
+
+Dataflow and Streams
+====================
+
+The HLSinf kernel follows the dataflow model. Within a dataflow modules are connected through streams and each module works independently from the others 
+as data becomes available on the input streams. Each module is pipelined in order to provide convenient processing speed.
+
+Several dataflows are implemented within HLSinf. The main dataflow model is the one that combines all the top level modules. Several modules in this dataflow
+are implemented as dataflows as well. The main dataflow model runs iteratively O / CPO times. On each iteration CPO output channels are computed and stored 
+in memory. Within one iteration all the input channels are read. No buffering of input channels is provided in the current version. Therefore, the kernel
+is memory bounded.
+
+Main dataflow
+-------------
+
+The top level module of the HLSinf kernel is designed with the dataflow structure depicted in the following figure:
+
+--------------                          --------       --------       ----------       -----------       ---------                           ------------
+|            |       -------------      |      |       |      |       |        |       |         |       |       |       -------------       |          |
+|            |------>| serialize |----->|      |       |      |       | ReLU   |       |         |       |       |------>| block_gen |------>|          |
+|    read    |   .   -------------      |      |       |      |       |        |       |         |       |       |   .   -------------       |  write   |
+|    data    | (cpi)                    | join |------>| conv |------>| Clip   |------>| pooling |------>| split | (cpo)                     |  data    |
+|  channels  |   .   -------------      |      |       |      |       |        |       |         |       |       |   .   -------------       | channels |
+|            |------>| serialize |----->|      |       |      |       | Shift  |       |         |       |       |------>| block_gen |------>|          |
+|            |       -------------      |      |       |      |       |        |       |         |       |       |       -------------       |          |
+--------------                          --------       --------       ----------       -----------       ---------                           ------------
+                                                         ^  ^
+  ---------------                                        |  |
+  | read kernel | ----------------------------------------  |
+  ---------------                                           |
+                                                            |
+  -------------                                             |
+  | read bias | ---------------------------------------------
+  -------------
+
+As previously described, the kernel works iteratively on CPI and CPO channels. Next, we describe each module within the dataflow model.
+
+read_data_channels module
+-------------------------
+
+This module is in charge of reading the input data for the kernel operation. Data is stored in the DDR memory of the FPGA board in I x H x W format, where 
+I is the number of input channels, H is the number of rows of each channel and W is the number of columns of each channel. Therefore, the complete data
+for a particular channel is consecutively stored in memory.
+
+For efficiency purposes the input data must be 64-byte block aligned into memory. The same is needed for each input channel. Therefore, for input data
+geometries with channel sizes not being multiple of 64 bytes some padding is needed (the host-side application must take this into account; the test programs
+provided do consider this situation and pad the input data as needed).
+
+This module reads input data in chunks of CPI channels. Indeed, CPI is defined as the number of input channels that can be read and processed in parallel by the kernel.
+Therefore, if the kernel needs to perform a convolution of I=512 input channels and the CPI value is set to 4, then the kernel will iterate on the input and will
+read all the input channels in blocks of 4 channels, thus performing 128 read channel operations.
+
+The module has one output stream per CPI channel. The stream width is 512-bits (to maximize performance). Indeed, data channels are read in blocks of 512-bits and 
+with bursts. We can consider that the output streams of the read channel store blocks of data. Those blocks are fed to the serialize module.
+
+serialize module
+----------------
+
+Each CPI channel has a serialize module. This module is in charge of filtering block elements that do not belong to the channel (in particular if the channel size is not
+multiple of 64 bytes). In addition, the module serializes the block data into specific pixels forwarded through the output stream of the module. Depending on the precision
+support defined (FP32, API8, APF8), this module will read one block at its input every 16 (FP32) or 64 (API8, APF8) cycles and will produce a pixel at its output on every
+cycle.
+
+join module
+-----------
+
+This module is in charge of combining pixels from the different input streams and pack them into the pixel_in structure. This structure just combines CPI pixels. Those packed 
+pixels are forwarded to the next module. Therefore, packs of CPI pixels are forwarded on every cycle.
+
+read_kernel module
+------------------
+
+This module reads filters of the convolution (also named kernels) from memory. Depending on the type of convolution implemented (current options are DIRECT_CONV, WINOGRAD_CONV, DWS_CONV),
+the format of the filters is different and they are stored in memory in a different way (described previously in this document). 
+The module produces at its output one complete filter set. CPO x CPI x KH x KW filter for the DIRECT_CONV or WINOGRAD_CONV types, or CPI x KW x KH (dw) and CPO x CPI (pw) for the DWS_CONV type.   
+
+read_bias module
+----------------
+
+This module reads bias and forwards it through its output stream. Bias are forwarded as packed items of CPO. Therefore, the module reads all bias (O bias; one per output channel) in groups of CPO.
+
+conv module
+-----------
+
+This module performs the convolution operation. The module receives the kernels (filters) and bias as well as the packed pixels that are streamlined. The module produces at the output
+a packed groups of output pixels, which correspond to a subset of output channels. Indeed, the CPO parameter defines the number of produced channels of the kernel. The produced pixels
+for each output channel are consecutive and follow the H x W format. Indeed, the output data of the HLSinf kernel is O x H x W. Thus, all the data pixels of the same channel are consecutively
+written into memory. 
+
+Depending on the type of convolution (current supported types are DIRECT_CONV, WINOGRAD_CONV, DWS_CONV) the module is adapted. This 
+affects to the input streams from the read_kernel and read_bias modules. However, the input data stream and the output data stream do not change. This module is implemented as a
+dataflow module and is described later in this document. 
+
+relu (clip, shift) module
+-------------------------
+
+This module performs basic linear operations at item granularity. It receives a packed set of CPO items and performs the same operation on all items. The supported operations are:
+
+  - ReLU: If the item value is negative, it is converted to zero
+  - clip: The item value is clipped to a minimum and a maximum value (defined as a parameter)
+  - shift: The item value is shifted several positions either to the left or to the right (direction and number of positions defined as a parameter)
+  
+The padding and shift operations are supported only on API8 precision mode. The ReLU operation can be performed on every type of precision supported. Each operation can be enabled or disabled with a parameter.
+
+The module produces a packed set of CPO items once the operations are performed. Therefore, this module reads one packed set on every cycles and produces one packed set on every cycle.  
+ 
+pooling module
+--------------
+ 
+This module performs pooling operations on the receiving items. The module is implemented as a dataflow model and is described later in this document. Current supported operations are Maxpooling and Avgpooling.
+The module receives a packed set of CPO items on every cycle and outputs a packed set of CPO items on every cycle.
+ 
+split module
+------------
+ 
+The split module reads on every cycle a packed set of CPO pixels and separates them. Each item is send through a different output stream. This is performed in order to prepare the items for
+the writing stage to memory as items belonging to different channels must be stored in different addresses (following the O x H x W format). The module reads a packed set of CPO pixels on every cycle and 
+produces CPO separated pixels at its outputs on every cycle.
+ 
+block_gen module
+----------------
+ 
+This module reads channel items and groups them in blocks. Blocks are defined as 512-bit blocks. Depending on the precision format a block will contain 16 items (FP32) or 64 items (APF8 or API8). On every cycle the
+module reads one item and on every 16 (FP32) or 64 (APF8, API8) cycles it produces a block at its output.
+ 
+write_data_channels module
+--------------------------
+ 
+This module receives input data blocks and writes them on memory, following the O x H x W format. The module reads CPO blocks and thus writes them on the corresponding addresses for 
+the specific output channels being processed. Blocks written in memory are aligned to 64 bytes. This means that every channel is assumed to be aligned to 64 byte boundaries as well. This simplifies the
+ memory access operation and allows maximum performance.
+ 
+ 
+Direct Convolution
+==================
+ 
+Winograd Convolution
+====================
+ 
+DWS Convolution
+===============
+ 
+Pooling
+=======
+ 
+ 
+ 
+  
