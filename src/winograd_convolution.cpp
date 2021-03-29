@@ -758,12 +758,12 @@ void winograd_conv(int H, int W, int I_ITER, int enable_upper_padding, int enabl
 	static hls::stream<frame_d_2>       mult_data_res;  	// mulData 	-> 	mult wise
 	static hls::stream<frame_d>         mult_wise_res;  	// mulWise 	-> 	mult_A_AT
 	static hls::stream<frame_winograd> 	str_mul_add;  		// mult_A_AT -> add_winograd
-	DO_PRAGMA(HLS stream variable=str_pad_cvt depth=CPI)
-	DO_PRAGMA(HLS stream variable=str_cvt_mul_cTc depth=CPI)
-	DO_PRAGMA(HLS stream variable=kernels_multWise depth=CPI)
-	DO_PRAGMA(HLS stream variable=mult_data_res depth=CPO)
-	DO_PRAGMA(HLS stream variable=mult_wise_res depth=CPO)
-	DO_PRAGMA(HLS stream variable=str_mul_add depth=CPO)
+	DO_PRAGMA(HLS stream variable=str_pad_cvt depth=STREAMS_DEPTH)
+	DO_PRAGMA(HLS stream variable=str_cvt_mul_cTc depth=STREAMS_DEPTH)
+	DO_PRAGMA(HLS stream variable=kernels_multWise depth=STREAMS_DEPTH)
+	DO_PRAGMA(HLS stream variable=mult_data_res depth=STREAMS_DEPTH)
+	DO_PRAGMA(HLS stream variable=mult_wise_res depth=STREAMS_DEPTH)
+	DO_PRAGMA(HLS stream variable=str_mul_add depth=STREAMS_DEPTH)
 
 	// topology
 	#pragma HLS dataflow

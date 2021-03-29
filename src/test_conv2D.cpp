@@ -179,6 +179,16 @@ void compute(int *enable, int *cpu, int *retval) {
 
          print_timings(time, time_per_iteration, expected_time, efficiency);
 
+         #ifdef OPENCL_TEST
+         // OpenCL kernel time
+         cl_ulong time_start, time_end;
+         kernel_events[0].getProfilingInfo(CL_PROFILING_COMMAND_START, &time_start);
+         kernel_events[0].getProfilingInfo(CL_PROFILING_COMMAND_END, &time_end);
+         double diff = time_end-time_start;
+         std::cout<< "TIME KERNEL = " << (diff/1000000)<<" ms \n"<<std::endl;
+         #endif
+
+
 
 	     if (*cpu) {
 	       cpu_conv2D();

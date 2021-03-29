@@ -208,7 +208,7 @@ static void pool_pooling(int HO, int WO, int enable_maxpooling, int enable_avgpo
 void pooling(int H, int W, int enable_maxpooling, int enable_avgpooling, hls::stream<pixel_out_t> &input, hls::stream<pixel_out_t> &output) {
 
 	static hls::stream<frame_pool_t> stream_pool;
-    DO_PRAGMA(HLS STREAM variable=stream_pool depth=32)
+    DO_PRAGMA(HLS STREAM variable=stream_pool depth=STREAMS_DEPTH)
 
 	int enable_pooling = enable_maxpooling | enable_avgpooling;
 

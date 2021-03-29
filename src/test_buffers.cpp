@@ -61,6 +61,7 @@ void allocate_buffers() {
   out_ddr[0].flags  = 0 | XCL_MEM_TOPOLOGY;
   out_ddr[0].obj = out;
   out_ddr[0].param = 0;
+  //out_ddr[0].banks = XCL_MEM_DDR_BANK1;
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
   kernel_ddr[0].flags  = 0 | XCL_MEM_TOPOLOGY;
   kernel_ddr[0].obj = kernel;

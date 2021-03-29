@@ -51,13 +51,13 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
 #endif
 	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_data      depth=DATA_IN_PORT_DEPTH   num_read_outstanding=CPI offset=slave bundle=gmem)
 	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_bias      depth=BIAS_PORT_DEPTH      offset=slave bundle=gmem2)
-	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_out       depth=DATA_OUT_PORT_DEPTH  offset=slave bundle=gmem3)
+	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_out       depth=DATA_OUT_PORT_DEPTH  num_write_outstanding=CPO offset=slave bundle=gmem3)
 
   #ifdef DEBUG_VERBOSE
   printf("kernel starts...\n");
   #endif
 
-  o_iter_loop:
+  o_iter_loop:STREAMS_DEPTH
   for (int o_iter = 0; o_iter<O_ITER; o_iter++) {
 	DO_PRAGMA(HLS loop_tripcount min=1 max=O_REFERENCE/CPO)
 	#pragma HLS dataflow
@@ -67,50 +67,50 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
     // input and output streams
     static hls::stream<pixel_in_t>   out_read_data;
     static hls::stream<pixel_in_t>   out_read_data_2;
-    DO_PRAGMA(HLS STREAM variable=out_read_data depth=32)
-    DO_PRAGMA(HLS STREAM variable=out_read_data_2 depth=32)
+    DO_PRAGMA(HLS STREAM variable=out_read_data depth=STREAMS_DEPTH)
+    DO_PRAGMA(HLS STREAM variable=out_read_data_2 depth=STREAMS_DEPTH)
 
 	// DIRECT CONV, WINOGRAD, DWS
     #ifdef DIRECT_CONV
     static hls::stream<kernel_t>     out_read_kernel;
-    DO_PRAGMA(HLS STREAM variable=out_read_kernel depth=CPO)
+    DO_PRAGMA(HLS STREAM variable=out_read_kernel depth=STREAMS_DEPTH)
     #endif
     #ifdef WINOGRAD_CONV
     static hls::stream<kernel_t>     out_read_kernel;
-    DO_PRAGMA(HLS STREAM variable=out_read_kernel depth=CPO)
+    DO_PRAGMA(HLS STREAM variable=out_read_kernel depth=STREAMS_DEPTH)
     #endif
     #ifdef DWS_CONV
     static hls::stream<kernel_dw_t>     str_dw_kernel;
     static hls::stream<kernel_pw_t>     str_pw_kernel;
-    DO_PRAGMA(HLS STREAM variable=str_dw_kernel depth=CPO)
-    DO_PRAGMA(HLS STREAM variable=str_pw_kernel depth=CPO)
+    DO_PRAGMA(HLS STREAM variable=str_dw_kernel depth=STREAMS_DEPTH)
+    DO_PRAGMA(HLS STREAM variable=str_pw_kernel depth=STREAMS_DEPTH)
     #endif
 
     static hls::stream<pixel_out_t>  out_read_bias;
     static hls::stream<pixel_out_t>  out_conv;
-    DO_PRAGMA(HLS STREAM variable=out_read_bias depth=CPO)
-    DO_PRAGMA(HLS STREAM variable=out_conv depth=32)
+    DO_PRAGMA(HLS STREAM variable=out_read_bias depth=STREAMS_DEPTH)
+    DO_PRAGMA(HLS STREAM variable=out_conv depth=STREAMS_DEPTH)
 
 	// RELU, CLIPPING, and SHIFT support
     #if defined(USE_RELU) || defined(USE_CLIPPING) || defined(USE_SHIFT)
     static hls::stream<pixel_out_t>  out_relu;
-    DO_PRAGMA(HLS STREAM variable=out_relu depth=32)
+    DO_PRAGMA(HLS STREAM variable=out_relu depth=STREAMS_DEPTH)
     #endif
 
     // MAXPOOLING, AVGPOOLING
     #ifdef USE_POOLING
     static hls::stream<pixel_out_t>  out_pooling;
-    DO_PRAGMA(HLS STREAM variable=out_pooling depth=32)
+    DO_PRAGMA(HLS STREAM variable=out_pooling depth=STREAMS_DEPTH)
     #endif
 
     hls::stream<read_block_t> stream_data_ch_0[CPI];
     hls::stream<data_type>    stream_data_ch_1[CPI];
     hls::stream<data_type> out_write_channel[CPO];
     hls::stream<write_block_t> out_block_write_channel[CPO];
-    DO_PRAGMA(HLS STREAM variable=stream_data_ch_0  depth=32)
-    DO_PRAGMA(HLS STREAM variable=stream_data_ch_1  depth=32)
-    DO_PRAGMA(HLS STREAM variable=out_write_channel depth=32)
-    DO_PRAGMA(HLS STREAM variable=out_block_write_channel depth=32)
+    DO_PRAGMA(HLS STREAM variable=stream_data_ch_0  depth=STREAMS_DEPTH)
+    DO_PRAGMA(HLS STREAM variable=stream_data_ch_1  depth=STREAMS_DEPTH)
+    DO_PRAGMA(HLS STREAM variable=out_write_channel depth=STREAMS_DEPTH)
+    DO_PRAGMA(HLS STREAM variable=out_block_write_channel depth=STREAMS_DEPTH)
 
     // variables
     int enable_write[CPO];

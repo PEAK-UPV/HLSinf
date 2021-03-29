@@ -211,18 +211,24 @@ void read_data_channels(int H, int W, int rows, int I_ITER, ap_uint<512> *ptr, i
       }
 
       read_data_channels_loop_blocks:
-      for (int block = 0; block < channel_blocks; block++) {
-    	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=W_REFERENCE*H_REFERENCE/READ_BLOCK_SIZE)
+      for (int block = 0; block < channel_blocks; block=block+READ_BURST_SIZE) {
+    	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=(W_REFERENCE*H_REFERENCE/READ_BLOCK_SIZE) / READ_BURST_SIZE)
+
     	read_data_channels_loop_CPI:
         for(int i = 0; i < CPI; i++){
-          #pragma HLS pipeline
-          read_block_t data_read;
+          DO_PRAGMA(HLS pipeline II=READ_BURST_SIZE)
+
+          read_block_t data_read[READ_BURST_SIZE];
        	  int current_input_channel = (i_iter * CPI) + i;
+       	  int addr = first_block_[i];
        	  int enable = current_input_channel < I;
-          if (enable) {
-        	  data_read = ptr[first_block_[i]];
-              out[i] << data_read;
+       	  read_data_channels_loop_burst:
+       	  for (int b = 0; b < READ_BURST_SIZE; b++) {
+    		data_read[b] = ptr[addr + b];
+            if (enable && ((block + b) < channel_blocks)) {
+        	  out[i] << data_read[b];
               first_block_[i] = first_block_[i] + 1;
+            }
           }
         }
       }

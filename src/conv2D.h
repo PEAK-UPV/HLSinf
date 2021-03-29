@@ -27,9 +27,9 @@
 // -----------------------------------------------------------------------------------------------------------
 #define WMAX            256   // Maximum image width
 #define HMAX            256   // Maximum image height
-#define CPI              16   // Basic kernel number of input channels
-#define CPO               8   // Basic kernel number of output channels
-#define LOG2_CPO          3   // number of bits for CPO (if you change CPO please change LOG2_CPO accordingly)
+#define CPI              32   // Basic kernel number of input channels
+#define CPO              16   // Basic kernel number of output channels
+#define LOG2_CPO          4   // number of bits for CPO (if you change CPO please change LOG2_CPO accordingly)
 
 // -----------------------------------------------------------------------------------------------------------
 // Defines for the added modules to the conv layer (clipping and shift must be used only for API8 data type)
@@ -47,6 +47,12 @@
 #define O_REFERENCE     CPO  // O for delay estimation (must be equal or higher than CPO)
 #define W_REFERENCE    WMAX  // W for delay estimation
 #define H_REFERENCE    HMAX  // H for delay estimation
+
+// -----------------------------------------------------------------------------------------------------------
+// Defines for burst memory access and depth of streams
+// -----------------------------------------------------------------------------------------------------------
+#define READ_BURST_SIZE   8   // Burst size for data read
+#define STREAMS_DEPTH     8   // Depth of streams
 
 // -----------------------------------------------------------------------------------------------------------
 // defines for debug (DEBUG_ALL activates all debug defines)
@@ -92,7 +98,7 @@
 // -----------------------------------------------------------------------------------------------------------
 #ifdef FP32_DATA_TYPE
 #define data_type float
-#define DATA_TYPE_WIDTH  32	  // data type width in bits (32 for float)
+#define DATA_TYPE_WIDTH  32	  // data type width in bits
 #define READ_BLOCK_SIZE  16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 #define WRITE_BLOCK_SIZE 16   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 #define MIN_DATA_TYPE_VALUE -99999
@@ -101,7 +107,7 @@
 
 #ifdef APF8_DATA_TYPE
 #define data_type ap_fixed<8,4,AP_TRN,AP_WRAP>
-#define DATA_TYPE_WIDTH   8	  // data type width in bits (32 for float)
+#define DATA_TYPE_WIDTH   8	  // data type width in bits
 #define READ_BLOCK_SIZE  64   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 #define WRITE_BLOCK_SIZE 64   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 #define MIN_DATA_TYPE_VALUE  -99999
@@ -110,7 +116,7 @@
 
 #ifdef API8_DATA_TYPE
 #define data_type ap_int<8>
-#define DATA_TYPE_WIDTH   8	  // data type width in bits (32 for float)
+#define DATA_TYPE_WIDTH   8	  // data type width in bits
 #define READ_BLOCK_SIZE  64   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 #define WRITE_BLOCK_SIZE 64   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 #define MIN_DATA_TYPE_VALUE  -127
