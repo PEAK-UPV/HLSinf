@@ -50,11 +50,12 @@ void serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int ch
     if ((offset_ch==0) && (num_pixels_cnt !=0)) {
       int first = p * DATA_TYPE_WIDTH;
       int last = first + DATA_TYPE_WIDTH - 1;
-      data_type bx2 = bx.range(last, first);
+      ap_int<DATA_TYPE_WIDTH> aux = bx.range(last,first);
+      data_type bx2 = *(float*)(&aux);
       out << bx2;
       num_pixels_cnt = num_pixels_cnt - 1;
       #ifdef DEBUG_SERIALIZE
-      //printf("SERIALIZE: pixel forwarded %f\n", (float)bx.pixel[p]);
+      printf("SERIALIZE: pixel forwarded %f\n", (float)bx2);
       #endif
     } else {
       offset_ch = offset_ch - 1;

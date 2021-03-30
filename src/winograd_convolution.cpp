@@ -21,7 +21,7 @@ struct frame_winograd {
 static void cvt_winograd(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<frame_d> &out) {
 
 	#ifdef DEBUG_CVT
-	printf("cvt: start\n");
+	printf("cvt: winograd START\n");
 	#endif
 
 	int HH=H+2;
@@ -700,7 +700,7 @@ static void add_winograd(int H, int W, int I_ITER, hls::stream<pixel_out_t> &b_i
 			add_loop_w:
 			for (int w = 0; w < W; w=w+2){
 				DO_PRAGMA(HLS loop_tripcount min=1 max=W_REFERENCE)
-				#pragma HLS PIPELINE
+				#pragma HLS PIPELINE II=1
 				data = in.read();
 				for (int cpi=0; cpi < CPI; cpi++) {
 					#pragma HLS UNROLL
@@ -719,6 +719,10 @@ static void add_winograd(int H, int W, int I_ITER, hls::stream<pixel_out_t> &b_i
 				DO_PRAGMA(HLS loop_tripcount min=1 max=W_REFERENCE)
 				#pragma HLS PIPELINE II=1
 				out << buff_o_channels[h][w];
+//				for(int cpo = 0; cpo<CPO; cpo++){
+//					printf("canal[%d] %f", cpo, buff_o_channels[h][w].pixel[cpo]);
+//				}
+//				printf("\n");
 				}
 			}
 		}
