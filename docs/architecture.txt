@@ -85,7 +85,7 @@ Input data is stored in a buffer consecutively in memory and addressed by a sing
 memory and addressed by a single memory pointer. Both buffers are 512-bit word aligned in memory. 
 
 Channels inside any of the two buffers are stored consecutively in memory and each channel is 512-bit aligned. This means that channels with sizes not
-multiple of 512-bits must be padded. Input data in memory follows the format I x H x W. Output data in memory follows the format O x H xW. This means 
+multiple of 512-bits must be padded. Input data in memory follows the format I x H x W. Output data in memory follows the format O x H x W. This means 
 that all items of the same input or output channel are stored consecutively in memory. Also, items of the same row for the same channel are also stored 
 consecutively in memory.
  

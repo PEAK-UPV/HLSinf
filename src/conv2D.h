@@ -11,8 +11,8 @@
 // Select only one type
 // -----------------------------------------------------------------------------------------------------------
 //#define DIRECT_CONV		// Direct convolution
-//#define WINOGRAD_CONV		// Winograd convolution
-#define DWS_CONV			// DeepWise Separable convolution
+#define WINOGRAD_CONV		// Winograd convolution
+//#define DWS_CONV			// DeepWise Separable convolution
 
 // -----------------------------------------------------------------------------------------------------------
 // data type. Defines the basic data type of the kernel
@@ -21,15 +21,16 @@
 //#define FP32_DATA_TYPE
 //#define APF8_DATA_TYPE
 #define API8_DATA_TYPE
+//#define API16_DATA_TYPE
 
 // -----------------------------------------------------------------------------------------------------------
 // Defines for the kernel
 // -----------------------------------------------------------------------------------------------------------
 #define WMAX            256   // Maximum image width
 #define HMAX            256   // Maximum image height
-#define CPI              32   // Basic kernel number of input channels
-#define CPO              16   // Basic kernel number of output channels
-#define LOG2_CPO          4   // number of bits for CPO (if you change CPO please change LOG2_CPO accordingly)
+#define CPI               4   // Basic kernel number of input channels
+#define CPO               4   // Basic kernel number of output channels
+#define LOG2_CPO          2   // number of bits for CPO (if you change CPO please change LOG2_CPO accordingly)
 
 // -----------------------------------------------------------------------------------------------------------
 // Defines for the added modules to the conv layer (clipping and shift must be used only for API8 data type)
@@ -57,7 +58,7 @@
 // -----------------------------------------------------------------------------------------------------------
 // defines for debug (DEBUG_ALL activates all debug defines)
 // -----------------------------------------------------------------------------------------------------------
-//#define DEBUG_ALL
+#define DEBUG_ALL
 
 //#define DEBUG_READ_BIAS
 //#define DEBUG_READ_KERNEL
@@ -123,6 +124,15 @@
 #define EPSILON_VALUE 0
 #endif
 
+#ifdef API16_DATA_TYPE
+#define data_type ap_int<16>
+#define DATA_TYPE_WIDTH  16	  // data type width in bits
+#define READ_BLOCK_SIZE  32   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define WRITE_BLOCK_SIZE 32   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define MIN_DATA_TYPE_VALUE  -127
+#define EPSILON_VALUE 0
+#endif
+
 // -----------------------------------------------------------------------------------------------------------
 // depth of pointers for co-simulation support
 // -----------------------------------------------------------------------------------------------------------
@@ -147,8 +157,8 @@
 #define SW_POOLING     2   // MAxpooling horizontal stride
 #define SH_POOLING     2   // MAxpooling vertical stride
 
-#if !defined(API8_DATA_TYPE) && (defined(USE_SHIFT) || defined(USE_CLIPPING))
-#error "USE_SHIFT and USE_CLIPPING can be used only with API8 data type"
+#if (!defined(API8_DATA_TYPE) && !defined(API16_DATA_TYPE)) && (defined(USE_SHIFT) || defined(USE_CLIPPING))
+#error "USE_SHIFT and USE_CLIPPING can be used only with API8 or API16 data types"
 #endif
 
 // -----------------------------------------------------------------------------------------------------------

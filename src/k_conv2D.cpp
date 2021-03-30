@@ -57,7 +57,7 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
   printf("kernel starts...\n");
   #endif
 
-  o_iter_loop:STREAMS_DEPTH
+  o_iter_loop:
   for (int o_iter = 0; o_iter<O_ITER; o_iter++) {
 	DO_PRAGMA(HLS loop_tripcount min=1 max=O_REFERENCE/CPO)
 	#pragma HLS dataflow

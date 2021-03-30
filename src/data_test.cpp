@@ -12,8 +12,12 @@ void init_data() {
   std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
 #endif
 #ifdef API8_DATA_TYPE
-  std::uniform_int_distribution<int> dist(-127.0, 127.0);
+  std::uniform_int_distribution<int> dist(-10, 10);
 #endif
+#ifdef API16_DATA_TYPE
+  std::uniform_int_distribution<int> dist(-10, 10);
+#endif
+
 
   int addr = 0;
   for (int i=0; i<I; i++) {

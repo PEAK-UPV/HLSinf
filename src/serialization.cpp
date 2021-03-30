@@ -51,7 +51,7 @@ void serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int ch
       int first = p * DATA_TYPE_WIDTH;
       int last = first + DATA_TYPE_WIDTH - 1;
       ap_int<DATA_TYPE_WIDTH> aux = bx.range(last,first);
-      data_type bx2 = *(float*)(&aux);
+      data_type bx2 = *(data_type *)(&aux);
       out << bx2;
       num_pixels_cnt = num_pixels_cnt - 1;
       #ifdef DEBUG_SERIALIZE

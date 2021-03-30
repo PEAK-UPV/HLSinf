@@ -187,7 +187,7 @@ void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<ker
     #endif
 
 
-    // as a first step we multiply the dp kernel with the input frame
+    // as a first step we multiply the dw kernel with the input frame
     dws_mul_loop_dw_mul_cpi:
 	for (int cpi=0; cpi<CPI; cpi++) {
       DO_PRAGMA(HLS UNROLL)
