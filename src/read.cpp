@@ -60,6 +60,8 @@ void read_kernel(int I_ITER, int offset_kernel, data_type *k_ptr, hls::stream<ke
 
   for (int i=0; i<I_ITER; i++) {
 	  DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE/CPI)
+	  DO_PRAGMA(HLS LOOP_FLATTEN OFF)
+
 	  for (int cpo=0; cpo < CPO; cpo++) {
 		  for (int cpi=0; cpi < CPI; cpi++) {
 			  for (int p=0; p<9; p++) {
@@ -198,6 +200,7 @@ void read_data_channels(int H, int W, int rows, int I_ITER, ap_uint<512> *ptr, i
     read_data_channels_loop_I_ITER:
     for (int i_iter = 0; i_iter < I_ITER; i_iter++) {
       DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE/CPI)
+      DO_PRAGMA(HLS LOOP_FLATTEN off)
 
       // each channel has its first block
       read_data_channels_loop_CPI_init:

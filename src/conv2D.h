@@ -28,9 +28,9 @@
 // -----------------------------------------------------------------------------------------------------------
 #define WMAX            256   // Maximum image width
 #define HMAX            256   // Maximum image height
-#define CPI               4   // Basic kernel number of input channels
-#define CPO               4   // Basic kernel number of output channels
-#define LOG2_CPO          2   // number of bits for CPO (if you change CPO please change LOG2_CPO accordingly)
+#define CPI               8   // Basic kernel number of input channels
+#define CPO               8   // Basic kernel number of output channels
+#define LOG2_CPO          3   // number of bits for CPO (if you change CPO please change LOG2_CPO accordingly)
 
 // -----------------------------------------------------------------------------------------------------------
 // Defines for the added modules to the conv layer (clipping and shift must be used only for API8 data type)
@@ -58,7 +58,7 @@
 // -----------------------------------------------------------------------------------------------------------
 // defines for debug (DEBUG_ALL activates all debug defines)
 // -----------------------------------------------------------------------------------------------------------
-#define DEBUG_ALL
+//#define DEBUG_ALL
 
 //#define DEBUG_READ_BIAS
 //#define DEBUG_READ_KERNEL

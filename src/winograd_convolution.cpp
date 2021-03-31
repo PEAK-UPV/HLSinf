@@ -194,7 +194,7 @@ static void frameConvert(int H, int W, int I_ITER, hls::stream<frame_d> &d_in, h
 	int send1 = 0;
 	int enable2=0;
 	frame_d frame;
-	DO_PRAGMA(HLS ARRAY_PARTITION variable=frame complete dim=0)
+	DO_PRAGMA(HLS ARRAY_PARTITION variable=frame     complete dim=0)
 	DO_PRAGMA(HLS ARRAY_PARTITION variable=subframe1 complete dim=0)
 	DO_PRAGMA(HLS ARRAY_PARTITION variable=subframe2 complete dim=0)
 
@@ -202,11 +202,13 @@ static void frameConvert(int H, int W, int I_ITER, hls::stream<frame_d> &d_in, h
 	loop_i_iter_frameConvert:
     for (int i_iter = 0; i_iter < I_ITER; i_iter++) {
     	DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE/CPI)
+
 		loop_frames_frameConvert:
 		for (int p = 0; p < (H/2 * W/2 * 2); p++) {
 			DO_PRAGMA(HLS loop_tripcount min=1 max=(H_REFERENCE/2) * (W_REFERENCE/2))
+			DO_PRAGMA(HLS PIPELINE)
 
-			if(p%2==0){
+			if (p%2==0) {
 
 				frame = d_in.read();
 				for(int cpi= 0; cpi < CPI/2; cpi++){
@@ -400,6 +402,7 @@ static void mulKernels(int I_ITER, hls::stream<kernel_t> &k_in, hls::stream<fram
 	// Reading the kernels
 	mul_i_iter_loop:
 	for(int i_iter = 0; i_iter < I_ITER; i_iter++){
+		DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE/CPI)
 		kernel = k_in.read();
 		loop_mul_kernels_load_cpo:
 		for (int cpo=0; cpo<CPO; cpo++) {
@@ -493,12 +496,12 @@ static void mulWise(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls:
 	int cpif = 0;
 	mul_i_iter_loop:
 	for(int i_iter = 0; i_iter < I_ITER; i_iter++){
-		
 		DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE/CPI)
+		DO_PRAGMA(HLS LOOP_FLATTEN off)
+
 		int even = 0;
 		
 		// Reading the kernels
-		#pragma HLS PIPELINE II=1
 		loop_mul_kernels_load_cpo_kernels_wise:
 		for (int cpo=0; cpo<CPO; cpo++) {
 			#pragma HLS PIPELINE II=1
@@ -508,9 +511,9 @@ static void mulWise(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls:
 		// Reading data
 		loop_mul_kernels_load_cpo_data_wise:
 		for (int i = 0; i < (H/2 * W/2 * 2); i++) {
-			
 			DO_PRAGMA(HLS loop_tripcount min=1 max=(H_REFERENCE/2)*W_REFERENCE)
-			#pragma HLS UNROLL
+			#pragma HLS PIPELINE
+
 			data = d_in.read();
 			for (int cpo=0; cpo<CPO; cpo++) {
 				#pragma HLS UNROLL
@@ -636,95 +639,103 @@ static void add_winograd(int H, int W, int I_ITER, hls::stream<pixel_out_t> &b_i
 	printf("add: start\n");
 	#endif
 
-	data_type bias[CPO];
-	DO_PRAGMA(HLS ARRAY_PARTITION variable=bias dim=0 complete)
-
-	// number of iterations by CPI || CPO channels
-	int num_iterations = W * H;
-
-	// Buffer for all data and CPO channels
-	pixel_out_t buff_o_channels[HMAX][WMAX];
-	DO_PRAGMA(HLS ARRAY_PARTITION variable=buff_o_channels dim=1 cyclic factor=2)
-	DO_PRAGMA(HLS ARRAY_PARTITION variable=buff_o_channels dim=2 cyclic factor=2)
-	DO_PRAGMA(HLS ARRAY_PARTITION variable=buff_o_channels dim=3 complete)
-
-	// We receive bias in packs of CPO
-	pixel_out_t p_out;
-	p_out = b_in.read();
-	add_load_bias_loop:
-	for (int b=0; b<CPO; b++) {
-		#pragma HLS PIPELINE II=1
-		bias[b] = p_out.pixel[b];
-	}
-
-	#ifdef DEBUG_VERBOSE
-	for (int b=0; b<CPO; b++) {
-		printf("Bias[%d] = %6.4f \n", b, float(bias[b]));
-	}
-	printf("add: bias received\n");
-	for(int cpo = 0; cpo<CPO; cpo++){
-		printf("Channel cpo = %d: ", cpo);
-		for(int it = 0; it<num_iterations; it++){
-			printf("%6.2f ", float(buff_o_channels[it]));
-		}
-		printf("\n");
-	}
-	#endif
-
-	add_copy_bias_loop:
-	for (int h = 0; h < H; h++) {
-		DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE)
-		for (int w=0; w < W; w++) {
-			DO_PRAGMA(HLS loop_tripcount min=1 max=W_REFERENCE)
-			#pragma HLS PIPELINE II=1
-			for (int cpo=0; cpo < CPO; cpo++) {
-			#pragma HLS UNROLL
-			buff_o_channels[h][w].pixel[cpo]= bias[cpo];
-			}
-		}
-	}
-
+	pixel_out_t bias;
+	pixel_out_t p0;
+	pixel_out_t p1;
+	pixel_out_t p2;
+	pixel_out_t p3;
+	pixel_out_t buff_o_channels_0[HMAX/2][WMAX/2];
+	pixel_out_t buff_o_channels_1[HMAX/2][WMAX/2];
+	pixel_out_t buff_o_channels_2[HMAX/2][WMAX/2];
+	pixel_out_t buff_o_channels_3[HMAX/2][WMAX/2];
 	frame_winograd data;
+	DO_PRAGMA(HLS ARRAY_PARTITION variable=bias dim=0 complete)
+	DO_PRAGMA(HLS ARRAY_PARTITION variable=p0 complete dim=0)
+	DO_PRAGMA(HLS ARRAY_PARTITION variable=p1 complete dim=0)
+	DO_PRAGMA(HLS ARRAY_PARTITION variable=p2 complete dim=0)
+	DO_PRAGMA(HLS ARRAY_PARTITION variable=p3 complete dim=0)
+	DO_PRAGMA(HLS ARRAY_PARTITION variable=buff_o_channels_0 dim=3 complete)
+	DO_PRAGMA(HLS ARRAY_PARTITION variable=buff_o_channels_1 dim=3 complete)
+	DO_PRAGMA(HLS ARRAY_PARTITION variable=buff_o_channels_2 dim=3 complete)
+	DO_PRAGMA(HLS ARRAY_PARTITION variable=buff_o_channels_3 dim=3 complete)
 	DO_PRAGMA(HLS ARRAY_PARTITION variable=data dim=0 complete)
 
+	// We read the bias
+	bias = b_in.read();
+
+	int h = 0;
+	int w = 0;
+	int hh, ww, pp;
+	int pixels = H * W;
 
 	// All input data have effect into output add
-	add_i_iter_loop:
+	add_winograd_loop_iter:
 	for (int i_iter = 0; i_iter < I_ITER; i_iter++){
 		DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE/CPI)
-		//#pragma HLS loop_flatten off
-		add_loop_h:
-		for (int h = 0; h<H; h=h+2) {
-			DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE)
-			//#pragma HLS loop_flatten off
-			add_loop_w:
-			for (int w = 0; w < W; w=w+2){
-				DO_PRAGMA(HLS loop_tripcount min=1 max=W_REFERENCE)
-				#pragma HLS PIPELINE II=1
-				data = in.read();
-				for (int cpi=0; cpi < CPI; cpi++) {
-					#pragma HLS UNROLL
-					buff_o_channels[h][w].pixel[cpi] += data.pixel[0].pixel[cpi];
-					buff_o_channels[h][w+1].pixel[cpi] += data.pixel[1].pixel[cpi];
-					buff_o_channels[h+1][w].pixel[cpi] += data.pixel[2].pixel[cpi];
-					buff_o_channels[h+1][w+1].pixel[cpi] += data.pixel[3].pixel[cpi];
-				}
-			}
-		}
 
-		if(i_iter ==(I_ITER-1)){
-			for (int h = 0; h < H; h++) {
-				DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE)
-				for (int w=0; w < W; w++) {
-				DO_PRAGMA(HLS loop_tripcount min=1 max=W_REFERENCE)
-				#pragma HLS PIPELINE II=1
-				out << buff_o_channels[h][w];
-//				for(int cpo = 0; cpo<CPO; cpo++){
-//					printf("canal[%d] %f", cpo, buff_o_channels[h][w].pixel[cpo]);
-//				}
-//				printf("\n");
-				}
+		add_winograd_loop_hw:
+		for (int p = 0; p<pixels; p=p+1) {
+			DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE * W_REFERENCE)
+			DO_PRAGMA(HLS pipeline)
+			DO_PRAGMA(HLS dependence variable=buff_o_channels_0 inter false)
+			DO_PRAGMA(HLS dependence variable=buff_o_channels_1 inter false)
+			DO_PRAGMA(HLS dependence variable=buff_o_channels_2 inter false)
+			DO_PRAGMA(HLS dependence variable=buff_o_channels_3 inter false)
+
+  		    ww = w / 2;
+		  	hh = h / 2;
+			if (((h % 2) == 0) && ((w % 2) == 0)) pp = 0;
+			if (((h % 2) == 0) && ((w % 2) == 1)) pp = 1;
+			if (((h % 2) == 1) && ((w % 2) == 0)) pp = 2;
+			if (((h % 2) == 1) && ((w % 2) == 1)) pp = 3;
+
+			if (i_iter == 0) {
+				p0 = bias;
+				p1 = bias;
+				p2 = bias;
+				p3 = bias;
+			} else {
+				p0 = buff_o_channels_0[hh][ww];
+				p1 = buff_o_channels_1[hh][ww];
+				p2 = buff_o_channels_2[hh][ww];
+				p3 = buff_o_channels_3[hh][ww];
 			}
+
+			if (pp == 0) {
+				data = in.read();
+
+    			add_winograd_loop_cpo:
+			    for (int cpo=0; cpo < CPO; cpo++) {
+				  #pragma HLS UNROLL
+
+				  p0.pixel[cpo] += data.pixel[0].pixel[cpo];
+				  p1.pixel[cpo] += data.pixel[1].pixel[cpo];
+				  p2.pixel[cpo] += data.pixel[2].pixel[cpo];
+				  p3.pixel[cpo] += data.pixel[3].pixel[cpo];
+
+				  buff_o_channels_0[hh][ww] = p0;
+				  buff_o_channels_1[hh][ww] = p1;
+				  buff_o_channels_2[hh][ww] = p2;
+				  buff_o_channels_3[hh][ww] = p3;
+			    }
+			}
+
+			if(i_iter == (I_ITER-1)){
+			  pixel_out_t px;
+			  if (pp == 0) px = p0;
+			  if (pp == 1) px = p1;
+			  if (pp == 2) px = p2;
+			  if (pp == 3) px = p3;
+			  out << px;
+			}
+
+			w = w + 1;
+			if (w == W) {
+				w = 0;
+				h = h + 1;
+				if (h == H) h = 0;
+			}
+
 		}
 
 	}
@@ -762,12 +773,12 @@ void winograd_conv(int H, int W, int I_ITER, int enable_upper_padding, int enabl
 	static hls::stream<frame_d_2>       mult_data_res;  	// mulData 	-> 	mult wise
 	static hls::stream<frame_d>         mult_wise_res;  	// mulWise 	-> 	mult_A_AT
 	static hls::stream<frame_winograd> 	str_mul_add;  		// mult_A_AT -> add_winograd
-	DO_PRAGMA(HLS stream variable=str_pad_cvt depth=STREAMS_DEPTH)
-	DO_PRAGMA(HLS stream variable=str_cvt_mul_cTc depth=STREAMS_DEPTH)
+	DO_PRAGMA(HLS stream variable=str_pad_cvt      depth=STREAMS_DEPTH)
+	DO_PRAGMA(HLS stream variable=str_cvt_mul_cTc  depth=STREAMS_DEPTH)
 	DO_PRAGMA(HLS stream variable=kernels_multWise depth=STREAMS_DEPTH)
-	DO_PRAGMA(HLS stream variable=mult_data_res depth=STREAMS_DEPTH)
-	DO_PRAGMA(HLS stream variable=mult_wise_res depth=STREAMS_DEPTH)
-	DO_PRAGMA(HLS stream variable=str_mul_add depth=STREAMS_DEPTH)
+	DO_PRAGMA(HLS stream variable=mult_data_res    depth=STREAMS_DEPTH)
+	DO_PRAGMA(HLS stream variable=mult_wise_res    depth=STREAMS_DEPTH)
+	DO_PRAGMA(HLS stream variable=str_mul_add      depth=STREAMS_DEPTH)
 
 	// topology
 	#pragma HLS dataflow
