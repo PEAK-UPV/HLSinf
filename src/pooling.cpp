@@ -48,7 +48,8 @@ static void pool_cvt(int H, int W, int enable_pooling, hls::stream<pixel_out_t> 
 	pixel_out_t  pixel;
 	pixel_out_t  p0, p1, p2, p3;
 	pixel_out_t  pix_b0, pix_b1;
-    //DO_PRAGMA(HLS AGGREGATE variable=pixel)
+    DO_PRAGMA(HLS AGGREGATE variable=buffer0)
+    DO_PRAGMA(HLS AGGREGATE variable=buffer1)
 
     #ifdef DEBUG_POOL
 	printf("DEBUG_POOL: starts (cvt)\n");

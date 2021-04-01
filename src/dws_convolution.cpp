@@ -23,9 +23,9 @@ void dws_conv(int H, int W, int I_ITER, int enable_upper_padding, int enable_low
   static hls::stream<pixel_in_t>  str_pad_cvt;  // padding->cvt
   static hls::stream<frame_t>     str_cvt_mul;  // cvt->mul
   static hls::stream<pixel_out_t> str_mul_add;  // mul->add
-  DO_PRAGMA(HLS stream variable=str_pad_cvt depth=STREAMS_DEPTH)
-  DO_PRAGMA(HLS stream variable=str_cvt_mul depth=STREAMS_DEPTH)
-  DO_PRAGMA(HLS stream variable=str_mul_add depth=STREAMS_DEPTH)
+  DO_PRAGMA(HLS stream variable=str_pad_cvt depth=1)
+  DO_PRAGMA(HLS stream variable=str_cvt_mul depth=1)
+  DO_PRAGMA(HLS stream variable=str_mul_add depth=1)
 
   // topology
   #pragma HLS dataflow

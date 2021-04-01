@@ -510,9 +510,10 @@ static void mulWise(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls:
 		
 		// Reading data
 		loop_mul_kernels_load_cpo_data_wise:
-		for (int i = 0; i < (H/2 * W/2 * 2); i++) {
+		for (int i = 0; i < (H * W) / 2; i++) {
 			DO_PRAGMA(HLS loop_tripcount min=1 max=(H_REFERENCE/2)*W_REFERENCE)
 			#pragma HLS PIPELINE
+			DO_PRAGMA(HLS dependence variable=res false)
 
 			data = d_in.read();
 			for (int cpo=0; cpo<CPO; cpo++) {
@@ -689,7 +690,8 @@ static void add_winograd(int H, int W, int I_ITER, hls::stream<pixel_out_t> &b_i
 			if (((h % 2) == 1) && ((w % 2) == 0)) pp = 2;
 			if (((h % 2) == 1) && ((w % 2) == 1)) pp = 3;
 
-			if (i_iter == 0) {
+			// read four pixels from bias or from buffer
+			if ((pp==0) && (i_iter == 0)) {
 				p0 = bias;
 				p1 = bias;
 				p2 = bias;
@@ -702,8 +704,11 @@ static void add_winograd(int H, int W, int I_ITER, hls::stream<pixel_out_t> &b_i
 			}
 
 			if (pp == 0) {
+
+				// read four input pixels
 				data = in.read();
 
+				// add operation and writing to the buffer
     			add_winograd_loop_cpo:
 			    for (int cpo=0; cpo < CPO; cpo++) {
 				  #pragma HLS UNROLL
@@ -720,6 +725,7 @@ static void add_winograd(int H, int W, int I_ITER, hls::stream<pixel_out_t> &b_i
 			    }
 			}
 
+			// send pixels out
 			if(i_iter == (I_ITER-1)){
 			  pixel_out_t px;
 			  if (pp == 0) px = p0;
@@ -729,6 +735,7 @@ static void add_winograd(int H, int W, int I_ITER, hls::stream<pixel_out_t> &b_i
 			  out << px;
 			}
 
+			// pointers (h, w) update
 			w = w + 1;
 			if (w == W) {
 				w = 0;
@@ -774,6 +781,7 @@ void winograd_conv(int H, int W, int I_ITER, int enable_upper_padding, int enabl
 	static hls::stream<frame_d>         mult_wise_res;  	// mulWise 	-> 	mult_A_AT
 	static hls::stream<frame_winograd> 	str_mul_add;  		// mult_A_AT -> add_winograd
 	DO_PRAGMA(HLS stream variable=str_pad_cvt      depth=STREAMS_DEPTH)
+	DO_PRAGMA(HLS stream variable=cvt_frameConvert depth=STREAMS_DEPTH)
 	DO_PRAGMA(HLS stream variable=str_cvt_mul_cTc  depth=STREAMS_DEPTH)
 	DO_PRAGMA(HLS stream variable=kernels_multWise depth=STREAMS_DEPTH)
 	DO_PRAGMA(HLS stream variable=mult_data_res    depth=STREAMS_DEPTH)

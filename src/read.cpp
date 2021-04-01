@@ -122,6 +122,7 @@ void dws_read_kernel(int I_ITER, int offset_dw_kernel, int offset_pw_kernel, dat
 	dws_read_kernel_loop_i_iter:
   for (int i_iter=0; i_iter<I_ITER; i_iter++) {
 	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE/CPI)
+	DO_PRAGMA(HLS LOOP_FLATTEN off)
 
 
 	// deep-wise
@@ -196,6 +197,7 @@ void read_data_channels(int H, int W, int rows, int I_ITER, ap_uint<512> *ptr, i
   read_block_t bx[CPI];								// buffer for block read from memory
   int offset_[CPI];									// offset for the channel
   int first_block_[CPI];							// first block address
+  int first_current_input_channel;    				// first current input channel being accessed
 
     read_data_channels_loop_I_ITER:
     for (int i_iter = 0; i_iter < I_ITER; i_iter++) {
@@ -213,6 +215,8 @@ void read_data_channels(int H, int W, int rows, int I_ITER, ap_uint<512> *ptr, i
         #endif
       }
 
+      first_current_input_channel = i_iter * CPI;
+
       read_data_channels_loop_blocks:
       for (int block = 0; block < channel_blocks; block=block+READ_BURST_SIZE) {
     	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=(W_REFERENCE*H_REFERENCE/READ_BLOCK_SIZE) / READ_BURST_SIZE)
@@ -222,16 +226,18 @@ void read_data_channels(int H, int W, int rows, int I_ITER, ap_uint<512> *ptr, i
           DO_PRAGMA(HLS pipeline II=READ_BURST_SIZE)
 
           read_block_t data_read[READ_BURST_SIZE];
-       	  int current_input_channel = (i_iter * CPI) + i;
        	  int addr = first_block_[i];
-       	  int enable = current_input_channel < I;
-       	  read_data_channels_loop_burst:
-       	  for (int b = 0; b < READ_BURST_SIZE; b++) {
-    		data_read[b] = ptr[addr + b];
-            if (enable && ((block + b) < channel_blocks)) {
-        	  out[i] << data_read[b];
-              first_block_[i] = first_block_[i] + 1;
-            }
+       	  int channel = first_current_input_channel + i;
+       	  int enable = channel < I;
+       	  if (enable) {
+       	    read_data_channels_loop_burst:
+       	    for (int b = 0; b < READ_BURST_SIZE; b++) {
+    		  data_read[b] = ptr[addr + b];
+              if ((block + b) < channel_blocks) {
+        	    out[i] << data_read[b];
+                first_block_[i] = first_block_[i] + 1;
+              }
+       	    }
           }
         }
       }

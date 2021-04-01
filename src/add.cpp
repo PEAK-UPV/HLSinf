@@ -25,8 +25,8 @@ void add(int H, int W, int I_ITER, hls::stream<pixel_out_t> &in, hls::stream<pix
   int num_iterations = W * H;
 
   // Buffer for all data and CPO channels
-  data_type buff_o_channels[CPO][WMAX*HMAX];
-  DO_PRAGMA(HLS ARRAY_PARTITION variable=buff_o_channels dim=1 complete)
+  pixel_out_t buff_o_channels[WMAX*HMAX];
+  DO_PRAGMA(HLS AGGREGATE variable=buffer_o_channels)
 
 
   // We receive bias in packs of CPO
@@ -40,7 +40,7 @@ void add(int H, int W, int I_ITER, hls::stream<pixel_out_t> &in, hls::stream<pix
   for(int cpo = 0; cpo<CPO; cpo++){
     printf("Channel cpo = %d: ", cpo);
     for(int it = 0; it<num_iterations; it++){
-      printf("%6.2f ", float(buff_o_channels[cpo][it]));
+      printf("%6.2f ", float(buff_o_channels[it].pixel[cpo]));
     }
     printf("\n");
   }
@@ -55,25 +55,23 @@ void add(int H, int W, int I_ITER, hls::stream<pixel_out_t> &in, hls::stream<pix
     add_load_data_it_loop:
     for(int it = 0; it<num_iterations; it++){
       DO_PRAGMA(HLS loop_tripcount  min=1 max=W_REFERENCE*H_REFERENCE)
+      pixel_out_t px;
+      px = in.read();
       pixel_out_t data_in;
-      data_in = in.read();
-      pixel_out_t data;
+      pixel_out_t data_out;
+
+      if (i_iter == 0) data_in = bias; else data_in = buff_o_channels[it];
+
       add_load_data_cpo_loop:
       for (int cpo=0; cpo<CPO; cpo++) {
         DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO)
         #pragma HLS unroll
-        if(i_iter == 0){
-          data.pixel[cpo] = bias.pixel[cpo];
-        } else {
-          data.pixel[cpo] = buff_o_channels[cpo][it];
-        }
-        buff_o_channels[cpo][it] = data.pixel[cpo] + data_in.pixel[cpo];
-
-        if(i_iter ==(I_ITER-1)){
-          data_out.pixel[cpo] = buff_o_channels[cpo][it];
-        }
+        data_out.pixel[cpo] = data_in.pixel[cpo] + px.pixel[cpo];
       }
+      buff_o_channels[it] = data_out;
+
       if(i_iter ==(I_ITER-1)){
+
         out << data_out;
       }
     }
@@ -83,7 +81,7 @@ void add(int H, int W, int I_ITER, hls::stream<pixel_out_t> &in, hls::stream<pix
   for (int cpo=0; cpo<CPO; cpo++) {
     printf("CH %d: ", cpo);
     for (int it=0; it<num_iterations; it++) {
-      printf("%6.2f ", float(buff_o_channels[cpo][it]));
+      printf("%6.2f ", float(buff_o_channels[it].pixel[cpo]));
     }
     printf("\n");
   }

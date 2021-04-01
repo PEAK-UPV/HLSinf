@@ -118,28 +118,25 @@ printf("DEBUG_BLOCK: starts\n");
 #endif
 
   write_block_t bx;
-  DO_PRAGMA(HLS ARRAY_PARTITION variable=bx complete dim=0)
+  int last = (WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH) - 1;
+  int first = (WRITE_BLOCK_SIZE-1) * DATA_TYPE_WIDTH;
 
-  int offset = 0;
   int num_pixels = H * W;
   int num_blocks = (num_pixels + WRITE_BLOCK_SIZE - 1) / WRITE_BLOCK_SIZE;
   block_generate_blocks:
   for (int b=0; b < num_blocks; b++) {
 	DO_PRAGMA(HLS loop_tripcount min=1 max=(W_REFERENCE * H_REFERENCE) / WRITE_BLOCK_SIZE)
+
     block_generate_pixels:
     for (int p=0; p < WRITE_BLOCK_SIZE; p++) {
 	  DO_PRAGMA(HLS PIPELINE)
 	  data_type dx;
-#ifdef DEBUG_BLOCK
-	  printf("to read pixel, pending %d\n", num_pixels);
-#endif
 	  if (num_pixels) dx = in.read();
-#ifdef DEBUG_BLOCK
-	  printf("read pixel, pending %d\n", num_pixels);
-#endif
-      int first = p * DATA_TYPE_WIDTH;
-      int last = first + DATA_TYPE_WIDTH - 1;
+      #ifdef DEBUG_BLOCK
+	  printf("read pixel %f, pending %d\n", float(dx), num_pixels);
+      #endif
       bx.range(last, first) = *(ap_uint<DATA_TYPE_WIDTH>*)(&dx);
+      if (p != WRITE_BLOCK_SIZE-1) bx = bx >> DATA_TYPE_WIDTH;
 	  if (num_pixels) num_pixels--;
     }
     out << bx;

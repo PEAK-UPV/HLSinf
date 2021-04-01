@@ -32,22 +32,22 @@ void serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int ch
   int b = 0;
   int p = 0;
   int iter = 0;
-  int offset_ch = 0;
   int current_channel = first_channel;
   for (int i_iter=0; i_iter < iters; i_iter++) {
 	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE/CPI * READ_BLOCK_SIZE * (W_REFERENCE * H_REFERENCE / READ_BLOCK_SIZE))
     #pragma HLS pipeline II=1
-    // offset
+
     if ((b==0) && (p==0)) {
-      offset_ch = (offset + (channel_size * CPI * iter)) % READ_BLOCK_SIZE;
       num_pixels_cnt = num_pixels;
     }
+
     read_block_t bx;
     DO_PRAGMA(HLS ARRAY_PARTITION variable=bx dim=0 complete)
+
     if (p==0) {
       if (current_channel < I) bx = in.read(); else bx = data_zeros;
     }
-    if ((offset_ch==0) && (num_pixels_cnt !=0)) {
+    if (num_pixels_cnt != 0) {
       int first = p * DATA_TYPE_WIDTH;
       int last = first + DATA_TYPE_WIDTH - 1;
       ap_int<DATA_TYPE_WIDTH> aux = bx.range(last,first);
@@ -57,8 +57,6 @@ void serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int ch
       #ifdef DEBUG_SERIALIZE
       printf("SERIALIZE: pixel forwarded %f\n", (float)bx2);
       #endif
-    } else {
-      offset_ch = offset_ch - 1;
     }
     p = p + 1;
     if (p == READ_BLOCK_SIZE) {
