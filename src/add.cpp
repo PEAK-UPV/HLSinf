@@ -27,6 +27,9 @@ void add(int H, int W, int I_ITER, hls::stream<pixel_out_t> &in, hls::stream<pix
   // Buffer for all data and CPO channels
   pixel_out_t buff_o_channels[WMAX*HMAX];
   DO_PRAGMA(HLS AGGREGATE variable=buffer_o_channels)
+  #ifdef ALVEO_U200
+  DO_PRAGMA(HLS bind_storage variable=buffer_o_channels type=ram_t2p impl=uram)
+  #endif
 
 
   // We receive bias in packs of CPO

@@ -72,15 +72,6 @@ void cvt(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<fram
 
     // build the frame
     pixel_in_t p0, p1, p2, p3, p4, p5, p6, p7, p8;
-    /*DO_PRAGMA(HLS AGGREGATE variable=p0)
-    DO_PRAGMA(HLS AGGREGATE variable=p1)
-    DO_PRAGMA(HLS AGGREGATE variable=p2)
-    DO_PRAGMA(HLS AGGREGATE variable=p3)
-    DO_PRAGMA(HLS AGGREGATE variable=p4)
-    DO_PRAGMA(HLS AGGREGATE variable=p5)
-    DO_PRAGMA(HLS AGGREGATE variable=p6)
-    DO_PRAGMA(HLS AGGREGATE variable=p7)
-    DO_PRAGMA(HLS AGGREGATE variable=p8)*/
 
     int shift_frame = (pin_row>1) & (pin_col > 2);
     int send_frame = (pin_row>1) & (pin_col > 1);

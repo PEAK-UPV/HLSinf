@@ -42,18 +42,19 @@ void serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int ch
     }
 
     read_block_t bx;
-    DO_PRAGMA(HLS ARRAY_PARTITION variable=bx dim=0 complete)
 
     if (p==0) {
       if (current_channel < I) bx = in.read(); else bx = data_zeros;
     }
     if (num_pixels_cnt != 0) {
-      int first = p * DATA_TYPE_WIDTH;
-      int last = first + DATA_TYPE_WIDTH - 1;
-      ap_int<DATA_TYPE_WIDTH> aux = bx.range(last,first);
+      ap_int<DATA_TYPE_WIDTH> aux = bx.range(DATA_TYPE_WIDTH-1, 0);
+
       data_type bx2 = *(data_type *)(&aux);
       out << bx2;
       num_pixels_cnt = num_pixels_cnt - 1;
+
+      bx = bx >> DATA_TYPE_WIDTH;
+
       #ifdef DEBUG_SERIALIZE
       printf("SERIALIZE: pixel forwarded %f\n", (float)bx2);
       #endif

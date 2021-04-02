@@ -48,6 +48,10 @@ static void pool_cvt(int H, int W, int enable_pooling, hls::stream<pixel_out_t> 
 	pixel_out_t  pixel;
 	pixel_out_t  p0, p1, p2, p3;
 	pixel_out_t  pix_b0, pix_b1;
+    #ifdef ALVEO_U200
+	DO_PRAGMA(HLS bind_storage variable=buffer0 type=ram_2p impl=uram)
+	DO_PRAGMA(HLS bind_storage variable=buffer1 type=ram_2p impl=uram)
+    #endif
     DO_PRAGMA(HLS AGGREGATE variable=buffer0)
     DO_PRAGMA(HLS AGGREGATE variable=buffer1)
 
@@ -209,7 +213,7 @@ static void pool_pooling(int HO, int WO, int enable_maxpooling, int enable_avgpo
 void pooling(int H, int W, int enable_maxpooling, int enable_avgpooling, hls::stream<pixel_out_t> &input, hls::stream<pixel_out_t> &output) {
 
 	static hls::stream<frame_pool_t> stream_pool;
-    DO_PRAGMA(HLS STREAM variable=stream_pool depth=STREAMS_DEPTH)
+    DO_PRAGMA(HLS STREAM variable=stream_pool depth=2)
 
 	int enable_pooling = enable_maxpooling | enable_avgpooling;
 

@@ -49,9 +49,9 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
     DO_PRAGMA(HLS INTERFACE m_axi port=ptr_dw_kernel depth=DW_KERNEL_PORT_DEPTH offset=slave bundle=gmem1)
     DO_PRAGMA(HLS INTERFACE m_axi port=ptr_pw_kernel depth=PW_KERNEL_PORT_DEPTH offset=slave bundle=gmem1)
 #endif
-	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_data      depth=DATA_IN_PORT_DEPTH   offset=slave bundle=gmem)
+	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_data      depth=DATA_IN_PORT_DEPTH  num_read_outstanding=CPI offset=slave bundle=gmem)
 	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_bias      depth=BIAS_PORT_DEPTH      offset=slave bundle=gmem2)
-	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_out       depth=DATA_OUT_PORT_DEPTH  offset=slave bundle=gmem3)
+	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_out       depth=DATA_OUT_PORT_DEPTH num_write_outstanding=CPO offset=slave bundle=gmem3)
 
 	DO_PRAGMA(HLS shared variable=I)
 	DO_PRAGMA(HLS shared variable=O)
@@ -108,8 +108,8 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
     #ifdef DWS_CONV
     static hls::stream<kernel_dw_t>     str_dw_kernel;
     static hls::stream<kernel_pw_t>     str_pw_kernel;
-    DO_PRAGMA(HLS STREAM variable=str_dw_kernel depth=1)
-    DO_PRAGMA(HLS STREAM variable=str_pw_kernel depth=1)
+    DO_PRAGMA(HLS STREAM variable=str_dw_kernel depth=2)
+    DO_PRAGMA(HLS STREAM variable=str_pw_kernel depth=2)
     #endif
 
     static hls::stream<pixel_out_t>  out_read_bias;
@@ -133,14 +133,19 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
     hls::stream<data_type>     stream_data_ch_1[CPI];
     hls::stream<data_type>     out_write_channel[CPO];
     hls::stream<write_block_t> out_block_write_channel[CPO];
-    DO_PRAGMA(HLS STREAM variable=stream_data_ch_0  depth=STREAMS_DEPTH)
-    DO_PRAGMA(HLS STREAM variable=stream_data_ch_1  depth=STREAMS_DEPTH)
-    DO_PRAGMA(HLS STREAM variable=out_write_channel depth=STREAMS_DEPTH)
-    DO_PRAGMA(HLS STREAM variable=out_block_write_channel depth=STREAMS_DEPTH)
+    DO_PRAGMA(HLS STREAM variable=stream_data_ch_0        depth=STREAMS_DEPTH)
+    DO_PRAGMA(HLS STREAM variable=stream_data_ch_1        depth=STREAMS_DEPTH)
+    DO_PRAGMA(HLS STREAM variable=out_write_channel       depth=2)
+    DO_PRAGMA(HLS STREAM variable=out_block_write_channel depth=2)
     DO_PRAGMA(HLS AGGREGATE variable=stream_data_ch_0)
     DO_PRAGMA(HLS AGGREGATE variable=stream_data_ch_1)
     DO_PRAGMA(HLS AGGREGATE variable=out_write_channel)
     DO_PRAGMA(HLS AGGREGATE variable=out_block_write_channel)
+
+    //#ifdef ALVEO_U200
+	//DO_PRAGMA(HLS bind_storage variable=stream_data_ch_0 type=fifo impl=uram)
+	//DO_PRAGMA(HLS bind_storage variable=out_block_write_channel type=fifo impl=uram)
+    //#endif
 
     // variables
     int enable_write[CPO];

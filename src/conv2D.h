@@ -7,53 +7,19 @@
 #include <hls_stream.h>
 
 // -----------------------------------------------------------------------------------------------------------
-// Convolution type
-// Select only one type
+// Configuration selection.
+// Select only one configuration. Each configuration defines the target device, the type of convolution, the
+// arithmetic precision format, and the size of the kernel in input channels and output channels.
+// Each configuration is optimized for the specific targeted board
 // -----------------------------------------------------------------------------------------------------------
-//#define DIRECT_CONV		// Direct convolution
-#define WINOGRAD_CONV		// Winograd convolution
-//#define DWS_CONV			// DeepWise Separable convolution
 
-// -----------------------------------------------------------------------------------------------------------
-// data type. Defines the basic data type of the kernel
-// Select only one data type (fp32, apf8, api8)
-// -----------------------------------------------------------------------------------------------------------
-//#define FP32_DATA_TYPE
-//#define APF8_DATA_TYPE
-#define API8_DATA_TYPE
-//#define API16_DATA_TYPE
+// Configurations for Alveo U200 boards
 
-// -----------------------------------------------------------------------------------------------------------
-// Defines for the kernel
-// -----------------------------------------------------------------------------------------------------------
-#define WMAX            256   // Maximum image width
-#define HMAX            256   // Maximum image height
-#define CPI               8   // Basic kernel number of input channels
-#define CPO               8   // Basic kernel number of output channels
-#define LOG2_CPO          3   // number of bits for CPO (if you change CPO please change LOG2_CPO accordingly)
-
-// -----------------------------------------------------------------------------------------------------------
-// Defines for the added modules to the conv layer (clipping and shift must be used only for API8 data type)
-// -----------------------------------------------------------------------------------------------------------
-#define USE_RELU		   // Enables the use of the ReLU activation
-#define USE_CLIPPING       // Enables the use of the clipping function (implemented in the ReLU module)
-#define USE_SHIFT          // Enables the use of the shift function (implemented in the ReLU module)
-#define USE_POOLING		   // Enables the use of the Pooling function (maxpooling or avgpooling)
-
-// -----------------------------------------------------------------------------------------------------------
-// Defines for latency estimation
-// Change those values and run C Synthesis in order to obtain the delay of the kernel
-// -----------------------------------------------------------------------------------------------------------
-#define I_REFERENCE     CPI  // I for delay estimation (must be equal or higher than CPI)
-#define O_REFERENCE     CPO  // O for delay estimation (must be equal or higher than CPO)
-#define W_REFERENCE    WMAX  // W for delay estimation
-#define H_REFERENCE    HMAX  // H for delay estimation
-
-// -----------------------------------------------------------------------------------------------------------
-// Defines for burst memory access and depth of streams
-// -----------------------------------------------------------------------------------------------------------
-#define READ_BURST_SIZE   8   // Burst size for data read
-#define STREAMS_DEPTH     8   // Depth of streams
+//#define CONF_ALVEO_U200_8x8_DIRECT_API8            	// Direct convolution 8x8 kernel with API8 for Alveo U200
+//#define CONF_ALVEO_U200_16x16_WINOGRAD_API8        	// Winograd convolution 16x16 kernel with API8 for Alveo U200
+//#define CONF_ALVEO_U200_32x32_DWS_API8             		// DeepWise Separable 32x32 kernel with API8 for Alveo U200
+//#define CONF_ALVEO_U200_32x64_DWS_API8             	// DeepWise Separable 32x64 kernel with API8 for Alveo U200
+#define CONF_ALVEO_U200_64x64_DWS_API8              // DeepWise Separable 64x64 kernel with API8 for Alveo U200
 
 // -----------------------------------------------------------------------------------------------------------
 // defines for debug (DEBUG_ALL activates all debug defines)
@@ -75,13 +41,92 @@
 //#define DEBUG_CPU
 
 // -----------------------------------------------------------------------------------------------------------
-// defines for C simulation and C/RTL co-simulation
+// Automatic defines (do not change; add new ones if needed)
 // -----------------------------------------------------------------------------------------------------------
-#define W_SIM WMAX
-#define H_SIM HMAX
-#define I_SIM I_REFERENCE
-#define O_SIM O_REFERENCE
-#define INSTANCES_SIM 2
+#ifdef CONF_ALVEO_U200_8x8_DIRECT_API8
+#define ALVEO_U200
+#define DIRECT_CONV
+#define API8_DATA_TYPE
+#define USE_RELU
+#define USE_CLIPPING
+#define USE_SHIFT
+#define USE_POOLING
+#define CPI                8
+#define CPO                8
+#define LOG2_CPO           3
+#define WMAX             256
+#define HMAX             256
+#define READ_BURST_SIZE    2
+#define STREAMS_DEPTH      2
+#endif
+
+#ifdef CONF_ALVEO_U200_16x16_WINOGRAD_API8
+#define ALVEO_U200
+#define WINOGRAD_CONV
+#define API8_DATA_TYPE
+#define USE_RELU
+#define USE_CLIPPING
+#define USE_SHIFT
+#define USE_POOLING
+#define CPI               16
+#define CPO               16
+#define LOG2_CPO           4
+#define WMAX             256
+#define HMAX             256
+#define READ_BURST_SIZE    4
+#define STREAMS_DEPTH      4
+#endif
+
+#ifdef CONF_ALVEO_U200_32x32_DWS_API8
+#define ALVEO_U200
+#define DWS_CONV
+#define API8_DATA_TYPE
+#define USE_RELU
+#define USE_CLIPPING
+#define USE_SHIFT
+#define USE_POOLING
+#define CPI               32
+#define CPO               32
+#define LOG2_CPO           5
+#define WMAX             256
+#define HMAX             256
+#define READ_BURST_SIZE    8
+#define STREAMS_DEPTH      8
+#endif
+
+#ifdef CONF_ALVEO_U200_32x64_DWS_API8
+#define ALVEO_U200
+#define DWS_CONV
+#define API8_DATA_TYPE
+#define USE_RELU
+#define USE_CLIPPING
+#define USE_SHIFT
+#define USE_POOLING
+#define CPI               32
+#define CPO               64
+#define LOG2_CPO           6
+#define WMAX             256
+#define HMAX             256
+#define READ_BURST_SIZE    8
+#define STREAMS_DEPTH      8
+#endif
+
+#ifdef CONF_ALVEO_U200_64x64_DWS_API8
+#define ALVEO_U200
+#define DWS_CONV
+#define API8_DATA_TYPE
+#define USE_RELU
+#define USE_CLIPPING
+#define USE_SHIFT
+#define USE_POOLING
+#define CPI               64
+#define CPO               64
+#define LOG2_CPO           6
+#define WMAX             256
+#define HMAX             256
+#define READ_BURST_SIZE   16
+#define STREAMS_DEPTH     16
+#endif
 
 // ***********************************************************************************************************
 // ***********************************************************************************************************
@@ -91,7 +136,27 @@
 // ***********************************************************************************************************
 // ***********************************************************************************************************
 
-#define LEFT_DIRECTION 0	// direction used in ReLU (shift) module
+// -----------------------------------------------------------------------------------------------------------
+// Defines for latency estimation in C synthesis
+// -----------------------------------------------------------------------------------------------------------
+#define I_REFERENCE     CPI  // I for delay estimation (must be equal or higher than CPI)
+#define O_REFERENCE     CPO  // O for delay estimation (must be equal or higher than CPO)
+#define W_REFERENCE    WMAX  // W for delay estimation
+#define H_REFERENCE    HMAX  // H for delay estimation
+
+// -----------------------------------------------------------------------------------------------------------
+// defines for C simulation and C/RTL co-simulation
+// -----------------------------------------------------------------------------------------------------------
+#define W_SIM         WMAX
+#define H_SIM         HMAX
+#define I_SIM         I_REFERENCE
+#define O_SIM         O_REFERENCE
+#define INSTANCES_SIM 2
+
+// -----------------------------------------------------------------------------------------------------------
+// Direction defines (for shift operations)
+// -----------------------------------------------------------------------------------------------------------
+#define LEFT_DIRECTION  0	// direction used in ReLU (shift) module
 #define RIGHT_DIRECTION 1   // direction used in ReLU (shift) module
 
 // -----------------------------------------------------------------------------------------------------------
