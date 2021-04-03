@@ -19,11 +19,18 @@
 // input data from all streams the join module uses BLOCK_SIZE cycles to produce
 // BLOCK_SIZE data items. All data items are sent through the output stream
 //
-void join(int H, int W, int I_ITER, int num_extra_rows, hls::stream<data_type> in[CPI], hls::stream<pixel_in_t> &out) {
+void join(int H, int W, int I_ITER, int num_extra_rows, int write_to_buff, int read_from_buff, hls::stream<data_type> in[CPI], hls::stream<pixel_in_t> &out) {
 
   #ifdef DEBUG_JOIN
   printf("JOIN: starts\n");
   #endif
+
+  // input buffer
+  pixel_in_t buffer[INPUT_BUFFER_SIZE];
+  #ifdef ALVEO_U200
+  DO_PRAGMA(HLS bind_storage variable=buffer type=ram_t2p impl=uram)
+  #endif
+
 
   int num_pixels = (H + num_extra_rows) * W;                    // pixels to read
 
@@ -38,20 +45,31 @@ void join(int H, int W, int I_ITER, int num_extra_rows, hls::stream<data_type> i
     for (int r=0; r<num_pixels; r++) {
       DO_PRAGMA(HLS loop_tripcount  min=1 max=W_REFERENCE*H_REFERENCE)
       #pragma HLS PIPELINE II=1
+
       pixel_in_t data;
       DO_PRAGMA(HLS ARRAY_PARTITION variable=data complete dim=0)
-      for(int i=0; i<CPI; i++){
-        DO_PRAGMA(HLS loop_tripcount  min=1 max=CPI)
-        #pragma HLS UNROLL
-        data.pixel[i] = in[i].read();
-        #ifdef DEBUG_JOIN
-        printf("data.pixel[%d] = %6.2f  ", i, float(data.pixel[i]));
-        #endif
+
+      if (!read_from_buff) {
+        for(int i=0; i<CPI; i++){
+          DO_PRAGMA(HLS loop_tripcount  min=1 max=CPI)
+          #pragma HLS UNROLL
+          data.pixel[i] = in[i].read();
+          #ifdef DEBUG_JOIN
+          printf("data.pixel[%d] = %6.2f  ", i, float(data.pixel[i]));
+          #endif
+        }
+      } else {
+    	data = buffer[r];
       }
+
+      out << data;
+
+      if (write_to_buff) buffer[r] = data;
+
       #ifdef DEBUG_JOIN
       printf("\n");
       #endif
-      out << data;
+
     }
   }
 

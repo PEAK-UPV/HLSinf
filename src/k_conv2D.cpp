@@ -134,7 +134,7 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
     hls::stream<data_type>     out_write_channel[CPO];
     hls::stream<write_block_t> out_block_write_channel[CPO];
     DO_PRAGMA(HLS STREAM variable=stream_data_ch_0        depth=STREAMS_DEPTH)
-    DO_PRAGMA(HLS STREAM variable=stream_data_ch_1        depth=STREAMS_DEPTH)
+    DO_PRAGMA(HLS STREAM variable=stream_data_ch_1        depth=STREAMS_DEPTH * READ_BLOCK_SIZE)
     DO_PRAGMA(HLS STREAM variable=out_write_channel       depth=2)
     DO_PRAGMA(HLS STREAM variable=out_block_write_channel depth=2)
     DO_PRAGMA(HLS AGGREGATE variable=stream_data_ch_0)
@@ -159,6 +159,10 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
     int enable_pooling           = enable_maxpooling | enable_avgpooling;
 
     int read_channel_offset      = (W * H);
+
+    // variables to manage the input buffer
+    int write_to_input_buffer    = 0;
+    int read_from_input_buffer   = 0;
 
     #ifdef USE_POOLING
     int write_pixels             = enable_pooling ? (rows * W / 4) : (rows * W);
@@ -213,7 +217,7 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
 
     read_data_channels(H, W, rows, I_ITER, ptr_data, offset_read_data_channel, num_extra_rows, read_channel_blocks, stream_data_ch_0, I);
     ch_serialize_and_filter<CPI>(I_ITER, read_pixels, read_channel_blocks, channel_size, offset_read_data_channel_i, stream_data_ch_0, stream_data_ch_1, I);
-    join(rows, W, I_ITER, num_extra_rows, stream_data_ch_1,  out_read_data);
+    join(rows, W, I_ITER, num_extra_rows, write_to_input_buffer, read_from_input_buffer, stream_data_ch_1,  out_read_data);
 
     // convolution: Direct, Winograd, DWS
     #ifdef DIRECT_CONV

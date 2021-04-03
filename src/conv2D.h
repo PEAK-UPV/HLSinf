@@ -17,9 +17,9 @@
 
 //#define CONF_ALVEO_U200_8x8_DIRECT_API8            	// Direct convolution 8x8 kernel with API8 for Alveo U200
 //#define CONF_ALVEO_U200_16x16_WINOGRAD_API8        	// Winograd convolution 16x16 kernel with API8 for Alveo U200
-//#define CONF_ALVEO_U200_32x32_DWS_API8             		// DeepWise Separable 32x32 kernel with API8 for Alveo U200
+#define CONF_ALVEO_U200_32x32_DWS_API8             		// DeepWise Separable 32x32 kernel with API8 for Alveo U200
 //#define CONF_ALVEO_U200_32x64_DWS_API8             	// DeepWise Separable 32x64 kernel with API8 for Alveo U200
-#define CONF_ALVEO_U200_64x64_DWS_API8              // DeepWise Separable 64x64 kernel with API8 for Alveo U200
+//#define CONF_ALVEO_U200_64x64_DWS_API8              // DeepWise Separable 64x64 kernel with API8 for Alveo U200
 
 // -----------------------------------------------------------------------------------------------------------
 // defines for debug (DEBUG_ALL activates all debug defines)
@@ -58,6 +58,7 @@
 #define HMAX             256
 #define READ_BURST_SIZE    2
 #define STREAMS_DEPTH      2
+#define INPUT_BUFFER_SIZE  128
 #endif
 
 #ifdef CONF_ALVEO_U200_16x16_WINOGRAD_API8
@@ -75,6 +76,7 @@
 #define HMAX             256
 #define READ_BURST_SIZE    4
 #define STREAMS_DEPTH      4
+#define INPUT_BUFFER_SIZE  128
 #endif
 
 #ifdef CONF_ALVEO_U200_32x32_DWS_API8
@@ -92,6 +94,7 @@
 #define HMAX             256
 #define READ_BURST_SIZE    8
 #define STREAMS_DEPTH      8
+#define INPUT_BUFFER_SIZE  128
 #endif
 
 #ifdef CONF_ALVEO_U200_32x64_DWS_API8
@@ -109,6 +112,7 @@
 #define HMAX             256
 #define READ_BURST_SIZE    8
 #define STREAMS_DEPTH      8
+#define INPUT_BUFFER_SIZE  128
 #endif
 
 #ifdef CONF_ALVEO_U200_64x64_DWS_API8
@@ -126,6 +130,7 @@
 #define HMAX             256
 #define READ_BURST_SIZE   16
 #define STREAMS_DEPTH     16
+#define INPUT_BUFFER_SIZE  128
 #endif
 
 // ***********************************************************************************************************
@@ -360,7 +365,7 @@ void dws_read_kernel(int I_ITER, int offset_dw_kernel, int offset_pw_kernel, dat
 void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<kernel_dw_t> &k_dw_in, hls::stream<kernel_pw_t> &k_pw_in, hls::stream<pixel_out_t> &out);
 
 // data reorganization
-void join(int H, int W, int I_ITER, int num_extra_rows, hls::stream<data_type> in[CPI], hls::stream<pixel_in_t> &out);
+void join(int H, int W, int I_ITER, int num_extra_rows, int write_to_buff, int read_from_buff, hls::stream<data_type> in[CPI], hls::stream<pixel_in_t> &out);
 void split(int H, int W, hls::stream<pixel_out_t> &in, hls::stream<data_type> out[CPO]);
 void block_generate(int H, int W, hls::stream<data_type> &in, hls::stream<write_block_t> &out);
 template <int LEVELS> void ch_block_generate(int H, int W, hls::stream<data_type> in[LEVELS], hls::stream<write_block_t> out[LEVELS]){
