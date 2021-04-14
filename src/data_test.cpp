@@ -8,22 +8,28 @@ void init_data() {
   std::random_device rd;
   std::mt19937 gen(rd());
 
-#if defined(FP32_DATA_TYPE) || defined(APF8_DATA_TYPE)
+  // random number generators
+  #if defined(FP32_DATA_TYPE) || defined(APF8_DATA_TYPE)
   std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
-#endif
-#ifdef API8_DATA_TYPE
+  #endif
+  #ifdef API8_DATA_TYPE
   std::uniform_int_distribution<int> dist(-10, 10);
-#endif
-#ifdef API16_DATA_TYPE
+  #endif
+  #ifdef API16_DATA_TYPE
   std::uniform_int_distribution<int> dist(-10, 10);
-#endif
+  #endif
 
-
-  int addr = 0;
-  for (int i=0; i<I; i++) {
+  // input data
+  int addr;
+  for (int i=0; i<I_input; i++) {
     for (int h=0; h<H; h++) {
       for (int w=0; w<W; w++) {
-        data_in[addr] = deterministic_input_values?i:dist(gen);
+    	addr = input_data_address(i, h, w);
+    	if (i<I) {
+          data_in[addr] = deterministic_input_values?i:dist(gen);
+    	} else {
+    	  data_in[addr] = 0;
+    	}
         addr++;
       }
     }
@@ -45,7 +51,7 @@ void init_data() {
                        (ki * KH * KW) +
                        (kh * KW) +
                        kw;
-          if ((i<I) && (o<O)) kernel[addr_k] = deterministic_input_values?i:dist(gen);
+          if ((i<I) && (o<O)) kernel[addr_k] = deterministic_input_values?(i % 20)-10:dist(gen);
           else kernel[addr_k] = 0;
 	    }
 	  }
@@ -60,7 +66,7 @@ void init_data() {
     for (int kh=0; kh<KH; kh++) {
       for (int kw=0; kw<KW; kw++) {
     	  int addr_k = (i * KW * KH) + (kh * KW) + kw;
-    	  if (i < I) dw_kernel[addr_k] = deterministic_input_values?kernel_id:dist(gen); else dw_kernel[addr_k] = 0;
+    	  if (i < I) dw_kernel[addr_k] = deterministic_input_values?(kernel_id%20)-10:dist(gen); else dw_kernel[addr_k] = 0;
       }
     }
     kernel_id++;
@@ -73,11 +79,11 @@ void init_data() {
 		  int go = o / CPO;
 		  int ko = o % CPO;
 		  int addr_k = (go * GI * CPO * CPI) + (gi * CPO * CPI) + (ko * CPI) + ki;
-		  if ((i < I) && (o < O)) pw_kernel[addr_k] = deterministic_input_values?kernel_id:dist(gen); else pw_kernel[addr_k] = 0;
+		  if ((i < I) && (o < O)) pw_kernel[addr_k] = deterministic_input_values?(kernel_id%20)-10:dist(gen); else pw_kernel[addr_k] = 0;
 	  }
 	  kernel_id++;
   }
 #endif
 
-  for (int cout=0; cout<O; cout++) bias[cout] = deterministic_input_values?cout:dist(gen);
+  for (int cout=0; cout<O; cout++) bias[cout] = deterministic_input_values?(cout%20)-10:dist(gen);
 }

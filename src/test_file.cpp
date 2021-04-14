@@ -33,6 +33,15 @@ int read_test_file(int *enable, int *cpu) {
  GO = O_kernel / CPO;
  if (enable_maxpooling || enable_avgpooling) {HO = H / 2; WO = W / 2;} else {HO = H; WO = W;}
 
+ #ifdef IHW_DATA_FORMAT
+ I_input = I;
+ O_output = O;
+ #endif
+ #ifdef GIHWCPI_DATA_FORMAT
+ I_input = ((I + (CPI - 1)) / CPI) * CPI;
+ O_output = ((O + (CPO - 1)) / CPO) * CPO;
+ #endif
+
  return 0;
 }
 

@@ -513,7 +513,7 @@ static void mulWise(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls:
 		for (int i = 0; i < (H * W) / 2; i++) {
 			DO_PRAGMA(HLS loop_tripcount min=1 max=(H_REFERENCE/2)*W_REFERENCE)
 			#pragma HLS PIPELINE
-			DO_PRAGMA(HLS dependence variable=res false)
+			DO_PRAGMA(HLS dependence variable=res inter false)
 
 			data = d_in.read();
 			for (int cpo=0; cpo<CPO; cpo++) {

@@ -62,13 +62,13 @@ void fn_init_fpga() {
   std::cout << "Device " << device_name.c_str() << ": program successful!" << std::endl;
 
   // kernels
-  //for (int kernel=0; kernel<KERNELS; kernel++) {
-  //  char dummy[50];
-  //  sprintf(dummy, "k_conv2D:{k_conv2D_%d}", kernel+1);
+  for (int kernel=0; kernel<NUM_KERNELS; kernel++) {
+    char dummy[50];
+    sprintf(dummy, "k_conv2D:{k_conv2D_%d}", kernel+1);
   //  printf("dummy %s\n", dummy);
-  //  OCL_CHECK(err, kernel_conv2d[kernel] = cl::Kernel(program, dummy, &err));
-  //  std::cout << "Kernel sucessfully created" << std::endl ;
-  //}
-  OCL_CHECK(err, kernel_conv2d[0] = cl::Kernel(program, "k_conv2D", &err));
+    OCL_CHECK(err, kernel_conv2d[kernel] = cl::Kernel(program, dummy, &err));
+    std::cout << "Kernel sucessfully created" << std::endl ;
+  }
+  //OCL_CHECK(err, kernel_conv2d[0] = cl::Kernel(program, "k_conv2D", &err));
 }
 #endif

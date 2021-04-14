@@ -43,6 +43,7 @@ void mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<kernel_
     if (load_kernel){
       kernel = k_in.read();
       #ifdef DEBUG_MUL
+      #ifdef DEBUG_VERBOSE
       printf("MUL: kernel read\n");
       for(int i=0; i<CPI; i++){
         for(int o=0; o<CPO; o++){
@@ -54,6 +55,7 @@ void mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<kernel_
           printf("\n");
         }
       }
+      #endif
       #endif
     }
 
@@ -89,10 +91,12 @@ void mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<kernel_
       p_out.pixel[i] = sum[i];
     }
     #ifdef DEBUG_MUL
+    #ifdef DEBUG_VERBOSE
     for(int i = 0;i<CPO;i++) {
       printf("mult: p_out.pixel[%d] = %6.2f  ", i, float(p_out.pixel[i]));
     }
     printf("\n");
+    #endif
     #endif
     out << p_out;
     iter_load_kernel++;
@@ -122,7 +126,7 @@ void mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<kernel_
 void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<kernel_dw_t> &k_dw_in, hls::stream<kernel_pw_t> &k_pw_in, hls::stream<pixel_out_t> &out) {
 	  
   #ifdef DEBUG_MUL
-  printf("mul: start\n");
+  printf("mul: start (I_ITER %d)\n", I_ITER);
   #endif
 
   kernel_dw_t kernel_dw;
@@ -154,7 +158,9 @@ void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<ker
     if (load_kernel) {
       kernel_dw = k_dw_in.read();
       kernel_pw = k_pw_in.read();
+
       #ifdef DEBUG_MUL
+      #ifdef DEBUG_VERBOSE
       printf("MUL: loaded dw kernel:\n");
       for (int cpi=0; cpi<CPI; cpi++) {
 	    printf("cpi %d: ", cpi);
@@ -163,12 +169,14 @@ void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<ker
 	    }
 	    printf("\n");
       }
-      printf("MUL: loaded pw kernel:\n");
+      printf("MUL: loaded pw kernel  (cpi/cpo table):\n");
       for (int cpi=0; cpi<CPI; cpi++) {
     	for (int cpo=0; cpo<CPO; cpo++) {
-    		printf("cpi %d cpo %d -> %f\n", cpi, cpo, float(kernel_pw.pixel[cpo][cpi]));
+    		printf(" %4.2f", float(kernel_pw.pixel[cpo][cpi]));
     	}
+    	printf("\n");
       }
+      #endif
       #endif
     }
 
@@ -176,6 +184,7 @@ void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<ker
     data_in = in.read();
 
     #ifdef DEBUG_MUL
+    #ifdef DEBUG_VERBOSE
     printf("MUL: read data:\n");
     for (int cpi=0; cpi<CPI; cpi++) {
     	printf("cpi %d: ", cpi);
@@ -184,6 +193,7 @@ void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<ker
     	}
     	printf("\n");
     }
+    #endif
     #endif
 
 
@@ -198,6 +208,7 @@ void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<ker
 	  }
 	}
     #ifdef DEBUG_MUL
+    #ifdef DEBUG_VERBOSE
     printf("MUL: DW_MUL\n");
     for (int cpi=0; cpi<CPI; cpi++) {
     	for (int p=0; p<9; p++) {
@@ -205,6 +216,7 @@ void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<ker
     	}
     	printf("\n");
     }
+    #endif
     #endif
 
 	// now we reduce the dw output into cpo pixels
@@ -219,11 +231,13 @@ void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<ker
 	  }
 	}
     #ifdef DEBUG_MUL
+    #ifdef DEBUG_VERBOSE
     printf("MUL: DW_REDUCE\n");
     for (int cpi=0; cpi<CPI; cpi++) {
   	  printf("%f ", float(data_sum[cpi]));
 	}
 	printf("\n");
+    #endif
     #endif
 
 	// now we multiply and reduce the input for each output applying the point wise kernel
@@ -238,11 +252,13 @@ void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<ker
 	  }
  	}
     #ifdef DEBUG_MUL
+    #ifdef DEBUG_VERBOSE
     printf("MUL: PW_REDUCE\n");
     for (int cpo=0; cpo<CPO; cpo++) {
 	  printf(" %f ", float(pixel_out[cpo]));
     }
     printf("\n");
+    #endif
     #endif
 
 	// now we send the frame out
@@ -253,17 +269,19 @@ void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<ker
     out << p_out;
 
     #ifdef DEBUG_MUL
+    #ifdef DEBUG_VERBOSE
     for(int i = 0;i<CPO;i++) {
       printf("mult: p_out.pixel[%d] = %6.2f  ", i, float(p_out.pixel[i]));
     }
     printf("\n");
+    #endif
     #endif
 
     iter_load_kernel++;
     if (iter_load_kernel == W*H) iter_load_kernel = 0;
   }
 
-  #ifdef DEBUG_MULL
+  #ifdef DEBUG_MUL
   printf("mul: end\n");
   #endif
 }

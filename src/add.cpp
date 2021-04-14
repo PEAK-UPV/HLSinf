@@ -25,7 +25,7 @@ void add(int H, int W, int I_ITER, hls::stream<pixel_out_t> &in, hls::stream<pix
   int num_iterations = W * H;
 
   // Buffer for all data and CPO channels
-  pixel_out_t buff_o_channels[WMAX*HMAX];
+  static pixel_out_t buff_o_channels[WMAX*HMAX];
   DO_PRAGMA(HLS AGGREGATE variable=buffer_o_channels)
   #ifdef ALVEO_U200
   DO_PRAGMA(HLS bind_storage variable=buffer_o_channels type=ram_t2p impl=uram)
@@ -36,6 +36,7 @@ void add(int H, int W, int I_ITER, hls::stream<pixel_out_t> &in, hls::stream<pix
   bias = b_in.read();
 
   #ifdef DEBUG_ADD
+  #ifdef DEBUG_VERBOSE
   for (int b=0; b<CPO; b++) {
     printf("Bias[%d] = %6.4f \n", b, float(bias.pixel[b]));
   }
@@ -47,6 +48,7 @@ void add(int H, int W, int I_ITER, hls::stream<pixel_out_t> &in, hls::stream<pix
     }
     printf("\n");
   }
+  #endif
   #endif
 
   // All input data have effect into output add
@@ -81,6 +83,7 @@ void add(int H, int W, int I_ITER, hls::stream<pixel_out_t> &in, hls::stream<pix
   } //i_iter
 
   #ifdef DEBUG_ADD
+  #ifdef DEBUG_VERBOSE
   for (int cpo=0; cpo<CPO; cpo++) {
     printf("CH %d: ", cpo);
     for (int it=0; it<num_iterations; it++) {
@@ -88,6 +91,7 @@ void add(int H, int W, int I_ITER, hls::stream<pixel_out_t> &in, hls::stream<pix
     }
     printf("\n");
   }
+  #endif
   #endif
 
   #ifdef DEBUG_ADD

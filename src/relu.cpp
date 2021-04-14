@@ -87,10 +87,12 @@ void relu(int enable_relu, int enable_clipping, int enable_shift, int min_clip, 
     }
 
     #ifdef DEBUG_RELU
+    #ifdef DEBUG_VERBOSE
     printf("RELU (pixel %d):\n", i);
     for (int x=0; x<CPI; x++) {
     	printf("  cpi %d : in %f out %f\n", x, float(data_in.pixel[x]), float(data_out.pixel[x]));
     }
+    #endif
     #endif
 
     out << data_out;
