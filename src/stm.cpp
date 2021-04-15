@@ -36,9 +36,7 @@ void stm(int H, int W, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &o
       DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO)
       #pragma HLS UNROLL
 
-	  //TODO cambiar el tipo
 	  data_type v_in, v_soft, v_tanh, v_mult;
-	  //float v_in, v_soft, v_tanh, v_mult;
 
       v_in = data_in.pixel[cpo];
 

@@ -259,7 +259,7 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
 				split(write_rows, write_cols, out_pooling, out_write_channel);
 				ch_block_generate<CPO>(write_rows, write_cols, out_write_channel, out_block_write_channel);
 			#else
-				split(write_rows, write_cols, out_conv, out_write_channel);
+				split(write_rows, write_cols, out_stm, out_write_channel);
 				ch_block_generate<CPO>(write_rows, write_cols, out_write_channel, out_block_write_channel);
 			#endif
 
