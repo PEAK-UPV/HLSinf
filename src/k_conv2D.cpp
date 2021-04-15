@@ -123,6 +123,12 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
     DO_PRAGMA(HLS STREAM variable=out_relu depth=STREAMS_DEPTH)
     #endif
 
+    //STM support
+    #if defined(USE_STM)
+    static hls::stream<pixel_out_t>  out_stm;
+    DO_PRAGMA(HLS STREAM variable=out_stm depth=STREAMS_DEPTH)
+    #endif
+
     // MAXPOOLING, AVGPOOLING
     #ifdef USE_POOLING
     static hls::stream<pixel_out_t>  out_pooling;
@@ -245,16 +251,32 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
       #endif
 
     #else
-      // Pooling: avgpooling or maxpooling
-      #ifdef USE_POOLING
-      pooling(H, W, enable_maxpooling, enable_avgpooling, out_conv, out_pooling);
-      split(write_rows, write_cols, out_pooling, out_write_channel);
-      ch_block_generate<CPO>(write_rows, write_cols, out_write_channel, out_block_write_channel);
-      #else
-      split(write_rows, write_cols, out_conv, out_write_channel);
-      ch_block_generate<CPO>(write_rows, write_cols, out_write_channel, out_block_write_channel);
-      #endif
-    #endif
+		#if defined(USE_STM)
+			stm(H, W, out_conv, out_stm);
+			// Pooling: avgpooling or maxpooling
+			#ifdef USE_POOLING
+				pooling(H, W, enable_maxpooling, enable_avgpooling, out_stm, out_pooling);
+				split(write_rows, write_cols, out_pooling, out_write_channel);
+				ch_block_generate<CPO>(write_rows, write_cols, out_write_channel, out_block_write_channel);
+			#else
+				split(write_rows, write_cols, out_conv, out_write_channel);
+				ch_block_generate<CPO>(write_rows, write_cols, out_write_channel, out_block_write_channel);
+			#endif
+
+		#else
+
+			// Pooling: avgpooling or maxpooling
+			#ifdef USE_POOLING
+				pooling(H, W, enable_maxpooling, enable_avgpooling, out_conv, out_pooling);
+				split(write_rows, write_cols, out_pooling, out_write_channel);
+				ch_block_generate<CPO>(write_rows, write_cols, out_write_channel, out_block_write_channel);
+			#else
+				split(write_rows, write_cols, out_conv, out_write_channel);
+				ch_block_generate<CPO>(write_rows, write_cols, out_write_channel, out_block_write_channel);
+			#endif
+
+		#endif
+	#endif
 
     write_data_channels(write_pixels, o_iter_write_offset, ptr_out, out_block_write_channel, enable_write);
 

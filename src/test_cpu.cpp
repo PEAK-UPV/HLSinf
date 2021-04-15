@@ -166,6 +166,17 @@ void cpu_conv2D() {
       }
     }
   }
+  // apply stm
+  if (enable_stm){
+	  for (int cout=0; cout<O; cout++) {
+		  for (int h=0; h<H; h++) {
+			  for (int w=0; w<W; w++) {
+				  int addr_o = (cout * W * H) + (h * W) + w;
+				  out_stm_cpu[addr_o] = tanh(log(exp(out_conv_cpu[addr_o] + 1))) * out_conv_cpu[addr_o];
+			  }
+		  }
+	  }
+  }
 
   // apply maxpooling or avgpooling
   if (enable_maxpooling) {

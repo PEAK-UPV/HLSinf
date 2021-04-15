@@ -38,6 +38,7 @@ extern int rows;						 // number of rows to compute by the kernel
 extern int enable_upper_padding;		 // enables the upper row of padding
 extern int enable_lower_padding;		 // enables the lower row of padding
 extern int enable_relu;				     // enables applying the relu activation functions
+extern int enable_stm;  			 	 // enables applying the STM functions
 extern int enable_shift;				 // enables applying shift to the output
 extern int dir_shift;			         // shift direction (left or right)
 extern int pos_shift;					 // positions to shift
@@ -59,6 +60,7 @@ extern data_type *pw_kernel;             // PW kernel (format GO x GI x CPO x CP
 extern data_type *bias;                  // Conv bias buffers (format O)
 extern data_type *out_conv_cpu;          // Output data buffer for cpu (format O x W x H)
 extern data_type *out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
+extern data_type *out_stm_cpu;		     // Output data buffer for STM for cpu (format O x W/2 x H/2)
 extern data_type *out_pool_cpu;		     // Output data fuffer for pool for cpu (format O x W/2 x H/2)
 extern char *input_data_file;            // file with input parameters
 extern int deterministic_input_values;   // whether input data is randomly generated or not (deterministic needed in co-simulation)

@@ -47,6 +47,11 @@ void allocate_buffers() {
     posix_memalign((void **)&out_relu_cpu, 4096, O * W * H * sizeof(data_type));
   }
 
+  // output for STM functions
+    if (enable_stm) {
+      posix_memalign((void **)&out_stm_cpu, 4096, O * W * H * sizeof(data_type));
+   }
+
   // output for pool function
   if ((enable_maxpooling) || (enable_avgpooling)) {
 	  posix_memalign((void **)&out_pool_cpu, 4096, O * (W/2) * (H/2) * sizeof(data_type));
@@ -106,6 +111,7 @@ void deallocate_buffers() {
   free(out);
   free(out_conv_cpu);
   if (enable_relu) free(out_relu_cpu);
+  if (enable_stm) free(out_stm_cpu);
   if ((enable_maxpooling) || (enable_avgpooling)) {
 	free(out_pool_cpu);
   }

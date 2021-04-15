@@ -36,6 +36,7 @@ int check_result(data_type *max_difference, int *num_elements_differ) {
           int addr_o = (cout * W * H) + (h * W) + w;
           data_type diff;
           if (enable_relu) diff = data_type(fabs(float(out_relu_cpu[addr_o]) - float(out[addr_o])));
+          else if(enable_stm) diff = data_type(fabs(float(out_stm_cpu[addr_o]) - float(out[addr_o])));
           else diff = fabs(float(out_conv_cpu[addr_o]) - float(out[addr_o]));
           if (float(diff) > float(epsilon)) {
             (*num_elements_differ)++;

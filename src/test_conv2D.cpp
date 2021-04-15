@@ -50,7 +50,8 @@ int O_kernel = O_SIM;			 // Number of output channels for the kernel (filter) - 
 int rows = H_SIM;				 // number of rows to compute by the kernel
 int enable_upper_padding = 1;	 // enables the upper row of padding
 int enable_lower_padding = 1;	 // enables the lower row of padding
-int enable_relu = 1;			 // enables applying the relu activation functions
+int enable_relu = 0;			 // enables applying the relu activation functions
+int enable_stm = 1;			 	 // enables applying the STM functions
 int enable_shift = 0;			 // enables applying shift to the output
 int dir_shift = 0;     			 // shift direction (left or right)
 int pos_shift = 0;				 // positions to shift
@@ -76,6 +77,7 @@ data_type *pw_kernel;             // PW kernel (format GO x GI x CPO x CPI) - fo
 data_type *bias;                  // Conv bias buffers (format O)
 data_type *out_conv_cpu;          // Output data buffer for cpu (format O x W x H)
 data_type *out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
+data_type *out_stm_cpu; 		  // Output data buffer for STM for cpu (format O x W x H)
 data_type *out_pool_cpu;		  // Output data fuffer for pool for cpu (format O x W/2 x H/2)
 
 FILE *fp;
