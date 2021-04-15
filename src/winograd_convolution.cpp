@@ -249,7 +249,7 @@ static void frameConvert(int H, int W, int I_ITER, hls::stream<frame_d> &d_in, h
 				}
 				out << subframe1;
 
-				#ifdef DEBUG_VERBOSE
+				#ifdef DEBUG_MUL
 					printf("cvt: frame sent1 %d:\n", i_iter);
 					for (int cpi=0; cpi<CPI/2; cpi++) {
 						printf("  cpi %d:\n", cpi);
@@ -264,7 +264,7 @@ static void frameConvert(int H, int W, int I_ITER, hls::stream<frame_d> &d_in, h
 
 			if (p%2==1) {
 				out << subframe2;
-				#ifdef DEBUG_VERBOSE
+				#ifdef DEBUG_MUL
 					printf("cvt: frame sent2 %d:\n", i_iter);
 					for (int cpi=0; cpi<CPI/2; cpi++) {
 						printf("  cpi %d:\n", cpi);
@@ -295,7 +295,7 @@ static void frameConvert(int H, int W, int I_ITER, hls::stream<frame_d> &d_in, h
 //
 static void mulData(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls::stream<frame_d_2> &out) {
 
-	#ifdef DEBUG_VERBOSE
+	#ifdef DEBUG_MUL
 	printf("mulData: start\n");
 	#endif
 	
@@ -350,7 +350,7 @@ static void mulData(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls:
 			out << res;
 			cont++;
 
-			#ifdef DEBUG_VERBOSE
+			#ifdef DEBUG_MUL
 				printf("frame sent:\n");
 				for (int cpi=0; cpi<CPI; cpi++) {
 					printf("  cpi %d:\n", cpi);
@@ -366,7 +366,7 @@ static void mulData(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls:
 
 	}
 	
-	#ifdef DEBUG_VERBOSE
+	#ifdef DEBUG_MUL
 	printf("mulDATA: ends %d\n", cont);
 	#endif
 }
@@ -385,7 +385,7 @@ static void mulData(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls:
 //
 static void mulKernels(int I_ITER, hls::stream<kernel_t> &k_in, hls::stream<frame_d> &out) {
 
-	#ifdef DEBUG_VERBOSE
+	#ifdef DEBUG_MUL
 	printf("mul: start\n");
 	#endif
 
@@ -407,26 +407,47 @@ static void mulKernels(int I_ITER, hls::stream<kernel_t> &k_in, hls::stream<fram
 		loop_mul_kernels_load_cpo:
 		for (int cpo=0; cpo<CPO; cpo++) {
 			#pragma HLS PIPELINE II=1
-
-			for(int i = 0; i<3; i++){
-				#pragma HLS UNROLL
-				for (int cpi=0; cpi < CPI; cpi++) {
-					Gg[cpi][0][i] = kernel.pixel[cpo][cpi][i];
-					Gg[cpi][1][i] = (kernel.pixel[cpo][cpi][i] / 2) + (kernel.pixel[cpo][cpi][i+KW]  / 2) + (kernel.pixel[cpo][cpi][i+6] / 2);
-					Gg[cpi][2][i] = (kernel.pixel[cpo][cpi][i] / 2) - (kernel.pixel[cpo][cpi][i+KW]  / 2) + (kernel.pixel[cpo][cpi][i+6] / 2);
-					Gg[cpi][3][i] = kernel.pixel[cpo][cpi][i+6];
+			#ifdef FP32_DATA_TYPE
+				for(int i = 0; i<3; i++){
+					#pragma HLS UNROLL
+					for (int cpi=0; cpi < CPI; cpi++) {
+						Gg[cpi][0][i] = kernel.pixel[cpo][cpi][i];
+						Gg[cpi][1][i] = (kernel.pixel[cpo][cpi][i] / 2) + (kernel.pixel[cpo][cpi][i+KW]  / 2) + (kernel.pixel[cpo][cpi][i+6] / 2);
+						Gg[cpi][2][i] = (kernel.pixel[cpo][cpi][i] / 2) - (kernel.pixel[cpo][cpi][i+KW]  / 2) + (kernel.pixel[cpo][cpi][i+6] / 2);
+						Gg[cpi][3][i] = kernel.pixel[cpo][cpi][i+6];
+					}
 				}
-			}
 
-			for(int i = 0; i<4; i++){
-				#pragma HLS UNROLL
-				for (int cpi=0; cpi < CPI; cpi++) {
-					GgGT[cpi][i][0] = Gg[cpi][i][0];
-					GgGT[cpi][i][1] = (Gg[cpi][i][0]  / 2) + (Gg[cpi][i][1]  / 2) + (Gg[cpi][i][2] / 2);
-					GgGT[cpi][i][2] = (Gg[cpi][i][0]  / 2) - (Gg[cpi][i][1]  / 2) + (Gg[cpi][i][2] / 2);
-					GgGT[cpi][i][3] = Gg[cpi][i][2];
+				for(int i = 0; i<4; i++){
+					#pragma HLS UNROLL
+					for (int cpi=0; cpi < CPI; cpi++) {
+						GgGT[cpi][i][0] = Gg[cpi][i][0];
+						GgGT[cpi][i][1] = (Gg[cpi][i][0]  / 2) + (Gg[cpi][i][1]  / 2) + (Gg[cpi][i][2] / 2);
+						GgGT[cpi][i][2] = (Gg[cpi][i][0]  / 2) - (Gg[cpi][i][1]  / 2) + (Gg[cpi][i][2] / 2);
+						GgGT[cpi][i][3] = Gg[cpi][i][2];
+					}
 				}
-			}
+			#else
+				for(int i = 0; i<3; i++){
+					#pragma HLS UNROLL
+					for (int cpi=0; cpi < CPI; cpi++) {
+						Gg[cpi][0][i] = kernel.pixel[cpo][cpi][i] + kernel.pixel[cpo][cpi][i];
+						Gg[cpi][1][i] = kernel.pixel[cpo][cpi][i] + kernel.pixel[cpo][cpi][i+KW] + kernel.pixel[cpo][cpi][i+6];
+						Gg[cpi][2][i] = kernel.pixel[cpo][cpi][i] - kernel.pixel[cpo][cpi][i+KW] + kernel.pixel[cpo][cpi][i+6];
+						Gg[cpi][3][i] = kernel.pixel[cpo][cpi][i+6] + kernel.pixel[cpo][cpi][i+6];
+					}
+				}
+
+				for(int i = 0; i<4; i++){
+					#pragma HLS UNROLL
+					for (int cpi=0; cpi < CPI; cpi++) {
+						GgGT[cpi][i][0] = Gg[cpi][i][0] + Gg[cpi][i][0];
+						GgGT[cpi][i][1] = Gg[cpi][i][0] + Gg[cpi][i][1] + Gg[cpi][i][2];
+						GgGT[cpi][i][2] = Gg[cpi][i][0] - Gg[cpi][i][1] + Gg[cpi][i][2];
+						GgGT[cpi][i][3] = Gg[cpi][i][2] + Gg[cpi][i][2];
+					}
+				}
+			#endif
 			int pos = 0;
 			for(int f = 0; f < 4; f++){
 				#pragma HLS UNROLL
@@ -439,7 +460,7 @@ static void mulKernels(int I_ITER, hls::stream<kernel_t> &k_in, hls::stream<fram
 			}
 
 			  out << res;
-			  #ifdef DEBUG_VERBOSE
+			  #ifdef DEBUG_MUL
 				  printf("frame sent:\n");
 				  for (int cpi=0; cpi<CPI; cpi++) {
 					printf("  cpi %d:\n", cpi);
@@ -454,7 +475,7 @@ static void mulKernels(int I_ITER, hls::stream<kernel_t> &k_in, hls::stream<fram
 		}
 	} //i_iter
 
-	#ifdef DEBUG_VERBOSE
+	#ifdef DEBUG_MUL
 	printf("mul: end\n");
 	#endif
 }
@@ -473,7 +494,7 @@ static void mulKernels(int I_ITER, hls::stream<kernel_t> &k_in, hls::stream<fram
 //
 static void mulWise(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls::stream<frame_d> &k_in, hls::stream<frame_d> &out) {
 	
-	#ifdef DEBUG_VERBOSE
+	#ifdef DEBUG_MUL
 	printf("mulwise: starts\n");
 	#endif
 	
@@ -544,7 +565,7 @@ static void mulWise(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls:
 			even=(even+1)%2;
 		}
 	}
-	#ifdef DEBUG_VERBOSE
+	#ifdef DEBUG_MUL
 	printf("mulwise: end\n");
 	#endif
 }
@@ -563,7 +584,7 @@ static void mulWise(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls:
 //
 static void mult_A_AT(int H, int W, int I_ITER, hls::stream<frame_d> &d_in, hls::stream<frame_winograd> &out) {
 
-	#ifdef DEBUG_VERBOSE
+	#ifdef DEBUG_MUL
 	printf("mult_A_AT: starts\n");
 	#endif
 	frame_d data;
@@ -606,7 +627,11 @@ static void mult_A_AT(int H, int W, int I_ITER, hls::stream<frame_d> &d_in, hls:
 				#pragma HLS UNROLL
 				for(int c = 0; c < 2; c++){
 					for (int cpi=0; cpi < CPI; cpi++) {
-						res.pixel[pos].pixel[cpi] = resMULT[cpi][f][c];
+						#ifdef FP32_DATA_TYPE
+							res.pixel[pos].pixel[cpi] = resMULT[cpi][f][c];
+						#else
+							res.pixel[pos].pixel[cpi] = resMULT[cpi][f][c]/4;
+						#endif
 					}
 					pos++;
 				}
@@ -616,7 +641,7 @@ static void mult_A_AT(int H, int W, int I_ITER, hls::stream<frame_d> &d_in, hls:
 
 		}
 	}
-	#ifdef DEBUG_VERBOSE
+	#ifdef DEBUG_MUL
 	printf("mult_A_AT: ends\n");
 	#endif
 }
@@ -636,7 +661,7 @@ static void mult_A_AT(int H, int W, int I_ITER, hls::stream<frame_d> &d_in, hls:
 //
 static void add_winograd(int H, int W, int I_ITER, hls::stream<pixel_out_t> &b_in, hls::stream<frame_winograd> &in, hls::stream<pixel_out_t> &out) {
 
-	#ifdef DEBUG_VERBOSE
+	#ifdef DEBUG_MUL
 	printf("add: start\n");
 	#endif
 
@@ -747,7 +772,7 @@ static void add_winograd(int H, int W, int I_ITER, hls::stream<pixel_out_t> &b_i
 
 	}
 
-	#ifdef DEBUG_VERBOSE
+	#ifdef DEBUG_MUL
 	printf("add: end\n");
 	#endif
 }
