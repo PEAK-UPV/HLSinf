@@ -18,6 +18,7 @@ void run_kernel() {
   OCL_CHECK(err, err = kernel_conv2d[0].setArg(arg++, i_iter));
   OCL_CHECK(err, err = kernel_conv2d[0].setArg(arg++, o_iter));
   OCL_CHECK(err, err = kernel_conv2d[0].setArg(arg++, enable_relu));
+  OCL_CHECK(err, err = kernel_conv2d[0].setArg(arg++, enable_stm));
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
   OCL_CHECK(err, err = kernel_conv2d[0].setArg(arg++, *buffer_k[0]));
 #endif
@@ -43,7 +44,7 @@ void run_kernel() {
   set_callback(kernel_events[0], "ooo_queue");
   OCL_CHECK(err, err = kernel_events[0].wait());
 #else
-  k_conv2D((ap_uint<512> *)data_in, H, W, rows, I, O, i_iter, o_iter, enable_relu,
+  k_conv2D((ap_uint<512> *)data_in, H, W, rows, I, O, i_iter, o_iter, enable_relu, enable_stm,
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
 		  kernel,
 #endif

@@ -172,7 +172,7 @@ void cpu_conv2D() {
 		  for (int h=0; h<H; h++) {
 			  for (int w=0; w<W; w++) {
 				  int addr_o = (cout * W * H) + (h * W) + w;
-				  out_stm_cpu[addr_o] = tanh(log(exp(out_conv_cpu[addr_o] + 1))) * out_conv_cpu[addr_o];
+				  out_stm_cpu[addr_o] = tanh(log(exp(out_conv_cpu[addr_o]) + 1)) * out_conv_cpu[addr_o];
 			  }
 		  }
 	  }
@@ -191,9 +191,13 @@ void cpu_conv2D() {
     		  int w_in = (w * 2) + kw;
               int addr_in = (o * W * H) + (h_in * W) + w_in;
               if (enable_relu) {
-                if (out_relu_cpu[addr_in] > max_v) max_v = out_relu_cpu[addr_in];
+            	  if (out_relu_cpu[addr_in] > max_v) max_v = out_relu_cpu[addr_in];
               } else {
-            	if (out_conv_cpu[addr_in] > max_v) max_v = out_conv_cpu[addr_in];
+            	  if(enable_stm) {
+            		  if (out_stm_cpu[addr_in] > max_v) max_v = out_stm_cpu[addr_in];
+            	  } else {
+              		  if (out_conv_cpu[addr_in] > max_v) max_v = out_conv_cpu[addr_in];
+              	  }
               }
     		}
     	  }
@@ -217,7 +221,11 @@ void cpu_conv2D() {
               if (enable_relu) {
             	sum_v += out_relu_cpu[addr_in];
               } else {
-            	sum_v += out_conv_cpu[addr_in];
+            	  if(enable_stm) {
+            		  sum_v += out_stm_cpu[addr_in];
+            	  } else {
+            		  sum_v += out_conv_cpu[addr_in];
+            	  }
               }
     		}
     	  }

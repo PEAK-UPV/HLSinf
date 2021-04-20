@@ -31,7 +31,7 @@ void set_channel_write_blocks(int num_channel_write_blocks[CPO], int H, int W) {
 
 extern "C" {
 
-void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int I_ITER, int O_ITER, int enable_relu,
+void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int I_ITER, int O_ITER, int enable_relu, int enable_stm,
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
                          data_type *ptr_kernel,
 #endif
@@ -252,7 +252,7 @@ void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int 
 
     #else
 		#if defined(USE_STM)
-			stm(H, W, out_conv, out_stm);
+			stm(enable_stm, H, W, out_conv, out_stm);
 			// Pooling: avgpooling or maxpooling
 			#ifdef USE_POOLING
 				pooling(H, W, enable_maxpooling, enable_avgpooling, out_stm, out_pooling);

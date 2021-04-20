@@ -16,6 +16,7 @@
 // Configurations for Alveo U200 boards
 
 #define CONF_ALVEO_U200_4x4_DIRECT_FP32
+//#define CONF_ALVEO_U200_4x4_DIRECT_API8
 //#define CONF_ALVEO_U200_8x8_DIRECT_API8            	// Direct convolution 8x8 kernel with API8 for Alveo U200
 //#define CONF_ALVEO_U200_16x16_WINOGRAD_API8        	// Winograd convolution 16x16 kernel with API8 for Alveo U200
 //#define CONF_ALVEO_U200_32x32_DWS_API8             		// DeepWise Separable 32x32 kernel with API8 for Alveo U200
@@ -49,6 +50,21 @@
 #define ALVEO_U200
 #define DIRECT_CONV
 #define FP32_DATA_TYPE
+#define USE_STM
+#define CPI                4
+#define CPO                4
+#define LOG2_CPO           2
+#define WMAX             256
+#define HMAX             256
+#define READ_BURST_SIZE    4
+#define STREAMS_DEPTH      4
+#define INPUT_BUFFER_SIZE  128
+#endif
+
+#ifdef CONF_ALVEO_U200_4x4_DIRECT_API8
+#define ALVEO_U200
+#define DIRECT_CONV
+#define API8_DATA_TYPE
 #define USE_STM
 #define CPI                4
 #define CPO                4
@@ -342,7 +358,7 @@ struct kernel_pw_t {
 
 // -----------------------------------------------------------------------------------------------------------
 // function prototypes
-extern "C" void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int I_ITER, int O_ITER, int enable_relu,
+extern "C" void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int I_ITER, int O_ITER, int enable_relu, int enable_stm,
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
                          data_type *ptr_kernel,
 #endif
@@ -398,7 +414,7 @@ ch_block_generate:
 // activation functions
 void relu(int enable_relu, int enable_clipping, int enable_shift, int min_clip, int max_clip, int direction_shift, int pos_shift,
 		  int H, int W, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &out);
-void stm(int H, int W, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &out);
+void stm(int enable_stm, int H, int W, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &out);
 
 // pooling function
 void pooling(int H, int W, int enable_maxpooling, int enable_avgpooling, hls::stream<pixel_out_t> &input, hls::stream<pixel_out_t> &output);

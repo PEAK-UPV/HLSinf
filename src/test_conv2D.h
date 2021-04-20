@@ -8,6 +8,7 @@
 #include <iostream>
 #include <random>
 #include <vector>
+#include <cmath>
 #include <sys/time.h>
 
 #ifdef OPENCL_TEST

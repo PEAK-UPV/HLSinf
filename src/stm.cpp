@@ -11,7 +11,7 @@
 //
 
 
-void stm(int H, int W, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &out) {
+void stm(int enable_stm, int H, int W, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &out) {
 
   #ifdef DEBUG_STM
   printf("stm: start\n");
@@ -36,28 +36,31 @@ void stm(int H, int W, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &o
       DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO)
       #pragma HLS UNROLL
 
-	  data_type v_in, v_soft, v_tanh, v_mult;
-
+      data_type v_in, v_soft, v_tanh, v_mult;
       v_in = data_in.pixel[cpo];
 
-      // softplus
-      v_soft = hls::log(hls::exp(v_in) + 1);
+      if(enable_stm) {
+    	  // softplus
+    	  v_soft = hls::log(hls::exp(v_in) + 1);
 
-      //tanh
-      v_tanh = hls::tanh(v_soft);
+    	  //tanh
+    	  v_tanh = hls::tanh(v_soft);
 
-      //mult
-      v_mult = v_tanh * v_in;
+    	  //mult
+    	  v_mult = v_tanh * v_in;
 
-      data_out.pixel[cpo] = v_mult;
-
+    	  data_out.pixel[cpo] = v_mult;
+      }
+      else {
+    	  data_out.pixel[cpo] = v_in;
+      }
     }
 
     #ifdef DEBUG_STM
     printf("STM (pixel %d):\n", i);
-    /*for (int x=0; x<CPI; x++) {
+    for (int x=0; x<CPI; x++) {
     	printf("  cpi %d : in %f out %f\n", x, float(data_in.pixel[x]), float(data_out.pixel[x]));
-    }*/
+    }
     #endif
     out << data_out;
 }
