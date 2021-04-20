@@ -1,8 +1,11 @@
 #include "conv2D.h"
+
 // -------------------------------------------------------------------------------
-// STM: TODO
+// stm: This module performs the softplus and hyperbolic tangent functions of the
+// input pixels and multiplies the result by the input.
 //
 // Arguments:
+//   enable_stm      : Flag to enable STM functions
 //   H               : Height of the input channel
 //   W               : Width of the input channel
 //   in              : input data stream
