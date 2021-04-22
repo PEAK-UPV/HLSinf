@@ -99,6 +99,7 @@ void cvt(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<fram
       frame.pixel[6] = p6; frame.pixel[7] = p7; frame.pixel[8] = p8;
       out << frame;
       #ifdef DEBUG_CVT
+      #ifdef DEBUG_VERBOSE
       printf("cvt: frame sent:\n");
       for (int cpi=0; cpi<CPI; cpi++) {
         printf("  cpi %d:\n", cpi);
@@ -106,6 +107,7 @@ void cvt(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<fram
         printf("    %6.4f %6.4f %6.4f\n", float(frame.pixel[3].pixel[cpi]), float(frame.pixel[4].pixel[cpi]), float(frame.pixel[5].pixel[cpi]));
         printf("    %6.4f %6.4f %6.4f\n", float(frame.pixel[6].pixel[cpi]), float(frame.pixel[7].pixel[cpi]), float(frame.pixel[8].pixel[cpi]));
       }
+      #endif
       #endif
     }
     if (pin_col_curr == WW) {

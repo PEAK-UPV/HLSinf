@@ -7,15 +7,15 @@
 
 void print_bias() {
   printf("Bias: ");
-  for (int o=0; o<O; o++) printf("%6.4f ", float(bias[o]));
+  for (int o=0; o<O_output; o++) printf("%6.4f ", float(bias[o]));
   printf("\n");
 }
 
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
 void print_kernel() {
   printf("Kernels: ");
-  for (int c=0; c<I; c++) {
-    for (int cout=0; cout<O; cout++) {
+  for (int c=0; c<I_input; c++) {
+    for (int cout=0; cout<O_output; cout++) {
       printf("i=%d o=%d:\n", c, cout);
       for (int kh=0; kh<KH; kh++) {
         for (int kw=0; kw<KW; kw++) {
@@ -42,44 +42,53 @@ void print_kernel() {
 #ifdef DWS_CONV
 void print_kernel() {
   printf("Kernels (dw): ");
-  for (int c=0; c<I; c++) {
-    printf("i=%d:\n", c);
+  for (int c=0; c<I_input; c++) {
+    printf("i=%d: ", c);
     for (int kh=0; kh<KH; kh++) {
       for (int kw=0; kw<KW; kw++) {
         // kernel position
         int addr_k = (c * KW * KH) + (kh * KW) + kw;
         printf(" %6.4f ", float(dw_kernel[addr_k]));
       }
-      printf("\n");
     }
+    printf("\n");
   }
-  printf("Kernels (pw):\n");
-  for (int c=0; c<I; c++) {
-	for (int o=0; o<O; o++) {
+  printf("Kernels (pw) (i/o table):\n");
+  for (int c=0; c<I_input; c++) {
+	for (int o=0; o<O_output; o++) {
 	  int gi = c / CPI;
 	  int ki = c % CPI;
 	  int go = o / CPO;
 	  int ko = o % CPO;
 	  int addr_k = (go * GI * CPO * CPI) + (gi * CPO * CPI) + (ko * CPI) + ki;
-      printf(" i=%d o=%d: %6.4f\n", c, o, float(pw_kernel[addr_k]));
+      printf(" %6.4f", float(pw_kernel[addr_k]));
     }
+    printf("\n");
   }
 }
 #endif
 
 
 void print_input() {
+
+  int Hmax = H;
+  int Wmax = W;
+  if (H > 5) Hmax = 5;
+  if (W > 5) Wmax = 5;
+
   printf("Input:\n");
-  int addr = 0;
-  for (int i=0; i<I; i++) {
+  for (int i=0; i<I_input; i++) {
     printf("channel %d:\n", i);
-	for (int h=0; h<H; h++) {
-	  for (int w=0; w<W; w++) {
-	    printf("%6.4f ", float(data_in[addr]));
+	for (int h=0; h<Hmax; h++) {
+	  for (int w=0; w<Wmax; w++) {
+		int addr = input_data_address(i, h, w);
+	    printf("%4.2f ", float(data_in[addr]));
         addr++;
 	  }
+	  if (W != Wmax) printf(" ...");
 	  printf("\n");
 	}
+	if (H != Hmax) printf("...\n");
   }
 }
 
@@ -88,11 +97,11 @@ void print_output() {
   if ((enable_maxpooling) || (enable_avgpooling)) {
 
 	printf("Output:\n");
-	for (int o=0; o<O; o++) {
+	for (int o=0; o<O_output; o++) {
 		printf("channel %d:\n", o);
 		for (int h=0; h<H/2; h++) {
 			for (int w=0; w<W/2; w++) {
-				int addr_o = (o * (W/2) * (H/2)) + (h * (W/2)) + w;
+				int addr_o = output_data_address_div(o, h, w);
 				printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_pool_cpu[addr_o]));
 			}
 			printf("\n");
@@ -102,11 +111,11 @@ void print_output() {
   } else {
 
 	printf("Output:\n");
-	for (int o=0; o<O; o++) {
+	for (int o=0; o<O_output; o++) {
 		printf("channel %d:\n", o);
 		for (int h=0; h<H; h++) {
 			for (int w=0; w<W; w++) {
-				int addr_o = (o * W * H) + (h * W) + w;
+				int addr_o = output_data_address(o, h, w);
 				if (enable_relu) printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_relu_cpu[addr_o]));
 				else printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_conv_cpu[addr_o]));
 			}

@@ -1,5 +1,6 @@
 #include "conv2D.h"
 
+#ifdef DWS_CONV
 // -------------------------------------------------------------------------------
 // dws_convolution: Convolutional kernel
 //
@@ -23,9 +24,9 @@ void dws_conv(int H, int W, int I_ITER, int enable_upper_padding, int enable_low
   static hls::stream<pixel_in_t>  str_pad_cvt;  // padding->cvt
   static hls::stream<frame_t>     str_cvt_mul;  // cvt->mul
   static hls::stream<pixel_out_t> str_mul_add;  // mul->add
-  DO_PRAGMA(HLS stream variable=str_pad_cvt depth=2)
-  DO_PRAGMA(HLS stream variable=str_cvt_mul depth=2)
-  DO_PRAGMA(HLS stream variable=str_mul_add depth=2)
+  DO_PRAGMA(HLS stream variable=str_pad_cvt depth=DWS_STREAM_DEPTH)
+  DO_PRAGMA(HLS stream variable=str_cvt_mul depth=DWS_STREAM_DEPTH)
+  DO_PRAGMA(HLS stream variable=str_mul_add depth=DWS_STREAM_DEPTH)
 
   // topology
   #pragma HLS dataflow
@@ -34,3 +35,4 @@ void dws_conv(int H, int W, int I_ITER, int enable_upper_padding, int enable_low
   dws_mul(H, W, I_ITER, str_cvt_mul, k_dw_in, k_pw_in, str_mul_add);                    // dws_mul
   add(H, W, I_ITER, str_mul_add, b_in, out);         									// add
 }
+#endif

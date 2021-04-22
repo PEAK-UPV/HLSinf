@@ -47,6 +47,8 @@ int HO = H_SIM;       			 // Output height
 int WO = W_SIM;    				 // Output width
 int I_kernel = I_SIM;  			 // Number of input channels for the kernel (filter) - padding
 int O_kernel = O_SIM;			 // Number of output channels for the kernel (filter) - padding
+int I_input = I_SIM;             // Number of input channels for the input data - padding (needed in GIHWCPI data format)
+int O_output = O_SIM;            // Number of output channels for the output data - padding (needed in GIHWCPI data format)
 int rows = H_SIM;				 // number of rows to compute by the kernel
 int enable_upper_padding = 1;	 // enables the upper row of padding
 int enable_lower_padding = 1;	 // enables the lower row of padding
@@ -60,8 +62,8 @@ int enable_maxpooling = 0;		 // enables the maxpooling layer
 int enable_avgpooling = 0;		 // enables the avgpooling layer
 int min_clip = 0;   			 // minimum clip value
 int max_clip = 0;				 // maximum clip value
-int i_iter = O_SIM/CPO; 		 // number of input iterations
-int o_iter = I_SIM/CPI;			 // number of output iterations
+int i_iter = I_SIM/CPI; 		 // number of input iterations
+int o_iter = O_SIM/CPO;			 // number of output iterations
 int global_offset = 0;			 // global offset for the output data for the kernel
 int GI = I_SIM/CPI;				 // number of groups for input channels
 int GO = O_SIM/CPO;				 // number of groups for output channels
@@ -133,6 +135,7 @@ void compute(int *enable, int *cpu, int *retval) {
 
 	   // Check, output must be at least as large as one write block
 
+       #ifdef IHW_DATA_FORMAT
 	   if (HO * WO * O < WRITE_BLOCK_SIZE) {
 		 print_message("Output too small (skipped)");
 		 *enable = 0;
@@ -147,6 +150,7 @@ void compute(int *enable, int *cpu, int *retval) {
 		 print_message("Output channel size must be multiple of write block size (skipped)");
 		 *enable = 0;
 	   }
+       #endif
 
 	   if (*enable) {
 	     allocate_buffers();

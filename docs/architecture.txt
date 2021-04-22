@@ -81,14 +81,48 @@ those alignments and storage formats.
 
 Input data and output data
 --------------------------
-Input data is stored in a buffer consecutively in memory and addressed by a single memory pointer. Output data is stored in a buffer consecutively in
+
+Input and output data can be stored with two different formats. Both the input and output data must be used with the same format (both formats can not
+be used at the same time). The first format is named IHW and the second one is named GIHWCPI. IHW stands for Input Height and Width and is the ordering
+of data in memory. GIHWCPI stands for GroupInput Height Width and CPI and is the ordering of data in memory. The kernel can be configured to work in 
+either IHW or GIHWCPI format.
+
+IHW format
+----------
+
+In IHW, input data is stored in a buffer consecutively in memory and addressed by a single memory pointer. Output data is stored in a buffer consecutively in
 memory and addressed by a single memory pointer. Both buffers are 512-bit word aligned in memory. 
 
 Channels inside any of the two buffers are stored consecutively in memory and each channel is 512-bit aligned. This means that channels with sizes not
 multiple of 512-bits must be padded. Input data in memory follows the format I x H x W. Output data in memory follows the format O x H x W. This means 
 that all items of the same input or output channel are stored consecutively in memory. Also, items of the same row for the same channel are also stored 
 consecutively in memory.
+
+The exact location in memory of an input pixel for a given channel i, a given row h and a given column w is:
+
+   addr = (i * I * W * H) + (h * W) + w
+   
+being I H and W the number of input channels, the height of the channel and the width of the channel, respectively. Notice that the same applies to the 
+output data (O instead of I)
+
+GIHWCPI format
+--------------
+
+In GIHWCPI, channels are grouped in groups of CPI channels and they are stored in memory in an interleaved manner. There is no restriction on the size of the channels. 
+However, padding is needed to the number of channels. This means, complete groups of CPI channels are expected.
+
+The exact location in memory of an input pixel for a given channel i, a given row h and a given column w is:
+
+   gi = i / CPI
+   ii = i % CPI
+   addr = gi * H * W * CPI) + (h * W * CPI) + (w * CPI) + ii
+
+being I H and W the number of input channels, the height of the channel and the width of the channel, respectively. Notice that the same applies to
+the output data (CPO and O instead of CPI and I, respectively).
  
+The GIHWCPI format simplifies the HLSinf read and write infrastructure as data is stored in memory as it is needed by the internal operations of the kernel. This
+format, however, may need data rearrangments at the host side.
+
 DIRECT and WINOGRAD Convolution filters
 ---------------------------------------
 
@@ -133,36 +167,58 @@ as data becomes available on the input streams. Each module is pipelined in orde
 
 Several dataflows are implemented within HLSinf. The main dataflow model is the one that combines all the top level modules. Several modules in this dataflow
 are implemented as dataflows as well. The main dataflow model runs iteratively O / CPO times. On each iteration CPO output channels are computed and stored 
-in memory. Within one iteration all the input channels are read. No buffering of input channels is provided in the current version. Therefore, the kernel
-is memory bounded.
+in memory. Within one iteration all the input channels are read. Buffering of input channels is provided. Therefore, the kernel may buffer read data (depending
+on the actual input data size).
 
 Main dataflow
 -------------
 
-The top level module of the HLSinf kernel is designed with the dataflow structure depicted in the following figure:
+Depending on the input data format (either IHW or GIHWCPI) the top level modeul will be instantiated with a different dataflow structure. 
 
---------------                          --------       --------       ----------       -----------       ---------                           ------------
-|            |       -------------      |      |       |      |       |        |       |         |       |       |       -------------       |          |
-|            |------>| serialize |----->|      |       |      |       | ReLU   |       |         |       |       |------>| block_gen |------>|          |
-|    read    |   .   -------------      |      |       |      |       |        |       |         |       |       |   .   -------------       |  write   |
-|    data    | (cpi)                    | join |------>| conv |------>| Clip   |------>| pooling |------>| split | (cpo)                     |  data    |
-|  channels  |   .   -------------      |      |       |      |       |        |       |         |       |       |   .   -------------       | channels |
-|            |------>| serialize |----->|      |       |      |       | Shift  |       |         |       |       |------>| block_gen |------>|          |
-|            |       -------------      |      |       |      |       |        |       |         |       |       |       -------------       |          |
---------------                          --------       --------       ----------       -----------       ---------                           ------------
-                                                         ^  ^
-  ---------------                                        |  |
-  | read kernel | ----------------------------------------  |
-  ---------------                                           |
-                                                            |
-  -------------                                             |
-  | read bias | ---------------------------------------------
+For IHW data format, the module has the following model:
+
+--------------                          --------       --------       --------       ----------       -----------       ---------                           ------------
+|            |       -------------      |      |       |      |       |      |       |        |       |         |       |       |       -------------       |          |
+|            |------>| serialize |----->|      |       |      |       |      |       | ReLU   |       |         |       |       |------>| block_gen |------>|          |
+|    read    |   .   -------------      |      |       |      |       |      |       |        |       |         |       |       |   .   -------------       |  write   |
+|    data    | (cpi)                    | join |------>| ibuf |------>| conv |------>| Clip   |------>| pooling |------>| split | (cpo)                     |  data    |
+|  channels  |   .   -------------      |      |       |      |       |      |       |        |       |         |       |       |   .   -------------       | channels |
+|    (IHW)   |------>| serialize |----->|      |       |      |       |      |       | Shift  |       |         |       |       |------>| block_gen |------>|  (OHW)   |
+|            |       -------------      |      |       |      |       |      |       |        |       |         |       |       |       -------------       |          |
+--------------                          --------       --------       --------       ----------       -----------       ---------                           ------------
+                                                                        ^  ^
+  ---------------                                                       |  |
+  | read kernel | -------------------------------------------------------  |
+  ---------------                                                          |
+                                                                           |
+  -------------                                                            |
+  | read bias | ------------------------------------------------------------
+  -------------
+
+For GIHWCPI data format, the module follows the model:
+
+--------------       --------       --------       ----------       -----------       -------------
+|            |       |      |       |      |       |        |       |         |       |           |
+|            |       |      |       |      |       | ReLU   |       |         |       |           |
+|    read    |       |      |       |      |       |        |       |         |       |  write    |
+|    data    |------>| ibuf |------>| conv |------>| Clip   |------>| pooling |------>|  data     |
+|  channels  |       |      |       |      |       |        |       |         |       | channels  |
+| (GIHWCPI)  |       |      |       |      |       | Shift  |       |         |       | (GOHWCPO) |
+|            |       |      |       |      |       |        |       |         |       |           |
+--------------       --------       --------       ----------       -----------       -------------
+                                      ^  ^
+  ---------------                     |  |
+  | read kernel | ---------------------  |
+  ---------------                        |
+                                         |
+  -------------                          |
+  | read bias | --------------------------
   -------------
 
 As previously described, the kernel works iteratively on CPI and CPO channels. Next, we describe each module within the dataflow model.
 
-read_data_channels module
--------------------------
+read_data_channels module (IHW format)
+--------------------------------------
 
 This module is in charge of reading the input data for the kernel operation. Data is stored in the DDR memory of the FPGA board in I x H x W format, where 
 I is the number of input channels, H is the number of rows of each channel and W is the number of columns of each channel. Therefore, the complete data
@@ -179,16 +235,22 @@ read all the input channels in blocks of 4 channels, thus performing 128 read ch
 The module has one output stream per CPI channel. The stream width is 512-bits (to maximize performance). Indeed, data channels are read in blocks of 512-bits and 
 with bursts. We can consider that the output streams of the read channel store blocks of data. Those blocks are fed to the serialize module.
 
-serialize module
-----------------
+read_data_channels module (GIHWCPI format)
+------------------------------------------
+
+This module reads data using the GIHWCPI format. Groups of CPI pixels are read consecutively and fed to the next module. There are no limitations on the sizes of
+the input channels. However, padding is needed for the input channels. The kernel reads complete groups of CPI channels.
+
+serialize module (only for IHW format)
+--------------------------------------
 
 Each CPI channel has a serialize module. This module is in charge of filtering block elements that do not belong to the channel (in particular if the channel size is not
 multiple of 64 bytes). In addition, the module serializes the block data into specific pixels forwarded through the output stream of the module. Depending on the precision
 support defined (FP32, API8, APF8), this module will read one block at its input every 16 (FP32) or 64 (API8, APF8) cycles and will produce a pixel at its output on every
 cycle.
 
-join module
------------
+join module (only for IHW format)
+---------------------------------
 
 This module is in charge of combining pixels from the different input streams and pack them into the pixel_in structure. This structure just combines CPI pixels. Those packed 
 pixels are forwarded to the next module. Therefore, packs of CPI pixels are forwarded on every cycle.
@@ -204,6 +266,13 @@ read_bias module
 ----------------
 
 This module reads bias and forwards it through its output stream. Bias are forwarded as packed items of CPO. Therefore, the module reads all bias (O bias; one per output channel) in groups of CPO.
+
+ibuf module
+-----------
+
+This module implements a buffer to keep input data. As the kernel may iterate several times with the input data, keeping the data in buffers is convenient. However, if the input data size is larger
+than the available buffer then the buffer is deactivated and the kernel reads all the data from memory on every iteration. If the buffer is activated, then in the first iteration the buffer stores
+all the input data read from memory. On every iteration the buffer serves the data from the buffer (if activated).
 
 conv module
 -----------
@@ -236,26 +305,31 @@ pooling module
 This module performs pooling operations on the receiving items. The module is implemented as a dataflow model and is described later in this document. Current supported operations are Maxpooling and Avgpooling.
 The module receives a packed set of CPO items on every cycle and outputs a packed set of CPO items on every cycle.
  
-split module
-------------
+split module (only for IHW format)
+----------------------------------
  
 The split module reads on every cycle a packed set of CPO pixels and separates them. Each item is send through a different output stream. This is performed in order to prepare the items for
 the writing stage to memory as items belonging to different channels must be stored in different addresses (following the O x H x W format). The module reads a packed set of CPO pixels on every cycle and 
 produces CPO separated pixels at its outputs on every cycle.
  
-block_gen module
-----------------
+block_gen module (only for IHW format)
+--------------------------------------
  
 This module reads channel items and groups them in blocks. Blocks are defined as 512-bit blocks. Depending on the precision format a block will contain 16 items (FP32) or 64 items (APF8 or API8). On every cycle the
 module reads one item and on every 16 (FP32) or 64 (APF8, API8) cycles it produces a block at its output.
  
-write_data_channels module
---------------------------
+write_data_channels module (IHW data format)
+--------------------------------------------
  
 This module receives input data blocks and writes them on memory, following the O x H x W format. The module reads CPO blocks and thus writes them on the corresponding addresses for 
 the specific output channels being processed. Blocks written in memory are aligned to 64 bytes. This means that every channel is assumed to be aligned to 64 byte boundaries as well. This simplifies the
  memory access operation and allows maximum performance.
  
+write_data_channels module (GIHWCPI data format)
+------------------------------------------------
+
+The module receives streams of CPO pixels and it writes them directly into memory. As the data is in GIHWCPI format the writting to memory is efficient as it is consecutive. Groups of CPO channels are delivered 
+to the module.
  
 Direct Convolution
 ==================

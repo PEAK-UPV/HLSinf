@@ -2,7 +2,7 @@
 
 #include <hls_stream.h>
 
-
+#ifdef IHW_DATA_FORMAT
 // ---------------------------------------------------------------------------------------
 // join. Joins input streams of pixels and combines them to produce groups of pixels
 //
@@ -19,18 +19,17 @@
 // input data from all streams the join module uses BLOCK_SIZE cycles to produce
 // BLOCK_SIZE data items. All data items are sent through the output stream
 //
-void join(int H, int W, int I_ITER, int num_extra_rows, int write_to_buff, int read_from_buff, hls::stream<data_type> in[CPI], hls::stream<pixel_in_t> &out) {
+void join(int H, int W, int I_ITER, int num_extra_rows, int enable, hls::stream<data_type> in[CPI], hls::stream<pixel_in_t> &out) {
 
   #ifdef DEBUG_JOIN
   printf("JOIN: starts\n");
   #endif
 
-  // input buffer
-  pixel_in_t buffer[INPUT_BUFFER_SIZE];
-  #ifdef ALVEO_U200
-  DO_PRAGMA(HLS bind_storage variable=buffer type=ram_t2p impl=uram)
-  #endif
+  if (!enable) return;
 
+  // input buffer
+  pixel_in_t data;
+  DO_PRAGMA(HLS ARRAY_PARTITION variable=data complete dim=0)
 
   int num_pixels = (H + num_extra_rows) * W;                    // pixels to read
 
@@ -46,29 +45,17 @@ void join(int H, int W, int I_ITER, int num_extra_rows, int write_to_buff, int r
       DO_PRAGMA(HLS loop_tripcount  min=1 max=W_REFERENCE*H_REFERENCE)
       #pragma HLS PIPELINE II=1
 
-      pixel_in_t data;
-      DO_PRAGMA(HLS ARRAY_PARTITION variable=data complete dim=0)
-
-      if (!read_from_buff) {
-        for(int i=0; i<CPI; i++){
-          DO_PRAGMA(HLS loop_tripcount  min=1 max=CPI)
-          #pragma HLS UNROLL
-          data.pixel[i] = in[i].read();
-          #ifdef DEBUG_JOIN
-          printf("data.pixel[%d] = %6.2f  ", i, float(data.pixel[i]));
-          #endif
-        }
-      } else {
-    	data = buffer[r];
+      for(int i=0; i<CPI; i++){
+        DO_PRAGMA(HLS loop_tripcount  min=1 max=CPI)
+        #pragma HLS UNROLL
+        data.pixel[i] = in[i].read();
       }
+      #ifdef DEBUG_JOIN
+      #ifdef DEBUG_VERBOSE
+      #endif
+      #endif
 
       out << data;
-
-      if (write_to_buff) buffer[r] = data;
-
-      #ifdef DEBUG_JOIN
-      printf("\n");
-      #endif
 
     }
   }
@@ -77,9 +64,46 @@ void join(int H, int W, int I_ITER, int num_extra_rows, int write_to_buff, int r
   printf("JOIN: ends\n");
   #endif
 }
+#endif
 
+void input_buffer(int read_pixels_total, int write_to_buff, int read_from_buff, hls::stream<pixel_in_t> &in, hls::stream<pixel_in_t> &out) {
+
+  #ifdef DEBUG_INPUT_BUFFER
+  printf("INPUT_BUFFER: starts (%d pixels; write_to_buff %d; read_from_buff %d)\n", read_pixels_total, write_to_buff, read_from_buff);
+  #endif
+
+  pixel_in_t px_input;
+  pixel_in_t px_buff;
+  DO_PRAGMA(HLS AGGREGATE variable=px_input)
+  DO_PRAGMA(HLS AGGREGATE variable=px_buff)
+
+  pixel_in_t buffer[INPUT_BUFFER_SIZE];
+  DO_PRAGMA(HLS aggregate variable=buffer)
+
+  #ifdef ALVEO_U200
+  DO_PRAGMA(HLS bind_storage variable=buffer type=ram_t2p impl=uram)
+  #endif
+
+  input_buffer_loop_pixels:
+  for (int p=0; p<read_pixels_total; p++) {
+	DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE * W_REFERENCE * H_REFERENCE / CPI)
+    DO_PRAGMA(HLS pipeline)
+
+	if (!read_from_buff) px_input = in.read();
+	if (read_from_buff)  px_buff = buffer[p];
+	if (write_to_buff)   buffer[p] = px_input;
+
+	if (read_from_buff)  out << px_buff;
+	else out << px_input;
+  }
+  #ifdef DEBUG_INPUT_BUFFER
+  printf("INPUT_BUFFER: ends\n");
+  #endif
+}
+
+#ifdef IHW_DATA_FORMAT
 // ---------------------------------------------------------------------------------------
-// split. Splits incomming pixels grouped in pixel_out_t struct into eight output streams
+// split. Splits incoming pixels grouped in pixel_out_t struct into eight output streams
 // of size BLOCK_SIZE elements each.
 //
 // Arguments:
@@ -151,7 +175,9 @@ printf("DEBUG_BLOCK: starts\n");
 	  data_type dx;
 	  if (num_pixels) dx = in.read();
       #ifdef DEBUG_BLOCK
+      #ifdef DEBUG_VERBOSE
 	  printf("read pixel %f, pending %d\n", float(dx), num_pixels);
+      #endif
       #endif
       bx.range(last, first) = *(ap_uint<DATA_TYPE_WIDTH>*)(&dx);
       if (p != WRITE_BLOCK_SIZE-1) bx = bx >> DATA_TYPE_WIDTH;
@@ -165,3 +191,4 @@ printf("DEBUG_BLOCK: ends\n");
 #endif
 
 }
+#endif

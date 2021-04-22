@@ -10,7 +10,7 @@ void allocate_buffers() {
   // First we allocate buffers in CPU
 
   // input data buffer
-  size_t size_data_in_bytes = I * W * H * sizeof(data_type);
+  size_t size_data_in_bytes = I_input * W * H * sizeof(data_type);
   posix_memalign((void **)&data_in, 4096, size_data_in_bytes);
 
   // weights buffer (kernel), depending on the type of convolution
@@ -26,25 +26,25 @@ void allocate_buffers() {
   #endif
 
   // bias buffer
-  size_t size_bias_in_bytes = O * sizeof(data_type);
+  size_t size_bias_in_bytes = O_output * sizeof(data_type);
   posix_memalign((void **)&bias, 4096, size_bias_in_bytes);
 
   // output buffer for fpga
   size_t size_output_in_bytes;
   if ((enable_maxpooling) || (enable_avgpooling)) {
-	size_output_in_bytes = O * (W/2) * (H/2) * sizeof(data_type);
+	size_output_in_bytes = O_output * (W/2) * (H/2) * sizeof(data_type);
 	posix_memalign((void **)&out, 4096, size_output_in_bytes);
   } else {
-	size_output_in_bytes = O * W * H * sizeof(data_type);
+	size_output_in_bytes = O_output * W * H * sizeof(data_type);
   }
   posix_memalign((void **)&out, 4096, size_output_in_bytes);
 
   // output buffer for cpu
-  posix_memalign((void **)&out_conv_cpu, 4096, O * W * H * sizeof(data_type));
+  posix_memalign((void **)&out_conv_cpu, 4096, O_output * W * H * sizeof(data_type));
 
   // output for relu function
   if (enable_relu) {
-    posix_memalign((void **)&out_relu_cpu, 4096, O * W * H * sizeof(data_type));
+    posix_memalign((void **)&out_relu_cpu, 4096, O_output * W * H * sizeof(data_type));
   }
 
   // output for STM functions
@@ -54,7 +54,7 @@ void allocate_buffers() {
 
   // output for pool function
   if ((enable_maxpooling) || (enable_avgpooling)) {
-	  posix_memalign((void **)&out_pool_cpu, 4096, O * (W/2) * (H/2) * sizeof(data_type));
+	  posix_memalign((void **)&out_pool_cpu, 4096, O_output * (W/2) * (H/2) * sizeof(data_type));
   }
 
 #ifdef OPENCL_TEST

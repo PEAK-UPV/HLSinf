@@ -2,6 +2,7 @@
 
 #include <hls_stream.h>
 
+#ifdef IHW_DATA_FORMAT
 // ---------------------------------------------------------------------------------------
 // write_data_channels. Writes data channels from the elements read from an input stream
 //
@@ -15,7 +16,7 @@
 // On every cycle the module receives BLOCK_SIZE pixels to write into memory
 //
 
-void write_data_channels(int num_pixels, int channel_offset, ap_uint<512> *ptr, hls::stream<write_block_t> in[CPO], int *enable_write) {
+void write_data_channels(int num_pixels, int channel_offset, write_block_t *ptr, hls::stream<write_block_t> in[CPO], int *enable_write) {
 
   int num_blocks_per_channel = (num_pixels + WRITE_BLOCK_SIZE - 1) / WRITE_BLOCK_SIZE;
   write_block_t bx;
@@ -53,3 +54,37 @@ void write_data_channels(int num_pixels, int channel_offset, ap_uint<512> *ptr, 
   }
 
 }
+#endif
+
+#ifdef GIHWCPI_DATA_FORMAT
+// ---------------------------------------------------------------------------------------
+// write_data_channels_gihwcpi. Writes data channels from the elements read from the stream
+// Expected output format is GIxHxWxCPI
+//
+// Arguments:
+//   num_pixels          : Number of pixels for each channel
+//   ptr                 : pointer to output buffer
+//   offset              : offset within output buffer
+//   in                  : input streams, one per CPO channel
+//   enable              : if not set the module just consumes the input stream and does not write memory, one per CPO channel
+//
+// On every cycle the module receives BLOCK_SIZE pixels to write into memory
+//
+
+void write_data_channels_gihwcpi(int num_pixels, int offset, write_block_t *ptr, hls::stream<pixel_out_t> &in) {
+
+  #ifdef DEBUG_WRITE_DATA
+  printf("WRITE_DATA: starts (gihwcpi data format)\n");
+  printf("WRITE_DATA: num_pixels %d\n", num_pixels);
+  #endif
+
+  write_data_channels_loop_pixels:
+  for (int i = 0; i < num_pixels; i++) {
+	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=W_REFERENCE*H_REFERENCE)
+    #pragma HLS pipeline
+	pixel_out_t bx = in.read();
+    ptr[offset+i] = bx;
+  }
+
+}
+#endif

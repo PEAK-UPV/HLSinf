@@ -69,9 +69,11 @@ static void pool_cvt(int H, int W, int enable_pooling, hls::stream<pixel_out_t> 
 		pixel = in.read();
 
         #ifdef DEBUG_POOL
+        #ifdef DEBUG_VERBOSE
 		printf("DEBUG_POOL: pixel read: ");
 		for (int x=0; x<CPO; x++) printf(" %f ", float(pixel.pixel[x]));
 		printf("\n");
+        #endif
         #endif
 
 		if (enable_pooling) {
@@ -117,8 +119,10 @@ static void pool_cvt(int H, int W, int enable_pooling, hls::stream<pixel_out_t> 
 			kernel.pixel[2] = p2; kernel.pixel[3] = p3;
 			out << kernel;
             #ifdef DEBUG_POOL
+            #ifdef DEBUG_VERBOSE
 			printf("DEBUG_POOL: Send Frame:\n");
 			for (int x=0; x<CPO; x++) printf(" cpo %d: %f %f %f %f\n", x, float(p0.pixel[x]), float(p1.pixel[x]), float(p2.pixel[x]), float(p3.pixel[x]));
+            #endif
             #endif
 		  }
 		} else {
@@ -169,12 +173,14 @@ static void pool_pooling(int HO, int WO, int enable_maxpooling, int enable_avgpo
 		kernel = in.read();
 
         #ifdef DEBUG_POOL
+        #ifdef DEBUG_VERBOSE
 		printf("DEBUG_POOL: read ");
 		for (int x=0; x<CPO; x++) {
 			printf("cpo %d: ", x);
 			for (int xx=0; xx<size_kernel; xx++) printf(" %f", float(kernel.pixel[xx].pixel[x]));
 			printf("\n");
 		}
+        #endif
         #endif
 
         pooling_loop_cpo:
@@ -200,8 +206,10 @@ static void pool_pooling(int HO, int WO, int enable_maxpooling, int enable_avgpo
 
 		out << out_pix;
         #ifdef DEBUG_POOL
+        #ifdef DEBUG_VERBOSE
 		printf("DEBUG_POOL: send pixel: ");
 		for (int x=0; x<CPO; x++) printf(" %f", float(out_pix.pixel[x]));
+        #endif
         #endif
 	}
 

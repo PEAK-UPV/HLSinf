@@ -22,19 +22,22 @@ using std::vector;
 #define MAX_CONVS        8  // Maximum number of convolutional layers
 #define MAX_KERNELS      4  // Maximum number of kernels implemented
 #define MAX_WORK_ITEMS 512  // Maximum number of work items to process
+#define NUM_KERNELS      2
 
 // Global variables
-extern int CONVS;                       // Number of convolutional layers
-extern int KERNELS;                     // Number of FPGA kernels to use
-extern int F;                           // Number of frames of the data
-extern int W;                           // Width of the data
-extern int H;                           // Height of the data
-extern int I;                           // Number of input channels
-extern int O;                           // Number of output channels
+extern int CONVS;                        // Number of convolutional layers
+extern int KERNELS;                      // Number of FPGA kernels to use
+extern int F;                            // Number of frames of the data
+extern int W;                            // Width of the data
+extern int H;                            // Height of the data
+extern int I;                            // Number of input channels
+extern int O;                            // Number of output channels
 extern int HO;						     // Output width
 extern int WO;							 // Output height
 extern int I_kernel;					 // Number of input channels for the kernel (filter) - padding
 extern int O_kernel;  					 // Number of output channels for the kernel (filter) - padding
+extern int I_input;                      // Number of input channels for the input data - padding (needed in GIHWCPI data format)
+extern int O_output;                     // Number of output channels for the output data - padding (needed in GIHWCPI data format)
 extern int rows;						 // number of rows to compute by the kernel
 extern int enable_upper_padding;		 // enables the upper row of padding
 extern int enable_lower_padding;		 // enables the lower row of padding
@@ -114,6 +117,9 @@ void print_configuration();
 void print_timings(unsigned long long time, unsigned long long time_per_iteration, unsigned long long expected_time, float efficiency);
 void print_check(int result, float max_difference, int num_differences);
 void print_message(const char *str);
+int input_data_address(int i, int h, int w);
+int output_data_address(int o, int h, int w);
+int output_data_address_div(int o, int h, int w);
 
 #ifdef OPENCL_TEST
 void parse_arguments(int argc, char **argv);
