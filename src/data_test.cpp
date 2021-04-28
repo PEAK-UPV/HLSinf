@@ -30,6 +30,7 @@ void init_data() {
     	} else {
     	  data_in[addr] = 0;
     	}
+    	if(enable_add) data_in_add[addr] = data_in[addr];
         addr++;
       }
     }

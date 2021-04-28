@@ -55,6 +55,7 @@ int enable_lower_padding = 1;	 // enables the lower row of padding
 int enable_relu = 0;			 // enables applying the relu activation functions
 int enable_stm = 1;			 	 // enables applying the STM functions
 int enable_shift = 0;			 // enables applying shift to the output
+int enable_add = 1; 			 // enables add module
 int dir_shift = 0;     			 // shift direction (left or right)
 int pos_shift = 0;				 // positions to shift
 int enable_clipping = 0;		 // enables applying clipping to the output
@@ -72,6 +73,7 @@ int deterministic_input_values;  // whether input data is randomly generated or 
 
 // buffers
 data_type *data_in;               // Input data buffer (format I x W x H)
+data_type *data_in_add;           // Input data buffer for add module(format I x W x H)
 data_type *out;                   // Output data buffer (format O x W x H)
 data_type *kernel;                // Conv kernel buffers (format GO x GI x CPO x CPI x KH x KW) - for DirectConv and WinogradConv
 data_type *dw_kernel;             // DW kernel (format I x KH x KW) - for DWS
@@ -80,6 +82,7 @@ data_type *bias;                  // Conv bias buffers (format O)
 data_type *out_conv_cpu;          // Output data buffer for cpu (format O x W x H)
 data_type *out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
 data_type *out_stm_cpu; 		  // Output data buffer for STM for cpu (format O x W x H)
+data_type *out_add_cpu;          // Output data buffer for ADD for cpu (format O x W x H)
 data_type *out_pool_cpu;		  // Output data fuffer for pool for cpu (format O x W/2 x H/2)
 
 FILE *fp;
@@ -102,6 +105,7 @@ cl::Buffer *buffer_k_dw[MAX_CONVS];           // Conv kernel buffers (deepwise)
 cl::Buffer *buffer_k_pw[MAX_CONVS];           // Conv kernel buffers (pointwise)
 // DDR assignment
 cl_mem_ext_ptr_t data_in_ddr;                 // input data buffer
+cl_mem_ext_ptr_t data_in_add_ddr;             // input data add buffer
 cl_mem_ext_ptr_t out_ddr[MAX_CONVS];          // output data buffers
 cl_mem_ext_ptr_t kernel_ddr[MAX_CONVS];       // Conv kernel buffers
 cl_mem_ext_ptr_t kernel_pw_ddr[MAX_CONVS];    // DeepWise conv kernel buffers
@@ -121,9 +125,32 @@ void compute(int *enable, int *cpu, int *retval) {
 	   }
 	   #endif
 
+	   #ifndef USE_STM
+	   if (enable_stm) {
+	     print_message("STM not supported (disabled)");
+	     enable_stm = 0;
+	   }
+	   #endif
+
+	   if (enable_relu && enable_stm) {
+	   	   	 print_message("Relu and STM cannot be active at the same time (skipped)");
+	   	   	 *enable = 0;
+	   }
+
+
+	   if (!enable_stm && enable_add) {
+	   	   	 print_message("STM must be activated to activate Adding (skipped)");
+	   	   	 *enable = 0;
+	   }
+
 	   if (enable_maxpooling && enable_avgpooling) {
 	   	 print_message("MaxPooling and AvgPooling cannot be active at the same time (skipped)");
 	   	 *enable = 0;
+	   }
+
+	   if ((enable_maxpooling || enable_avgpooling) && enable_add) {
+	   	  print_message("Pooling and Adding cannot be active at the same time (pooling disabled)");
+	   	  enable_maxpooling = 0; enable_avgpooling = 0;
 	   }
 
        #ifndef API8_DATA_TYPE
@@ -162,6 +189,7 @@ void compute(int *enable, int *cpu, int *retval) {
 
 	     #ifdef DEBUG_CPU
 	     print_input();
+	     print_input_add();
 	     print_bias();
 	     print_kernel();
 	     #endif

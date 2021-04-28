@@ -44,6 +44,7 @@ extern int enable_lower_padding;		 // enables the lower row of padding
 extern int enable_relu;				     // enables applying the relu activation functions
 extern int enable_stm;  			 	 // enables applying the STM functions
 extern int enable_shift;				 // enables applying shift to the output
+extern int enable_add; 				     // enables add module
 extern int dir_shift;			         // shift direction (left or right)
 extern int pos_shift;					 // positions to shift
 extern int enable_clipping;			     // enables applying clipping to the output
@@ -57,6 +58,7 @@ extern int global_offset;				 // global offset for the output data for the kerne
 extern int GI;							 // number of groups for input channels
 extern int GO;							 // number of groups for output channels
 extern data_type *data_in;               // Input data buffer (format I x W x H)
+extern data_type *data_in_add;           // Input data buffer for add module(format I x W x H)
 extern data_type *out;                   // Output data buffer (format O x W x H)
 extern data_type *kernel;                // Conv kernel buffers (format GO x GI x CPO x CPI x KW x KH) - for DirectConv and WinogradConv
 extern data_type *dw_kernel;             // DW kernel (format I x KH x KW) - for DWS
@@ -64,7 +66,8 @@ extern data_type *pw_kernel;             // PW kernel (format GO x GI x CPO x CP
 extern data_type *bias;                  // Conv bias buffers (format O)
 extern data_type *out_conv_cpu;          // Output data buffer for cpu (format O x W x H)
 extern data_type *out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
-extern data_type *out_stm_cpu;		     // Output data buffer for STM for cpu (format O x W/2 x H/2)
+extern data_type *out_stm_cpu;		     // Output data buffer for STM for cpu (format O x O x W x H)
+extern data_type *out_add_cpu;		     // Output data buffer for ADD for cpu (format O x O x W x H)
 extern data_type *out_pool_cpu;		     // Output data fuffer for pool for cpu (format O x W/2 x H/2)
 extern char *input_data_file;            // file with input parameters
 extern int deterministic_input_values;   // whether input data is randomly generated or not (deterministic needed in co-simulation)
@@ -82,6 +85,7 @@ extern vector<cl::Event> kernel_events;              // Kernel events (completio
 extern vector<cl::Event> read_events;                // Read events
 extern vector<cl::Event> write_events;               // Write events
 extern cl::Buffer *buffer_i;                         // input buffer
+extern cl::Buffer *buffer_i_add;                     // input buffer for add module
 extern cl::Buffer *buffer_o[MAX_CONVS];              // output buffers
 extern cl::Buffer *buffer_k[MAX_CONVS];              // Conv kernel buffers
 extern cl::Buffer *buffer_k_dw[MAX_CONVS];           // Conv kernel buffers (deepwise)
@@ -89,6 +93,7 @@ extern cl::Buffer *buffer_k_pw[MAX_CONVS];           // Conv kernel buffers (poi
 extern cl::Buffer *buffer_bias[MAX_CONVS];           // Conv bias buffers
 // DDR assignment
 extern cl_mem_ext_ptr_t data_in_ddr;                 // input data buffer
+extern cl_mem_ext_ptr_t data_in_add_ddr;             // input data add buffer
 extern cl_mem_ext_ptr_t out_ddr[MAX_CONVS];          // output data buffers
 extern cl_mem_ext_ptr_t kernel_ddr[MAX_CONVS];       // Conv kernel buffers
 extern cl_mem_ext_ptr_t kernel_pw_ddr[MAX_CONVS];    // DeepWise conv kernel buffers
@@ -103,6 +108,7 @@ int filter_address_direct_conv(int i, int o, int kh, int kw);
 void cpu_conv2D();
 void print_bias();
 void print_input();
+void print_input_add();
 void print_output();
 void print_kernel();
 int check_result(data_type *max_difference, int *num_elements_differ);

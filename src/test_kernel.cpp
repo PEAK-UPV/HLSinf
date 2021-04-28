@@ -35,6 +35,7 @@ void run_kernel() {
     cl_int err;
     int arg = 0;
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_i));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_i_add));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, H));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, W));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, rows));
@@ -61,19 +62,16 @@ void run_kernel() {
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_avgpooling));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_clipping));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_shift));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_add));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, min_clip));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, max_clip));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, dir_shift));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, pos_shift));
-    //
     OCL_CHECK(err, err = q.enqueueNDRangeKernel(kernel_conv2d[k], 0, 1, 1, NULL, &kernel_events[k]));
     set_callback(kernel_events[k], "ooo_queue");
     #else
-
-    k_conv2D((ap_uint<512> *)data_in, H, W, rows, I, O, i_iter, o_iter, enable_relu, enable_stm,
-    k_conv2D((read_block_t *)data_in, H, W, rows, I, O, i_iter, o_iter_first, o_iter_last, enable_relu, enable_stm,
+    k_conv2D((read_block_t *)data_in, (write_block_t *)data_in_add, H, W, rows, I, O, i_iter, o_iter_first, o_iter_last, enable_relu, enable_stm,
           #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
->>>>>>> origin/develop
 		  kernel,
           #endif
           #ifdef DWS_CONV
@@ -81,7 +79,7 @@ void run_kernel() {
           #endif
 		  (pixel_out_t *)bias, (write_block_t *)out, global_offset,
 		   enable_upper_padding, enable_lower_padding, enable_maxpooling, enable_avgpooling,
-		   enable_clipping, enable_shift, min_clip, max_clip, dir_shift, pos_shift);
+		   enable_clipping, enable_shift, enable_add, min_clip, max_clip, dir_shift, pos_shift);
     #endif
   }
 

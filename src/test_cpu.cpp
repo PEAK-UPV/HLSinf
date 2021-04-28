@@ -207,7 +207,7 @@ void cpu_conv2D() {
 	  for (int cout=0; cout<O; cout++) {
 		  for (int h=0; h<H; h++) {
 			  for (int w=0; w<W; w++) {
-				  int addr_o = (cout * W * H) + (h * W) + w;
+				  int addr_o = output_data_address(cout, h, w);
 				  out_stm_cpu[addr_o] = tanh(log(exp(out_conv_cpu[addr_o]) + 1)) * out_conv_cpu[addr_o];
 			  }
 		  }
@@ -271,4 +271,26 @@ void cpu_conv2D() {
     }
   }
 
+  if (enable_add) {
+  	  for (int cout=0; cout<O; cout++) {
+  		  for (int h=0; h<H; h++) {
+  			  for (int w=0; w<W; w++) {
+  				  int addr_o = output_data_address(cout, h, w);
+  				  if (enable_avgpooling || enable_maxpooling) {
+  				  	out_add_cpu[addr_o] = data_in_add[addr_o] + out_pool_cpu[addr_o];
+  				  	} else {
+  				  		if (enable_relu) {
+  				  			out_add_cpu[addr_o] = data_in_add[addr_o] + out_relu_cpu[addr_o];
+  				  		} else {
+  				  			if(enable_stm) {
+  				  				out_add_cpu[addr_o] = data_in_add[addr_o] +  out_stm_cpu[addr_o];
+  				  			} else {
+  				  				out_add_cpu[addr_o] = data_in_add[addr_o] +  out_conv_cpu[addr_o];
+  				  			}
+  				  		}
+  				  	}
+  			  }
+      	  }
+  	  }
+  }
 }

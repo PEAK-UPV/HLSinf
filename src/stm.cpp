@@ -68,7 +68,7 @@ void stm(int enable_stm, int H, int W, hls::stream<pixel_out_t> &in, hls::stream
     out << data_out;
 }
 
-#ifdef DEBUG_RELU
+#ifdef DEBUG_STM
 printf("stm: end\n");
 #endif
 }

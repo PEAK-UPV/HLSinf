@@ -92,6 +92,29 @@ void print_input() {
   }
 }
 
+void print_input_add() {
+
+  int Hmax = H;
+  int Wmax = W;
+  if (H > 5) Hmax = 5;
+  if (W > 5) Wmax = 5;
+
+  printf("Input ADD:\n");
+  for (int i=0; i<I_input; i++) {
+    printf("channel %d:\n", i);
+	for (int h=0; h<Hmax; h++) {
+	  for (int w=0; w<Wmax; w++) {
+		int addr = input_data_address(i, h, w);
+	    printf("%4.2f ", float(data_in_add[addr]));
+        addr++;
+	  }
+	  if (W != Wmax) printf(" ...");
+	  printf("\n");
+	}
+	if (H != Hmax) printf("...\n");
+  }
+}
+
 
 void print_output() {
   if ((enable_maxpooling) || (enable_avgpooling)) {
@@ -132,8 +155,8 @@ void print_configuration() {
   printf("====================================================================================================================\n");
   printf("| Input: %3d x %3d x %3d x %3d      |  Kernel: %3d x %3d   |    Padding: %3d x %3d     |     Stride: %3d x %3d     |\n", H, W, I, O, KH, KW, 1, 1, 1, 1);
   printf("|------------------------------------------------------------------------------------------------------------------|\n");
-  printf("| ReLU: %s | STM: %s  |  MaxPooling: %s |  AvgPooling: %s  |  Clipping: %s (%2d:%2d)  | Shift: %s (%s,%2d)  |\n", enable_relu?"Yes":"No ", enable_stm?"Yes":"No ",
-  		    enable_maxpooling?"Yes":"No ", enable_avgpooling?"Yes":"No ", enable_clipping?"Yes":"No ", min_clip, max_clip, enable_shift?"Yes":"No ", dir_shift==LEFT_DIRECTION?"LEFT ":"RIGHT", pos_shift);
+  printf("| ReLU: %s | STM: %s | MaxPooling: %s | AvgPooling: %s | Add: %s | Clipping: %s (%2d:%2d) | Shift: %s (%s,%2d) |\n", enable_relu?"Yes":"No ", enable_stm?"Yes":"No ",
+  		    enable_maxpooling?"Yes":"No ", enable_avgpooling?"Yes":"No ", enable_add?"Yes":"No ", enable_clipping?"Yes":"No ", min_clip, max_clip, enable_shift?"Yes":"No ", dir_shift==LEFT_DIRECTION?"LEFT ":"RIGHT", pos_shift);
   printf("====================================================================================================================\n");
 }
 

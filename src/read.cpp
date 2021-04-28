@@ -350,4 +350,47 @@ void read_data_channels_gihwcpi(int num_pixels, int offset, read_block_t *ptr, h
   #endif
 
 }
+
+// ---------------------------------------------------------------------------------------
+// read_data_channels_gihwcpi. Reads all input data assuming GIxHxWxCPO input data format
+// Read pixels are sent out through the output stream
+//
+// Arguments:
+//   num_pixels          : Number of pixels to read in total (each pixel is CPI wide)
+//   offset              : offsets within input data to read (offset aligned to CPI wide pixels)
+//   ptr                 : pointer to input data
+//   out                 : output stream
+//   enable              : enable for the read operation
+//
+
+void read_data_channels_gihwcpi(int num_pixels, int offset, write_block_t *ptr, hls::stream<pixel_out_t> &out, int enable) {
+
+  #ifdef DEBUG_READ_DATA
+  printf("READ_DATA: starts (gihwcpi format)\n");
+  #endif
+
+  if (!enable) return;
+
+  read_data_channels_loop_pixels:
+  for (int i = 0; i < num_pixels; i++) {
+    DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max = I_REFERENCE * H_REFERENCE * W_REFERENCE / CPI)
+    DO_PRAGMA(HLS pipeline)
+
+    pixel_out_t px;
+	px = ptr[offset+i];
+    out << px;
+    #ifdef DEBUG_READ_DATA
+    #ifdef DEBUG_VERBOSE
+    printf("data read: ");
+    for (int x=0; x<CPI; x++) printf("%f ", float(px.pixel[x]));
+    printf("\n");
+    #endif
+    #endif
+  }
+
+  #ifdef DEBUG_READ_DATA
+  printf("READ_DATA: ends (gihwcpi format)\n");
+  #endif
+
+}
 #endif

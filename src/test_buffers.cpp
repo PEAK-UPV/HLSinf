@@ -13,6 +13,12 @@ void allocate_buffers() {
   size_t size_data_in_bytes = I_input * W * H * sizeof(data_type);
   posix_memalign((void **)&data_in, 4096, size_data_in_bytes);
 
+  // input data add buffer
+  if (enable_add) {
+	  posix_memalign((void **)&data_in_add, 4096, size_data_in_bytes);
+	  posix_memalign((void **)&out_add_cpu, 4096, O_output * W * H * sizeof(data_type));
+  }
+
   // weights buffer (kernel), depending on the type of convolution
   #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
   size_t size_kernel_in_bytes = I_kernel * O_kernel * KW * KH * sizeof(data_type);
@@ -63,6 +69,11 @@ void allocate_buffers() {
   data_in_ddr.flags  =  0 | XCL_MEM_TOPOLOGY;
   data_in_ddr.obj = data_in;
   data_in_ddr.param = 0;
+
+  data_in_add_ddr.flags  =  0 | XCL_MEM_TOPOLOGY;
+  data_in_add_ddr.obj = data_in_add;
+  data_in_add_ddr.param = 0;
+
   out_ddr[0].flags  = 0 | XCL_MEM_TOPOLOGY;
   out_ddr[0].obj = out;
   out_ddr[0].param = 0;
@@ -85,6 +96,7 @@ void allocate_buffers() {
   bias_ddr[0].obj = bias;
   bias_ddr[0].param = 0;
   OCL_CHECK(err, buffer_i    = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_data_in_bytes, &data_in_ddr, &err));
+  OCL_CHECK(err, buffer_i_add = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_data_in_bytes, &data_in_add_ddr, &err));
   OCL_CHECK(err, buffer_o[0]    = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_WRITE_ONLY  | CL_MEM_USE_HOST_PTR , size_output_in_bytes, &out_ddr[0], &err));
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
   OCL_CHECK(err, buffer_k[0]    = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_kernel_in_bytes, &kernel_ddr[0], &err));
@@ -100,6 +112,7 @@ void allocate_buffers() {
 // deallocate_buffers. Deallocates all CPU buffers
 void deallocate_buffers() {
   free(data_in);
+  free(data_in_add);
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
   free(kernel);
 #endif
@@ -122,6 +135,10 @@ void deallocate_buffers() {
 void copy_to_fpga() {
   cl_int err;
   OCL_CHECK(err, err = q.enqueueMigrateMemObjects( {*buffer_i}, 0 /*0 means from host*/, NULL, &write_events[0]));
+  set_callback(write_events[0], "ooo_queue");
+  OCL_CHECK(err, err = write_events[0].wait());
+
+  OCL_CHECK(err, err = q.enqueueMigrateMemObjects( {*buffer_i_add}, 0 /*0 means from host*/, NULL, &write_events[0]));
   set_callback(write_events[0], "ooo_queue");
   OCL_CHECK(err, err = write_events[0].wait());
 
