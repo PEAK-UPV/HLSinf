@@ -98,6 +98,7 @@ vector<cl::Event> kernel_events(MAX_KERNELS); // Kernel events (completion)
 vector<cl::Event> read_events(1);             // Read events
 vector<cl::Event> write_events(3);            // Write events
 cl::Buffer *buffer_i;                         // input buffer
+cl::Buffer *buffer_i_add;                     // input buffer add module
 cl::Buffer *buffer_o[MAX_CONVS];              // output buffers
 cl::Buffer *buffer_k[MAX_CONVS];              // Conv kernel buffers
 cl::Buffer *buffer_bias[MAX_CONVS];           // Conv bias buffers

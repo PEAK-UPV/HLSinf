@@ -1,5 +1,6 @@
 #include "../../src/k_conv2D.cpp"
 #include "../../src/add.cpp"
+#include "../../src/add_data.cpp"
 #include "../../src/cvt.cpp"
 #include "../../src/stm.cpp"
 #include "../../src/direct_convolution.cpp"

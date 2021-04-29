@@ -128,6 +128,7 @@ void deallocate_buffers() {
   if ((enable_maxpooling) || (enable_avgpooling)) {
 	free(out_pool_cpu);
   }
+  free(out_add_cpu);
 }
 
 #ifdef OPENCL_TEST
