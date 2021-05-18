@@ -71,6 +71,7 @@
 #define DIRECT_CONV
 #define FP32_DATA_TYPE
 #define USE_STM
+#define USE_RELU
 #define USE_POOLING
 #define CPI                          4
 #define CPO                          4
@@ -513,7 +514,7 @@ void stm(int enable_stm, int H, int W, hls::stream<pixel_out_t> &in, hls::stream
 void pooling(int H, int W, int enable_maxpooling, int enable_avgpooling, hls::stream<pixel_out_t> &input, hls::stream<pixel_out_t> &output);
 
 // add function
-void add_data(int enable_add, int H, int W, int I_ITER, hls::stream<pixel_out_t> &in_r, hls::stream<pixel_out_t> &in_stm, hls::stream<pixel_out_t> &out);
+void add_data(int enable_add, int H, int W, hls::stream<pixel_out_t> &in_r, hls::stream<pixel_out_t> &in_stm, hls::stream<pixel_out_t> &out);
 // padding functions
 void padding(int H, int W, int I_ITER, int enable_upper_padding, int enable_lower_padding, hls::stream<pixel_in_t> &in, hls::stream<pixel_in_t> &out);
 

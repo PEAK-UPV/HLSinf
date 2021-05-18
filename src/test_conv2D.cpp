@@ -139,19 +139,14 @@ void compute(int *enable, int *cpu, int *retval) {
 	   }
 
 
-	   if (!enable_stm && enable_add) {
-	   	   	 print_message("STM must be activated to activate Adding (skipped)");
-	   	   	 *enable = 0;
-	   }
-
 	   if (enable_maxpooling && enable_avgpooling) {
 	   	 print_message("MaxPooling and AvgPooling cannot be active at the same time (skipped)");
 	   	 *enable = 0;
 	   }
 
 	   if ((enable_maxpooling || enable_avgpooling) && enable_add) {
-	   	  print_message("Pooling and Adding cannot be active at the same time (pooling disabled)");
-	   	  enable_maxpooling = 0; enable_avgpooling = 0;
+	   	  print_message("Pooling and Adding cannot be active at the same time (Adding disabled)");
+	   	  enable_add = 0;
 	   }
 
        #ifndef API8_DATA_TYPE
