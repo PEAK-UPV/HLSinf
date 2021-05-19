@@ -16,7 +16,7 @@ void init_data() {
   std::uniform_int_distribution<int> dist(-10, 10);
   #endif
   #ifdef API16_DATA_TYPE
-  std::uniform_int_distribution<int> dist(-10, 10);
+  std::uniform_int_distribution<int> dist(-5, 5);
   #endif
 
   // input data
@@ -26,7 +26,7 @@ void init_data() {
       for (int w=0; w<W; w++) {
     	addr = input_data_address(i, h, w);
     	if (i<I) {
-          data_in[addr] = deterministic_input_values?i:dist(gen);
+          data_in[addr] = i+1;//deterministic_input_values?i:dist(gen);
     	} else {
     	  data_in[addr] = 0;
     	}
@@ -51,7 +51,7 @@ void init_data() {
                        (ki * KH * KW) +
                        (kh * KW) +
                        kw;
-          if ((i<I) && (o<O)) kernel[addr_k] = deterministic_input_values?(i % 20)-10:dist(gen);
+          if ((i<I) && (o<O)) kernel[addr_k] = i+1;//deterministic_input_values?(i % 20)-10:dist(gen);
           else kernel[addr_k] = 0;
 	    }
 	  }
@@ -85,5 +85,5 @@ void init_data() {
   }
 #endif
 
-  for (int cout=0; cout<O; cout++) bias[cout] = deterministic_input_values?(cout%20)-10:dist(gen);
+  for (int cout=0; cout<O; cout++) bias[cout] = cout+1;//deterministic_input_values?(cout%20)-10:dist(gen);
 }

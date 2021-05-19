@@ -159,7 +159,7 @@ void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int I, int O, int 
     int read_pixels              = W * (rows + num_extra_rows);
     int read_pixels_total        = read_pixels * I_ITER;
     //printf("I_ITER %d W %d rows %d num_extra_rows %d read_pixels %d read_pixels_total %d\n", I_ITER, W, rows, num_extra_rows, read_pixels, read_pixels_total);
-    int enable_buffer            = (read_pixels * (I / CPI)) <= INPUT_BUFFER_SIZE;
+    int enable_buffer            = (read_pixels * (I / CPI)) <= INPUT_BUFFER_SIZE;//desactivar i provar
     int write_to_input_buffer    = enable_buffer && (o_iter == 0) && (O_ITER>1);
     int read_from_input_buffer   = enable_buffer && (o_iter != 0);
     int enable_read              = (o_iter == 0) || !enable_buffer;
@@ -305,7 +305,7 @@ void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int I, int O, int 
         #ifdef USE_POOLING
         write_data_channels_gihwcpi(write_pixels, o_iter_write_offset, ptr_out, out_pooling);
         #else
-        write_data_channels_gihwcpi(write_pixels, o_iter_write_offset, ptr_out, out_relu, enable_write);
+        write_data_channels_gihwcpi(write_pixels, o_iter_write_offset, ptr_out, out_conv);
         #endif
       #else
         #ifdef USE_POOLING

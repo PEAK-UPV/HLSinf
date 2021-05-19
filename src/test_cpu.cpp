@@ -162,7 +162,7 @@ void cpu_conv2D() {
   }
 
   // apply shift
-  #ifdef API8_DATA_TYPE
+  #ifdef API16_DATA_TYPE
   if (enable_shift) {
     for (int cout=0; cout<O_output; cout++) {
       for (int h=0; h<H; h++) {
@@ -177,7 +177,7 @@ void cpu_conv2D() {
   #endif
 
   // apply clipping
-  #ifdef API8_DATA_TYPE
+  #ifdef API16_DATA_TYPE
   if (enable_clipping){
     for (int cout=0; cout<O_output; cout++) {
       for (int h=0; h<H; h++) {
@@ -209,7 +209,15 @@ void cpu_conv2D() {
       for (int h=0; h<H/2; h++) {
     	for (int w=0; w<W/2; w++) {
           int addr_out = output_data_address_div(o, h, w);
-    	  data_type max_v = -9999999;
+		  #if defined(FP32_DATA_TYPE)
+          data_type max_v = -9999999;
+		  #endif
+		  #ifdef API8_DATA_TYPE
+          data_type max_v = -256;
+		  #endif
+		  #ifdef API16_DATA_TYPE
+          data_type max_v = -65536;
+		  #endif
     	  for (int kh=0; kh<2; kh++) {
     		for (int kw=0; kw<2; kw++) {
     		  int h_in = (h * 2) + kh;
@@ -223,6 +231,7 @@ void cpu_conv2D() {
     		}
     	  }
     	  out_pool_cpu[addr_out] = max_v;
+
     	}
       }
     }

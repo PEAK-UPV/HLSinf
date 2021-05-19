@@ -73,14 +73,14 @@ void print_input() {
 
   int Hmax = H;
   int Wmax = W;
-  if (H > 5) Hmax = 5;
-  if (W > 5) Wmax = 5;
+  if (H > 5) Hmax = 50;
+  if (W > 5) Wmax = 50;
 
   printf("Input:\n");
   for (int i=0; i<I_input; i++) {
     printf("channel %d:\n", i);
-	for (int h=0; h<Hmax; h++) {
-	  for (int w=0; w<Wmax; w++) {
+	for (int h=0; h<H; h++) {
+	  for (int w=0; w<W; w++) {
 		int addr = input_data_address(i, h, w);
 	    printf("%4.2f ", float(data_in[addr]));
         addr++;
