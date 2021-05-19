@@ -83,6 +83,9 @@ void input_buffer(int read_pixels_total, int write_to_buff, int read_from_buff, 
   #ifdef ALVEO_U200
   DO_PRAGMA(HLS bind_storage variable=buffer type=ram_t2p impl=uram)
   #endif
+  #ifdef ALVEO_U280
+  DO_PRAGMA(HLS bind_storage variable=buffer type=ram_t2p impl=uram)
+  #endif
 
   input_buffer_loop_pixels:
   for (int p=0; p<read_pixels_total; p++) {
