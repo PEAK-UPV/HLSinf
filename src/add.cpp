@@ -30,6 +30,9 @@ void add(int H, int W, int I_ITER, hls::stream<pixel_out_t> &in, hls::stream<pix
   #ifdef ALVEO_U200
   DO_PRAGMA(HLS bind_storage variable=buffer_o_channels type=ram_t2p impl=uram)
   #endif
+  #ifdef ALVEO_U280
+  DO_PRAGMA(HLS bind_storage variable=buffer_o_channels type=ram_t2p impl=uram)
+  #endif
 
 
   // We receive bias in packs of CPO
