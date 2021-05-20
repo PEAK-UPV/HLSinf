@@ -9,7 +9,7 @@
 #COMPILATION MODE
 #export XCL_EMULATION_MODE=sw_emu
 
-#VITIS 2020.1 ENV
+#VITIS 2020.2 ENV
 source /opt/Xilinx/Vitis/2020.2/settings64.sh
 source /opt/xilinx/xrt/setup.sh
 export XILINX_VIVADO=/opt/Xilinx/Vivado/2020.2

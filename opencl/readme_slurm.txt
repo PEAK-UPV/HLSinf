@@ -17,3 +17,8 @@ squeue
 
 Once the implementation is done you will find all the associated files in the
 run folder.
+
+IMPORTANT NOTE: Pay attention to the configuration of the HLSinf accelerator.
+The launch scripts will set the configuration. Therefore, you need to guarantee that
+in the conv2D.h file no configuration is set (all defines for configurations must be
+disabled).
