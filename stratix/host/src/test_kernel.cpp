@@ -20,8 +20,14 @@ void run_kernel() {
 	  o_iter_per_kernel = o_iter / num_kernels;
   }
 
+  int my_val[NUM_KERNELS];
+  int my_ret[NUM_KERNELS];
+
   for (int k=0; k<num_kernels; k++) {
 
+
+    my_val[k] = (k+1)*10;
+    my_ret[k] = 5;
 
     int o_iter_first = o_iter_per_kernel * k;
     int o_iter_last  = o_iter_first + o_iter_per_kernel - 1;
@@ -64,6 +70,15 @@ void run_kernel() {
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, max_clip));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, dir_shift));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, pos_shift));
+
+
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, my_val[k]));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, &my_ret[k]));
+
+
+
+
+
     //
     OCL_CHECK(err, err = q.enqueueNDRangeKernel(kernel_conv2d[k], 0, 1, 1, NULL, &kernel_events[k]));
     set_callback(kernel_events[k], "ooo_queue");
@@ -77,7 +92,7 @@ void run_kernel() {
           #endif
 		  (pixel_out_t *)bias, (write_block_t *)out, global_offset,
 		   enable_upper_padding, enable_lower_padding, enable_maxpooling, enable_avgpooling,
-		   enable_clipping, enable_shift, min_clip, max_clip, dir_shift, pos_shift);
+		   enable_clipping, enable_shift, min_clip, max_clip, dir_shift, pos_shift, my_val, &my_ret[k]);
     #endif
   }
 
@@ -86,6 +101,15 @@ void run_kernel() {
 	cl_int err;
     OCL_CHECK(err, err = kernel_events[k].wait());
   }
+
+
+  printf("JM10 run kernel is finishing\n");
+  for (int k=0; k<num_kernels; k++) {
+    printf("k=%d  my_val=%d  my_val_ret=%d\n", k, my_val[k], my_ret[k]);
+ }
+
+
+
   #endif
 
 }
