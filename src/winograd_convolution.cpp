@@ -544,7 +544,7 @@ static void mulWise(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls:
 		loop_mul_kernels_load_cpo_kernels_wise:
 		for (int cpo=0; cpo<CPO; cpo++) {
 			#pragma HLS PIPELINE II=1
-			#ifdef FP32_DATA_TYPE
+			#if defined(FP32_DATA_TYPE) || defined(APF8_DATA_TYPE)
 				for(int i = 0; i<3; i++){
 					#pragma HLS UNROLL
 					for (int cpi=0; cpi < CPI; cpi++) {
@@ -641,7 +641,7 @@ static void mulWise(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls:
 					#pragma HLS UNROLL
 					for(int c = 0; c < 2; c++){
 						for (int cpi=0; cpi < CPI; cpi++) {
-							#ifdef FP32_DATA_TYPE
+							#if defined(FP32_DATA_TYPE) || defined(APF8_DATA_TYPE)
 								resMultAtxA.pixel[pos].pixel[cpi] = resMULT[cpi][f][c];
 							#else
 								resMultAtxA.pixel[pos].pixel[cpi] = resMULT[cpi][f][c]/4;

@@ -17,15 +17,25 @@
 
 // Configurations for Alveo U200 board
 //#define CONF_ALVEO_U200_4x4_DIRECT_FP32               // Direct convolution 4x4 kernel with FP32
+//#define CONF_ALVEO_U200_4x4_DIRECT_APF8               // Direct convolution 4x4 kernel with FP32
+//#define CONF_ALVEO_U200_4x4_DIRECT_API8               // Direct convolution 4x4 kernel with FP32
+
 //#define CONF_ALVEO_U200_8x8_DIRECT_API8            	// Direct convolution 8x8 kernel with API8
 //#define CONF_ALVEO_U200_4x4_WINOGRAD_API16        		// Winograd convolution 16x16 kernel with API8
+
 //#define CONF_ALVEO_U200_4x4_WINOGRAD_FP32        		// Winograd convolution 16x16 kernel with FP32
-//#define CONF_ALVEO_U200_8x8_WINOGRAD_API16            // Direct convolution 8x8 kernel with API16
+//#define CONF_ALVEO_U200_4x4_WINOGRAD_APF8            // Direct convolution 8x8 kernel with API8
 //#define CONF_ALVEO_U200_4x4_WINOGRAD_API8            // Direct convolution 8x8 kernel with API8
+
+//#define CONF_ALVEO_U200_8x8_WINOGRAD_API16            // Direct convolution 8x8 kernel with API16
 //#define CONF_ALVEO_U200_32x32_DWS_API8               	// DeepWise Separable 32x32 kernel with API8
 //#define CONF_ALVEO_U200_32x64_DWS_API8             	// DeepWise Separable 32x64 kernel with API8
 //#define CONF_ALVEO_U200_64x64_DWS_API8                // DeepWise Separable 64x64 kernel with API8
+
+//#define CONF_ALVEO_U200_4x4_DWS_FP32             		// DeepWise Separable 4x4 kernel with API8 -> fail
+//#define CONF_ALVEO_U200_4x4_DWS_APF8             		// DeepWise Separable 4x4 kernel with API8 -> fail
 //#define CONF_ALVEO_U200_4x4_DWS_API8             		// DeepWise Separable 4x4 kernel with API8
+
 
 // Configurations for Alveo U280 boards
 //#define CONF_ALVEO_U280_4x4_DIRECT_FP32                 // Direct convolution 4x4 kernel with FP32
@@ -69,7 +79,7 @@
 //#define DEBUG_WRITE_DATA
 //#define DEBUG_RELU
 //#define DEBUG_POOL
-//#define DEBUG_CPU
+#define DEBUG_CPU
 
 // -----------------------------------------------------------------------------------------------------------
 // Automatic defines (do not change; add new ones if needed)
@@ -88,6 +98,46 @@
 #define READ_BURST_SIZE              4
 #define STREAMS_DEPTH                4
 #define INPUT_BUFFER_SIZE        65536 //524288
+#define MAX_KERNELS_DW         512/CPI
+#define DW_KERNEL_STREAM_DEPTH       4      // 512 DW kernels
+#define PW_KERNEL_STREAM_DEPTH       4      // 512 * 512 PW kernels
+#define DWS_STREAM_DEPTH            64
+#endif
+
+#ifdef CONF_ALVEO_U200_4x4_DIRECT_APF8
+#define ALVEO_U200
+#define DIRECT_CONV
+#define APF8_DATA_TYPE
+#define USE_RELU
+#define USE_POOLING
+#define CPI                          4
+#define CPO                          4
+#define LOG2_CPO                     2
+#define WMAX                       256
+#define HMAX                       256
+#define READ_BURST_SIZE              4
+#define STREAMS_DEPTH                4
+#define INPUT_BUFFER_SIZE        131072 //524288
+#define MAX_KERNELS_DW         512/CPI
+#define DW_KERNEL_STREAM_DEPTH       4      // 512 DW kernels
+#define PW_KERNEL_STREAM_DEPTH       4      // 512 * 512 PW kernels
+#define DWS_STREAM_DEPTH            64
+#endif
+
+#ifdef CONF_ALVEO_U200_4x4_DIRECT_API8
+#define ALVEO_U200
+#define DIRECT_CONV
+#define API8_DATA_TYPE
+#define USE_RELU
+#define USE_POOLING
+#define CPI                          4
+#define CPO                          4
+#define LOG2_CPO                     2
+#define WMAX                       256
+#define HMAX                       256
+#define READ_BURST_SIZE              4
+#define STREAMS_DEPTH                4
+#define INPUT_BUFFER_SIZE        131072 //524288
 #define MAX_KERNELS_DW         512/CPI
 #define DW_KERNEL_STREAM_DEPTH       4      // 512 DW kernels
 #define PW_KERNEL_STREAM_DEPTH       4      // 512 * 512 PW kernels
@@ -179,7 +229,23 @@
 #define HMAX             256
 #define READ_BURST_SIZE    4
 #define STREAMS_DEPTH      4
-#define INPUT_BUFFER_SIZE  32768 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define INPUT_BUFFER_SIZE  131072 // 32 rows x 32 cols x (512/CPI) pixels_in
+#endif
+
+#ifdef CONF_ALVEO_U200_4x4_WINOGRAD_APF8
+#define ALVEO_U200
+#define WINOGRAD_CONV
+#define APF8_DATA_TYPE
+#define USE_RELU
+#define USE_POOLING
+#define CPI               4
+#define CPO               4
+#define LOG2_CPO           2
+#define WMAX             256
+#define HMAX             256
+#define READ_BURST_SIZE    4
+#define STREAMS_DEPTH      4
+#define INPUT_BUFFER_SIZE  131072 // 32 rows x 32 cols x (512/CPI) pixels_in
 #endif
 
 #ifdef CONF_ALVEO_U200_32x32_DWS_API8
@@ -259,7 +325,47 @@
 #define HMAX                       256
 #define READ_BURST_SIZE              8
 #define STREAMS_DEPTH                8
-#define INPUT_BUFFER_SIZE      65536    // 256x256x(512/CPI) pixels
+#define INPUT_BUFFER_SIZE      131072    // 256x256x(512/CPI) pixels
+#define MAX_KERNELS_DW         512/CPI
+#define DW_KERNEL_STREAM_DEPTH       4      // 512 DW kernels
+#define PW_KERNEL_STREAM_DEPTH       4      // 512 * 512 PW kernels
+#define DWS_STREAM_DEPTH            64
+#endif
+
+#ifdef CONF_ALVEO_U200_4x4_DWS_FP32
+#define ALVEO_U200
+#define DWS_CONV
+#define FP32_DATA_TYPE
+#define USE_RELU
+#define USE_POOLING
+#define CPI                          4
+#define CPO                          4
+#define LOG2_CPO                     2
+#define WMAX                       256
+#define HMAX                       256
+#define READ_BURST_SIZE              8
+#define STREAMS_DEPTH                8
+#define INPUT_BUFFER_SIZE      8388608    // 256x256x(512/CPI) pixels
+#define MAX_KERNELS_DW         512/CPI
+#define DW_KERNEL_STREAM_DEPTH       4      // 512 DW kernels
+#define PW_KERNEL_STREAM_DEPTH       4      // 512 * 512 PW kernels
+#define DWS_STREAM_DEPTH            64
+#endif
+
+#ifdef CONF_ALVEO_U200_4x4_DWS_APF8
+#define ALVEO_U200
+#define DWS_CONV
+#define APF8_DATA_TYPE
+#define USE_RELU
+#define USE_POOLING
+#define CPI                          4
+#define CPO                          4
+#define LOG2_CPO                     2
+#define WMAX                       256
+#define HMAX                       256
+#define READ_BURST_SIZE              8
+#define STREAMS_DEPTH                8
+#define INPUT_BUFFER_SIZE      131072    // 256x256x(512/CPI) pixels
 #define MAX_KERNELS_DW         512/CPI
 #define DW_KERNEL_STREAM_DEPTH       4      // 512 DW kernels
 #define PW_KERNEL_STREAM_DEPTH       4      // 512 * 512 PW kernels
@@ -279,7 +385,7 @@
 #define HMAX                       256
 #define READ_BURST_SIZE              4
 #define STREAMS_DEPTH                4
-#define INPUT_BUFFER_SIZE        65536
+#define INPUT_BUFFER_SIZE        131072
 #define MAX_KERNELS_DW         512/CPI
 #define DW_KERNEL_STREAM_DEPTH       4
 #define PW_KERNEL_STREAM_DEPTH       4

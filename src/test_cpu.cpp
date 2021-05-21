@@ -209,7 +209,7 @@ void cpu_conv2D() {
       for (int h=0; h<H/2; h++) {
     	for (int w=0; w<W/2; w++) {
           int addr_out = output_data_address_div(o, h, w);
-		  #if defined(FP32_DATA_TYPE)
+		  #if defined(FP32_DATA_TYPE) || defined(APF8_DATA_TYPE)
           data_type max_v = -9999999;
 		  #endif
 		  #ifdef API8_DATA_TYPE
