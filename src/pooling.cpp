@@ -52,6 +52,10 @@ static void pool_cvt(int H, int W, int enable_pooling, hls::stream<pixel_out_t> 
 	DO_PRAGMA(HLS bind_storage variable=buffer0 type=ram_2p impl=uram)
 	DO_PRAGMA(HLS bind_storage variable=buffer1 type=ram_2p impl=uram)
     #endif
+    #ifdef ALVEO_U280
+    DO_PRAGMA(HLS bind_storage variable=buffer0 type=ram_2p impl=uram)
+    DO_PRAGMA(HLS bind_storage variable=buffer1 type=ram_2p impl=uram)
+    #endif
     DO_PRAGMA(HLS AGGREGATE variable=buffer0)
     DO_PRAGMA(HLS AGGREGATE variable=buffer1)
 
