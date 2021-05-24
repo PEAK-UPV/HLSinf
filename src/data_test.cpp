@@ -30,10 +30,27 @@ void init_data() {
     	} else {
     	  data_in[addr] = 0;
     	}
-    	if(enable_add) data_in_add[addr] = data_in[addr];
         addr++;
       }
     }
+  }
+
+  //input add data
+  if(enable_add) {
+	  addr = 0;
+	  for (int o=0; o<O_output; o++) {
+		  for (int h=0; h<H; h++) {
+			  for (int w=0; w<W; w++) {
+				  addr = output_data_address(o, h, w);
+				  if (o<O) {
+					  data_in_add[addr] = deterministic_input_values?o:dist(gen);
+				  } else {
+					  data_in_add[addr] = 0;
+				  }
+				  addr++;
+			  }
+		  }
+	  }
   }
 
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)

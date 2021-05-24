@@ -15,7 +15,7 @@ void allocate_buffers() {
 
   // input data add buffer
   if (enable_add) {
-	  posix_memalign((void **)&data_in_add, 4096, size_data_in_bytes);
+	  posix_memalign((void **)&data_in_add, 4096, O_output * W * H * sizeof(data_type));
 	  posix_memalign((void **)&out_add_cpu, 4096, O_output * W * H * sizeof(data_type));
   }
 
@@ -55,7 +55,7 @@ void allocate_buffers() {
 
   // output for STM functions
     if (enable_stm) {
-      posix_memalign((void **)&out_stm_cpu, 4096, O * W * H * sizeof(data_type));
+      posix_memalign((void **)&out_stm_cpu, 4096, O_output * W * H * sizeof(data_type));
    }
 
   // output for pool function
@@ -96,7 +96,13 @@ void allocate_buffers() {
   bias_ddr[0].obj = bias;
   bias_ddr[0].param = 0;
   OCL_CHECK(err, buffer_i    = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_data_in_bytes, &data_in_ddr, &err));
-  OCL_CHECK(err, buffer_i_add = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_data_in_bytes, &data_in_add_ddr, &err));
+
+  if (enable_add){
+	  OCL_CHECK(err, buffer_i_add = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , O_output * W * H * sizeof(data_type), &data_in_add_ddr, &err));
+  }
+  else { //create a dummy buffer
+	  buffer_i_add = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , sizeof(data_type), &data_in_ddr, &err);
+  }
   OCL_CHECK(err, buffer_o[0]    = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_WRITE_ONLY  | CL_MEM_USE_HOST_PTR , size_output_in_bytes, &out_ddr[0], &err));
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
   OCL_CHECK(err, buffer_k[0]    = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_kernel_in_bytes, &kernel_ddr[0], &err));
@@ -128,7 +134,9 @@ void deallocate_buffers() {
   if ((enable_maxpooling) || (enable_avgpooling)) {
 	free(out_pool_cpu);
   }
-  free(out_add_cpu);
+  if (enable_add) {
+	  free(out_add_cpu);
+  }
 }
 
 #ifdef OPENCL_TEST
@@ -138,6 +146,7 @@ void copy_to_fpga() {
   OCL_CHECK(err, err = q.enqueueMigrateMemObjects( {*buffer_i}, 0 /*0 means from host*/, NULL, &write_events[0]));
   set_callback(write_events[0], "ooo_queue");
   OCL_CHECK(err, err = write_events[0].wait());
+
 
   OCL_CHECK(err, err = q.enqueueMigrateMemObjects( {*buffer_i_add}, 0 /*0 means from host*/, NULL, &write_events[0]));
   set_callback(write_events[0], "ooo_queue");
