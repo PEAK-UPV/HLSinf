@@ -600,78 +600,56 @@ static void mulWise(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls:
 		// Reading data
 		loop_mul_kernels_load_cpo_data_wise:
 		for (int i = 0; i < (H * W); i++) {//el doble de frames recibidos
-			DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE*W_REFERENCE)
-			#pragma HLS PIPELINE II=1
-			//DO_PRAGMA(HLS dependence variable=res inter false)
+		  DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE*W_REFERENCE)
+		  #pragma HLS PIPELINE II=1
 
-			data = d_in.read();
-			for (int cpo=0; cpo<CPO; cpo++) {
-				#pragma HLS UNROLL
-				for(int pos = 0; pos < 16; pos++){
-					#pragma HLS UNROLL
-
-					res.pixel[pos].pixel[cpo] += data.pixel[pos] * kernel[cpo].pixel[pos].pixel[cpif];
-//					if(i>3 && i<8){
-//					printf("%d res.pixel[%d].pixel[%d] += data.pixel[%d] * kernel[%d].pixel[%d].pixel[%d]\n",
-//							i,pos,cpo,pos,cpo,pos,cpif);
-//					}
-				}
-			}
-			cpif++;
-			//printf("\n");
-			if(cpif>0 && cpif==4){
-				//printf("envio\n");
-				for(int i = 0; i<4; i++){
-					#pragma HLS UNROLL
-					for (int cpi=0; cpi < CPI; cpi++) {
-						ATxWise_mult[cpi][0][i] = res.pixel[i].pixel[cpi] + res.pixel[i+4].pixel[cpi]+ res.pixel[i+8].pixel[cpi];
-						ATxWise_mult[cpi][1][i] = res.pixel[i+4].pixel[cpi] - res.pixel[i+8].pixel[cpi]- res.pixel[i+12].pixel[cpi];
-					}
-				}
-
-				for(int i = 0; i<2; i++){
-					#pragma HLS UNROLL
-					for (int cpi=0; cpi < CPI; cpi++) {
-						resMULT[cpi][i][0] = ATxWise_mult[cpi][i][0] + ATxWise_mult[cpi][i][1] + ATxWise_mult[cpi][i][2];
-						resMULT[cpi][i][1] = ATxWise_mult[cpi][i][1] - ATxWise_mult[cpi][i][2] - ATxWise_mult[cpi][i][3];
-					}
-				}
-				int pos = 0;
-				for(int f = 0; f < 2; f++){
-					#pragma HLS UNROLL
-					for(int c = 0; c < 2; c++){
-						for (int cpi=0; cpi < CPI; cpi++) {
-							#if defined(FP32_DATA_TYPE) || defined(APF8_DATA_TYPE)
-								resMultAtxA.pixel[pos].pixel[cpi] = resMULT[cpi][f][c];
-							#else
-								resMultAtxA.pixel[pos].pixel[cpi] = resMULT[cpi][f][c]/4;
-							#endif
-						}
-						pos++;
-					}
-				}
-
-				out << resMultAtxA;
-				#ifdef DEBUG_MUL
-					  printf("MULT_A_AT frame sent:\n");
-					  for (int cpi=0; cpi<CPI; cpi++) {
-						printf("  cpi %d:\n", cpi);
-						printf("    %6.4f %6.4f \n", float(resMultAtxA.pixel[0].pixel[cpi]), float(resMultAtxA.pixel[1].pixel[cpi]));
-						printf("    %6.4f %6.4f \n", float(resMultAtxA.pixel[2].pixel[cpi]), float(resMultAtxA.pixel[3].pixel[cpi]));
-
-					  }
-				#endif
-
-				for(int i = 0; i<16; i++){
-					#pragma HLS UNROLL
-					for (int cpo=0; cpo<CPO; cpo++) {
-						#pragma HLS UNROLL
-						res.pixel[i].pixel[cpo] = 0.f;
-					}
-				}
-				cpif=0;
-			}
-
+		  data = d_in.read();
+		  for (int cpo=0; cpo<CPO; cpo++) {
+		    #pragma HLS UNROLL
+		    for(int pos = 0; pos < 16; pos++){
+		      #pragma HLS UNROLL
+		      res.pixel[pos].pixel[cpo] = data.pixel[pos] * kernel[cpo].pixel[pos].pixel[cpif];
+		      if (cpif==3) {
+		        for(int i = 0; i<4; i++){
+		          for (int cpi=0; cpi < CPI; cpi++) {
+		            ATxWise_mult[cpi][0][i] = res.pixel[i].pixel[cpi] + res.pixel[i+4].pixel[cpi]+ res.pixel[i+8].pixel[cpi];
+		            ATxWise_mult[cpi][1][i] = res.pixel[i+4].pixel[cpi] - res.pixel[i+8].pixel[cpi]- res.pixel[i+12].pixel[cpi];
+    		          }
+		        }
+		        for(int i = 0; i<2; i++){
+		          for (int cpi=0; cpi < CPI; cpi++) {
+		    	    resMULT[cpi][i][0] = ATxWise_mult[cpi][i][0] + ATxWise_mult[cpi][i][1] + ATxWise_mult[cpi][i][2];
+			    resMULT[cpi][i][1] = ATxWise_mult[cpi][i][1] - ATxWise_mult[cpi][i][2] - ATxWise_mult[cpi][i][3];
+			  }
+	   	        }
+ 		        int pos = 0;
+		        for(int f = 0; f < 2; f++){
+		          for(int c = 0; c < 2; c++){
+		      	    for (int cpi=0; cpi < CPI; cpi++) {
+			      #if defined(FP32_DATA_TYPE) || defined(APF8_DATA_TYPE)
+			      resMultAtxA.pixel[pos].pixel[cpi] = resMULT[cpi][f][c];
+			      #else
+			      resMultAtxA.pixel[pos].pixel[cpi] = resMULT[cpi][f][c]/4;
+			      #endif
+			    }
+			    pos++;
+		 	  }
+		        }
+		      }
+                    }
+		  }
+		  cpif++;
+		  if (cpif==4) {
+		    out << resMultAtxA;
+    		    for(int i = 0; i<16; i++){
+		      #pragma HLS UNROLL
+		      for (int cpo=0; cpo<CPO; cpo++) {
+		        #pragma HLS UNROLL
+		        res.pixel[i].pixel[cpo] = 0.f;
+		      }
+		    }
+		    cpif=0;
+		  }
 		}
 		
 	}
