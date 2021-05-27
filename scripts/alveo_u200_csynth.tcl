@@ -6,6 +6,8 @@
 open_project HLSinf
 set_top k_conv2D
 add_files ../src/add.cpp -cflags "-D [lindex $argv 2]"
+add_files ../src/add_data.cpp -cflags "-D [lindex $argv 2]"
+add_files ../src/stm.cpp -cflags "-D [lindex $argv 2]"
 add_files ../src/conv2D.h -cflags "-D [lindex $argv 2]"
 add_files ../src/cvt.cpp -cflags "-D [lindex $argv 2]"
 add_files ../src/direct_convolution.cpp -cflags "-D [lindex $argv 2]"
