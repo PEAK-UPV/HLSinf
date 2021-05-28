@@ -82,14 +82,14 @@ void write_data_channels_gihwcpi(int num_pixels, int offset, write_block_t *ptr,
   for (int i = 0; i < num_pixels; i++) {
 	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=W_REFERENCE*H_REFERENCE)
     #pragma HLS pipeline
-	//pixel_in_t aux =
+	//pixel_in_t aux;
 	pixel_out_t bx = in.read();
-	//for(int cpi=0;cpi<CPI;cpi++){
-		//bx.pixel[cpi]=aux.pixel[cpi];
-	//}
+//	for(int cpi=0;cpi<CPI;cpi++){
+//		bx.pixel[cpi]=aux.pixel[cpi];
+//	}
     ptr[offset+i] = bx;
-    //printf("pos %d, valor0 %6.4f, valor1 %6.4f, valor2 %6.4f, valor3 %6.4f\n",
-    //		offset+i, float(bx.pixel[0]), float(bx.pixel[1]), float(bx.pixel[2]) ,float(bx.pixel[3]));
+//    printf("pos %d, valor0 %6.4f, valor1 %6.4f, valor2 %6.4f, valor3 %6.4f\n",
+//    		offset+i, float(bx.pixel[0]), float(bx.pixel[1]), float(bx.pixel[2]) ,float(bx.pixel[3]));
   }
 
 }

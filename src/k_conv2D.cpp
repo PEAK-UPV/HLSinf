@@ -305,7 +305,7 @@ void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int I, int O, int 
         #ifdef USE_POOLING
         write_data_channels_gihwcpi(write_pixels, o_iter_write_offset, ptr_out, out_pooling);
         #else
-        write_data_channels_gihwcpi(write_pixels, o_iter_write_offset, ptr_out, out_conv);
+        write_data_channels_gihwcpi(write_pixels, o_iter_write_offset, ptr_out, out_relu);
         #endif
       #else
         #ifdef USE_POOLING

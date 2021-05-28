@@ -13,7 +13,7 @@ void init_data() {
   std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
   #endif
   #ifdef API8_DATA_TYPE
-  std::uniform_int_distribution<int> dist(-10, 10);
+  std::uniform_int_distribution<int> dist(-5, 5);
   #endif
   #ifdef API16_DATA_TYPE
   std::uniform_int_distribution<int> dist(-5, 5);
@@ -26,7 +26,11 @@ void init_data() {
       for (int w=0; w<W; w++) {
     	addr = input_data_address(i, h, w);
     	if (i<I) {
-          data_in[addr] = deterministic_input_values?i:dist(gen);
+//    		if(i==0) data_in[addr] = 0.2;
+//    		else if(i==1) data_in[addr] = -0.3;
+//    		else if(i==2)data_in[addr] = 0.1;
+//    		else if(i==3)data_in[addr] = -0.4;
+    		data_in[addr] = deterministic_input_values?i:dist(gen);
     	} else {
     	  data_in[addr] = 0;
     	}
