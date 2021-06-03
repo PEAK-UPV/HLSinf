@@ -17,7 +17,7 @@
 
 // Configurations for Alveo U200 boards
 
-//#define CONF_ALVEO_U200_4x4_DIRECT_FP32                 // Direct convolution 4x4 kernel with FP32
+#define CONF_ALVEO_U200_4x4_DIRECT_FP32                 // Direct convolution 4x4 kernel with FP32
 //#define CONF_ALVEO_U200_8x8_DIRECT_API8            	// Direct convolution 8x8 kernel with API8
 //#define CONF_ALVEO_U200_16x16_WINOGRAD_API8        	// Winograd convolution 16x16 kernel with API8
 //#define CONF_ALVEO_U200_32x32_DWS_API8               	// DeepWise Separable 32x32 kernel with API8
@@ -401,9 +401,9 @@
 // -----------------------------------------------------------------------------------------------------------
 #define W_SIM         256 //WMAX
 #define H_SIM         256 //HMAX
-#define I_SIM         64  //I_REFERENCE
-#define O_SIM         64  //O_REFERENCE
-#define INSTANCES_SIM 1   //2
+#define I_SIM         CPI  //I_REFERENCE
+#define O_SIM         CPO //O_REFERENCE
+#define INSTANCES_SIM 2   //2
 
 // -----------------------------------------------------------------------------------------------------------
 // Direction defines (for shift operations)
@@ -453,8 +453,8 @@
 // -----------------------------------------------------------------------------------------------------------
 // depth of pointers for co-simulation support
 // -----------------------------------------------------------------------------------------------------------
-#define DATA_IN_PORT_DEPTH   W_SIM * H_SIM * I_SIM * (DATA_TYPE_WIDTH / 8) / 64
-#define DATA_OUT_PORT_DEPTH  W_SIM * H_SIM * O_SIM * (DATA_TYPE_WIDTH / 8) / 64
+#define DATA_IN_PORT_DEPTH   W_SIM * H_SIM * I_SIM / CPI
+#define DATA_OUT_PORT_DEPTH  W_SIM * H_SIM * O_SIM / CPO
 #define KERNEL_PORT_DEPTH    3 * 3 * I_SIM * O_SIM
 #define DW_KERNEL_PORT_DEPTH I_SIM * 9
 #define PW_KERNEL_PORT_DEPTH O_SIM * (I_SIM / CPI)
