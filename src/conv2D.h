@@ -32,9 +32,9 @@
 
 //#define CONF_ALVEO_U200_4x4_WINOGRAD_FP32        	   // Winograd convolution 4x4 kernel with FP32
 //#define CONF_ALVEO_U200_4x4_WINOGRAD_APF8            // Winograd convolution 4x4 kernel with API8 ->fail precision
-#define CONF_ALVEO_U200_4x4_WINOGRAD_API8            // Winograd convolution 4x4 kernel with API8
+//#define CONF_ALVEO_U200_4x4_WINOGRAD_API8            // Winograd convolution 4x4 kernel with API8
 
-//#define CONF_ALVEO_U200_8x8_WINOGRAD_FP32        	   // Winograd convolution 8x8 kernel with FP32
+#define CONF_ALVEO_U200_8x8_WINOGRAD_FP32        	   // Winograd convolution 8x8 kernel with FP32
 //#define CONF_ALVEO_U200_8x8_WINOGRAD_APF8            // Winograd convolution 8x8 kernel with APF8
 //#define CONF_ALVEO_U200_8x8_WINOGRAD_API8            // Winograd convolution 8x8 kernel with API8
 
@@ -350,7 +350,7 @@
 #define HMAX             256
 #define READ_BURST_SIZE    4
 #define STREAMS_DEPTH      4
-#define INPUT_BUFFER_SIZE  65536 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define INPUT_BUFFER_SIZE  131072 // 32 rows x 32 cols x (512/CPI) pixels_in
 #endif
 
 #ifdef CONF_ALVEO_U200_4x4_WINOGRAD_FP32
@@ -386,7 +386,7 @@
 #define HMAX             256
 #define READ_BURST_SIZE    8
 #define STREAMS_DEPTH      8
-#define INPUT_BUFFER_SIZE  65536 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define INPUT_BUFFER_SIZE  131072 // 32 rows x 32 cols x (512/CPI) pixels_in
 #endif
 
 #ifdef CONF_ALVEO_U200_16x16_WINOGRAD_FP32

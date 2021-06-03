@@ -524,6 +524,7 @@ static void mulWise(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls:
 	data_type GgGT[CPI][4][4];
 
 
+
 	for(int i = 0; i<16; i++){
 		#pragma HLS PIPELINE II=1
 		for (int cpi=0; cpi<CPI; cpi++) {
@@ -600,56 +601,122 @@ static void mulWise(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls:
 		// Reading data
 		loop_mul_kernels_load_cpo_data_wise:
 		for (int i = 0; i < (H * W); i++) {//el doble de frames recibidos
-		  DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE*W_REFERENCE)
-		  #pragma HLS PIPELINE II=1
+			DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE*W_REFERENCE)
+			#pragma HLS PIPELINE II=1
 
-		  data = d_in.read();
-		  for (int cpo=0; cpo<CPO; cpo++) {
-		    #pragma HLS UNROLL
-		    for(int pos = 0; pos < 16; pos++){
-		      #pragma HLS UNROLL
-		      res.pixel[pos].pixel[cpo] = data.pixel[pos] * kernel[cpo].pixel[pos].pixel[cpif];
-		      if (cpif==3) {
-		        for(int i = 0; i<4; i++){
-		          for (int cpi=0; cpi < CPI; cpi++) {
-		            ATxWise_mult[cpi][0][i] = res.pixel[i].pixel[cpi] + res.pixel[i+4].pixel[cpi]+ res.pixel[i+8].pixel[cpi];
-		            ATxWise_mult[cpi][1][i] = res.pixel[i+4].pixel[cpi] - res.pixel[i+8].pixel[cpi]- res.pixel[i+12].pixel[cpi];
-    		          }
-		        }
-		        for(int i = 0; i<2; i++){
-		          for (int cpi=0; cpi < CPI; cpi++) {
-		    	    resMULT[cpi][i][0] = ATxWise_mult[cpi][i][0] + ATxWise_mult[cpi][i][1] + ATxWise_mult[cpi][i][2];
-			    resMULT[cpi][i][1] = ATxWise_mult[cpi][i][1] - ATxWise_mult[cpi][i][2] - ATxWise_mult[cpi][i][3];
-			  }
-	   	        }
- 		        int pos = 0;
-		        for(int f = 0; f < 2; f++){
-		          for(int c = 0; c < 2; c++){
-		      	    for (int cpi=0; cpi < CPI; cpi++) {
-			      #if defined(FP32_DATA_TYPE) || defined(APF8_DATA_TYPE)
-			      resMultAtxA.pixel[pos].pixel[cpi] = resMULT[cpi][f][c];
-			      #else
-			      resMultAtxA.pixel[pos].pixel[cpi] = resMULT[cpi][f][c]/4;
-			      #endif
-			    }
-			    pos++;
-		 	  }
-		        }
-		      }
-                    }
-		  }
-		  cpif++;
-		  if (cpif==4) {
-		    out << resMultAtxA;
-    		    for(int i = 0; i<16; i++){
-		      #pragma HLS UNROLL
-		      for (int cpo=0; cpo<CPO; cpo++) {
-		        #pragma HLS UNROLL
-		        res.pixel[i].pixel[cpo] = 0.f;
-		      }
-		    }
-		    cpif=0;
-		  }
+			data = d_in.read();
+			#if defined(FP32_DATA_TYPE)
+				for(int pos = 0; pos < 16; pos++){
+						#pragma HLS UNROLL
+						for (int cpo=0; cpo<CPO; cpo++) {
+							#pragma HLS UNROLL
+							res.pixel[pos].pixel[cpo] = data.pixel[pos] * kernel[cpo].pixel[pos].pixel[cpif];
+					}
+				}
+				cpif++;
+				if(cpif==4) cpif=0;
+				for(int i = 0; i<4; i++){
+					#pragma HLS UNROLL
+					for (int cpi=0; cpi < CPI; cpi++) {
+						ATxWise_mult[cpi][0][i] = res.pixel[i].pixel[cpi] + res.pixel[i+4].pixel[cpi]+ res.pixel[i+8].pixel[cpi];
+						ATxWise_mult[cpi][1][i] = res.pixel[i+4].pixel[cpi] - res.pixel[i+8].pixel[cpi]- res.pixel[i+12].pixel[cpi];
+					}
+				}
+
+				for(int i = 0; i<2; i++){
+					#pragma HLS UNROLL
+					for (int cpi=0; cpi < CPI; cpi++) {
+						resMULT[cpi][i][0] = ATxWise_mult[cpi][i][0] + ATxWise_mult[cpi][i][1] + ATxWise_mult[cpi][i][2];
+						resMULT[cpi][i][1] = ATxWise_mult[cpi][i][1] - ATxWise_mult[cpi][i][2] - ATxWise_mult[cpi][i][3];
+					}
+				}
+				int pos = 0;
+				for(int f = 0; f < 2; f++){
+					#pragma HLS UNROLL
+					for(int c = 0; c < 2; c++){
+						for (int cpi=0; cpi < CPI; cpi++) {
+								resMultAtxA.pixel[pos].pixel[cpi] = resMULT[cpi][f][c];
+						}
+						pos++;
+					}
+				}
+
+				out << resMultAtxA;
+				#ifdef DEBUG_MUL
+					  printf("MULT_WISE frame sent:\n");
+					  for (int cpi=0; cpi<CPI; cpi++) {
+						printf("  cpi %d:\n", cpi);
+						printf("    %6.4f %6.4f \n", float(resMultAtxA.pixel[0].pixel[cpi]), float(resMultAtxA.pixel[1].pixel[cpi]));
+						printf("    %6.4f %6.4f \n", float(resMultAtxA.pixel[2].pixel[cpi]), float(resMultAtxA.pixel[3].pixel[cpi]));
+
+					  }
+				#endif
+
+			#else
+				for (int cpo=0; cpo<CPO; cpo++) {
+					#pragma HLS UNROLL
+					for(int pos = 0; pos < 16; pos++){
+						#pragma HLS UNROLL
+						res.pixel[pos].pixel[cpo] += data.pixel[pos] * kernel[cpo].pixel[pos].pixel[cpif];
+					}
+				}
+				cpif++;
+				//printf("\n");
+				if(cpif>0 && cpif==4){
+					//printf("envio\n");
+
+					for(int i = 0; i<4; i++){
+						#pragma HLS UNROLL
+						for (int cpi=0; cpi < CPI; cpi++) {
+							ATxWise_mult[cpi][0][i] = res.pixel[i].pixel[cpi] + res.pixel[i+4].pixel[cpi]+ res.pixel[i+8].pixel[cpi];
+							ATxWise_mult[cpi][1][i] = res.pixel[i+4].pixel[cpi] - res.pixel[i+8].pixel[cpi]- res.pixel[i+12].pixel[cpi];
+						}
+					}
+
+					for(int i = 0; i<2; i++){
+						#pragma HLS UNROLL
+						for (int cpi=0; cpi < CPI; cpi++) {
+							resMULT[cpi][i][0] = ATxWise_mult[cpi][i][0] + ATxWise_mult[cpi][i][1] + ATxWise_mult[cpi][i][2];
+							resMULT[cpi][i][1] = ATxWise_mult[cpi][i][1] - ATxWise_mult[cpi][i][2] - ATxWise_mult[cpi][i][3];
+						}
+					}
+					int pos = 0;
+					for(int f = 0; f < 2; f++){
+						#pragma HLS UNROLL
+						for(int c = 0; c < 2; c++){
+							for (int cpi=0; cpi < CPI; cpi++) {
+								#if defined(APF8_DATA_TYPE)
+									resMultAtxA.pixel[pos].pixel[cpi] = resMULT[cpi][f][c];
+								#else
+									resMultAtxA.pixel[pos].pixel[cpi] = resMULT[cpi][f][c]/4;
+								#endif
+							}
+							pos++;
+						}
+					}
+
+					out << resMultAtxA;
+					#ifdef DEBUG_MUL
+						  printf("MULT_WISE frame sent:\n");
+						  for (int cpi=0; cpi<CPI; cpi++) {
+							printf("  cpi %d:\n", cpi);
+							printf("    %6.4f %6.4f \n", float(resMultAtxA.pixel[0].pixel[cpi]), float(resMultAtxA.pixel[1].pixel[cpi]));
+							printf("    %6.4f %6.4f \n", float(resMultAtxA.pixel[2].pixel[cpi]), float(resMultAtxA.pixel[3].pixel[cpi]));
+
+						  }
+					#endif
+
+					for(int i = 0; i<16; i++){
+						#pragma HLS UNROLL
+						for (int cpo=0; cpo<CPO; cpo++) {
+							#pragma HLS UNROLL
+							res.pixel[i].pixel[cpo] = 0.f;
+						}
+					}
+					cpif=0;
+				}
+			#endif
+
 		}
 		
 	}
@@ -670,75 +737,82 @@ static void mulWise(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls:
 //   d_in  : input stream with data frames
 //   out   : output stream
 //
-/* static void mult_A_AT(int H, int W, int I_ITER, hls::stream<frame_d> &d_in, hls::stream<frame_winograd> &out) {
+#if defined(FP32_DATA_TYPE)
+static void mult_A_AT(int H, int W, int I_ITER, hls::stream<frame_winograd> &d_in, hls::stream<frame_winograd> &out) {
 
 	#ifdef DEBUG_MUL
 	printf("mult_A_AT: starts\n");
 	#endif
-	frame_d data;
+	frame_winograd data;
+	DO_PRAGMA(HLS ARRAY_PARTITION variable=data dim=0 complete)
+	pixel_in_t buff_o_channels[16];
+	DO_PRAGMA(HLS ARRAY_PARTITION variable=buff_o_channels dim=1 complete)
+	DO_PRAGMA(HLS ARRAY_PARTITION variable=buff_o_channels dim=2 complete)
+
 	frame_winograd res;
+	DO_PRAGMA(HLS ARRAY_PARTITION variable=res dim=0 complete)
+	int cont = 0;
 	
-	data_type ATxWise_mult[CPI][2][4];
-	data_type resMULT[CPI][2][2];
-	
+	for(int i = 0; i<4; i++){
+		#pragma HLS PIPELINE II=1
+		for (int cpi=0; cpi<CPI; cpi++) {
+			#pragma HLS UNROLL
+			res.pixel[i].pixel[cpi] = 0.f;
+		}
+	}
+
 	// Reading data
 	loop_mul_kernels_load_cpo_A_AT:
 	for (int i_iter = 0; i_iter < I_ITER; i_iter++) {
 		DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE/CPI)
-		for (int p = 0; p < (H/2 * W/2); p++) {
-			DO_PRAGMA(HLS loop_tripcount min=1 max=(H_REFERENCE/2) * (W_REFERENCE/2))
-
+		for (int p = 0; p < (H * W); p++) {
+			DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE*W_REFERENCE)
 			#pragma HLS PIPELINE II=1
+
 			data = d_in.read();
-
-			for(int i = 0; i<4; i++){
+			for(int pos = 0; pos<4; pos++){
 				#pragma HLS UNROLL
-				for (int cpi=0; cpi < CPI; cpi++) {
-					ATxWise_mult[cpi][0][i] = data.pixel[i].pixel[cpi] + data.pixel[i+4].pixel[cpi]+ data.pixel[i+8].pixel[cpi];
-					ATxWise_mult[cpi][1][i] = data.pixel[i+4].pixel[cpi] - data.pixel[i+8].pixel[cpi]- data.pixel[i+12].pixel[cpi];
-				}
+					buff_o_channels[cont++] = data.pixel[pos];
 			}
 
-			for(int i = 0; i<2; i++){
-				#pragma HLS UNROLL
-				for (int cpi=0; cpi < CPI; cpi++) {
-					resMULT[cpi][i][0] = ATxWise_mult[cpi][i][0] + ATxWise_mult[cpi][i][1] + ATxWise_mult[cpi][i][2];
-					resMULT[cpi][i][1] = ATxWise_mult[cpi][i][1] - ATxWise_mult[cpi][i][2] - ATxWise_mult[cpi][i][3];
-				}
-			}
-			int pos = 0;
-			for(int f = 0; f < 2; f++){
-				#pragma HLS UNROLL
-				for(int c = 0; c < 2; c++){
+			if(cont == 16){
+				//añadir valores del buffer a res
+				for(int numframe = 0; numframe<4; numframe++){
+					#pragma HLS UNROLL
 					for (int cpi=0; cpi < CPI; cpi++) {
-						#ifdef FP32_DATA_TYPE
-							res.pixel[pos].pixel[cpi] = resMULT[cpi][f][c];
-						#else
-							res.pixel[pos].pixel[cpi] = resMULT[cpi][f][c]/4;
-						#endif
+						#pragma HLS UNROLL
+						res.pixel[0].pixel[cpi] += buff_o_channels[numframe*4+0].pixel[cpi];
+						res.pixel[1].pixel[cpi] += buff_o_channels[numframe*4+1].pixel[cpi];
+						res.pixel[2].pixel[cpi] += buff_o_channels[numframe*4+2].pixel[cpi];
+						res.pixel[3].pixel[cpi] += buff_o_channels[numframe*4+3].pixel[cpi];
 					}
-					pos++;
 				}
-			}
+			    out << res;
+				#ifdef DEBUG_MUL
+					  printf("MULT_A_AT frame sent:\n");
+					  for (int cpi=0; cpi<CPI; cpi++) {
+						printf("  cpi %d:\n", cpi);
+						printf("    %6.4f %6.4f \n", float(res.pixel[0].pixel[cpi]), float(res.pixel[1].pixel[cpi]));
+						printf("    %6.4f %6.4f \n", float(res.pixel[2].pixel[cpi]), float(res.pixel[3].pixel[cpi]));
 
-		   out << res;
-			#ifdef DEBUG_MUL
-				  printf("MULT_A_AT frame sent:\n");
-				  for (int cpi=0; cpi<CPI; cpi++) {
-					printf("  cpi %d:\n", cpi);
-					printf("    %6.4f %6.4f \n", float(res.pixel[0].pixel[cpi]), float(res.pixel[1].pixel[cpi]));
-					printf("    %6.4f %6.4f \n", float(res.pixel[2].pixel[cpi]), float(res.pixel[3].pixel[cpi]));
-
+					  }
+				#endif
+    		    for(int i = 0; i<4; i++){
+				  #pragma HLS UNROLL
+				  for (int cpo=0; cpo<CPO; cpo++) {
+					#pragma HLS UNROLL
+					res.pixel[i].pixel[cpo] = 0.f;
 				  }
-			#endif
-
+    		    }
+    		    cont=0;
+			}
 		}
 	}
 	#ifdef DEBUG_MUL
 	printf("mult_A_AT: ends\n");
 	#endif
-} */
-
+}
+#endif
 // -------------------------------------------------------------------------------
 // add_winograd: This function performs the addition of all subpixels for the same channel. To do that
 // it receives several frame_m frames in format (2, 2, CPI) and add these values to its correct pixel result.
@@ -914,14 +988,17 @@ void winograd_conv(int H, int W, int I_ITER, int enable_upper_padding, int enabl
 	//static hls::stream<frame_d>         kernels_multWise;  	// mulKernels -> mulWise
 	//static hls::stream<frame_d_2>       mult_data_res;  	// mulData 	-> 	mult wise
 	static hls::stream<frame_winograd>  mult_wise_res;  	// mulWise 	-> 	add_winograd
-	//static hls::stream<frame_winograd> 	str_mul_add;  		// mult_A_AT -> add_winograd
-	DO_PRAGMA(HLS stream variable=str_pad_cvt      depth=STREAMS_DEPTH)
+	#if defined(FP32_DATA_TYPE)
+		static hls::stream<frame_winograd> 	str_mul_add;  		// mult_A_AT -> add_winograd
+		DO_PRAGMA(HLS stream variable=str_mul_add      depth=STREAMS_DEPTH)
+	#endif
+	DO_PRAGMA(HLS stream variable=str_pad_cvt      depth=40)
 	DO_PRAGMA(HLS stream variable=cvt_frameConvert depth=STREAMS_DEPTH)
 	DO_PRAGMA(HLS stream variable=str_cvt_mul_cTc  depth=STREAMS_DEPTH)
 	//DO_PRAGMA(HLS stream variable=kernels_multWise depth=STREAMS_DEPTH)
 	//DO_PRAGMA(HLS stream variable=mult_data_res    depth=STREAMS_DEPTH)
 	DO_PRAGMA(HLS stream variable=mult_wise_res    depth=STREAMS_DEPTH)
-	//DO_PRAGMA(HLS stream variable=str_mul_add      depth=STREAMS_DEPTH)
+
 
 	// topology
 	#pragma HLS dataflow
@@ -931,7 +1008,12 @@ void winograd_conv(int H, int W, int I_ITER, int enable_upper_padding, int enabl
 	//mulKernels(I_ITER, k_in, kernels_multWise);
 	//mulData(H, W, I_ITER, str_cvt_mul_cTc, mult_data_res);
 	mulWise(H, W, I_ITER, str_cvt_mul_cTc, k_in, mult_wise_res);
-	//mult_A_AT(H, W, I_ITER, mult_wise_res, str_mul_add);
-	add_winograd(H, W, I_ITER, b_in, mult_wise_res, out);         
+	#if defined(FP32_DATA_TYPE)
+		mult_A_AT(H, W, I_ITER, mult_wise_res, str_mul_add);
+		add_winograd(H, W, I_ITER, b_in, str_mul_add, out);
+	#else
+		add_winograd(H, W, I_ITER, b_in, mult_wise_res, out);
+	#endif
+
 }
 
