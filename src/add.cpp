@@ -63,6 +63,7 @@ void add(int H, int W, int I_ITER, hls::stream<pixel_out_t> &in, hls::stream<pix
     add_load_data_it_loop:
     for(int it = 0; it<num_iterations; it++){
       DO_PRAGMA(HLS loop_tripcount  min=1 max=W_REFERENCE*H_REFERENCE)
+	  DO_PRAGMA(HLS PIPELINE II=1)
       pixel_out_t px;
       px = in.read();
       pixel_out_t data_in;
