@@ -17,18 +17,9 @@
 // to be included from OpenCL kernel file only: k_conv2D.cl
 
 #include "lib_conv2D_commons.h"
-/*
-void lib_conv2D(
-    #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
-    int sss,
-    #endif
-    int a,
-    int *b
-    );
-*/
 
 void lib_conv2D( 
-      global struct read_block_t *ptr_data,
+      global read_block_t * restrict ptr_data,
       int H, 
       int W, 
       int rows,
@@ -46,7 +37,7 @@ void lib_conv2D(
       global read_kernel_pw_t *ptr_pw_kernel,
       #endif
       global struct pixel_out_t *ptr_bias,
-      global struct write_block_t *ptr_out,
+      global write_block_t *ptr_out,
       int global_offset,
       int enable_upper_padding,
       int enable_lower_padding,
@@ -57,7 +48,26 @@ void lib_conv2D(
       int min_clip,
       int max_clip,
       int dir_shift,
-      int pos_shift,
-      int my_val,
-      global int *my_ret);
+      int pos_shift
+      #ifdef HLS_DEBUG
+      ,
+      unsigned long          my_val,
+      global unsigned long  *my_ret,
+      global unsigned long  *my_ret_2,
+      global unsigned long  *my_ret_3,
+      global unsigned long  *my_ret_4,
+      global float          *my_flt_bias,
+      global float          *my_flt_krnl,
+      global float          *my_flt_din,
+      global float          *my_flt_dout,
+      global read_block_t   *dbg_loop_ptr_data_in,
+      global read_block_t   *dbg_loop_ptr_data_input_buffer,
+      global read_block_t   *dbg_loop_ptr_data_dc_pad_out,
+      global struct frame_t *dbg_loop_ptr_data_dc_cvt_out,
+      global write_block_t  *dbg_loop_ptr_data_dc_mul_out,
+      global write_block_t  *dbg_loop_ptr_data_directconv_out
+      #endif
+      );
+
+
 

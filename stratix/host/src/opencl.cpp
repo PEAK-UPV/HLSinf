@@ -147,7 +147,7 @@ int fn_init_fpga() {
 
 
   printf("Create command queue...\n");
-  OCL_CHECK(err, q = cl::CommandQueue(context, device, CL_QUEUE_PROFILING_ENABLE | CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE, &err));
+  OCL_CHECK(err, q = cl::CommandQueue(context, device, CL_QUEUE_PROFILING_ENABLE/* | CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE*/, &err));
 
   printf("Reading kernel binary file\n");
   auto fileBuf = read_binary_file(binaryFile);

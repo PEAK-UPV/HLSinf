@@ -70,7 +70,6 @@ void print_kernel() {
 
 
 void print_input() {
-
   int Hmax = H;
   int Wmax = W;
   if (H > 5) Hmax = 5;
@@ -94,34 +93,52 @@ void print_input() {
 
 
 void print_output() {
-  if ((enable_maxpooling) || (enable_avgpooling)) {
+  float epsilon = EPSILON_VALUE;
 
-	printf("Output:\n");
-	for (int o=0; o<O_output; o++) {
-		printf("channel %d:\n", o);
-		for (int h=0; h<H/2; h++) {
-			for (int w=0; w<W/2; w++) {
-				int addr_o = output_data_address_div(o, h, w);
-				printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_pool_cpu[addr_o]));
-			}
-			printf("\n");
-		}
-	}
+  if ((enable_maxpooling) || (enable_avgpooling)) {
+    printf("Output:\n");
+    for (int o=0; o<O_output; o++) {
+      printf("channel %d:\n", o);
+      for (int h=0; h<H/2; h++) {
+        for (int w=0; w<W/2; w++) {
+          int addr_o = output_data_address_div(o, h, w);
+          data_type diff = float(out[addr_o]) - float(out_pool_cpu[addr_o]);
+          if (float(diff) > float(epsilon)) {
+            printf( KRED );
+          }
+          printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_pool_cpu[addr_o]));
+          printf( KNRM );
+        }
+        printf("\n");
+      }
+    }
 
   } else {
-
-	printf("Output:\n");
-	for (int o=0; o<O_output; o++) {
-		printf("channel %d:\n", o);
-		for (int h=0; h<H; h++) {
-			for (int w=0; w<W; w++) {
-				int addr_o = output_data_address(o, h, w);
-				if (enable_relu) printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_relu_cpu[addr_o]));
-				else printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_conv_cpu[addr_o]));
-			}
-			printf("\n");
-		}
-	}
+    printf("Output:\n");
+    for (int o=0; o<O_output; o++) {
+      printf("channel %d:\n", o);
+      for (int h=0; h<H; h++) {
+        for (int w=0; w<W; w++) {
+          int addr_o = output_data_address(o, h, w);
+          if (enable_relu) {
+            data_type diff = data_type(fabs(float(out[addr_o]) - float(out_relu_cpu[addr_o])));
+            if (float(diff) > float(epsilon)) {
+              printf( KRED );
+            }
+            printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_relu_cpu[addr_o]));
+            printf( KNRM );
+          } else { 
+            data_type diff = data_type(fabs(float(out[addr_o]) - float(out_conv_cpu[addr_o])));
+            if  (float(diff) > float(epsilon)) {
+              printf( KRED );
+            }
+            printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_conv_cpu[addr_o]));
+            printf( KNRM );
+          }
+        }
+        printf("\n");
+      }
+    }
 
   }
 

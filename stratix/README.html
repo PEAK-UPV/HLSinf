@@ -219,12 +219,14 @@ aoc <span class="highlight nowrap">-march=emulator</span> -v device/src/k_conv2D
 
 <section>
 <a id="Running_the_Host_Program"><h2>Running the Host Program</h2></a>
+<p>Current BSP only supports emulation mode, thus kernel files must be compiled for emulation</p>
 <p>Before running the host program, you should have compiled the OpenCL kernel and the host program. Refer to the above sections if you have not completed those steps.</p>
 <p>To run the host program on hardware, execute:</p>
 <div class="command">
 cd bin<br/>
 ./host input.data k_conv2D.aocx<br/>
 </div>
+<!--
 <section>
 <h3>Running with the Emulator</h3>
 <p>Prior to running the emulation flow, ensure that you have compiled the kernel for emulation.
@@ -239,7 +241,9 @@ Refer to the above sections if you have not done so. Also, please set up your en
 simulation. Please see the <a href="http://www.altera.com/literature/hb/opencl-sdk/aocl_programming_guide.pdf">Intel&reg; FPGA SDK for OpenCL&trade; Programming Guide</a> for more information.</p>
 <p>For this example design, the suggested simulation command is:</p>
 <div class="command">CL_CONTEXT_MPSIM_DEVICE_INTELFPGA=1 bin/host</div>
+-->
 <section>
+<!--
 <h3>Host Parameters</h3>
 <p>The general command-line for the host program is:</p>
 <div class="command">bin/host <span class="nowrap">[-<span class="highlight">emulator</span>]</span><span class="nowrap">[-<span class="highlight">n</span>=num_elements]</span></div>
@@ -268,13 +272,48 @@ simulation. Please see the <a href="http://www.altera.com/literature/hb/opencl-s
 </tr>
 </tbody>
 </table>
-</section>
+-->
+<h3>Host Parameters</h3>
+<p>The host program requires two files:</p>
+<ol>
+  <li>An input file containg configration for convolutional kernel test.</li>
+  <li>An OpenCL binary kernel file for stratix board (.aocx).</li>
+</ol>
 
+For this design, both files should be placed in the
+<span class="mono">bin</span> directory.</p>
+<p>The general command-line for the host program is:</p>
+<div class="command">bin/host <span class="nowrap">&lt;<span class="highlight">input_file</span>&gt;</span><span class="nowrap"> &lt;<span class="highlight">kernel_file.aocx</span>&gt;</span></div>
+<p>where the parameters are:</p>
+
+<table class="parameters host-params">
+<thead>
+<tr>
+  <th class="name">Parameter</th>
+  <th class="type">Type</th>
+  <th class="desc">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td class="name"><span class="highlight">input_file</span></td>
+  <td class="type">mandatory</td>
+  <td class="desc">convolutional kernel configuration parameters.</td>
+</tr>
+<tr>
+  <td class="name"><span class="highlight">kernel_file</span></td>
+  <td class="type">mandatory</td>
+  <td class="desc">OpenCL kernel binary file</td>
+</tr>
+</tbody>
+</table>
+
+</section>
+<!--
 <section>
 <h3>OpenCL Binary Selection</h3>
 <p>The host program requires a OpenCL binary (AOCX) file to run. For this example design, OpenCL binary files should be placed in the
 <span class="mono">bin</span> directory.</p>
-
 <p>By default, the host program will look for a binary file in the following order (earlier pattern matches
 take priority):</p>
 <ol>
@@ -284,6 +323,7 @@ take priority):</p>
   <span class="mono">-board</span> argument to <span class="mono">aoc</span>).</li>
 </ol>
 </section>
+-->
 
 </section>
 

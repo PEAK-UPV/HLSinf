@@ -2,6 +2,28 @@
 #define _LIB_CONV2D_COMMONS_H_
 
 
+//#define HLS_DEBUG
+
+#define MAX_O_ITERS 4
+
+
+//#define DEBUG_READ_BIAS
+//#define DEBUG_READ_KERNEL
+//#define DEBUG_READ_DATA
+//#define DEBUG_SERIALIZE
+//#define DEBUG_JOIN
+//#define DEBUG_INPUT_BUFFER
+//#define DEBUG_PADDING
+//#define DEBUG_CVT
+//#define DEBUG_MUL
+//#define DEBUG_ADD
+//#define DEBUG_SPLIT
+//#define DEBUG_BLOCK
+//#define DEBUG_WRITE_DATA
+//#define DEBUG_RELU
+//#define DEBUG_POOL
+//#define DEBUG_CPU
+
 // debo llevarlo a un include compartido entre el k_conv2D.cl y el lib_conv2D.cpp
 #define AP_INT_MAX_W 4096 // Must be defined before includes
 #define CONF_ALVEO_U200_4x4_DIRECT_FP32    
@@ -12,7 +34,8 @@
 #define MAX_CONVS        8  // Maximum number of convolutional layers
 #define MAX_KERNELS      4  // Maximum number of kernels implemented
 #define MAX_WORK_ITEMS 512  // Maximum number of work items to process
-#define NUM_KERNELS      2   //JM10
+//#define NUM_KERNELS      2   //JM10
+#define NUM_KERNELS      1   //JM10
 
 
 
@@ -257,6 +280,7 @@
 // -----------------------------------------------------------------------------------------------------------
 // Defines for debug
 // -----------------------------------------------------------------------------------------------------------
+
 #ifdef DEBUG_ALL
 #define DEBUG_READ_BIAS
 #define DEBUG_READ_KERNEL
@@ -280,13 +304,13 @@
 // Data type for input data to the conv module
 struct pixel_in_t {
 	data_type pixel[CPI];
-};
+}__attribute__((packed));
 
 // -----------------------------------------------------------------------------------------------------------
 // Data type for output data from the conv module
 struct pixel_out_t {
   data_type pixel[CPO];
-};
+}__attribute__((packed));
 // -----------------------------------------------------------------------------------------------------------
 // Data type for output data from the conv_winograd module
 struct pixel_in_t2 {           // pixel in
@@ -342,7 +366,7 @@ struct kernel_pw_t {
 #define read_block_t ac_int<512>
 #endif
 #ifdef GIHWCPI_DATA_FORMAT
-#define read_block_t pixel_in_t
+#define read_block_t struct pixel_in_t
 #endif
 
 // -----------------------------------------------------------------------------------------------------------
@@ -351,8 +375,10 @@ struct kernel_pw_t {
 #define write_block_t ac_int<512>
 #endif
 #ifdef GIHWCPI_DATA_FORMAT
-#define write_block_t pixel_out_t
+#define write_block_t struct pixel_out_t
 #endif
 
 
 #endif
+
+

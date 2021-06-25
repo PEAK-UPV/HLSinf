@@ -83,6 +83,8 @@ data_type *out_pool_cpu;		  // Output data fuffer for pool for cpu (format O x W
 FILE *fp;
 
 #ifdef OPENCL_TEST
+int use_emulator = 1;
+
 // OpenCL variables
 cl::Context context;                          // Context
 cl::CommandQueue q;                           // Command queue
@@ -243,8 +245,10 @@ int main(int argc, char **argv) {
     fn_init_fpga();
     #endif
 
+    // check input data file is accessible
     if (open_test_file() == 1) return 1;
 
+    
     while (!read_test_file(&enable, &cpu)) {
 
 	  compute(&enable, &cpu, &retval);

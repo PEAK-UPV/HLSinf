@@ -98,7 +98,11 @@ void cpu_conv2D() {
 
               // operation
               data_type din = padding? data_type(0) : data_in[addr_p];
-              if (!padding) out_conv_cpu[addr_o] += din * kernel[addr_k];
+
+
+              if (!padding) {
+                out_conv_cpu[addr_o] += din * kernel[addr_k];
+              }
             }
           }
         }
@@ -160,6 +164,26 @@ void cpu_conv2D() {
       }
     }
   }
+
+
+
+// let's store the generated values after direct convolution to compare with output of direct convolution values in kernel 
+  #ifdef HLS_DEBUG
+  for (int cout=0; cout<O_output; cout++) {
+    for (int h=0; h<H; h++) {
+      for (int w=0; w<W; w++) {
+        // data_out pixel position
+        int addr_o = output_data_address(cout, h, w);
+        // bias operation
+        dbg_cpu_data_directconv_sum +=out_conv_cpu[addr_o];
+        dbg_cpu_data_directconv_out[addr_o] = out_conv_cpu[addr_o];
+        if (O_output < O_useful)printf("dbg_cpu_data_directconv_out[%2d] = %f\n", addr_o, dbg_cpu_data_directconv_out[addr_o]);
+      }
+    }
+  }
+#endif
+
+
 
   // apply shift
   #ifdef API8_DATA_TYPE
@@ -253,3 +277,5 @@ void cpu_conv2D() {
   }
 
 }
+
+

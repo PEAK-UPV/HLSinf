@@ -101,6 +101,9 @@ cl::Buffer *buffer_k[MAX_CONVS];              // Conv kernel buffers
 cl::Buffer *buffer_bias[MAX_CONVS];           // Conv bias buffers
 cl::Buffer *buffer_k_dw[MAX_CONVS];           // Conv kernel buffers (deepwise)
 cl::Buffer *buffer_k_pw[MAX_CONVS];           // Conv kernel buffers (pointwise)
+
+
+
 // DDR assignment
 /*
 cl_mem_ext_ptr_t data_in_ddr;                 // input data buffer
@@ -188,10 +191,13 @@ void compute(int *enable, int *cpu, int *retval) {
       allocate_buffers();
 
       printf("initialize data\n");
+      // generates input data in host depending on configuration "macros" and parameters at "input_data" file
       init_data();
+      // at this point, generated data is stored in "data_in"
 
 
       #ifdef OPENCL_TEST
+      // set events to move values in "data_in" to fpga memory
       copy_to_fpga();
       #endif
 
@@ -207,7 +213,7 @@ void compute(int *enable, int *cpu, int *retval) {
       gettimeofday(&prof_t1, NULL);
 
       
-         run_kernel();
+      run_kernel();
        
 
       // timing
@@ -246,6 +252,14 @@ void compute(int *enable, int *cpu, int *retval) {
         printf("\n");
       }
 
+
+#ifdef HLS_DEBUG
+      printf("\n");
+      hls_debug();
+      printf("\n\n");
+#endif
+
+
       #ifdef DEBUG_CPU
       print_output();
       #endif
@@ -283,6 +297,17 @@ int main(int argc, char **argv) {
 
     printf("File-based test...\n");
     deterministic_input_values = 0;
+
+
+    #ifdef HLS_DEBUG
+    printf("\n\n");
+    printf(KRED "HLS DEBUG ENABLED\n" KNRM);
+    printf("  forcing data_in deterministic values as per co-simulation test\n");
+    printf("\n\n");
+    deterministic_input_values = 1;
+    #endif
+
+
     parse_arguments(argc, argv);
 
     #ifdef OPENCL_TEST
@@ -302,31 +327,44 @@ int main(int argc, char **argv) {
 
     printf("Process test intput data file\n");
     int file_line = 0;
-    //while (!read_test_file(&enable, &cpu)) {
-    while (!read_test_file(&enable, &cpu) && (file_line < 1)) {
+    while (!read_test_file(&enable, &cpu)) {
+    //while (!read_test_file(&enable, &cpu) && (file_line < 1)) {
       printf("Process test intput data file line #%2d\n", file_line);
-      file_line++;
 
       // Launh kernel wiht configuration read from file (one line contains the configuration of a "computation")
       compute(&enable, &cpu, &retval);
-      if (enable) global_retval = global_retval || retval;
+      
+      printf("Test check results returned\n");
+      if(retval == 0){
+        printf(KGRN "  OK: RESULTS match for input file line #%d\n" KNRM, file_line + 1);
+      } else {
+        printf(KRED "  ERROR: RESULTS mismatch, retval=%d  for input file line #%d \n" KNRM, retval, file_line + 1);
+      }
 
+      if (enable) {
+        global_retval = global_retval || retval;
+      }
+      
+      file_line++;
     }
 
     close_test_file();
   }
 
+  printf("\n\n");
+  printf(KCYN "End of test\n" KNRM);
  if(global_retval == 0){
-   printf("    *** *** *** *** \n");
-   printf("    Results are good \n");
-   printf("    *** *** *** *** \n");
+   printf(" \n");
+   printf(KGRN "  Results are good \n" KNRM);
  } else {
-   printf("    *** *** *** *** \n");
-   printf("    Mismatch: retval=%d \n", retval);
-   printf("    *** *** *** *** \n");
+   printf("\n");
+   printf(KRED "  ERROR: Results mismatch, retval=%d \n" KNRM, retval);
  }
+   printf(" \n");
 
  // Return 0 if outputs are correct
  return global_retval;
 }
+
+
 

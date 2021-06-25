@@ -1,5 +1,11 @@
 #include "conv2D.h"
 
+
+
+#ifdef HLS_DEBUG
+#include "hls_debug.h"
+#endif
+
 #include <cstdio>      /* printf, scanf, NULL */
 #include <cstdlib>     /* malloc, free, rand */
 
@@ -41,49 +47,40 @@
 
 
 
-using std::vector;
-
-// constants
-#define MAX_CONVS        8  // Maximum number of convolutional layers
-#define MAX_KERNELS      4  // Maximum number of kernels implemented
-#define MAX_WORK_ITEMS 512  // Maximum number of work items to process
-#define NUM_KERNELS      2   //JM10
-//#define NUM_KERNELS      1
-
 // Global variables
-extern int CONVS;                        // Number of convolutional layers
-extern int KERNELS;                      // Number of FPGA kernels to use
-extern int F;                            // Number of frames of the data
-extern int W;                            // Width of the data
-extern int H;                            // Height of the data
-extern int I;                            // Number of input channels
-extern int O;                            // Number of output channels
-extern int HO;						     // Output width
-extern int WO;							 // Output height
-extern int I_kernel;					 // Number of input channels for the kernel (filter) - padding
-extern int O_kernel;  					 // Number of output channels for the kernel (filter) - padding
-extern int I_input;                      // Number of input channels for the input data - padding (needed in GIHWCPI data format)
-extern int O_output;                     // Number of output channels for the output data - padding (needed in GIHWCPI data format)
-extern int rows;						 // number of rows to compute by the kernel
-extern int enable_upper_padding;		 // enables the upper row of padding
-extern int enable_lower_padding;		 // enables the lower row of padding
+extern int CONVS;       // Number of convolutional layers
+extern int KERNELS;     // Number of FPGA kernels to use
+extern int F;           // Number of frames of the data
+extern int W;           // Width of the data
+extern int H;           // Height of the data
+extern int I;           // Number of input channels
+extern int O;           // Number of output channels
+extern int HO;          // Output width
+extern int WO;          // Output height
+extern int I_kernel;    // Number of input channels for the kernel (filter) - padding
+extern int O_kernel;    // Number of output channels for the kernel (filter) - padding
+extern int I_input;     // Number of input channels for the input data - padding (needed in GIHWCPI data format)
+extern int O_output;    // Number of output channels for the output data - padding (needed in GIHWCPI data format)
+extern int rows;        // number of rows to compute by the kernel
+extern int enable_upper_padding;   // enables the upper row of padding
+extern int enable_lower_padding;   // enables the lower row of padding
 extern int enable_relu;				     // enables applying the relu activation functions
-extern int enable_shift;				 // enables applying shift to the output
-extern int dir_shift;			         // shift direction (left or right)
-extern int pos_shift;					 // positions to shift
-extern int enable_clipping;			     // enables applying clipping to the output
+extern int enable_shift;           // enables applying shift to the output
+extern int dir_shift;              // shift direction (left or right)
+extern int pos_shift;              // positions to shift
+extern int enable_clipping;			   // enables applying clipping to the output
 extern int enable_maxpooling;			 // enables the maxpooling layer
 extern int enable_avgpooling;			 // enables the avgpooling layer
-extern int min_clip;				 	 // minimum clip value
-extern int max_clip;				 	 // maximum clip value
-extern int i_iter;						 // number of input iterations
-extern int o_iter;						 // number of output iterations
-extern int global_offset;				 // global offset for the output data for the kernel
+extern int min_clip;				 // minimum clip value
+extern int max_clip;				 // maximum clip value
+extern int i_iter;					 // number of input iterations
+extern int o_iter;					 // number of output iterations
+extern int global_offset;    // global offset for the output data for the kernel
 extern int GI;							 // number of groups for input channels
 extern int GO;							 // number of groups for output channels
-extern data_type *data_in;               // Input data buffer (format I x W x H)
-extern data_type *out;                   // Output data buffer (format O x W x H)
-extern data_type *kernel;                // Conv kernel buffers (format GO x GI x CPO x CPI x KW x KH) - for DirectConv and WinogradConv
+extern data_type *data_in;   // Input data buffer (format I x W x H)
+extern data_type *out;       // Output data buffer (format O x W x H)
+extern data_type *kernel;    // Conv kernel buffers (format GO x GI x CPO x CPI x KW x KH) - for DirectConv and WinogradConv
 extern data_type *dw_kernel;             // DW kernel (format I x KH x KW) - for DWS
 extern data_type *pw_kernel;             // PW kernel (format GO x GI x CPO x CPI) - for DWS
 extern data_type *bias;                  // Conv bias buffers (format O)
@@ -112,6 +109,8 @@ extern cl::Buffer *buffer_k[MAX_CONVS];              // Conv kernel buffers
 extern cl::Buffer *buffer_k_dw[MAX_CONVS];           // Conv kernel buffers (deepwise)
 extern cl::Buffer *buffer_k_pw[MAX_CONVS];           // Conv kernel buffers (pointwise)
 extern cl::Buffer *buffer_bias[MAX_CONVS];           // Conv bias buffers
+
+
 // DDR assignment
 /*
 extern cl_mem_ext_ptr_t data_in_ddr;                 // input data buffer
@@ -127,6 +126,10 @@ extern cl_mem_ext_ptr_t bias_ddr[MAX_CONVS];         // Conv bias buffers
 //extern cl_mem_ext_host_ptr kernel_pw_ddr[MAX_CONVS];    // DeepWise conv kernel buffers
 //extern cl_mem_ext_host_ptr kernel_dw_ddr[MAX_CONVS];    // PointWise conv kernel buffers
 //extern cl_mem_ext_host_ptr bias_ddr[MAX_CONVS];         // Conv bias buffers
+
+
+
+
 #endif
 
 // function prototypes
@@ -164,3 +167,5 @@ void copy_from_fpga();
 void set_callback(cl::Event event, const char *queue_name);
 void event_cb(cl_event event1, cl_int cmd_status, void *data);
 #endif
+
+
