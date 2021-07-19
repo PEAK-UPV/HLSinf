@@ -38,6 +38,12 @@
 // Global variables
 int CONVS;                       // Number of convolutional layers
 int KERNELS;                     // Number of FPGA kernels to use
+int PT = PT_SIM;                 // Top padding
+int PB = PB_SIM;                 // Bottom padding
+int PL = PL_SIM;                 // Left padding
+int PR = PR_SIM;                 // Right padding
+int SH = SH_SIM;                 // Vertical stride
+int SW = SW_SIM;                 // Horizontal stride
 int F;                           // Number of frames of the data
 int W = W_SIM;                   // Width of the data
 int H = H_SIM;                   // Height of the data
@@ -50,12 +56,11 @@ int O_kernel = O_SIM;			 // Number of output channels for the kernel (filter) - 
 int I_input = I_SIM;             // Number of input channels for the input data - padding (needed in GIHWCPI data format)
 int O_output = O_SIM;            // Number of output channels for the output data - padding (needed in GIHWCPI data format)
 int rows = H_SIM;				 // number of rows to compute by the kernel
-int enable_upper_padding = 1;	 // enables the upper row of padding
-int enable_lower_padding = 1;	 // enables the lower row of padding
-int enable_relu = 0;			 // enables applying the relu activation functions
-int enable_stm = 1;			 	 // enables applying the STM functions
+int enable_relu = 1;			 // enables applying the relu activation functions
+data_type relu_factor = 0;
 int enable_shift = 0;			 // enables applying shift to the output
-int enable_add = 1; 			 // enables add module
+int enable_stm = 1;			 	 // enables applying the STM functions
+int enable_add = 0; 			 // enables add module
 int dir_shift = 0;     			 // shift direction (left or right)
 int pos_shift = 0;				 // positions to shift
 int enable_clipping = 0;		 // enables applying clipping to the output
@@ -148,6 +153,11 @@ void compute(int *enable, int *cpu, int *retval) {
 	   	  print_message("Pooling and Adding cannot be active at the same time (Adding disabled)");
 	   	  enable_add = 0;
 	   }
+	   
+	   if ((enable_maxpooling || enable_avgpooling) && ((HO % 2) || (WO % 2))) {
+		 print_message("Pooling not allowed with outut convolution with no even rows and columns (skipped)");
+		 *enable = 0;
+	   }
 
        #ifndef API8_DATA_TYPE
 	   if (enable_clipping || enable_shift) {
@@ -185,7 +195,7 @@ void compute(int *enable, int *cpu, int *retval) {
 
 	     #ifdef DEBUG_CPU
 	     print_input();
-	     print_input_add();
+		 if (enable_add) print_input_add();
 	     print_bias();
 	     print_kernel();
 	     #endif

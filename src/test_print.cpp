@@ -73,8 +73,8 @@ void print_input() {
 
   int Hmax = H;
   int Wmax = W;
-  if (H > 5) Hmax = 5;
-  if (W > 5) Wmax = 5;
+  if (H > 8) Hmax = 8;
+  if (W > 8) Wmax = 8;
 
   printf("Input:\n");
   for (int i=0; i<I_input; i++) {
@@ -122,8 +122,8 @@ void print_output() {
 	printf("Output:\n");
 	for (int o=0; o<O_output; o++) {
 		printf("channel %d:\n", o);
-		for (int h=0; h<H/2; h++) {
-			for (int w=0; w<W/2; w++) {
+		for (int h=0; h<HO/2; h++) {
+			for (int w=0; w<WO/2; w++) {
 				int addr_o = output_data_address_div(o, h, w);
 				printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_pool_cpu[addr_o]));
 			}
@@ -136,8 +136,8 @@ void print_output() {
 	printf("Output:\n");
 	for (int o=0; o<O_output; o++) {
 		printf("channel %d:\n", o);
-		for (int h=0; h<H; h++) {
-			for (int w=0; w<W; w++) {
+		for (int h=0; h<HO; h++) {
+			for (int w=0; w<WO; w++) {
 				int addr_o = output_data_address(o, h, w);
 				if (enable_relu) printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_relu_cpu[addr_o]));
 				else printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_conv_cpu[addr_o]));
@@ -153,7 +153,7 @@ void print_output() {
 void print_configuration() {
   printf("\n");
   printf("====================================================================================================================\n");
-  printf("| Input: %3d x %3d x %3d x %3d      |  Kernel: %3d x %3d   |    Padding: %3d x %3d     |     Stride: %3d x %3d     |\n", H, W, I, O, KH, KW, 1, 1, 1, 1);
+  printf("| In: %3d x %3d x %3d | Out: %3d x %3d x %3d | Kernel: %3d x %3d  | Pad (TBLR): %1d x %1d x %1d x %1d | Stride: %3d x %3d  |\n", H, W, I, HO, WO, O, KH, KW, PT, PB, PL, PR, SH, SW);
   printf("|------------------------------------------------------------------------------------------------------------------|\n");
   printf("| ReLU: %s | STM: %s | MaxPooling: %s | AvgPooling: %s | Add: %s | Clipping: %s (%2d:%2d) | Shift: %s (%s,%2d) |\n", enable_relu?"Yes":"No ", enable_stm?"Yes":"No ",
   		    enable_maxpooling?"Yes":"No ", enable_avgpooling?"Yes":"No ", enable_add?"Yes":"No ", enable_clipping?"Yes":"No ", min_clip, max_clip, enable_shift?"Yes":"No ", dir_shift==LEFT_DIRECTION?"LEFT ":"RIGHT", pos_shift);

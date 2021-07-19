@@ -22,11 +22,17 @@ using std::vector;
 #define MAX_CONVS        8  // Maximum number of convolutional layers
 #define MAX_KERNELS      4  // Maximum number of kernels implemented
 #define MAX_WORK_ITEMS 512  // Maximum number of work items to process
-#define NUM_KERNELS      2
+#define NUM_KERNELS      1
 
 // Global variables
 extern int CONVS;                        // Number of convolutional layers
 extern int KERNELS;                      // Number of FPGA kernels to use
+extern int PT;                           // Top padding
+extern int PB;                           // Bottom padding
+extern int PL;                           // Left padding
+extern int PR;                           // Right padding
+extern int SH;                           // Vertical stride
+extern int SW;                           // Horizontal stride
 extern int F;                            // Number of frames of the data
 extern int W;                            // Width of the data
 extern int H;                            // Height of the data
@@ -39,10 +45,9 @@ extern int O_kernel;  					 // Number of output channels for the kernel (filter)
 extern int I_input;                      // Number of input channels for the input data - padding (needed in GIHWCPI data format)
 extern int O_output;                     // Number of output channels for the output data - padding (needed in GIHWCPI data format)
 extern int rows;						 // number of rows to compute by the kernel
-extern int enable_upper_padding;		 // enables the upper row of padding
-extern int enable_lower_padding;		 // enables the lower row of padding
 extern int enable_relu;				     // enables applying the relu activation functions
 extern int enable_stm;  			 	 // enables applying the STM functions
+extern data_type relu_factor;
 extern int enable_shift;				 // enables applying shift to the output
 extern int enable_add; 				     // enables add module
 extern int dir_shift;			         // shift direction (left or right)

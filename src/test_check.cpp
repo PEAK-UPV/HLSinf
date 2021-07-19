@@ -13,8 +13,8 @@ int check_result(data_type *max_difference, int *num_elements_differ) {
   if ((enable_maxpooling) || (enable_avgpooling)) {
 
     for (int cout=0; cout < O_output; cout++) {
-      for (int h=0; h<H/2; h++) {
-        for (int w=0; w<W/2; w++) {
+      for (int h=0; h<HO/2; h++) {
+        for (int w=0; w<WO/2; w++) {
           // data_out pixel position
           int addr_o = output_data_address_div(cout, h, w);
           data_type diff = data_type(fabs(float(out_pool_cpu[addr_o]) - float(out[addr_o])));
@@ -30,8 +30,8 @@ int check_result(data_type *max_difference, int *num_elements_differ) {
   } else {
 
 	for (int cout=0; cout < O_output; cout++) {
-      for (int h=0; h<H; h++) {
-        for (int w=0; w<W; w++) {
+      for (int h=0; h<HO; h++) {
+        for (int w=0; w<WO; w++) {
           // data_out pixel position
           int addr_o = output_data_address(cout, h, w);
           data_type diff;

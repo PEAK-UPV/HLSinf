@@ -14,7 +14,7 @@
 //
 
 
-void stm(int enable_stm, int H, int W, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &out) {
+void stm(int enable_stm, int num_pixels, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &out) {
 
   #ifdef DEBUG_STM
   printf("stm: start\n");
@@ -22,7 +22,7 @@ void stm(int enable_stm, int H, int W, hls::stream<pixel_out_t> &in, hls::stream
 
   pixel_out_t data_in;
   pixel_out_t data_out;
-  int data_size = W * H;
+  int data_size = num_pixels;
   DO_PRAGMA(HLS ARRAY_PARTITION variable=data_in complete dim=0)
   DO_PRAGMA(HLS ARRAY_PARTITION variable=data_out complete dim=0)
 

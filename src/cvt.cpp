@@ -2,24 +2,27 @@
 
 // ---------------------------------------------------------------------------------------------------
 // cvt: reads an input stream with an image of format (H, W, CPI) and writes an output stream
-// in a 2D format based on (KW, KH). (SW=1, SH=1) stride is assumed and (PW=1, PH=1) padding is assumed.
+// in a 2D format based on (KW, KH) and (SH, SW). (PW=1, PH=1) padding is assumed.
 // The function outputs data in the format (KH, KW, CPI).
 //
 // Arguments:
 //   H      : Height of input channel
 //   W      : Width of input channel
 //   I_ITER : Number of input iterations (I / CPI)
+//   SH     : Vertical stride
+//   SW     : Horizontal stride
 //   in     : input stream (format pixel_in_t)
 //   out    : output stream (format frame_t)
 //
-void cvt(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<frame_t> &out) {
+void cvt(int H, int W, int I_ITER, int SH, int SW, hls::stream<pixel_in_t> &in, hls::stream<frame_t> &out) {
 
   #ifdef DEBUG_CVT
   printf("cvt: start\n");
+  printf("  H: %d, W: %d, I_ITER: %d, SH: %d, SW: %d\n", H, W, I_ITER, SH, SW);
   #endif
 
-  int HH=H+2;
-  int WW=W+2;
+  int HH=H;
+  int WW=W;
   // buffers (keep three rows)
   pixel_in_t buffer0[WMAX+2];
   pixel_in_t buffer1[WMAX+2];
@@ -27,6 +30,8 @@ void cvt(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<fram
   frame_t frame;
   int pin_row;
   int pin_col;
+  int stride_row;
+  int stride_col;
   int row0_buffer_write;
   int row1_buffer_write;
   int row2_buffer_write;
@@ -50,6 +55,8 @@ void cvt(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<fram
 	  row0_buffer_write = 1;
 	  row1_buffer_write = 0;
 	  row2_buffer_write = 0;
+	  stride_row = 2;
+	  stride_col = 2;
     }
 
     int pin_col0 = (pin_col==0);
@@ -59,6 +66,9 @@ void cvt(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<fram
     pixel_in_t pixel;
     DO_PRAGMA(HLS ARRAY_PARTITION variable=pixel complete dim=0)
     pixel = in.read();
+#ifdef DEBUG_CVT
+    printf("CVT: read data (i %d pin_row %d pin_col %d stride_row %d stride_col %d)\n", i_iter, pin_row, pin_col, stride_row, stride_col);
+#endif
 
     // row buffer write (in which buffer row we write the pixel)
     // first row buffer
@@ -74,12 +84,14 @@ void cvt(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<fram
     pixel_in_t p0, p1, p2, p3, p4, p5, p6, p7, p8;
 
     int shift_frame = (pin_row>1) & (pin_col > 2);
-    int send_frame = (pin_row>1) & (pin_col > 1);
+    int send_frame = (pin_row>1) & (pin_col > 1) & (stride_row == SH) & (stride_col == SW);
+    //printf("pin_row %d pin_col %d stride_row %d stride_col %d send_frame %d\n", pin_row, pin_col, stride_row, stride_col, send_frame);
     pixel_in_t pixel_b0, pixel_b1, pixel_b2;
     pixel_b0 = buffer0[pin_col];
     pixel_b1 = buffer1[pin_col];
     pixel_b2 = buffer2[pin_col];
     pin_col++;
+    if (stride_col == 1) stride_col = SW; else stride_col = stride_col - 1;
     int pin_col_curr = pin_col;
     // p0, p1, p2
     if (shift_frame) {p0 = p1;} else if (pin_col0) {if (row0) p0 = pixel_b0; else if (row1) p0 = pixel_b1; else p0 = pixel_b2;}
@@ -112,7 +124,9 @@ void cvt(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<fram
     }
     if (pin_col_curr == WW) {
    	  pin_col = 0;
-      pin_row++;
+          pin_row++;
+	  stride_col = 2;
+	  if (stride_row == 1) stride_row = SH; else stride_row = stride_row - 1;
       // row buffer write rotation
       if (row0_buffer_write) {
       	row0_buffer_write = 0;

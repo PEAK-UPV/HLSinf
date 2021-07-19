@@ -20,8 +20,8 @@
 //
 //
 
-void relu(int enable_relu, int enable_clipping, int enable_shift, int min_clip, int max_clip, int direction_shift, int pos_shift,
-		  int H, int W, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &out) {
+void relu(int enable_relu, int enable_clipping, int enable_shift, data_type relu_factor, int min_clip, int max_clip, int direction_shift, int pos_shift,
+		  int num_pixels, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &out) {
 
   #ifdef DEBUG_RELU
   printf("relu: start\n");
@@ -29,7 +29,7 @@ void relu(int enable_relu, int enable_clipping, int enable_shift, int min_clip, 
 
   pixel_out_t data_in;
   pixel_out_t data_out;
-  int data_size = W * H;
+  int data_size = num_pixels;
   DO_PRAGMA(HLS ARRAY_PARTITION variable=data_in complete dim=0)
   DO_PRAGMA(HLS ARRAY_PARTITION variable=data_out complete dim=0)
 
@@ -78,7 +78,7 @@ void relu(int enable_relu, int enable_clipping, int enable_shift, int min_clip, 
       // relu
 #ifdef USE_RELU
       v_relu = v_clipping;
-      if(enable_relu && (v_relu < 0)) v_relu = 0;
+      if(enable_relu && (v_relu < 0)) v_relu = relu_factor * v_clipping;
 #else
       v_relu = v_clipping;
 #endif

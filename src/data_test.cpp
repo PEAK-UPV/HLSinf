@@ -26,7 +26,7 @@ void init_data() {
       for (int w=0; w<W; w++) {
     	addr = input_data_address(i, h, w);
     	if (i<I) {
-          data_in[addr] = deterministic_input_values?i:dist(gen);
+          data_in[addr] = deterministic_input_values?i+1:dist(gen);
     	} else {
     	  data_in[addr] = 0;
     	}

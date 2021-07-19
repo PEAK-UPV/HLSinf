@@ -11,7 +11,7 @@
 //   in_stm: input stream data from stm module
 //   out   : output stream
 //
-void add_data(int enable_add, int H, int W, hls::stream<pixel_out_t> &in_r, hls::stream<pixel_out_t> &in_stm, hls::stream<pixel_out_t> &out) {
+void add_data(int enable_add, int num_pixels, hls::stream<pixel_out_t> &in_r, hls::stream<pixel_out_t> &in_stm, hls::stream<pixel_out_t> &out) {
 
   #ifdef DEBUG_ADD_DATA
   printf("add_data: start\n");
@@ -20,7 +20,7 @@ void add_data(int enable_add, int H, int W, hls::stream<pixel_out_t> &in_r, hls:
   pixel_out_t data_in_r;
   pixel_out_t data_in_stm;
   pixel_out_t data_out;
-  int data_size = W * H;
+  int data_size = num_pixels;
   DO_PRAGMA(HLS ARRAY_PARTITION variable=data_in_r complete dim=0)
   DO_PRAGMA(HLS ARRAY_PARTITION variable=data_in_stm complete dim=0)
   DO_PRAGMA(HLS ARRAY_PARTITION variable=data_out complete dim=0)

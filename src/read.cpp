@@ -200,8 +200,8 @@ void dws_read_pw_kernel(int I_ITER, int O, int o_iter, read_kernel_pw_t *k_pw_pt
 
         int first = cpi * DATA_TYPE_WIDTH;
         int last = first + DATA_TYPE_WIDTH - 1;
-        data_type data = (data_type)read_kernel_pw.range(last, first);
-        kernel_pw.pixel[cpo][cpi] = data;
+	ap_int<DATA_TYPE_WIDTH> aux = read_kernel_pw.range(last, first);
+        *(ap_uint<DATA_TYPE_WIDTH>*)(&kernel_pw.pixel[cpo][cpi]) = (data_type)aux;
       }
     }
     addr += CPO;

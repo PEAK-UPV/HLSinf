@@ -16,7 +16,7 @@
 // -----------------------------------------------------------------------------------------------------------
 
 // Configurations for Alveo U200 boards
-//#define CONF_ALVEO_U200_4x4_DIRECT_STM_FP32                 // Direct convolution 4x4 kernel with FP32
+#define CONF_ALVEO_U200_4x4_DIRECT_STM_FP32                 // Direct convolution 4x4 kernel with FP32
 //#define CONF_ALVEO_U200_4x4_DIRECT_FP32                 // Direct convolution 4x4 kernel with FP32
 //#define CONF_ALVEO_U200_8x8_DIRECT_API8            	// Direct convolution 8x8 kernel with API8
 //#define CONF_ALVEO_U200_16x16_WINOGRAD_API8        	// Winograd convolution 16x16 kernel with API8
@@ -424,9 +424,15 @@
 // -----------------------------------------------------------------------------------------------------------
 #define W_SIM         256 //WMAX
 #define H_SIM         256 //HMAX
-#define I_SIM         64  //I_REFERENCE
-#define O_SIM         64  //O_REFERENCE
-#define INSTANCES_SIM 1   //2
+#define I_SIM         CPI //I_REFERENCE
+#define O_SIM         CPO //O_REFERENCE
+#define PT_SIM        1   
+#define PB_SIM        1
+#define PL_SIM        1
+#define PR_SIM        1
+#define SH_SIM        1   // SH
+#define SW_SIM        1   // SW
+#define INSTANCES_SIM 2   //2
 
 // -----------------------------------------------------------------------------------------------------------
 // Direction defines (for shift operations)
@@ -476,8 +482,8 @@
 // -----------------------------------------------------------------------------------------------------------
 // depth of pointers for co-simulation support
 // -----------------------------------------------------------------------------------------------------------
-#define DATA_IN_PORT_DEPTH   W_SIM * H_SIM * I_SIM * (DATA_TYPE_WIDTH / 8) / 64
-#define DATA_OUT_PORT_DEPTH  W_SIM * H_SIM * O_SIM * (DATA_TYPE_WIDTH / 8) / 64
+#define DATA_IN_PORT_DEPTH   W_SIM * H_SIM * I_SIM / CPI
+#define DATA_OUT_PORT_DEPTH  W_SIM * H_SIM * O_SIM / CPO
 #define KERNEL_PORT_DEPTH    3 * 3 * I_SIM * O_SIM
 #define DW_KERNEL_PORT_DEPTH I_SIM * 9
 #define PW_KERNEL_PORT_DEPTH O_SIM * (I_SIM / CPI)
@@ -611,17 +617,15 @@ struct kernel_pw_t {
 
 // -----------------------------------------------------------------------------------------------------------
 // function prototypes
-extern "C" void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W, int rows, int I, int O, int I_ITER, int o_iter_first, int o_iter_last, int enable_relu, int enable_stm,
+extern "C" void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W, int rows, int PT, int PB, int PL, int PR, int SH, int SW, int I, int O, int I_ITER, int o_iter_first, int o_iter_last, int enable_relu, int enable_stm, data_type relu_factor,
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
                          data_type *ptr_kernel,
 #endif
 #ifdef DWS_CONV
 						 data_type *ptr_dw_kernel, read_kernel_pw_t *ptr_pw_kernel,
 #endif
-						 pixel_out_t *ptr_bias, write_block_t *ptr_out, int global_offset, int enable_upper_padding,
-						 int enable_lower_padding, int enable_maxpooling, int enable_avgpooling,
+						 pixel_out_t *ptr_bias, write_block_t *ptr_out, int global_offset, int enable_maxpooling, int enable_avgpooling,
 						 int enable_clipping, int enable_shift, int enable_add, int min_clip, int max_clip, int dir_shift, int pos_shift);
-
 
 // read and write functions
 void read_bias(int offset_bias, pixel_out_t *b_ptr, hls::stream<pixel_out_t> &out);
@@ -664,15 +668,15 @@ ch_block_generate:
 
 // convolution modules
 #ifdef DIRECT_CONV
-void direct_conv(int H, int W, int I_ITER, int enable_upper_padding, int enable_lower_padding, hls::stream<pixel_in_t> &in, hls::stream<kernel_t> &k_in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out);
+void direct_conv(int H, int W, int PT, int PB, int PL, int PR, int SH, int SW, int num_output_conv_pixels, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<kernel_t> &k_in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out);
 #endif
 
 #ifdef WINOGRAD_CONV
-void winograd_conv(int H, int W, int I_ITER, int enable_upper_padding, int enable_lower_padding, hls::stream<pixel_in_t> &in, hls::stream<kernel_t> &k_in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out);
+void winograd_conv(int H, int W, int PT, int PB, int PL, int PR, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<kernel_t> &k_in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out);
 #endif
 
 #ifdef DWS_CONV
-void dws_conv(int H, int W, int I_ITER, int enable_upper_padding, int enable_lower_padding, hls::stream<pixel_in_t> &in, hls::stream<kernel_dw_t> &k_dw_in, hls::stream<kernel_pw_t> &k_pw_in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out);
+void dws_conv(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<kernel_dw_t> &k_dw_in, hls::stream<kernel_pw_t> &k_pw_in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out);
 void dws_read_dw_kernel(int I_ITER, int o_iter, data_type *k_dw_ptr, hls::stream<kernel_dw_t> &k_dw_out);
 void dws_read_pw_kernel(int I_ITER, int O, int o_iter, read_kernel_pw_t *k_pw_ptr, hls::stream<kernel_pw_t> &k_pw_out);
 void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<kernel_dw_t> &k_dw_in, hls::stream<kernel_pw_t> &k_pw_in, hls::stream<pixel_out_t> &out);
@@ -682,22 +686,22 @@ void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<ker
 void input_buffer(int num_pixels, int write_to_buff, int read_from_buff, hls::stream<pixel_in_t> &in, hls::stream<pixel_in_t> &out);
 
 // activation functions
-void relu(int enable_relu, int enable_clipping, int enable_shift, int min_clip, int max_clip, int direction_shift, int pos_shift,
-		  int H, int W, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &out);
-void stm(int enable_stm, int H, int W, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &out);
+void relu(int enable_relu, int enable_clipping, int enable_shift, data_type relu_factor, int min_clip, int max_clip, int direction_shift, int pos_shift,
+		  int num_pixels, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &out);
+void stm(int enable_stm, int num_pixels, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &out);
 
 // pooling function
 void pooling(int H, int W, int enable_maxpooling, int enable_avgpooling, hls::stream<pixel_out_t> &input, hls::stream<pixel_out_t> &output);
 
 // add function
-void add_data(int enable_add, int H, int W, hls::stream<pixel_out_t> &in_r, hls::stream<pixel_out_t> &in_stm, hls::stream<pixel_out_t> &out);
+void add_data(int enable_add, int num_pixels, hls::stream<pixel_out_t> &in_r, hls::stream<pixel_out_t> &in_stm, hls::stream<pixel_out_t> &out);
 // padding functions
-void padding(int H, int W, int I_ITER, int enable_upper_padding, int enable_lower_padding, hls::stream<pixel_in_t> &in, hls::stream<pixel_in_t> &out);
+void padding(int H, int W, int PT, int PB, int PL, int PR, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<pixel_in_t> &out);
 
 // other functions
-void add(int H, int W, int I_ITER, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out);
-void mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<kernel_t> &k_in, hls::stream<pixel_out_t> &out);
-void cvt(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<frame_t> &out);
+void add(int num_pixels, int I_ITER, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out);
+void mul(int num_data_frames, int I_ITER, hls::stream<frame_t> &in, hls::stream<kernel_t> &k_in, hls::stream<pixel_out_t> &out);
+void cvt(int H, int W, int SH, int SW, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<frame_t> &out);
 
 // What follows are macros used in the code
 
