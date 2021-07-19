@@ -84,6 +84,26 @@ void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int PH, int PW, in
 
   int O_ITER = o_iter_last - o_iter_first + 1;
 
+  // output convolution geometry
+  int HO_conv                  = (H + PH + PH - KH + SH) / SH; // HO = ceil(H + padding - (KH-1) / SH)
+  int WO_conv                  = (W + PW + PW - KW + SW) / SW; // WO = ceil(H + padding - (KW-1) / SW)
+  int num_output_conv_pixels   = HO_conv * WO_conv;
+
+  #ifdef USE_POOLING
+  int enable_pooling           = enable_maxpooling | enable_avgpooling;
+  int HI_pooling               = HO_conv;
+  int WI_pooling               = WO_conv;
+  int write_pixels             = enable_pooling ? (HO_conv / 2) * (WO_conv / 2) : HO_conv * WO_conv;
+  int write_rows               = enable_pooling ? HO_conv / 2 : HO_conv;
+  int write_cols               = enable_pooling ? WO_conv / 2 : WO_conv;
+  int write_channel_offset     = enable_pooling ? (HO_conv  / 2) * (WO_conv / 2) : WO_conv * HO_conv;
+  #else
+  int write_pixels             = HO_conv * WO_conv;
+  int write_rows               = HO_conv;
+  int write_cols               = WO_conv;
+  int write_channel_offset     = HO_conv * WO_conv;
+  #endif
+    
   o_iter_loop:
   for (int o_iter = 0; o_iter<O_ITER; o_iter++) {
 	DO_PRAGMA(HLS loop_tripcount min=1 max=O_REFERENCE/CPO)
@@ -170,29 +190,8 @@ void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int PH, int PW, in
     int offset_read_data_channel = global_offset - corrected_offset;
     int channel_size             = H * W;
 
-
-    int enable_pooling           = enable_maxpooling | enable_avgpooling;
-
     int read_channel_offset      = (W * H);
 
-
-    // output conv geometry
-    int HO_conv                  = (H + PH + PH - KH + SH) / SH; // HO = ceil(H + padding - (KH-1) / SH)
-    int WO_conv                  = (W + PW + PW - KW + SW) / SW; // WO = ceil(H + padding - (KW-1) / SW)
-    int num_output_conv_pixels   = HO_conv * WO_conv;
-    #ifdef USE_POOLING
-    int HI_pooling               = HO_conv;
-    int WI_pooling               = WO_conv;
-    int write_pixels             = enable_pooling ? (HO_conv / 2) * (WO_conv / 2) : HO_conv * WO_conv;
-    int write_rows               = enable_pooling ? HO_conv / 2 : HO_conv;
-    int write_cols               = enable_pooling ? WO_conv / 2 : WO_conv;
-    int write_channel_offset     = enable_pooling ? (HO_conv  / 2) * (WO_conv / 2) : WO_conv * HO_conv;
-    #else
-    int write_pixels             = HO_conv * WO_conv;
-    int write_rows               = HO_conv;
-    int write_cols               = WO_conv;
-    int write_channel_offset     = HO_conv * WO_conv;
-    #endif
 
     #ifdef IHW_DATA_FORMAT
     int o_iter_write_offset      = (global_offset + (o_channel * write_channel_offset)) / WRITE_BLOCK_SIZE;
@@ -309,13 +308,13 @@ void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int PH, int PW, in
         #ifdef USE_POOLING
         write_data_channels_gihwcpi(write_pixels, o_iter_write_offset, ptr_out, out_pooling);
         #else
-        write_data_channels_gihwcpi(write_pixels, o_iter_write_offset, ptr_out, out_relu, enable_write);
+        write_data_channels_gihwcpi(write_pixels, o_iter_write_offset, ptr_out, out_relu);
         #endif
       #else
         #ifdef USE_POOLING
-        write_data_channels_gihwcpi(write_pixels, o_iter_write_offset, ptr_out, out_pooling, enable_write);
+        write_data_channels_gihwcpi(write_pixels, o_iter_write_offset, ptr_out, out_pooling);
         #else
-        write_data_channels_gihwcpi(write_pixels, o_iter_write_offset, ptr_out, out_conv, enable_write);
+        write_data_channels_gihwcpi(write_pixels, o_iter_write_offset, ptr_out, out_conv);
         #endif
       #endif
     #endif

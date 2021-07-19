@@ -34,6 +34,7 @@
     <solutions xmlns="">
         <solution name="AlveoU200" status="active"/>
         <solution name="CONF_ALVEO_U200_4x4_DIRECT_FP32" status=""/>
+        <solution name="CONF_ALVEO_U280_4x4_DIRECT_FP32" status=""/>
     </solutions>
 </project>
 
