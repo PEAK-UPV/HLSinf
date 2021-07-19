@@ -13,7 +13,7 @@
 //
 // This module is used in the Direct Convolution method
 //
-void mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<kernel_t> &k_in, hls::stream<pixel_out_t> &out) {
+void mul(int num_data_frames, int I_ITER, hls::stream<frame_t> &in, hls::stream<kernel_t> &k_in, hls::stream<pixel_out_t> &out) {
 
   #ifdef DEBUG_MUL
   printf("mul: start\n");
@@ -32,7 +32,7 @@ void mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<kernel_
   pixel_out_t p_out;
 
   int load_kernel = 0;
-  int num_iter = I_ITER * H * W;
+  int num_iter = I_ITER * num_data_frames;
   int iter_load_kernel = 0;
 
   mul_loop_1:
@@ -100,7 +100,7 @@ void mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<kernel_
     #endif
     out << p_out;
     iter_load_kernel++;
-    if (iter_load_kernel == W*H) iter_load_kernel = 0;
+    if (iter_load_kernel == num_data_frames) iter_load_kernel = 0;
   }
 
   #ifdef DEBUG_MUL

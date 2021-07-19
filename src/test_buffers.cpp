@@ -32,24 +32,24 @@ void allocate_buffers() {
   // output buffer for fpga
   size_t size_output_in_bytes;
   if ((enable_maxpooling) || (enable_avgpooling)) {
-	size_output_in_bytes = O_output * (W/2) * (H/2) * sizeof(data_type);
+	size_output_in_bytes = O_output * (WO/2) * (HO/2) * sizeof(data_type);
 	posix_memalign((void **)&out, 4096, size_output_in_bytes);
   } else {
-	size_output_in_bytes = O_output * W * H * sizeof(data_type);
+	size_output_in_bytes = O_output * WO * HO * sizeof(data_type);
   }
   posix_memalign((void **)&out, 4096, size_output_in_bytes);
 
   // output buffer for cpu
-  posix_memalign((void **)&out_conv_cpu, 4096, O_output * W * H * sizeof(data_type));
+  posix_memalign((void **)&out_conv_cpu, 4096, O_output * WO * HO * sizeof(data_type));
 
   // output for relu function
   if (enable_relu) {
-    posix_memalign((void **)&out_relu_cpu, 4096, O_output * W * H * sizeof(data_type));
+    posix_memalign((void **)&out_relu_cpu, 4096, O_output * WO * HO * sizeof(data_type));
   }
 
   // output for pool function
   if ((enable_maxpooling) || (enable_avgpooling)) {
-	  posix_memalign((void **)&out_pool_cpu, 4096, O_output * (W/2) * (H/2) * sizeof(data_type));
+	  posix_memalign((void **)&out_pool_cpu, 4096, O_output * (WO/2) * (HO/2) * sizeof(data_type));
   }
 
 #ifdef OPENCL_TEST

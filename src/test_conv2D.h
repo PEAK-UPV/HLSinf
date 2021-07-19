@@ -26,6 +26,10 @@ using std::vector;
 // Global variables
 extern int CONVS;                        // Number of convolutional layers
 extern int KERNELS;                      // Number of FPGA kernels to use
+extern int PH;                           // Vertical padding
+extern int PW;                           // Horizontal padding
+extern int SH;                           // Vertical stride
+extern int SW;                           // Horizontal stride
 extern int F;                            // Number of frames of the data
 extern int W;                            // Width of the data
 extern int H;                            // Height of the data
@@ -38,9 +42,8 @@ extern int O_kernel;  					 // Number of output channels for the kernel (filter)
 extern int I_input;                      // Number of input channels for the input data - padding (needed in GIHWCPI data format)
 extern int O_output;                     // Number of output channels for the output data - padding (needed in GIHWCPI data format)
 extern int rows;						 // number of rows to compute by the kernel
-extern int enable_upper_padding;		 // enables the upper row of padding
-extern int enable_lower_padding;		 // enables the lower row of padding
 extern int enable_relu;				     // enables applying the relu activation functions
+extern data_type relu_factor;
 extern int enable_shift;				 // enables applying shift to the output
 extern int dir_shift;			         // shift direction (left or right)
 extern int pos_shift;					 // positions to shift

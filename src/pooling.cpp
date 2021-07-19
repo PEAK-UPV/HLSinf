@@ -61,6 +61,7 @@ static void pool_cvt(int H, int W, int enable_pooling, hls::stream<pixel_out_t> 
 
     #ifdef DEBUG_POOL
 	printf("DEBUG_POOL: starts (cvt)\n");
+	printf("  H %d W %d\n", H, W);
     #endif
 
 
@@ -114,6 +115,7 @@ static void pool_cvt(int H, int W, int enable_pooling, hls::stream<pixel_out_t> 
 		  odd_col = (odd_col + 1) % 2;
 		  if (pin_col == W) {
 			pin_col = 0;
+			odd_col = 0;
 			pin_row++;
 			if (pin_row == H) pin_row = 0;
 		  }

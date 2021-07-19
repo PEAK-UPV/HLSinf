@@ -12,7 +12,7 @@
 //   b_in  : input stream bias
 //   out   : output stream
 //
-void add(int H, int W, int I_ITER, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out) {
+void add(int num_pixels, int I_ITER, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out) {
 
   #ifdef DEBUG_ADD
   printf("add: start\n");
@@ -22,7 +22,7 @@ void add(int H, int W, int I_ITER, hls::stream<pixel_out_t> &in, hls::stream<pix
   DO_PRAGMA(HLS ARRAY_PARTITION variable=bias dim=0 complete)
 
   // number of iterations by CPI || CPO channels
-  int num_iterations = W * H;
+  int num_iterations = num_pixels;
 
   // Buffer for all data and CPO channels
   static pixel_out_t buff_o_channels[WMAX*HMAX];

@@ -16,11 +16,12 @@ int open_test_file() {
 }
 
 int read_test_file(int *enable, int *cpu) {
- int n = fscanf(fp, "ENABLE %d CPU %d %dx%dx%dx%d EUP %d ELP %d RELU %d MAXPOOL %d AVGPOOL %d SHIFT %d DIRECTION_SHIFT %d POS_SHIFT %d CLIP %d MINCLIP %d MAXCLIP %d\n",
-            enable, cpu, &H, &W, &I, &O, &enable_upper_padding, &enable_lower_padding, &enable_relu, &enable_maxpooling, &enable_avgpooling, &enable_shift, &dir_shift, &pos_shift,
+ int n = fscanf(fp, "ENABLE %d CPU %d DET %d %dx%dx%dx%d PH %d PW %d SH %d SW %d RELU %d RELU_FACTOR %f MAXPOOL %d AVGPOOL %d SHIFT %d DIRECTION_SHIFT %d POS_SHIFT %d CLIP %d MINCLIP %d MAXCLIP %d\n",
+            enable, cpu, &deterministic_input_values, &H, &W, &I, &O, &PH, &PW,
+	    &SH, &SW, &enable_relu, &relu_factor, &enable_maxpooling, &enable_avgpooling, &enable_shift, &dir_shift, &pos_shift,
 	    &enable_clipping, &min_clip, &max_clip);
 
- if (n != 17) return 1;
+ if (n != 21) return 1;
 
  // derived arguments
  rows = H;
@@ -31,7 +32,8 @@ int read_test_file(int *enable, int *cpu) {
  global_offset = 0;
  GI = I_kernel / CPI;
  GO = O_kernel / CPO;
- if (enable_maxpooling || enable_avgpooling) {HO = H / 2; WO = W / 2;} else {HO = H; WO = W;}
+ HO = (H + PH + PH - KH + SH) / SH;  // HO = ceil((H + padding - (KH-1)) / SH)
+ WO = (W + PW + PW - KW + SW) / SW;  // WO = ceil((W + padding - (KW-1)) / SW)
 
  #ifdef IHW_DATA_FORMAT
  I_input = I;

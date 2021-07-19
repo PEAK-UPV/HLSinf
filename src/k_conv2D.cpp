@@ -30,15 +30,14 @@ void set_channel_write_blocks(int num_channel_write_blocks[CPO], int H, int W) {
 }
 
 extern "C" {
-void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int I, int O, int I_ITER, int o_iter_first, int o_iter_last, int enable_relu,
+void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int PH, int PW, int SH, int SW, int I, int O, int I_ITER, int o_iter_first, int o_iter_last, int enable_relu, data_type relu_factor,
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
                          data_type *ptr_kernel,
 #endif
 #ifdef DWS_CONV
 						 data_type *ptr_dw_kernel, read_kernel_pw_t *ptr_pw_kernel,
 #endif
-              pixel_out_t *ptr_bias, write_block_t *ptr_out, int global_offset, int enable_upper_padding,
-			  int enable_lower_padding, int enable_maxpooling, int enable_avgpooling,
+              pixel_out_t *ptr_bias, write_block_t *ptr_out, int global_offset, int enable_maxpooling, int enable_avgpooling,
 			  int enable_clipping, int enable_shift, int min_clip, int max_clip, int dir_shift, int pos_shift) {
 
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
@@ -57,8 +56,6 @@ void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int I, int O, int 
 	DO_PRAGMA(HLS shared variable=I_ITER)
 	DO_PRAGMA(HLS shared variable=o_iter_first)
 	DO_PRAGMA(HLS shared variable=o_iter_last)
-	DO_PRAGMA(HLS shared variable=enable_upper_padding)
-	DO_PRAGMA(HLS shared variable=enable_lower_padding)
 	DO_PRAGMA(HLS shared variable=enable_maxpooling)
 	DO_PRAGMA(HLS shared variable=enable_avgpooling)
 	DO_PRAGMA(HLS shared variable=rows)
@@ -71,13 +68,14 @@ void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int I, int O, int 
 	DO_PRAGMA(HLS stable variable=I_ITER)
 	DO_PRAGMA(HLS stable variable=o_iter_first)
 	DO_PRAGMA(HLS stable variable=o_iter_last)
-	DO_PRAGMA(HLS stable variable=enable_upper_padding)
-	DO_PRAGMA(HLS stable variable=enable_lower_padding)
 	DO_PRAGMA(HLS stable variable=H)
 	DO_PRAGMA(HLS stable variable=W)
 	DO_PRAGMA(HLS stable variable=enable_maxpooling)
 	DO_PRAGMA(HLS stable variable=enable_avgpooling)
 	DO_PRAGMA(HLS stable variable=rows)
+	DO_PRAGMA(HLS stable variable=SH)
+	DO_PRAGMA(HLS stable variable=SW)
+	DO_PRAGMA(HLS stable variable=relu_factor)
 
 
   #ifdef DEBUG_VERBOSE
@@ -154,8 +152,8 @@ void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int I, int O, int 
 
     // -------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // variables to manage the input buffer
-    int corrected_offset         = (enable_upper_padding==0)? W : 0;
-    int num_extra_rows           = (enable_lower_padding == 0) + (enable_upper_padding == 0);
+    int corrected_offset         = 0;
+    int num_extra_rows           = 0;
     int read_pixels              = W * (rows + num_extra_rows);
     int read_pixels_total        = read_pixels * I_ITER;
     //printf("I_ITER %d W %d rows %d num_extra_rows %d read_pixels %d read_pixels_total %d\n", I_ITER, W, rows, num_extra_rows, read_pixels, read_pixels_total);
@@ -178,16 +176,22 @@ void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int I, int O, int 
     int read_channel_offset      = (W * H);
 
 
+    // output conv geometry
+    int HO_conv                  = (H + PH + PH - KH + SH) / SH; // HO = ceil(H + padding - (KH-1) / SH)
+    int WO_conv                  = (W + PW + PW - KW + SW) / SW; // WO = ceil(H + padding - (KW-1) / SW)
+    int num_output_conv_pixels   = HO_conv * WO_conv;
     #ifdef USE_POOLING
-    int write_pixels             = enable_pooling ? (rows * W / 4) : (rows * W);
-    int write_rows               = enable_pooling ? rows/2 : rows;
-    int write_cols               = enable_pooling ? W/2 : W;
-    int write_channel_offset     = enable_pooling ? (W * H) / 4 : (W * H);
+    int HI_pooling               = HO_conv;
+    int WI_pooling               = WO_conv;
+    int write_pixels             = enable_pooling ? (HO_conv / 2) * (WO_conv / 2) : HO_conv * WO_conv;
+    int write_rows               = enable_pooling ? HO_conv / 2 : HO_conv;
+    int write_cols               = enable_pooling ? WO_conv / 2 : WO_conv;
+    int write_channel_offset     = enable_pooling ? (HO_conv  / 2) * (WO_conv / 2) : WO_conv * HO_conv;
     #else
-    int write_pixels             = rows * W;
-    int write_rows               = rows;
-    int write_cols               = W;
-    int write_channel_offset     = (W * H);
+    int write_pixels             = HO_conv * WO_conv;
+    int write_rows               = HO_conv;
+    int write_cols               = WO_conv;
+    int write_channel_offset     = HO_conv * WO_conv;
     #endif
 
     #ifdef IHW_DATA_FORMAT
@@ -250,28 +254,28 @@ void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int I, int O, int 
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // convolution: Direct, Winograd, DWS
     #ifdef DIRECT_CONV
-    direct_conv(rows, W, I_ITER, enable_upper_padding, enable_lower_padding, out_read_data_1, out_read_kernel, out_read_bias, out_conv);
+    direct_conv(rows, W, PH, PW, SH, SW, num_output_conv_pixels, I_ITER, out_read_data_1, out_read_kernel, out_read_bias, out_conv);
     #endif
     #ifdef WINOGRAD_CONV
-    winograd_conv(rows, W, I_ITER, enable_upper_padding, enable_lower_padding, out_read_data_1, out_read_kernel, out_read_bias, out_conv);
+    winograd_conv(rows, W, PH, PW, I_ITER, out_read_data_1, out_read_kernel, out_read_bias, out_conv);
     #endif
     #ifdef DWS_CONV
-    dws_conv(rows, W, I_ITER, enable_upper_padding, enable_lower_padding, out_read_data_1, str_dw_kernel, str_pw_kernel, out_read_bias, out_conv);
+    dws_conv(rows, W, I_ITER, out_read_data_1, str_dw_kernel, str_pw_kernel, out_read_bias, out_conv);
     #endif
 
 
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // Relu, Clipping, shift, and pooling
     #if defined(USE_RELU) || defined(USE_CLIPPING) || defined(USE_SHIFT)
-    relu(enable_relu, enable_clipping, enable_shift, min_clip, max_clip, dir_shift, pos_shift, rows, W, out_conv, out_relu);
+    relu(enable_relu, enable_clipping, enable_shift, relu_factor, min_clip, max_clip, dir_shift, pos_shift, num_output_conv_pixels, out_conv, out_relu);
       // Pooling: avgpooling or maxpooling
       #ifdef USE_POOLING
-      pooling(H, W, enable_maxpooling, enable_avgpooling, out_relu, out_pooling);
+      pooling(HI_pooling, WI_pooling, enable_maxpooling, enable_avgpooling, out_relu, out_pooling);
       #endif
     #else
       // Pooling: avgpooling or maxpooling
       #ifdef USE_POOLING
-      pooling(H, W, enable_maxpooling, enable_avgpooling, out_conv, out_pooling);
+      pooling(HI_pooling, WI_pooling, enable_maxpooling, enable_avgpooling, out_conv, out_pooling);
       #endif
     #endif
 
