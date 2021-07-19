@@ -26,8 +26,10 @@ using std::vector;
 // Global variables
 extern int CONVS;                        // Number of convolutional layers
 extern int KERNELS;                      // Number of FPGA kernels to use
-extern int PH;                           // Vertical padding
-extern int PW;                           // Horizontal padding
+extern int PT;                           // Top padding
+extern int PB;                           // Bottom padding
+extern int PL;                           // Left padding
+extern int PR;                           // Right padding
 extern int SH;                           // Vertical stride
 extern int SW;                           // Horizontal stride
 extern int F;                            // Number of frames of the data

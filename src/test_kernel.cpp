@@ -38,8 +38,10 @@ void run_kernel() {
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, H));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, W));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, rows));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, PH));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, PW));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, PT));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, PB));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, PL));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, PB));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, SH));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, SW));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, I_input));
@@ -71,7 +73,7 @@ void run_kernel() {
     OCL_CHECK(err, err = q.enqueueNDRangeKernel(kernel_conv2d[k], 0, 1, 1, NULL, &kernel_events[k]));
     set_callback(kernel_events[k], "ooo_queue");
     #else
-    k_conv2D((read_block_t *)data_in, H, W, rows, PH, PW, SH, SW, I, O, i_iter, o_iter_first, o_iter_last, enable_relu, relu_factor,
+    k_conv2D((read_block_t *)data_in, H, W, rows, PT, PB, PL, PR, SH, SW, I, O, i_iter, o_iter_first, o_iter_last, enable_relu, relu_factor,
           #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
 		  kernel,
           #endif

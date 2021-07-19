@@ -85,8 +85,8 @@ void cpu_conv2D() {
           for (int kh=0; kh<KH; kh++) {
             for (int kw=0; kw<KW; kw++) {
 
-              int data_h = (h*SH)-PH+kh;
-              int data_w = (w*SW)-PW+kw;
+              int data_h = (h*SH)-PT+kh;
+              int data_w = (w*SW)-PL+kw;
 
               int padding = (data_h < 0) | (data_w < 0) | (data_w >= W) | (data_h >= H);
 

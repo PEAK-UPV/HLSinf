@@ -30,7 +30,7 @@ void set_channel_write_blocks(int num_channel_write_blocks[CPO], int H, int W) {
 }
 
 extern "C" {
-void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int PH, int PW, int SH, int SW, int I, int O, int I_ITER, int o_iter_first, int o_iter_last, int enable_relu, data_type relu_factor,
+void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int PT, int PB, int PL, int PR, int SH, int SW, int I, int O, int I_ITER, int o_iter_first, int o_iter_last, int enable_relu, data_type relu_factor,
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
                          data_type *ptr_kernel,
 #endif
@@ -85,8 +85,8 @@ void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int PH, int PW, in
   int O_ITER = o_iter_last - o_iter_first + 1;
 
   // output convolution geometry
-  int HO_conv                  = (H + PH + PH - KH + SH) / SH; // HO = ceil(H + padding - (KH-1) / SH)
-  int WO_conv                  = (W + PW + PW - KW + SW) / SW; // WO = ceil(H + padding - (KW-1) / SW)
+  int HO_conv                  = (H + PT + PB - KH + SH) / SH; // HO = ceil(H + padding - (KH-1) / SH)
+  int WO_conv                  = (W + PL + PR - KW + SW) / SW; // WO = ceil(H + padding - (KW-1) / SW)
   int num_output_conv_pixels   = HO_conv * WO_conv;
 
   #ifdef USE_POOLING
@@ -253,10 +253,10 @@ void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int PH, int PW, in
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // convolution: Direct, Winograd, DWS
     #ifdef DIRECT_CONV
-    direct_conv(rows, W, PH, PW, SH, SW, num_output_conv_pixels, I_ITER, out_read_data_1, out_read_kernel, out_read_bias, out_conv);
+    direct_conv(rows, W, PT, PB, PL, PR, SH, SW, num_output_conv_pixels, I_ITER, out_read_data_1, out_read_kernel, out_read_bias, out_conv);
     #endif
     #ifdef WINOGRAD_CONV
-    winograd_conv(rows, W, PH, PW, I_ITER, out_read_data_1, out_read_kernel, out_read_bias, out_conv);
+    winograd_conv(rows, W, PT, PB, PL, PR, I_ITER, out_read_data_1, out_read_kernel, out_read_bias, out_conv);
     #endif
     #ifdef DWS_CONV
     dws_conv(rows, W, I_ITER, out_read_data_1, str_dw_kernel, str_pw_kernel, out_read_bias, out_conv);

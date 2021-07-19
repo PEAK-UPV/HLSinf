@@ -38,8 +38,10 @@
 // Global variables
 int CONVS;                       // Number of convolutional layers
 int KERNELS;                     // Number of FPGA kernels to use
-int PH = PH_SIM;                 // Vertical padding
-int PW = PW_SIM;                 // Horizontal padding
+int PT = PT_SIM;                 // Top padding
+int PB = PB_SIM;                 // Bottom padding
+int PL = PL_SIM;                 // Left padding
+int PR = PR_SIM;                 // Right padding
 int SH = SH_SIM;                 // Vertical stride
 int SW = SW_SIM;                 // Horizontal stride
 int F;                           // Number of frames of the data

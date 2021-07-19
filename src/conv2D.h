@@ -403,8 +403,10 @@
 #define H_SIM         256 //HMAX
 #define I_SIM         CPI //I_REFERENCE
 #define O_SIM         CPO //O_REFERENCE
-#define PH_SIM        1
-#define PW_SIM        1
+#define PT_SIM        1   
+#define PB_SIM        1
+#define PL_SIM        1
+#define PR_SIM        1
 #define SH_SIM        1   // SH
 #define SW_SIM        1   // SW
 #define INSTANCES_SIM 2   //2
@@ -590,7 +592,7 @@ struct kernel_pw_t {
 
 // -----------------------------------------------------------------------------------------------------------
 // function prototypes
-extern "C" void k_conv2D(read_block_t *ptr_data, int H, int W, int PH, int PW, int SH, int SW, int rows, int I, int O, int I_ITER, int o_iter_first, int o_iter_last, int enable_relu, data_type relu_factor,
+extern "C" void k_conv2D(read_block_t *ptr_data, int H, int W, int PT, int PB, int PL, int PR, int SH, int SW, int rows, int I, int O, int I_ITER, int o_iter_first, int o_iter_last, int enable_relu, data_type relu_factor,
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
                          data_type *ptr_kernel,
 #endif
@@ -641,11 +643,11 @@ ch_block_generate:
 
 // convolution modules
 #ifdef DIRECT_CONV
-void direct_conv(int H, int W, int PH, int PW, int SH, int SW, int num_output_conv_pixels, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<kernel_t> &k_in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out);
+void direct_conv(int H, int W, int PT, int PB, int PL, int PR, int SH, int SW, int num_output_conv_pixels, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<kernel_t> &k_in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out);
 #endif
 
 #ifdef WINOGRAD_CONV
-void winograd_conv(int H, int W, int PH, int PW, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<kernel_t> &k_in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out);
+void winograd_conv(int H, int W, int PT, int PB, int PL, int PR, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<kernel_t> &k_in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out);
 #endif
 
 #ifdef DWS_CONV
@@ -666,7 +668,7 @@ void relu(int enable_relu, int enable_clipping, int enable_shift, data_type relu
 void pooling(int H, int W, int enable_maxpooling, int enable_avgpooling, hls::stream<pixel_out_t> &input, hls::stream<pixel_out_t> &output);
 
 // padding functions
-void padding(int H, int W, int PH, int PW, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<pixel_in_t> &out);
+void padding(int H, int W, int PT, int PB, int PL, int PR, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<pixel_in_t> &out);
 
 // other functions
 void add(int num_pixels, int I_ITER, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out);

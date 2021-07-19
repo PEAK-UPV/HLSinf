@@ -793,7 +793,7 @@ static void add_winograd(int H, int W, int I_ITER, hls::stream<pixel_out_t> &b_i
 // This module builds the winograd convolutional operation by instantiating streams and
 // building the dataflow model with the corresponding modules
 //
-void winograd_conv(int H, int W, int PH, int PW, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<kernel_t> &k_in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out) {
+void winograd_conv(int H, int W, int PT, int PB, int PL, int PR, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<kernel_t> &k_in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out) {
 
 	// streams
 	static hls::stream<pixel_in_t>      str_pad_cvt;  	 	// padding 	-> 	cvt
@@ -813,7 +813,7 @@ void winograd_conv(int H, int W, int PH, int PW, int I_ITER, hls::stream<pixel_i
 
 	// topology
 	#pragma HLS dataflow
-	padding(H, W, PH, PW, I_ITER, in, str_pad_cvt); 
+	padding(H, W, PT, PB, PL, PR, I_ITER, in, str_pad_cvt); 
 	cvt_winograd(H, W, I_ITER, str_pad_cvt, cvt_frameConvert);		
 	frameConvert(H, W, I_ITER, cvt_frameConvert, str_cvt_mul_cTc);
 	mulKernels(I_ITER, k_in, kernels_multWise);
