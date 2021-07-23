@@ -69,6 +69,16 @@ void run_kernel() {
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, max_clip));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, dir_shift));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, pos_shift));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, mul_value));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, add_value));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, multi_threshold_count));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, multi_threshold_min));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, multi_threshold_max));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, multi_threshold_stride));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, multi_threshold_scale));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, multi_threshold_bias));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, mul_value2));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, add_value2));
     //
     OCL_CHECK(err, err = q.enqueueNDRangeKernel(kernel_conv2d[k], 0, 1, 1, NULL, &kernel_events[k]));
     set_callback(kernel_events[k], "ooo_queue");
@@ -82,7 +92,9 @@ void run_kernel() {
           #endif
 		  (pixel_out_t *)bias, (write_block_t *)out, global_offset,
 		   enable_maxpooling, enable_avgpooling,
-		   enable_clipping, enable_shift, min_clip, max_clip, dir_shift, pos_shift);
+		   enable_clipping, enable_shift, min_clip, max_clip, dir_shift, pos_shift,
+		   mul_value, add_value, multi_threshold_count, multi_threshold_min, multi_threshold_max, multi_threshold_stride, multi_threshold_scale, multi_threshold_bias,
+		   mul_value2, add_value2);
     #endif
   }
 

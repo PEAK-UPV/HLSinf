@@ -2,6 +2,56 @@
 
 #include <hls_stream.h>
 
+void mul_add(int num_pixels, data_type mul_value, data_type add_value, hls::stream<pixel_in_t> &in, hls::stream<pixel_in_t> &out) {
+  for (int x = 0; x < num_pixels; x++) {
+    pixel_in_t pin;
+    pixel_in_t pout;
+    pin = in.read();
+    for (int p=0; p < CPI; p++) {
+      DO_PRAGMA(HLS UNROLL)
+      pout.pixel[p] = (pin.pixel[p] * mul_value) + add_value;
+    }
+    out << pout;
+  }
+}
+
+void multi_threshold(int num_pixels, int count, data_type min, data_type max, data_type stride, data_type scale, data_type bias, hls::stream<pixel_in_t> &in, hls::stream<pixel_in_t> &out) {
+  for (int x = 0; x < num_pixels; x++) {
+    pixel_in_t pin;
+    pixel_in_t pout;
+    pin = in.read();
+    for (int p = 0; p < CPI; p++) {
+      DO_PRAGMA(HLS UNROLL)
+      data_type vin = pin.pixel[p];
+      data_type vout;
+      if (count == 0) vout = vin;
+      else if (vin > max) vout = (data_type)count;
+      else if (vin < max) vin = (data_type)0;
+      else vout = (vin - min) / stride;
+
+      vout = vout + bias;
+      vout = vout * scale;
+
+      pout.pixel[p] = vout;
+    }
+    out << pout;
+  }
+}
+
+void add_mul(int num_pixels, data_type add_value, data_type mul_value, hls::stream<pixel_in_t> &in, hls::stream<pixel_in_t> &out) {
+  for (int x = 0; x < num_pixels; x++) {
+    pixel_in_t pin;
+    pixel_in_t pout;
+    pin = in.read();
+    for (int p=0; p < CPI; p++) {
+      DO_PRAGMA(HLS UNROLL)
+      pout.pixel[p] = (pin.pixel[p] + add_value) * mul_value;
+    }
+    out << pout;
+  }
+}
+
+
 void set_write_enables(int enable_write[CPO], int o_channel, int O) {
   set_write_enables_loop:
   for (int o = 0; o <CPO; o++) {
@@ -38,7 +88,12 @@ void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int PT, int PB, in
 						 data_type *ptr_dw_kernel, read_kernel_pw_t *ptr_pw_kernel,
 #endif
               pixel_out_t *ptr_bias, write_block_t *ptr_out, int global_offset, int enable_maxpooling, int enable_avgpooling,
-			  int enable_clipping, int enable_shift, int min_clip, int max_clip, int dir_shift, int pos_shift) {
+			  int enable_clipping, int enable_shift, int min_clip, int max_clip, int dir_shift, int pos_shift,
+			  data_type mul_value, data_type add_value, 
+			  int multi_threshold_count,
+			  data_type multi_threshold_min, data_type multi_threshold_max, data_type multi_threshold_stride,
+			  data_type multi_threshold_scale, data_type multi_threshold_bias,
+			  data_type mul_value2, data_type add_value2) {
 
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
 	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_kernel    depth=KERNEL_PORT_DEPTH    offset=slave bundle=gmem1)
@@ -76,7 +131,16 @@ void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int PT, int PB, in
 	DO_PRAGMA(HLS stable variable=SH)
 	DO_PRAGMA(HLS stable variable=SW)
 	DO_PRAGMA(HLS stable variable=relu_factor)
-
+	DO_PRAGMA(HLS stable variable=mul_value)
+        DO_PRAGMA(HLS stable variable=add_value)
+	DO_PRAGMA(HLS stable variable=multi_threshold_count)
+        DO_PRAGMA(HLS stable variable=multi_threshold_min)
+        DO_PRAGMA(HLS stable variable=multi_threshold_max)
+        DO_PRAGMA(HLS stable variable=multi_threshold_stride)
+        DO_PRAGMA(HLS stable variable=multi_threshold_scale)
+        DO_PRAGMA(HLS stable variable=multi_threshold_bias)
+        DO_PRAGMA(HLS stable variable=mul_value2)
+        DO_PRAGMA(HLS stable variable=add_value2)
 
   #ifdef DEBUG_VERBOSE
   printf("kernel starts...\n");
@@ -115,10 +179,14 @@ void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int PT, int PB, in
     static hls::stream<pixel_in_t>   out_read_data;
     static hls::stream<pixel_in_t>   out_read_data_1;
     static hls::stream<pixel_in_t>   out_read_data_2;
+    static hls::stream<pixel_in_t>   out_read_data_3;
+    static hls::stream<pixel_in_t>   out_read_data_4;
 
     DO_PRAGMA(HLS STREAM variable=out_read_data depth=STREAMS_DEPTH)
     DO_PRAGMA(HLS STREAM variable=out_read_data_1 depth=STREAMS_DEPTH)
     DO_PRAGMA(HLS STREAM variable=out_read_data_2 depth=STREAMS_DEPTH)
+    DO_PRAGMA(HLS STREAM variable=out_read_data_3 depth=STREAMS_DEPTH)
+    DO_PRAGMA(HLS STREAM variable=out_read_data_4 depth=STREAMS_DEPTH)
 
 	// DIRECT CONV, WINOGRAD, DWS
     #ifdef DIRECT_CONV
@@ -250,16 +318,28 @@ void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int PT, int PB, in
     input_buffer(read_pixels_total, write_to_input_buffer, read_from_input_buffer, out_read_data, out_read_data_1);
     #endif
 
+    // ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    // MulAdd 
+    mul_add(read_pixels_total, mul_value, add_value, out_read_data_1, out_read_data_2);
+
+    // ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    // MultiThreshold
+    multi_threshold(read_pixels_total, multi_threshold_count, multi_threshold_min, multi_threshold_max, multi_threshold_stride, multi_threshold_scale, multi_threshold_bias, out_read_data_2, out_read_data_3);
+
+    // ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    // AddMul
+    add_mul(read_pixels_total, add_value2, mul_value2, out_read_data_3, out_read_data_4);
+
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // convolution: Direct, Winograd, DWS
     #ifdef DIRECT_CONV
-    direct_conv(rows, W, PT, PB, PL, PR, SH, SW, num_output_conv_pixels, I_ITER, out_read_data_1, out_read_kernel, out_read_bias, out_conv);
+    direct_conv(rows, W, PT, PB, PL, PR, SH, SW, num_output_conv_pixels, I_ITER, out_read_data_4, out_read_kernel, out_read_bias, out_conv);
     #endif
     #ifdef WINOGRAD_CONV
-    winograd_conv(rows, W, PT, PB, PL, PR, I_ITER, out_read_data_1, out_read_kernel, out_read_bias, out_conv);
+    winograd_conv(rows, W, PT, PB, PL, PR, I_ITER, out_read_data_4, out_read_kernel, out_read_bias, out_conv);
     #endif
     #ifdef DWS_CONV
-    dws_conv(rows, W, I_ITER, out_read_data_1, str_dw_kernel, str_pw_kernel, out_read_bias, out_conv);
+    dws_conv(rows, W, I_ITER, out_read_data_4, str_dw_kernel, str_pw_kernel, out_read_bias, out_conv);
     #endif
 
 

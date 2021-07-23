@@ -54,6 +54,16 @@ extern int enable_maxpooling;			 // enables the maxpooling layer
 extern int enable_avgpooling;			 // enables the avgpooling layer
 extern int min_clip;				 	 // minimum clip value
 extern int max_clip;				 	 // maximum clip value
+extern data_type mul_value;
+extern data_type add_value;
+extern int multi_threshold_count;
+extern data_type multi_threshold_min;
+extern data_type multi_threshold_max;
+extern data_type multi_threshold_stride;
+extern data_type multi_threshold_scale;
+extern data_type multi_threshold_bias;
+extern data_type mul_value2;
+extern data_type add_value2;
 extern int i_iter;						 // number of input iterations
 extern int o_iter;						 // number of output iterations
 extern int global_offset;				 // global offset for the output data for the kernel

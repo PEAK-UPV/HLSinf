@@ -66,6 +66,18 @@ int enable_maxpooling = 0;		 // enables the maxpooling layer
 int enable_avgpooling = 0;		 // enables the avgpooling layer
 int min_clip = 0;   			 // minimum clip value
 int max_clip = 0;				 // maximum clip value
+
+data_type mul_value = (data_type) 1;
+data_type add_value = (data_type) 0;
+int multi_threshold_count = 0;
+data_type multi_threshold_min = (data_type) 0;
+data_type multi_threshold_max = (data_type) 0;
+data_type multi_threshold_stride = (data_type) 0;
+data_type multi_threshold_scale = (data_type) 1;
+data_type multi_threshold_bias = (data_type) 0;
+data_type mul_value2 = (data_type) 1;
+data_type add_value2 = (data_type) 0;
+
 int i_iter = I_SIM/CPI; 		 // number of input iterations
 int o_iter = O_SIM/CPO;			 // number of output iterations
 int global_offset = 0;			 // global offset for the output data for the kernel

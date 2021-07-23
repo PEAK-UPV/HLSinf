@@ -18,6 +18,10 @@
 // Configurations for Alveo U200 boards
 
 //#define CONF_ALVEO_U200_4x4_DIRECT_FP32                 // Direct convolution 4x4 kernel with FP32
+//#define CONF_ALVEO_U200_4x4_DIRECT_APF16                // Direct convolution 4x4 kernel with APF16
+//#define CONF_ALVEO_U200_8x8_DIRECT_FP32                 // Direct convolution 8x8 kernel with FP32
+//#define CONF_ALVEO_U200_8x8_DIRECT_APF16                // Direct convolution 8x8 kernel with APF16
+//#define CONF_ALVEO_U200_8x8_DIRECT_APF8                 // Direct convolution 8x8 kernel with APF8
 //#define CONF_ALVEO_U200_8x8_DIRECT_API8            	// Direct convolution 8x8 kernel with API8
 //#define CONF_ALVEO_U200_16x16_WINOGRAD_API8        	// Winograd convolution 16x16 kernel with API8
 //#define CONF_ALVEO_U200_32x32_DWS_API8               	// DeepWise Separable 32x32 kernel with API8
@@ -83,15 +87,75 @@
 #define CPI                          4
 #define CPO                          4
 #define LOG2_CPO                     2
-#define WMAX                       256
-#define HMAX                       256
+#define WMAX                      1024 
+#define HMAX                      1024
 #define READ_BURST_SIZE              4
 #define STREAMS_DEPTH                4
-#define INPUT_BUFFER_SIZE        65536 //524288
-#define MAX_KERNELS_DW         512/CPI
-#define DW_KERNEL_STREAM_DEPTH       4      // 512 DW kernels
-#define PW_KERNEL_STREAM_DEPTH       4      // 512 * 512 PW kernels
-#define DWS_STREAM_DEPTH            64
+#define INPUT_BUFFER_SIZE        65536
+#endif
+
+#ifdef CONF_ALVEO_U200_4x4_DIRECT_APF16
+#define ALVEO_U200
+#define DIRECT_CONV
+#define APF16_DATA_TYPE
+#define USE_RELU
+#define USE_POOLING
+#define CPI                          4
+#define CPO                          4
+#define LOG2_CPO                     2
+#define WMAX                      1024
+#define HMAX                      1024
+#define READ_BURST_SIZE              4
+#define STREAMS_DEPTH                4
+#define INPUT_BUFFER_SIZE        65536
+#endif
+
+#ifdef CONF_ALVEO_U200_8x8_DIRECT_FP32
+#define ALVEO_U200
+#define DIRECT_CONV
+#define FP32_DATA_TYPE
+#define USE_RELU
+#define USE_POOLING
+#define CPI                          8
+#define CPO                          8
+#define LOG2_CPO                     3
+#define WMAX                      1024
+#define HMAX                      1024
+#define READ_BURST_SIZE              4
+#define STREAMS_DEPTH                4
+#define INPUT_BUFFER_SIZE        65536
+#endif
+
+#ifdef CONF_ALVEO_U200_8x8_DIRECT_APF16
+#define ALVEO_U200
+#define DIRECT_CONV
+#define APF16_DATA_TYPE
+#define USE_RELU
+#define USE_POOLING
+#define CPI                          8
+#define CPO                          8
+#define LOG2_CPO                     3
+#define WMAX                      1024
+#define HMAX                      1024
+#define READ_BURST_SIZE              4
+#define STREAMS_DEPTH                4
+#define INPUT_BUFFER_SIZE        65536
+#endif
+
+#ifdef CONF_ALVEO_U200_8x8_DIRECT_APF8
+#define ALVEO_U200
+#define DIRECT_CONV
+#define APF8_DATA_TYPE
+#define USE_RELU
+#define USE_POOLING
+#define CPI                          8
+#define CPO                          8
+#define LOG2_CPO                     3
+#define WMAX                      1024
+#define HMAX                      1024
+#define READ_BURST_SIZE              4
+#define STREAMS_DEPTH                4
+#define INPUT_BUFFER_SIZE        65536
 #endif
 
 #ifdef CONF_ALVEO_U200_8x8_DIRECT_API8
@@ -429,6 +493,15 @@
 #define EPSILON_VALUE 0.00001
 #endif
 
+#ifdef APF16_DATA_TYPE
+#define data_type ap_fixed<16,8,AP_TRN,AP_WRAP>
+#define DATA_TYPE_WIDTH  16   // data type width in bits
+#define READ_BLOCK_SIZE  32   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define WRITE_BLOCK_SIZE 32   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define MIN_DATA_TYPE_VALUE  -99999
+#define EPSILON_VALUE 0.0001
+#endif
+
 #ifdef APF8_DATA_TYPE
 #define data_type ap_fixed<8,4,AP_TRN,AP_WRAP>
 #define DATA_TYPE_WIDTH   8	  // data type width in bits
@@ -600,7 +673,12 @@ extern "C" void k_conv2D(read_block_t *ptr_data, int H, int W, int PT, int PB, i
 						 data_type *ptr_dw_kernel, read_kernel_pw_t *ptr_pw_kernel,
 #endif
 						 pixel_out_t *ptr_bias, write_block_t *ptr_out, int global_offset, int enable_maxpooling, int enable_avgpooling,
-						 int enable_clipping, int enable_shift, int min_clip, int max_clip, int dir_shift, int pos_shift);
+						 int enable_clipping, int enable_shift, int min_clip, int max_clip, int dir_shift, int pos_shift,
+						 data_type mul_value, data_type add_value,
+                                                 int multi_threshold_count,
+                                                 data_type multi_threshold_min, data_type multi_threshold_max, data_type multi_threshold_stride,
+                                                 data_type multi_threshold_scale, data_type multi_threshold_bias,
+                                                 data_type mul_value2, data_type add_value2);
 
 
 // read and write functions
@@ -674,6 +752,11 @@ void padding(int H, int W, int PT, int PB, int PL, int PR, int I_ITER, hls::stre
 void add(int num_pixels, int I_ITER, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out);
 void mul(int num_data_frames, int I_ITER, hls::stream<frame_t> &in, hls::stream<kernel_t> &k_in, hls::stream<pixel_out_t> &out);
 void cvt(int H, int W, int SH, int SW, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<frame_t> &out);
+
+void mul_add(int num_pixels, data_type mul_value, data_type add_value, hls::stream<pixel_in_t> &in, hls::stream<pixel_in_t> &out);
+void multi_threshold(int num_pixels, int count, data_type min, data_type max, data_type stride, data_type scale, data_type bias, hls::stream<pixel_in_t> &in, hls::stream<pixel_in_t> &out);
+void add_mul(int num_pixels, data_type add_value, data_type mul_value, hls::stream<pixel_in_t> &in, hls::stream<pixel_in_t> &out);
+
 
 // What follows are macros used in the code
 

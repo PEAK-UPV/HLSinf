@@ -9,7 +9,7 @@ void init_data() {
   std::mt19937 gen(rd());
 
   // random number generators
-  #if defined(FP32_DATA_TYPE) || defined(APF8_DATA_TYPE)
+  #if defined(FP32_DATA_TYPE) || defined(APF8_DATA_TYPE) || defined(APF16_DATA_TYPE)
   std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
   #endif
   #ifdef API8_DATA_TYPE
