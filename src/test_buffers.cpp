@@ -15,8 +15,8 @@ void allocate_buffers() {
 
   // input data add buffer
   if (enable_add) {
-	  posix_memalign((void **)&data_in_add, 4096, O_output * W * H * sizeof(data_type));
-	  posix_memalign((void **)&out_add_cpu, 4096, O_output * W * H * sizeof(data_type));
+	  posix_memalign((void **)&data_in_add, 4096, HO_final * WO_final * O_output * sizeof(data_type));
+	  posix_memalign((void **)&out_add_cpu, 4096, HO_final * WO_final * O_output * sizeof(data_type));
   }
 
   // weights buffer (kernel), depending on the type of convolution
@@ -37,12 +37,7 @@ void allocate_buffers() {
 
   // output buffer for fpga
   size_t size_output_in_bytes;
-  if ((enable_maxpooling) || (enable_avgpooling)) {
-	size_output_in_bytes = O_output * (WO/2) * (HO/2) * sizeof(data_type);
-	posix_memalign((void **)&out, 4096, size_output_in_bytes);
-  } else {
-	size_output_in_bytes = O_output * WO * HO * sizeof(data_type);
-  }
+  size_output_in_bytes = O_output * WO_final * HO_final * sizeof(data_type);
   posix_memalign((void **)&out, 4096, size_output_in_bytes);
 
   // output buffer for cpu

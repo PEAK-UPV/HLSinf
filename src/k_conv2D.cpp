@@ -265,7 +265,7 @@ void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W,
     #ifdef GIHWCPI_DATA_FORMAT
     read_data_channels_gihwcpi(read_pixels_total, offset_read_data_channel, ptr_data, out_read_data, enable_read);
     input_buffer(read_pixels_total, write_to_input_buffer, read_from_input_buffer, out_read_data, out_read_data_1);
-    read_data_channels_gihwcpi(read_pixels_total, offset_read_data_channel, ptr_data_add, out_read_data_add, enable_add);
+    read_data_channels_gihwcpi(write_pixels, o_iter_write_offset, ptr_data_add, out_read_data_add, enable_add);
     #endif
 
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -302,12 +302,12 @@ void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W,
         #else
             pooling(HI_pooling, WI_pooling, enable_maxpooling, enable_avgpooling, out_relu, out_pooling);
 		  	#endif
-      		  add_data(enable_add, write_pixels,  out_read_data_add, out_pooling, out_add); 
+      		  add_data(enable_add, write_pixels, out_read_data_add, out_pooling, out_add); 
 		  #else
 		  	#if defined(USE_STM)
-      			add_data(enable_add, num_output_conv_pixels, out_read_data_add, out_stm, out_add);
+      			add_data(enable_add, write_pixels, out_read_data_add, out_stm, out_add);
 		  	#else
-      			add_data(enable_add, num_output_conv_pixels, out_read_data_add, out_relu, out_add); 
+      			add_data(enable_add, write_pixels, out_read_data_add, out_relu, out_add); 
 		  	#endif
       #endif
 	  

@@ -15,6 +15,7 @@ void add_data(int enable_add, int num_pixels, hls::stream<pixel_out_t> &in_r, hl
 
   #ifdef DEBUG_ADD_DATA
   printf("add_data: start\n");
+  printf("  num_pixels : %d\n", num_pixels);
   #endif
 
   pixel_out_t data_in_r;

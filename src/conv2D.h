@@ -16,7 +16,7 @@
 // -----------------------------------------------------------------------------------------------------------
 
 // Configurations for Alveo U200 boards
-#define CONF_ALVEO_U200_4x4_DIRECT_STM_FP32                 // Direct convolution 4x4 kernel with FP32
+//#define CONF_ALVEO_U200_4x4_DIRECT_STM_FP32                 // Direct convolution 4x4 kernel with FP32
 //#define CONF_ALVEO_U200_4x4_DIRECT_FP32                 // Direct convolution 4x4 kernel with FP32
 //#define CONF_ALVEO_U200_8x8_DIRECT_API8            	// Direct convolution 8x8 kernel with API8
 //#define CONF_ALVEO_U200_16x16_WINOGRAD_API8        	// Winograd convolution 16x16 kernel with API8
@@ -50,9 +50,9 @@
 // -----------------------------------------------------------------------------------------------------------
 // defines for debug (DEBUG_ALL activates all debug defines)
 // -----------------------------------------------------------------------------------------------------------
-//#define DEBUG_ALL
+#define DEBUG_ALL
 
-//#define DEBUG_VERBOSE
+#define DEBUG_VERBOSE
 
 //#define DEBUG_READ_BIAS
 //#define DEBUG_READ_KERNEL

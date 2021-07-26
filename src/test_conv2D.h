@@ -38,8 +38,10 @@ extern int W;                            // Width of the data
 extern int H;                            // Height of the data
 extern int I;                            // Number of input channels
 extern int O;                            // Number of output channels
-extern int HO;						     // Output width
-extern int WO;							 // Output height
+extern int HO;						     // Output width of the conv
+extern int WO;							 // Output height of the conv
+extern int HO_final;                     // HO at the output of the kernel
+extern int WO_final;                     // WO at the output of the kernel
 extern int I_kernel;					 // Number of input channels for the kernel (filter) - padding
 extern int O_kernel;  					 // Number of output channels for the kernel (filter) - padding
 extern int I_input;                      // Number of input channels for the input data - padding (needed in GIHWCPI data format)

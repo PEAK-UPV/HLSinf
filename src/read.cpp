@@ -324,6 +324,7 @@ void read_data_channels_gihwcpi(int num_pixels, int offset, read_block_t *ptr, h
 
   #ifdef DEBUG_READ_DATA
   printf("READ_DATA: starts (gihwcpi format)\n");
+  printf("  num_pixels : %d\n", num_pixels);
   #endif
 
   if (!enable) return;
@@ -338,7 +339,7 @@ void read_data_channels_gihwcpi(int num_pixels, int offset, read_block_t *ptr, h
     out << px;
     #ifdef DEBUG_READ_DATA
     #ifdef DEBUG_VERBOSE
-    printf("data read: ");
+    printf("data read : %d : ", i);
     for (int x=0; x<CPI; x++) printf("%f ", float(px.pixel[x]));
     printf("\n");
     #endif
@@ -367,6 +368,7 @@ void read_data_channels_gihwcpi(int num_pixels, int offset, write_block_t *ptr, 
 
   #ifdef DEBUG_READ_DATA
   printf("READ_DATA: starts (gihwcpi format)\n");
+  printf("  num_pixels : %d\n", num_pixels);
   #endif
 
   if (!enable) return;
@@ -381,8 +383,8 @@ void read_data_channels_gihwcpi(int num_pixels, int offset, write_block_t *ptr, 
     out << px;
     #ifdef DEBUG_READ_DATA
     #ifdef DEBUG_VERBOSE
-    printf("data read: ");
-    for (int x=0; x<CPI; x++) printf("%f ", float(px.pixel[x]));
+    printf("data read : %d : ", i);
+    for (int x=0; x<CPO; x++) printf("%f ", float(px.pixel[x]));
     printf("\n");
     #endif
     #endif
