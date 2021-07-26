@@ -30,10 +30,10 @@ int check_result(data_type *max_difference, int *num_elements_differ) {
   } else {
 
 	for (int cout=0; cout < O_output; cout++) {
-      for (int h=0; h<HO; h++) {
-        for (int w=0; w<WO; w++) {
+      for (int h=0; h<HO_final; h++) {
+        for (int w=0; w<WO_final; w++) {
           // data_out pixel position
-          int addr_o = output_data_address(cout, h, w);
+          int addr_o = output_data_address(cout, h, w, HO_final, WO_final);
           data_type diff;
           if (enable_relu) diff = data_type(fabs(float(out_relu_cpu[addr_o]) - float(out[addr_o])));
           else if(enable_stm) {

@@ -131,7 +131,7 @@ void print_timings(unsigned long long time, unsigned long long time_per_iteratio
 void print_check(int result, float max_difference, int num_differences);
 void print_message(const char *str);
 int input_data_address(int i, int h, int w);
-int output_data_address(int o, int h, int w);
+int output_data_address(int o, int h, int w, int height, int width);
 int output_data_address_div(int o, int h, int w);
 
 #ifdef OPENCL_TEST

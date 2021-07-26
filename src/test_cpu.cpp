@@ -44,14 +44,14 @@ int input_data_address(int i, int h, int w) {
 	return addr;
 }
 
-int output_data_address(int o, int h, int w) {
+int output_data_address(int o, int h, int w, int height, int width) {
     #ifdef GIHWCPI_DATA_FORMAT
 	int go = o / CPO;
 	int oo = o % CPO;
-	int addr = (go * HO * WO * CPO) + (h * WO * CPO) + (w * CPO) + oo;
+	int addr = (go * height * width * CPO) + (h * width * CPO) + (w * CPO) + oo;
     #endif
     #ifdef IHW_DATA_FORMAT
-    int addr = (o * HO * WO) + (h * WO) + w;
+    int addr = (o * height * width) + (h * width) + w;
     #endif
 	return addr;
 }
@@ -80,7 +80,7 @@ void cpu_conv2D() {
       for (int h=0; h<HO; h++) {
         for (int w=0; w<WO; w++) {
           // data_out pixel position
-          int addr_o = output_data_address(cout, h, w);
+          int addr_o = output_data_address(cout, h, w, HO, WO);
 
           for (int kh=0; kh<KH; kh++) {
             for (int kw=0; kw<KW; kw++) {
@@ -138,7 +138,7 @@ void cpu_conv2D() {
 
       // point wise reduce operation
       for (int o=0; o<O_output; o++) {
-        int addr_o = output_data_address(o, h, w);
+        int addr_o = output_data_address(o, h, w, HO, WO);
         out_conv_cpu[addr_o] = 0;
     	for (int i=0; i<I_input; i++) {
           int addr_pw_k = filter_address_dws_conv(i, o);
@@ -155,7 +155,7 @@ void cpu_conv2D() {
     for (int h=0; h<HO; h++) {
       for (int w=0; w<WO; w++) {
         // data_out pixel position
-        int addr_o = output_data_address(cout, h, w);
+        int addr_o = output_data_address(cout, h, w, HO, WO);
         // bias operation
         out_conv_cpu[addr_o] += bias[cout];
 	//printf("cpu_bias: c %d h %d w %d out_conv %f\n", cout, h, w, out_conv_cpu[addr_o]);
@@ -169,7 +169,7 @@ void cpu_conv2D() {
     for (int cout=0; cout<O_output; cout++) {
       for (int h=0; h<HO; h++) {
         for (int w=0; w<WO; w++) {
-          int addr_o = output_data_address(cout, h, w);
+          int addr_o = output_data_address(cout, h, w, HO, WO);
           if (dir_shift == LEFT_DIRECTION) out_conv_cpu[addr_o] = out_conv_cpu[addr_o] << pos_shift;
           else out_conv_cpu[addr_o] = out_conv_cpu[addr_o] >> pos_shift;
         }
@@ -184,7 +184,7 @@ void cpu_conv2D() {
     for (int cout=0; cout<O_output; cout++) {
       for (int h=0; h<HO; h++) {
         for (int w=0; w<WO; w++) {
-          int addr_o = output_data_address(cout, h, w);
+          int addr_o = output_data_address(cout, h, w, HO, WO);
           if (out_conv_cpu[addr_o] < min_clip) out_conv_cpu[addr_o] = min_clip;
           else if (out_conv_cpu[addr_o] > max_clip) out_conv_cpu[addr_o] = max_clip;
         }
@@ -198,7 +198,7 @@ void cpu_conv2D() {
     for (int cout=0; cout<O_output; cout++) {
       for (int h=0; h<HO; h++) {
         for (int w=0; w<WO; w++) {
-          int addr_o = output_data_address(cout, h, w);
+          int addr_o = output_data_address(cout, h, w, HO, WO);
           if (float(out_conv_cpu[addr_o]) < float(0)) out_relu_cpu[addr_o] = out_conv_cpu[addr_o] * relu_factor; else out_relu_cpu[addr_o] = out_conv_cpu[addr_o];
           //printf("cpu_relu: c %d h %d w %d out_conv %f\n", cout, h, w, out_relu_cpu[addr_o]);
         }
@@ -208,9 +208,9 @@ void cpu_conv2D() {
   // apply stm
   if (enable_stm){
 	  for (int cout=0; cout<O; cout++) {
-		  for (int h=0; h<H; h++) {
-			  for (int w=0; w<W; w++) {
-				  int addr_o = output_data_address(cout, h, w);
+		  for (int h=0; h<HO; h++) {
+			  for (int w=0; w<WO; w++) {
+				  int addr_o = output_data_address(cout, h, w, HO, WO);
 				  out_stm_cpu[addr_o] = tanh(log(exp(out_conv_cpu[addr_o]) + 1)) * out_conv_cpu[addr_o];
 			  }
 		  }
@@ -228,7 +228,7 @@ void cpu_conv2D() {
     		for (int kw=0; kw<2; kw++) {
     		  int h_in = h + kh;
     		  int w_in = w + kw;
-              int addr_in = output_data_address(o, h_in, w_in);
+              int addr_in = output_data_address(o, h_in, w_in, HO, WO);
 	      //printf("cpu: o %d h_in %d w_in %d value %f\n", o, h_in, w_in, out_conv_cpu[addr_in]);
               if (enable_relu) {
             	  if (out_relu_cpu[addr_in] > max_v) max_v = out_relu_cpu[addr_in];
@@ -257,7 +257,7 @@ void cpu_conv2D() {
     		for (int kw=0; kw<2; kw++) {
     		  int h_in = h + kh;
     		  int w_in = w + kw;
-              int addr_in = output_data_address(o, h_in, w_in);
+              int addr_in = output_data_address(o, h_in, w_in, HO, WO);
 	      //printf("cpu_avgp: o %d h_in %d w_in %d value %f\n", o, h_in, w_in, out_conv_cpu[addr_in]);
               if (enable_relu) {
             	sum_v += out_relu_cpu[addr_in];
@@ -278,9 +278,9 @@ void cpu_conv2D() {
 
   if (enable_add) {
   	  for (int cout=0; cout<O; cout++) {
-  		  for (int h=0; h<H; h++) {
-  			  for (int w=0; w<W; w++) {
-  				  int addr_o = output_data_address(cout, h, w);
+  		  for (int h=0; h<HO_final; h++) {
+  			  for (int w=0; w<WO_final; w++) {
+  				  int addr_o = output_data_address(cout, h, w, HO_final, WO_final);
   				  if (enable_avgpooling || enable_maxpooling) {
   				  	out_add_cpu[addr_o] = data_in_add[addr_o] + out_pool_cpu[addr_o];
   				  	} else {

@@ -41,7 +41,7 @@ void init_data() {
 	  for (int o=0; o<O_output; o++) {
 		  for (int h=0; h<HO_final; h++) {
 			  for (int w=0; w<WO_final; w++) {
-				  addr = output_data_address(o, h, w);
+				  addr = output_data_address(o, h, w, HO_final, WO_final);
 				  if (o<O) {
 					  data_in_add[addr] = deterministic_input_values?o:dist(gen);
 				  } else {

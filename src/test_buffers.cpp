@@ -112,8 +112,11 @@ void allocate_buffers() {
 
 // deallocate_buffers. Deallocates all CPU buffers
 void deallocate_buffers() {
+
+	printf("hola\n");
   free(data_in);
-  free(data_in_add);
+  if (enable_add) free(data_in_add);
+  printf("hola\n");
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
   free(kernel);
 #endif
@@ -130,7 +133,9 @@ void deallocate_buffers() {
 	free(out_pool_cpu);
   }
   if (enable_add) {
+	  printf("1\n");
 	  free(out_add_cpu);
+	  printf("2\n");
   }
 }
 

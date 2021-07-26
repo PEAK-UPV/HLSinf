@@ -122,8 +122,8 @@ void print_output() {
 	printf("Output:\n");
 	for (int o=0; o<O_output; o++) {
 		printf("channel %d:\n", o);
-		for (int h=0; h<HO/2; h++) {
-			for (int w=0; w<WO/2; w++) {
+		for (int h=0; h<HO_final; h++) {
+			for (int w=0; w<WO_final; w++) {
 				int addr_o = output_data_address_div(o, h, w);
 				printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_pool_cpu[addr_o]));
 			}
@@ -136,9 +136,9 @@ void print_output() {
 	printf("Output:\n");
 	for (int o=0; o<O_output; o++) {
 		printf("channel %d:\n", o);
-		for (int h=0; h<HO; h++) {
-			for (int w=0; w<WO; w++) {
-				int addr_o = output_data_address(o, h, w);
+		for (int h=0; h<HO_final; h++) {
+			for (int w=0; w<WO_final; w++) {
+				int addr_o = output_data_address(o, h, w, HO_final, WO_final);
 				if (enable_relu) printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_relu_cpu[addr_o]));
 				else printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_conv_cpu[addr_o]));
 			}
