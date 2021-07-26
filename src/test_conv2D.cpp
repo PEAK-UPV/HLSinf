@@ -91,7 +91,7 @@ data_type *out_relu_cpu;          // Output data buffer for cpu (format O x W x 
 data_type *out_stm_cpu; 		  // Output data buffer for STM for cpu (format O x W x H)
 data_type *out_add_cpu;          // Output data buffer for ADD for cpu (format O x W x H)
 data_type *out_pool_cpu;		  // Output data fuffer for pool for cpu (format O x W/2 x H/2)
-
+data_type *cpu_out;               // final output
 FILE *fp;
 
 #ifdef OPENCL_TEST
@@ -140,22 +140,11 @@ void compute(int *enable, int *cpu, int *retval) {
 	   }
 	   #endif
 
-	   if (enable_relu && enable_stm) {
-	   	   	 print_message("Relu and STM cannot be active at the same time (skipped)");
-	   	   	 *enable = 0;
-	   }
-
-
 	   if (enable_maxpooling && enable_avgpooling) {
 	   	 print_message("MaxPooling and AvgPooling cannot be active at the same time (skipped)");
 	   	 *enable = 0;
 	   }
 
-	   if ((enable_maxpooling || enable_avgpooling) && enable_add) {
-	   	  print_message("Pooling and Adding cannot be active at the same time (Adding disabled)");
-	   	  enable_add = 0;
-	   }
-	   
 	   if ((enable_maxpooling || enable_avgpooling) && ((HO % 2) || (WO % 2))) {
 		 print_message("Pooling not allowed with outut convolution with no even rows and columns (skipped)");
 		 *enable = 0;

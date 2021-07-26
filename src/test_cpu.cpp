@@ -230,17 +230,15 @@ void cpu_conv2D() {
     		  int w_in = w + kw;
               int addr_in = output_data_address(o, h_in, w_in, HO, WO);
 	      //printf("cpu: o %d h_in %d w_in %d value %f\n", o, h_in, w_in, out_conv_cpu[addr_in]);
-              if (enable_relu) {
-            	  if (out_relu_cpu[addr_in] > max_v) max_v = out_relu_cpu[addr_in];
-              } else {
-            	  if(enable_stm) {
-            		  if (out_stm_cpu[addr_in] > max_v) max_v = out_stm_cpu[addr_in];
-            	  } else {
-              		  if (out_conv_cpu[addr_in] > max_v) max_v = out_conv_cpu[addr_in];
-              	  }
+              if(enable_stm) {
+                if (out_stm_cpu[addr_in] > max_v) max_v = out_stm_cpu[addr_in];
+              } else if (enable_relu) {
+                if (out_relu_cpu[addr_in] > max_v) max_v = out_relu_cpu[addr_in];
+ 	      } else {
+                if (out_conv_cpu[addr_in] > max_v) max_v = out_conv_cpu[addr_in];
               }
-    		}
     	  }
+	  }
     	  out_pool_cpu[addr_out] = max_v;
     	}
       }
@@ -259,17 +257,15 @@ void cpu_conv2D() {
     		  int w_in = w + kw;
               int addr_in = output_data_address(o, h_in, w_in, HO, WO);
 	      //printf("cpu_avgp: o %d h_in %d w_in %d value %f\n", o, h_in, w_in, out_conv_cpu[addr_in]);
-              if (enable_relu) {
-            	sum_v += out_relu_cpu[addr_in];
-              } else {
-            	  if(enable_stm) {
-            		  sum_v += out_stm_cpu[addr_in];
-            	  } else {
-            		  sum_v += out_conv_cpu[addr_in];
-            	  }
+              if (enable_stm) {
+            	sum_v += out_stm_cpu[addr_in];
+              } else if (enable_relu) {
+	        sum_v += out_relu_cpu[addr_in];
+	      } else {
+                sum_v += out_conv_cpu[addr_in];
               }
-    		}
     	  }
+	  }
     	  out_pool_cpu[addr_out] = sum_v / 4;
     	}
       }
@@ -277,25 +273,35 @@ void cpu_conv2D() {
   }
 
   if (enable_add) {
-  	  for (int cout=0; cout<O; cout++) {
-  		  for (int h=0; h<HO_final; h++) {
-  			  for (int w=0; w<WO_final; w++) {
-  				  int addr_o = output_data_address(cout, h, w, HO_final, WO_final);
-  				  if (enable_avgpooling || enable_maxpooling) {
-  				  	out_add_cpu[addr_o] = data_in_add[addr_o] + out_pool_cpu[addr_o];
-  				  	} else {
-  				  		if (enable_relu) {
-  				  			out_add_cpu[addr_o] = data_in_add[addr_o] + out_relu_cpu[addr_o];
-  				  		} else {
-  				  			if(enable_stm) {
-  				  				out_add_cpu[addr_o] = data_in_add[addr_o] +  out_stm_cpu[addr_o];
-  				  			} else {
-  				  				out_add_cpu[addr_o] = data_in_add[addr_o] +  out_conv_cpu[addr_o];
-  				  			}
-  				  		}
-  				  	}
-  			  }
-      	  }
+    for (int cout=0; cout<O; cout++) {
+      for (int h=0; h<HO_final; h++) {
+        for (int w=0; w<WO_final; w++) {
+  	  int addr_o = output_data_address(cout, h, w, HO_final, WO_final);
+  	  if (enable_avgpooling || enable_maxpooling) {
+  	    out_add_cpu[addr_o] = data_in_add[addr_o] + out_pool_cpu[addr_o];
+  	  } else if (enable_stm) {
+	    out_add_cpu[addr_o] = data_in_add[addr_o] + out_stm_cpu[addr_o];
+	  } else if (enable_relu) {
+  	    out_add_cpu[addr_o] = data_in_add[addr_o] + out_relu_cpu[addr_o];
+  	  } else {
+  	    out_add_cpu[addr_o] = data_in_add[addr_o] +  out_conv_cpu[addr_o];
   	  }
+	}
+      }
+    }
+  }
+
+  // We now copy the output to the final output for the cpu
+  for (int cout = 0; cout < O; cout++) {
+    for (int h = 0; h < HO_final; h++) {
+      for (int w = 0; w < WO_final; w++) {
+        int addr_out = output_data_address(cout, h, w, HO_final, WO_final);
+	if (enable_add) cpu_out[addr_out] = out_add_cpu[addr_out];
+	else if (enable_avgpooling | enable_maxpooling) cpu_out[addr_out] = out_pool_cpu[addr_out];
+	else if (enable_stm) cpu_out[addr_out] = out_stm_cpu[addr_out];
+	else if (enable_relu) cpu_out[addr_out] = out_relu_cpu[addr_out];
+	else cpu_out[addr_out] = out_conv_cpu[addr_out];
+      }
+    }
   }
 }

@@ -50,9 +50,9 @@
 // -----------------------------------------------------------------------------------------------------------
 // defines for debug (DEBUG_ALL activates all debug defines)
 // -----------------------------------------------------------------------------------------------------------
-#define DEBUG_ALL
+//#define DEBUG_ALL
 
-#define DEBUG_VERBOSE
+//#define DEBUG_VERBOSE
 
 //#define DEBUG_READ_BIAS
 //#define DEBUG_READ_KERNEL

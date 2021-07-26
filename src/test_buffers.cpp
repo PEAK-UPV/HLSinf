@@ -58,6 +58,9 @@ void allocate_buffers() {
 	  posix_memalign((void **)&out_pool_cpu, 4096, O_output * (WO/2) * (HO/2) * sizeof(data_type));
   }
 
+  // final output for cpu
+  posix_memalign((void **)&cpu_out, 4096, O_output * WO_final * HO_final * sizeof(data_type));
+
 #ifdef OPENCL_TEST
   // Now we allocate those buffers in the FPGA (for OpenCL)
   cl_int err;
@@ -113,10 +116,8 @@ void allocate_buffers() {
 // deallocate_buffers. Deallocates all CPU buffers
 void deallocate_buffers() {
 
-	printf("hola\n");
   free(data_in);
   if (enable_add) free(data_in_add);
-  printf("hola\n");
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
   free(kernel);
 #endif
@@ -132,11 +133,8 @@ void deallocate_buffers() {
   if ((enable_maxpooling) || (enable_avgpooling)) {
 	free(out_pool_cpu);
   }
-  if (enable_add) {
-	  printf("1\n");
-	  free(out_add_cpu);
-	  printf("2\n");
-  }
+  if (enable_add) free(out_add_cpu);
+  free(cpu_out);
 }
 
 #ifdef OPENCL_TEST

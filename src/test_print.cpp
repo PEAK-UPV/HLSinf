@@ -94,8 +94,8 @@ void print_input() {
 
 void print_input_add() {
 
-  int Hmax = H;
-  int Wmax = W;
+  int Hmax = HO_final;
+  int Wmax = WO_final;
   if (H > 5) Hmax = 5;
   if (W > 5) Wmax = 5;
 
@@ -117,37 +117,17 @@ void print_input_add() {
 
 
 void print_output() {
-  if ((enable_maxpooling) || (enable_avgpooling)) {
-
-	printf("Output:\n");
-	for (int o=0; o<O_output; o++) {
-		printf("channel %d:\n", o);
-		for (int h=0; h<HO_final; h++) {
-			for (int w=0; w<WO_final; w++) {
-				int addr_o = output_data_address_div(o, h, w);
-				printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_pool_cpu[addr_o]));
-			}
-			printf("\n");
-		}
-	}
-
-  } else {
-
-	printf("Output:\n");
-	for (int o=0; o<O_output; o++) {
-		printf("channel %d:\n", o);
-		for (int h=0; h<HO_final; h++) {
-			for (int w=0; w<WO_final; w++) {
-				int addr_o = output_data_address(o, h, w, HO_final, WO_final);
-				if (enable_relu) printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_relu_cpu[addr_o]));
-				else printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_conv_cpu[addr_o]));
-			}
-			printf("\n");
-		}
-	}
-
+  printf("Output:\n");
+  for (int o=0; o<O_output; o++) {
+    printf("channel %d:\n", o);
+    for (int h=0; h<HO_final; h++) {
+      for (int w=0; w<WO_final; w++) {
+        int addr_o = output_data_address_div(o, h, w);
+        printf("%6.4f (%6.4f) ", float(out[addr_o]), float(cpu_out[addr_o]));
+      }
+      printf("\n");
+    }
   }
-
 }
 
 void print_configuration() {

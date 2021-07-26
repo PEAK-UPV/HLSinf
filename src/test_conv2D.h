@@ -76,6 +76,7 @@ extern data_type *out_relu_cpu;          // Output data buffer for cpu (format O
 extern data_type *out_stm_cpu;		     // Output data buffer for STM for cpu (format O x O x W x H)
 extern data_type *out_add_cpu;		     // Output data buffer for ADD for cpu (format O x O x W x H)
 extern data_type *out_pool_cpu;		     // Output data fuffer for pool for cpu (format O x W/2 x H/2)
+extern data_type *cpu_out;
 extern char *input_data_file;            // file with input parameters
 extern int deterministic_input_values;   // whether input data is randomly generated or not (deterministic needed in co-simulation)
 
