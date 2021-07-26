@@ -490,7 +490,7 @@
 #define READ_BLOCK_SIZE  16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 #define WRITE_BLOCK_SIZE 16   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 #define MIN_DATA_TYPE_VALUE -99999
-#define EPSILON_VALUE 0.00001
+#define EPSILON_VALUE 0.0001
 #endif
 
 #ifdef APF16_DATA_TYPE

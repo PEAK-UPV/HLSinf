@@ -17,22 +17,21 @@ void mul_add(int num_pixels, data_type mul_value, data_type add_value, hls::stre
 
 void multi_threshold(int num_pixels, int count, data_type min, data_type max, data_type stride, data_type scale, data_type bias, hls::stream<pixel_in_t> &in, hls::stream<pixel_in_t> &out) {
   for (int x = 0; x < num_pixels; x++) {
+    DO_PRAGMA(HLS PIPELINE II=1)
     pixel_in_t pin;
+    DO_PRAGMA(HLS ARRAY_PARTITION variable=pin complete)
     pixel_in_t pout;
+    DO_PRAGMA(HLS ARRAY_PARTITION variable=pout complete)
     pin = in.read();
     for (int p = 0; p < CPI; p++) {
       DO_PRAGMA(HLS UNROLL)
       data_type vin = pin.pixel[p];
       data_type vout;
-      if (count == 0) vout = vin;
-      else if (vin > max) vout = (data_type)count;
-      else if (vin < max) vin = (data_type)0;
-      else vout = (vin - min) / stride;
-
-      vout = vout + bias;
-      vout = vout * scale;
-
-      pout.pixel[p] = vout;
+      data_type final_vout;
+      vout = (vin - min) / stride;
+      if (vout > count) final_vout = (count + bias) * scale;
+      else final_vout = (vout + bias) * scale;
+      pout.pixel[p] = count?final_vout:vin;
     }
     out << pout;
   }

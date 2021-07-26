@@ -71,6 +71,17 @@ int output_data_address_div(int o, int h, int w) {
 // cpu_conv2d. Performs the convolutions on the cpu
 void cpu_conv2D() {
 
+  // input data must pass through MUL_ADD
+  int size_in = I_input * W * H;
+  for (int i=0; i<size_in; i++) {
+    data_in[i] = (data_in[i] * mul_value) + add_value;
+  }
+
+  // input data must pass through ADD_MUL
+  for (int i=0; i<size_in; i++) {
+    data_in[i] = (data_in[i] + add_value2) * mul_value2;
+  }
+
   int size_out = O_output * WO * HO;
   for (int i=0; i<size_out; i++) out_conv_cpu[i] = 0.f;
 

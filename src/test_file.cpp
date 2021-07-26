@@ -16,12 +16,12 @@ int open_test_file() {
 }
 
 int read_test_file(int *enable, int *cpu) {
- int n = fscanf(fp, "ENABLE %d CPU %d DET %d %dx%dx%dx%d PT %d PB %d PL %d PR %d SH %d SW %d RELU %d RELU_FACTOR %f MAXPOOL %d AVGPOOL %d SHIFT %d DIRECTION_SHIFT %d POS_SHIFT %d CLIP %d MINCLIP %d MAXCLIP %d\n",
+ int n = fscanf(fp, "ENABLE %d CPU %d DET %d %dx%dx%dx%d PT %d PB %d PL %d PR %d SH %d SW %d RELU %d RELU_FACTOR %f MAXPOOL %d AVGPOOL %d SHIFT %d DIRECTION_SHIFT %d POS_SHIFT %d CLIP %d MINCLIP %d MAXCLIP %d MUL1 %f ADD1 %f MUL2 %f ADD2 %f\n",
             enable, cpu, &deterministic_input_values, &H, &W, &I, &O, &PT, &PB, &PL, &PR,
 	    &SH, &SW, &enable_relu, &relu_factor, &enable_maxpooling, &enable_avgpooling, &enable_shift, &dir_shift, &pos_shift,
-	    &enable_clipping, &min_clip, &max_clip);
+	    &enable_clipping, &min_clip, &max_clip, &mul_value, &add_value, &mul_value2, &add_value2);
 
- if (n != 23) return 1;
+ if (n != 27) return 1;
 
  // derived arguments
  rows = H;

@@ -134,6 +134,10 @@ void print_configuration() {
   printf("|------------------------------------------------------------------------------------------------------------------|\n");
   printf("| ReLU: %s   |   MaxPooling: %s   |   AvgPooling: %s    |  Clipping: %s (%2d:%2d)    |  Shift: %s (%s,%2d)    |\n", enable_relu?"Yes":"No ",
 		    enable_maxpooling?"Yes":"No ", enable_avgpooling?"Yes":"No ", enable_clipping?"Yes":"No ", min_clip, max_clip, enable_shift?"Yes":"No ", dir_shift==LEFT_DIRECTION?"LEFT ":"RIGHT", pos_shift);
+  printf("|------------------------------------------------------------------------------------------------------------------|\n");
+  printf("| MUL_ADD: %6.4f %6.4f | ADD_MUL: %6.4f %6.4f                                                                    |\n", mul_value, add_value, mul_value2, add_value2);
+  printf("| MULTI_THRESHOLD: count %3d min %6.4f max %6.4f stride %6.4f scale %6.4f bias %6.4f|\n", multi_threshold_count, multi_threshold_min, multi_threshold_max, multi_threshold_stride, multi_threshold_scale, multi_threshold_bias);
+
   printf("====================================================================================================================\n");
 }
 
@@ -145,7 +149,7 @@ void print_timings(unsigned long long time, unsigned long long time_per_iteratio
 
 void print_check(int result, float max_difference, int num_differences) {
     if (result) printf("| FAIL                    |            max diff %20.18f           |        num differences %d          |\n", max_difference, num_differences);
-    else        printf("| SUCCESS                                                                                                          |\n");
+    else        printf("| SUCCESS (< %12.8f)                                                                                         |\n", EPSILON_VALUE);
     printf("====================================================================================================================\n");
 }
 
