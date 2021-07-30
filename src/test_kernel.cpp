@@ -52,7 +52,7 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, o_iter_first));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, o_iter_last));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_relu));
-    OCL_CHECK(err, err = kernel_conv2d[0].setArg(arg++, enable_stm));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_stm));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, relu_factor));
     #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_k[0]));
