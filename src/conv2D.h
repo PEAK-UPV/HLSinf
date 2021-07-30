@@ -6,8 +6,12 @@
 #include <stdio.h>
 #include <ap_fixed.h>
 #include <ap_int.h>
+
+#ifndef OPENCL_TEST
 #include <hls_stream.h>
 #include <hls_math.h>
+#endif
+
 // -----------------------------------------------------------------------------------------------------------
 // Configuration selection.
 // Select only one configuration. Each configuration defines the target device, the type of convolution, the

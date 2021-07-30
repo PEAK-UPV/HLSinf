@@ -55,14 +55,14 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
     OCL_CHECK(err, err = kernel_conv2d[0].setArg(arg++, enable_stm));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, relu_factor));
     #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_k));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_k[0]));
     #endif
     #ifdef DWS_CONV
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_k_dw[0]));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_k_pw[0]));
     #endif
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_bias));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_o));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_bias[0]));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_o[0]));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, read_offset_p));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, write_offset_p));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_maxpooling));
