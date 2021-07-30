@@ -30,14 +30,14 @@ void set_channel_write_blocks(int num_channel_write_blocks[CPO], int H, int W) {
 }
 
 extern "C" {
-void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W, int rows, int PT, int PB, int PL, int PR, int SH, int SW, int I, int O, int I_ITER, int o_iter_first, int o_iter_last, int enable_relu, int enable_stm, data_type relu_factor,
+void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W, int HO, int WO, int rows, int PT, int PB, int PL, int PR, int SH, int SW, int I, int O, int I_ITER, int o_iter_first, int o_iter_last, int enable_relu, int enable_stm, data_type relu_factor,
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
                          data_type *ptr_kernel,
 #endif
 #ifdef DWS_CONV
 						 data_type *ptr_dw_kernel, read_kernel_pw_t *ptr_pw_kernel,
 #endif
-              pixel_out_t *ptr_bias, write_block_t *ptr_out, int global_offset, int enable_maxpooling, int enable_avgpooling,
+              pixel_out_t *ptr_bias, write_block_t *ptr_out, int read_offset, int write_offset, int enable_maxpooling, int enable_avgpooling,
 						 int enable_clipping, int enable_shift, int enable_add, int min_clip, int max_clip, int dir_shift, int pos_shift){
 
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
@@ -86,7 +86,7 @@ void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W,
   int O_ITER = o_iter_last - o_iter_first + 1;
 
   // output convolution geometry
-  int HO_conv                  = (H + PT + PB - KH + SH) / SH; // HO = ceil(H + padding - (KH-1) / SH)
+  int HO_conv                  = (rows + PT + PB - KH + SH) / SH; // HO = ceil(H + padding - (KH-1) / SH)
   int WO_conv                  = (W + PL + PR - KW + SW) / SW; // WO = ceil(H + padding - (KW-1) / SW)
   int num_output_conv_pixels   = HO_conv * WO_conv;
 
@@ -105,10 +105,7 @@ void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W,
   int write_cols               = WO_conv;
   int write_channel_offset     = HO_conv * WO_conv;
   #endif
-  
-  int WO = enable_pooling ? ((W - KW_POOLING)/SW_POOLING + 1) : W;
-	int HO = enable_pooling ? ((H - KH_POOLING)/SH_POOLING + 1) : H;
-  
+ 
   o_iter_loop:
   for (int o_iter = 0; o_iter<O_ITER; o_iter++) {
 	DO_PRAGMA(HLS loop_tripcount min=1 max=O_REFERENCE/CPO)
@@ -193,6 +190,9 @@ void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W,
     int num_extra_rows           = 0;
     int read_pixels              = W * (rows + num_extra_rows);
     int read_pixels_total        = read_pixels * I_ITER;
+    int offset_data_in_group_cpi = H * W;
+    int offset_data_out_group_cpo = HO * WO;
+
     //printf("I_ITER %d W %d rows %d num_extra_rows %d read_pixels %d read_pixels_total %d\n", I_ITER, W, rows, num_extra_rows, read_pixels, read_pixels_total);
     int enable_buffer            = (read_pixels * (I / CPI)) <= INPUT_BUFFER_SIZE;
     int write_to_input_buffer    = enable_buffer && (o_iter == 0) && (O_ITER>1);
@@ -204,17 +204,17 @@ void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W,
     int enable_write[CPO];
     int offset_read_data_channel_i[CPI];
     int num_channel_write_blocks[CPO];
-    int offset_read_data_channel = global_offset - corrected_offset;
+    int offset_read_data_channel = read_offset - corrected_offset;
     int channel_size             = H * W;
 
     int read_channel_offset      = (W * H);
 
 
     #ifdef IHW_DATA_FORMAT
-    int o_iter_write_offset      = (global_offset + (o_channel * write_channel_offset)) / WRITE_BLOCK_SIZE;
+    int o_iter_write_offset      = (write_offset + (o_channel * write_channel_offset)) / WRITE_BLOCK_SIZE;
     #endif
     #ifdef GIHWCPI_DATA_FORMAT
-    int o_iter_write_offset      = write_pixels * (o_iter + o_iter_first);
+    int o_iter_write_offset      = write_offset + (offset_data_out_group_cpo * (o_iter + o_iter_first));
     #endif
 
     int read_channel_blocks      = (read_pixels + READ_BLOCK_SIZE - 1) / READ_BLOCK_SIZE;
@@ -263,7 +263,8 @@ void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W,
     input_buffer(read_pixels_total, write_to_input_buffer, read_from_input_buffer, out_read_data, out_read_data_1);
     #endif
     #ifdef GIHWCPI_DATA_FORMAT
-    read_data_channels_gihwcpi(read_pixels_total, offset_read_data_channel, ptr_data, out_read_data, enable_read);
+    //read_data_channels_gihwcpi(read_pixels_total, offset_read_data_channel, ptr_data, out_read_data, enable_read);
+    read_data_channels_gihwcpi(read_pixels, offset_read_data_channel, I_ITER, offset_data_in_group_cpi, ptr_data, out_read_data, enable_read);
     input_buffer(read_pixels_total, write_to_input_buffer, read_from_input_buffer, out_read_data, out_read_data_1);
     read_data_channels_gihwcpi(write_pixels, o_iter_write_offset, ptr_data_add, out_read_data_add, enable_add);
     #endif

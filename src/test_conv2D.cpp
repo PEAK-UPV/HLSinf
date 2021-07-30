@@ -176,6 +176,11 @@ void compute(int *enable, int *cpu, int *retval) {
 	   }
        #endif
 
+	   if (WO_final > WMAX) {
+	     print_message("Width of output data is too large, consider increasing WMAX");
+	     *enable = 0;
+	   }
+
 	   if (*enable) {
 	     allocate_buffers();
 	     init_data();
@@ -196,7 +201,7 @@ void compute(int *enable, int *cpu, int *retval) {
 	     struct timeval prof_t1;
 	     gettimeofday(&prof_t1, NULL);
 
-	     run_kernel();
+	     compute();
 
 	     // timing
          struct timeval prof_t2;

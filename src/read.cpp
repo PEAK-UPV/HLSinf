@@ -320,30 +320,43 @@ void read_data_channels(int H, int W, int rows, int I_ITER, read_block_t *ptr, i
 //   enable              : enable for the read operation
 //
 
-void read_data_channels_gihwcpi(int num_pixels, int offset, read_block_t *ptr, hls::stream<pixel_in_t> &out, int enable) {
+void read_data_channels_gihwcpi(int num_pixels, int offset, int I_ITER, int cpi_group_offset, read_block_t *ptr, hls::stream<pixel_in_t> &out, int enable) {
 
   #ifdef DEBUG_READ_DATA
   printf("READ_DATA: starts (gihwcpi format)\n");
   printf("  num_pixels : %d\n", num_pixels);
+  printf("  offset     : %d\n", offset);
+  printf("  cpi_group_offset : %d\n", cpi_group_offset);
+  printf("  ptr        : %p\n", ptr);
   #endif
 
   if (!enable) return;
 
-  read_data_channels_loop_pixels:
-  for (int i = 0; i < num_pixels; i++) {
-    DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max = I_REFERENCE * H_REFERENCE * W_REFERENCE / CPI)
-    DO_PRAGMA(HLS pipeline)
+  read_data_channels_loop_i_iter:
+  for (int iter = 0; iter < I_ITER; iter++) {
+    DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE / CPI)
+    int offset_global = offset + (cpi_group_offset * iter);
+#ifdef DEBUG_READ_DATA
+#ifdef DEBUG_VERBOSE
+    printf("offset global for iteration %d = %d\n", iter, offset_global);
+#endif
+#endif
+    read_data_channels_loop_pixels:
+    for (int i = 0; i < num_pixels; i++) {
+      DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max = H_REFERENCE * W_REFERENCE)
+      DO_PRAGMA(HLS pipeline)
 
-    pixel_in_t px;
-	px = ptr[offset+i];
-    out << px;
-    #ifdef DEBUG_READ_DATA
-    #ifdef DEBUG_VERBOSE
-    printf("data read : %d : ", i);
-    for (int x=0; x<CPI; x++) printf("%f ", float(px.pixel[x]));
-    printf("\n");
-    #endif
-    #endif
+      pixel_in_t px;
+      px = ptr[offset_global+i];
+      out << px;
+      #ifdef DEBUG_READ_DATA
+      #ifdef DEBUG_VERBOSE
+      printf("data read : %d : ", i);
+      for (int x=0; x<CPI; x++) printf("%f ", float(px.pixel[x]));
+      printf("\n");
+      #endif
+      #endif
+    }
   }
 
   #ifdef DEBUG_READ_DATA
@@ -369,6 +382,7 @@ void read_data_channels_gihwcpi(int num_pixels, int offset, write_block_t *ptr, 
   #ifdef DEBUG_READ_DATA
   printf("READ_DATA: starts (gihwcpi format)\n");
   printf("  num_pixels : %d\n", num_pixels);
+  printf("  offset : %d\n", offset);
   #endif
 
   if (!enable) return;
