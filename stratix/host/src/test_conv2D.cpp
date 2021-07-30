@@ -82,8 +82,10 @@ data_type *out_pool_cpu;		  // Output data fuffer for pool for cpu (format O x W
 
 FILE *fp;
 
+int use_emulator = 0;
+
+
 #ifdef OPENCL_TEST
-int use_emulator = 1;
 
 
 // OpenCL variables
@@ -299,13 +301,13 @@ int main(int argc, char **argv) {
     deterministic_input_values = 0;
 
 
-    #ifdef HLS_DEBUG
+    //#ifdef HLS_DEBUG
     printf("\n\n");
-    printf(KRED "HLS DEBUG ENABLED\n" KNRM);
-    printf("  forcing data_in deterministic values as per co-simulation test\n");
+    //printf(KRED "HLS DEBUG ENABLED\n" KNRM);
+    printf(KRED "  forcing data_in deterministic values\n" KNRM);
     printf("\n\n");
     deterministic_input_values = 1;
-    #endif
+    //#endif
 
 
     parse_arguments(argc, argv);

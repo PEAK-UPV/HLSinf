@@ -37,9 +37,9 @@ int check_result(data_type *max_difference, int *num_elements_differ) {
           data_type diff;
           if (enable_relu) diff = data_type(fabs(float(out_relu_cpu[addr_o]) - float(out[addr_o])));
           else diff = fabs(float(out_conv_cpu[addr_o]) - float(out[addr_o]));
-//#ifdef HLS_DEBUG
-//          if(cout < O_useful)printf("addr %d  epsilon %2.2f   diff %2.2f   cpu %2.2f   mem %2.2f\n", addr_o, epsilon, diff, out_conv_cpu[addr_o], out[addr_o]);
-//#endif
+#ifdef DEBUG_CHECK
+          printf("addr %3d  epsilon %2.2f   diff %2.2f   cpu %2.2f   mem %2.2f\n", addr_o, epsilon, diff, out_conv_cpu[addr_o], out[addr_o]);
+#endif
           if (float(diff) > float(epsilon)) {
             (*num_elements_differ)++;
             if (*max_difference < diff) *max_difference = diff;

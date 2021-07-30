@@ -91,7 +91,9 @@ TARGET_DIR := bin
 # Directories
 #INC_DIRS := ${CMN_DIR}/inc $(INTELFPGAHLSROOT)/include
 INC_DIRS := ${CMN_DIR}/inc /opt/intelFPGA_pro/20.4/hls/include/
-LIB_DIRS := 
+#LIB_DIRS := $(wildcard $(INTELFPGASDKROOT)/linux64/lib/)
+LIB_DIRS := /opt/intelFPGA_pro/20.4/hld/linux64/lib/
+
 
 # Files
 INCS := $(wildcard )

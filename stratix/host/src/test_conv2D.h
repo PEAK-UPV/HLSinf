@@ -1,3 +1,9 @@
+// --------------------------------------------------------------------------------------------------------------
+//
+//
+// --------------------------------------------------------------------------------------------------------------
+
+
 #include "conv2D.h"
 
 
@@ -36,15 +42,15 @@
 #define CHECK(X) assert(CL_SUCCESS == (X))
 
 
+const char *getErrorString(cl_int error); //function in opencl.cpp
 // OCL_CHECK doesn't work if call has templatized function call
-#define OCL_CHECK(error, call)                                                 \
-  call;                                                                        \
-  if (error != CL_SUCCESS) {                                                   \
-    printf("%s:%d Error calling " #call ", error code is: %d\n", __FILE__,     \
-           __LINE__, error);                                                   \
-    exit(EXIT_FAILURE);                                                        \
+#define OCL_CHECK(error, call)                                                          \
+  call;                                                                                 \
+  if (error != CL_SUCCESS) {                                                            \
+    printf("%s:%d Error calling " #call ", error code is: %d   corresponds to:  %s\n",  \
+           __FILE__, __LINE__, error, getErrorString(error));                           \
+    exit(EXIT_FAILURE);                                                                 \
   }
-
 
 
 // Global variables

@@ -67,13 +67,12 @@ void join(int H, int W, int I_ITER, int num_extra_rows, int enable, ihc::stream<
 }
 #endif
 
-void input_buffer(int o_iter, int read_pixels_total, int write_to_buff, int read_from_buff, ihc::stream<pixel_in_t> &in, ihc::stream<pixel_in_t> &out) {
+unsigned long input_buffer(int o_iter, int read_pixels_total, int write_to_buff, int read_from_buff) {
 
   //#ifdef DEBUG_INPUT_BUFFER
   //printf("INPUT_BUFFER: starts (%d pixels; write_to_buff %d; read_from_buff %d)\n", read_pixels_total, write_to_buff, read_from_buff);
   //#endif
-
-
+  unsigned long cnt = 0;
 
   pixel_in_t buffer[INPUT_BUFFER_SIZE];
   //DO_PRAGMA(HLS aggregate variable=buffer)
@@ -94,27 +93,39 @@ void input_buffer(int o_iter, int read_pixels_total, int write_to_buff, int read
     //DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE * W_REFERENCE * H_REFERENCE / CPI)
     //  DO_PRAGMA(HLS pipeline)
 
-    if (!read_from_buff) px_input = in.read();
+    if (!read_from_buff) px_input = out_read_data.read();
     if (read_from_buff)  px_buff = buffer[p];
     if (write_to_buff)   buffer[p] = px_input;
 
     if (read_from_buff) {
-      out.write(px_buff);
-      #ifdef HLS_DEBUG
-      dbg_loop_stream_data_input_buffer[o_iter].write(px_buff);
-      dbg_elements_per_iter_data_input_buffer[o_iter] = dbg_elements_per_iter_data_input_buffer[o_iter] + 1;
+      out_read_data_from_input_buffer.write(px_buff);
+      #ifdef HLS_DEBUG //#ifdef laguasa 
+      if(o_iter == HLS_O_ITER_MONITOR)  
+      {
+        dbg_loop_stream_data_input_buffer.write(px_buff);
+      }
+      //dbg_elements_per_iter_data_input_buffer[o_iter] = dbg_elements_per_iter_data_input_buffer[o_iter] + 1;
+      cnt = cnt +1;
+
       #endif
     } else {
-      out.write(px_input);
-      #ifdef HLS_DEBUG
-      dbg_loop_stream_data_input_buffer[o_iter].write(px_input);
-      dbg_elements_per_iter_data_input_buffer[o_iter] = dbg_elements_per_iter_data_input_buffer[o_iter] + 1;
+      out_read_data_from_input_buffer.write(px_input);
+      #ifdef HLS_DEBUG //#ifdef laguasa
+      if(o_iter == HLS_O_ITER_MONITOR) 
+      {
+        dbg_loop_stream_data_input_buffer.write(px_input);
+      }
+      //dbg_elements_per_iter_data_input_buffer[o_iter] = dbg_elements_per_iter_data_input_buffer[o_iter] + 1;
+      cnt = cnt +1;
+      
       #endif
     }
   }
   //#ifdef DEBUG_INPUT_BUFFER
   //printf("INPUT_BUFFER: ends\n");
   //#endif
+  
+  return cnt;
 }
 
 #ifdef IHW_DATA_FORMAT

@@ -15,11 +15,12 @@
 //
 // This module is used in the Direct Convolution method
 //
-void mul(int o_iter, int H, int W, int I_ITER, ihc::stream<frame_t> &in, ihc::stream<kernel_t> &k_in, ihc::stream<pixel_out_t> &out) {
+unsigned long mul(int o_iter, int H, int W, int I_ITER) {
 
   //#ifdef DEBUG_MUL
   //printf("mul: start\n");
   //#endif
+  unsigned long cnt = 0;
 
   kernel_t kernel;
   
@@ -43,7 +44,7 @@ void mul(int o_iter, int H, int W, int I_ITER, ihc::stream<frame_t> &in, ihc::st
     //#pragma HLS PIPELINE II=1
     load_kernel = (iter_load_kernel == 0);
     if (load_kernel){
-      kernel = k_in.read();
+      kernel = out_read_kernel.read();
       //#ifdef DEBUG_MUL
       //#ifdef DEBUG_VERBOSE
       //printf("MUL: kernel read\n");
@@ -70,7 +71,7 @@ void mul(int o_iter, int H, int W, int I_ITER, ihc::stream<frame_t> &in, ihc::st
     }
 
     frame_t data_in;
-    data_in = in.read();
+    data_in = str_cvt_mul.read();
 
     loop_mul_cpi:
     #pragma unroll
@@ -106,11 +107,15 @@ void mul(int o_iter, int H, int W, int I_ITER, ihc::stream<frame_t> &in, ihc::st
     //printf("\n");
     //#endif
     //#endif
-    out.write(p_out);
+    str_mul_add.write(p_out);
     #ifdef HLS_DEBUG
-    dbg_loop_stream_data_dc_mul_out[o_iter].write(p_out);
-    dbg_loop_stream_data_dc_mul_out_counter = dbg_loop_stream_data_dc_mul_out_counter + 1;
-    dbg_elements_per_iter_data_dc_mul_out[o_iter] = dbg_elements_per_iter_data_dc_mul_out[o_iter] + 1;
+    if (o_iter == HLS_O_ITER_MONITOR)
+    {
+      dbg_loop_stream_data_dc_mul_out.write(p_out);
+    }
+    //dbg_loop_stream_data_dc_mul_out_counter = dbg_loop_stream_data_dc_mul_out_counter + 1;
+    //dbg_elements_per_iter_data_dc_mul_out[o_iter] = dbg_elements_per_iter_data_dc_mul_out[o_iter] + 1;
+    cnt = cnt + 1;
     #endif
     iter_load_kernel++;
     if (iter_load_kernel == W*H) iter_load_kernel = 0;
@@ -119,6 +124,7 @@ void mul(int o_iter, int H, int W, int I_ITER, ihc::stream<frame_t> &in, ihc::st
   //#ifdef DEBUG_MUL
   //printf("mul: end\n");
   //#endif
+  return cnt;
 }
 
 // ----------------------------------------------------------------------------------------

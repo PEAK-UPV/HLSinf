@@ -36,7 +36,7 @@ void lib_conv2D(
       global data_type *ptr_dw_kernel, 
       global read_kernel_pw_t *ptr_pw_kernel,
       #endif
-      global struct pixel_out_t *ptr_bias,
+      global pixel_out_t *ptr_bias,
       global write_block_t *ptr_out,
       int global_offset,
       int enable_upper_padding,
@@ -52,18 +52,12 @@ void lib_conv2D(
       #ifdef HLS_DEBUG
       ,
       unsigned long          my_val,
-      global unsigned long  *my_ret,
-      global unsigned long  *my_ret_2,
-      global unsigned long  *my_ret_3,
-      global unsigned long  *my_ret_4,
-      global float          *my_flt_bias,
-      global float          *my_flt_krnl,
-      global float          *my_flt_din,
-      global float          *my_flt_dout,
+      global unsigned long  *dbg_ptr_ul,
+      global data_type      *dbg_ptr_dt,
       global read_block_t   *dbg_loop_ptr_data_in,
       global read_block_t   *dbg_loop_ptr_data_input_buffer,
       global read_block_t   *dbg_loop_ptr_data_dc_pad_out,
-      global struct frame_t *dbg_loop_ptr_data_dc_cvt_out,
+      global frame_t        *dbg_loop_ptr_data_dc_cvt_out,
       global write_block_t  *dbg_loop_ptr_data_dc_mul_out,
       global write_block_t  *dbg_loop_ptr_data_directconv_out
       #endif

@@ -2,14 +2,13 @@
 #define _LIB_CONV2D_COMMONS_H_
 
 
-//#define HLS_DEBUG
-
-#define MAX_O_ITERS 4
+#define HLS_DEBUG
 
 
-//#define DEBUG_READ_BIAS
-//#define DEBUG_READ_KERNEL
-//#define DEBUG_READ_DATA
+
+#define DEBUG_READ_BIAS
+#define DEBUG_READ_KERNEL
+#define DEBUG_READ_DATA
 //#define DEBUG_SERIALIZE
 //#define DEBUG_JOIN
 //#define DEBUG_INPUT_BUFFER
@@ -19,10 +18,90 @@
 //#define DEBUG_ADD
 //#define DEBUG_SPLIT
 //#define DEBUG_BLOCK
-//#define DEBUG_WRITE_DATA
+#define DEBUG_WRITE_DATA
 //#define DEBUG_RELU
 //#define DEBUG_POOL
-//#define DEBUG_CPU
+#define DEBUG_CPU
+//#define DEBUG_CHECK
+
+// HLS DEBUG MACROS
+#define HLS_DBG_H_IND          0
+#define HLS_DBG_W_IND          1
+#define HLS_DBG_ROWS_IND       2
+#define HLS_DBG_I_INPUT_IND    3
+#define HLS_DBG_O_OUTPUT_IND   4
+#define HLS_DBG_I_ITER_IND           5
+#define HLS_DBG_O_ITER_FIRST_IND     6
+#define HLS_DBG_O_ITER_LAST_IND      7
+#define HLS_DBG_ENABLE_RELU_IND      8
+#define HLS_DBG_GLOBAL_OFFSET_IND    9
+#define HLS_DBG_ENABLE_UPPER_PADDING_IND   10
+#define HLS_DBG_ENABLE_LOWER_PADDING_IND   11
+#define HLS_DBG_ENABLE_MAX_POOLING_IND     12
+#define HLS_DBG_ENABLE_AVG_POOLING_IND     13
+#define HLS_DBG_ENABLE_CLIPPING_IND        14
+#define HLS_DBG_ENABLE_SHIFT_IND   15
+#define HLS_DBG_MIN_CLIP_IND       16
+#define HLS_DBG_MAX_CLIP_IND       17
+#define HLS_DBG_DIR_SHIFT_IND      18
+#define HLS_DBG_POS_SHIFT_IND      19
+
+#define HLS_DBG_VALUES_read_from_bias_IND                 20
+#define HLS_DBG_VALUES_read_from_kernel_IND               21
+#define HLS_DBG_VALUES_read_from_data_in_IND              22
+
+#define HLS_DBG_VALUES_write_to_bias_stream_IND   23 
+#define HLS_DBG_VALUES_read_from_bias_stream_IND  24
+
+#define HLS_DBG_VALUES_write_to_kernel_stream_IND  25
+#define HLS_DBG_VALUES_read_from_kernel_stream_IND 26
+
+#define HLS_DBG_VALUES_write_to_out_read_data_stream_IND  27
+#define HLS_DBG_VALUES_read_from_out_read_data_stream_IND 28
+
+#define HLS_DBG_VALUES_write_to_out_read_data_from_input_buffer_stream_IND  29
+#define HLS_DBG_VALUES_read_from_out_read_data_from_input_buffer_stream_IND 30
+
+#define HLS_DBG_VALUES_write_to_pad_cvt_stream_IND  31
+#define HLS_DBG_VALUES_read_from_pad_cvt_stream_IND 32
+
+#define HLS_DBG_VALUES_write_to_cvt_mul_stream_IND  33
+#define HLS_DBG_VALUES_read_from_cvt_mul_stream_IND 34
+
+#define HLS_DBG_VALUES_write_to_mul_add_stream_IND  35
+#define HLS_DBG_VALUES_read_from_mul_add_stream_IND 36
+
+#define HLS_DBG_VALUES_write_to_out_conv_stream_IND  37
+#define HLS_DBG_VALUES_read_from_out_conv_stream_IND 38
+
+#define HLS_DBG_VALUES_write_to_out_relu_stream_IND  39
+#define HLS_DBG_VALUES_read_from_out_relu_stream_IND 40
+
+#define HLS_DBG_VALUES_write_to_stream_pool_stream_IND  41 
+#define HLS_DBG_VALUES_read_from_stream_pool_stream_IND 42
+
+#define HLS_DBG_VALUES_write_to_out_pooling_stream_IND  43
+#define HLS_DBG_VALUES_read_from_out_polling_stream_IND 44
+
+#define HLS_DBG_VALUES_write_to_data_out_IND  45
+
+//
+#define HLS_DBG_DT_bias_sum_IND              0
+#define HLS_DBG_DT_kernel_sum_IND            1
+#define HLS_DBG_DT_din_sum_IND               2
+#define HLS_DBG_DT_dout_sum_IND              3
+
+
+// max index in both arrays (plus one)
+#define NUM_HLS_DBG_VALUE_ARRAY_ENTRIES  46
+
+
+
+
+
+
+//----end of HLS debug macros
+
 
 // debo llevarlo a un include compartido entre el k_conv2D.cl y el lib_conv2D.cpp
 #define AP_INT_MAX_W 4096 // Must be defined before includes
@@ -302,80 +381,99 @@
 
 // -----------------------------------------------------------------------------------------------------------
 // Data type for input data to the conv module
-struct pixel_in_t {
+struct pixel_in_t_st {
 	data_type pixel[CPI];
 }__attribute__((packed));
+typedef struct pixel_in_t_st pixel_in_t;
 
 // -----------------------------------------------------------------------------------------------------------
 // Data type for output data from the conv module
-struct pixel_out_t {
+struct pixel_out_t_st {
   data_type pixel[CPO];
 }__attribute__((packed));
+typedef struct pixel_out_t_st pixel_out_t;
+
 // -----------------------------------------------------------------------------------------------------------
 // Data type for output data from the conv_winograd module
-struct pixel_in_t2 {           // pixel in
+struct pixel_in_t2_st {           // pixel in
   data_type pixel[CPI/2];
 };
+typedef struct pixel_in_t2_st pixel_in_t2;
 
 // -----------------------------------------------------------------------------------------------------------
 // frames struct (KWxKH)
-struct frame_t {
-  struct pixel_in_t pixel[9];
+struct frame_t_st {
+  pixel_in_t pixel[9];
 };
+typedef struct frame_t_st frame_t;
+
 
 // -----------------------------------------------------------------------------------------------------------
 // frames struct (4x4) winograd
-struct frame_d {
-  struct pixel_in_t pixel[16];
+struct frame_d_st {
+  pixel_in_t pixel[16];
 };
+typedef struct frame_d_st frame_d;
 
 // -----------------------------------------------------------------------------------------------------------
 // frames struct (4x4) winograd
-struct frame_d_2 {
-  struct pixel_in_t2 pixel[16];
+struct frame_d_2_st {
+  pixel_in_t2 pixel[16];
 };
+typedef struct frame_d_2_st frame_d_2;
 
 // -----------------------------------------------------------------------------------------------------------
 // kernel struct
-struct kernel_t {
+struct kernel_t_st {
   data_type pixel[CPO][CPI][9];
 };
+typedef struct kernel_t_st kernel_t;
 
 // -----------------------------------------------------------------------------------------------------------
 //kernel read struct
-struct kernel_in_t {
+struct kernel_in_t_st {
   data_type pixel[9];
 };
+typedef struct kernel_in_t_st kernel_in_t;
 
 // -----------------------------------------------------------------------------------------------------------
 // kernel struct (deepwise)
-struct kernel_dw_t {
+struct kernel_dw_t_st {
   data_type pixel[CPI][KH*KW];
 };
+typedef struct kernel_dw_t_st kernel_dw_t;
 
 // -----------------------------------------------------------------------------------------------------------
 // kernel struct (pointwise)
-struct kernel_pw_t {
+struct kernel_pw_t_st {
   data_type pixel[CPO][CPI];
 };
+typedef struct kernel_pw_t_st kernel_pw_t;
+
 #define read_kernel_pw_t ac_int<CPI*DATA_TYPE_WIDTH>
+// typedef ac_int<CPI*DATA_TYPE_WIDTH> read_kernel_pw_t;
+
 
 // -----------------------------------------------------------------------------------------------------------
 // Read block struct
 #ifdef IHW_DATA_FORMAT
-#define read_block_t ac_int<512>
+  #define read_block_t ac_int<512>
+  // typedef ac_int<512> read_block_t;
 #endif
 #ifdef GIHWCPI_DATA_FORMAT
-#define read_block_t struct pixel_in_t
+  #define read_block_t pixel_in_t
+  // typedef pixel_in_t read_block_t;
 #endif
 
 // -----------------------------------------------------------------------------------------------------------
 // Write block struct
 #ifdef IHW_DATA_FORMAT
-#define write_block_t ac_int<512>
+  #define write_block_t ac_int<512>
+  // typedef ac_int<512> write_block_t;
 #endif
 #ifdef GIHWCPI_DATA_FORMAT
-#define write_block_t struct pixel_out_t
+  #define write_block_t pixel_out_t
+  //typedef pixel_out_t write_block_t;
 #endif
 
 

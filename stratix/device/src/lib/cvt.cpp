@@ -16,11 +16,12 @@
 // changes log:
 //  hls::stream     ihc::stream
 // no prinf support
-void cvt(int o_iter, int H, int W, int I_ITER, ihc::stream<pixel_in_t> &in, ihc::stream<frame_t> &out) {
+unsigned long cvt(int o_iter, int H, int W, int I_ITER) {
 
   //#ifdef DEBUG_CVT
   //printf("cvt: start\n");
   //#endif
+  unsigned long cnt = 0;
 
   int HH=H+2;
   int WW=W+2;
@@ -63,7 +64,7 @@ void cvt(int o_iter, int H, int W, int I_ITER, ihc::stream<pixel_in_t> &in, ihc:
     // get the pixel
     pixel_in_t pixel;
     //DO_PRAGMA(HLS ARRAY_PARTITION variable=pixel complete dim=0)
-    pixel = in.read();
+    pixel = str_pad_cvt.read();
 
 
     // row buffer write (in which buffer row we write the pixel)
@@ -103,13 +104,18 @@ void cvt(int o_iter, int H, int W, int I_ITER, ihc::stream<pixel_in_t> &in, ihc:
       frame.pixel[0] = p0; frame.pixel[1] = p1; frame.pixel[2] = p2;
       frame.pixel[3] = p3; frame.pixel[4] = p4; frame.pixel[5] = p5;
       frame.pixel[6] = p6; frame.pixel[7] = p7; frame.pixel[8] = p8;
-      out.write(frame);
+      str_cvt_mul.write(frame);
 
-      #ifdef HLS_DEBUG
-      dbg_loop_stream_data_dc_cvt_out[o_iter].write(frame);
-      dbg_loop_stream_data_dc_cvt_out_counter = dbg_loop_stream_data_dc_cvt_out_counter + 1;
-      dbg_elements_per_iter_data_dc_cvt_out[o_iter] = dbg_elements_per_iter_data_dc_cvt_out[o_iter] + 1;
+      #ifdef HLS_DEBUG //#ifdef laguasa
+//      //if(o_iter == HLS_O_ITER_MONITOR)
+//      {
+//        dbg_loop_stream_data_dc_cvt_out.write(frame);
+//      }
+//      dbg_loop_stream_data_dc_cvt_out_counter = dbg_loop_stream_data_dc_cvt_out_counter + 1;
+//      dbg_elements_per_iter_data_dc_cvt_out[o_iter] = dbg_elements_per_iter_data_dc_cvt_out[o_iter] + 1;
+      cnt = cnt + 1;
       #endif
+
       //#ifdef DEBUG_CVT
       //#ifdef DEBUG_VERBOSE
       //printf("cvt: frame sent:\n");
@@ -146,4 +152,5 @@ void cvt(int o_iter, int H, int W, int I_ITER, ihc::stream<pixel_in_t> &in, ihc:
   //#ifdef DEBUG_CVT
   //printf("cvt: end\n");
   //#endif
+  return cnt;
 }

@@ -10,9 +10,9 @@
 
 #include "lib_hdrs_priv.h"
 
-struct frame_pool_t {
-	pixel_out_t pixel[KW_POOLING * KH_POOLING];
-};
+//struct frame_pool_t {
+//	pixel_out_t pixel[KW_POOLING * KH_POOLING];
+//};
 
 
 /*
@@ -31,8 +31,9 @@ struct frame_pool_t {
 *	In case enable_pooling is not set, the module bypasses the input
 *	to the output, sending the pixel on the first position of the output frame.
 */
-static void pool_cvt(int H, int W, int enable_pooling, ihc::stream<pixel_out_t> &in, ihc::stream<frame_pool_t> &out) {
+static unsigned long pool_cvt(int H, int W, int enable_pooling) {
 
+  unsigned long cnt = 0;
 	//frame_pool_t kernel;
 	pixel_out_t  buffer0[WMAX];
 	pixel_out_t  buffer1[WMAX];
@@ -68,7 +69,7 @@ static void pool_cvt(int H, int W, int enable_pooling, ihc::stream<pixel_out_t> 
     pixel_out_t  pixel;
 
 		// Let's read CPI pixels
-		pixel = in.read();
+		pixel = out_relu.read();
 
     //    #ifdef DEBUG_POOL
     //    #ifdef DEBUG_VERBOSE
@@ -124,7 +125,8 @@ static void pool_cvt(int H, int W, int enable_pooling, ihc::stream<pixel_out_t> 
 		  if (send_frame) {
      	  kernel.pixel[0] = p0; kernel.pixel[1] = p1;
 			  kernel.pixel[2] = p2; kernel.pixel[3] = p3;
-			  out.write(kernel);
+			  stream_pool.write(kernel);
+        cnt = cnt + 1;
         //#ifdef DEBUG_POOL
         //#ifdef DEBUG_VERBOSE
   			//printf("DEBUG_POOL: Send Frame:\n");
@@ -134,12 +136,14 @@ static void pool_cvt(int H, int W, int enable_pooling, ihc::stream<pixel_out_t> 
 		  }
 		} else {
           kernel.pixel[0] = pixel;
-          out.write(kernel);
+          stream_pool.write(kernel);
+          cnt = cnt + 1;
 		}
 	}
     //#ifdef DEBUG_POOL
     //printf("DEBUG_POOL: ends (cvt)\n");
     //#endif
+    return cnt;
 }
 
 /*
@@ -155,9 +159,10 @@ static void pool_cvt(int H, int W, int enable_pooling, ihc::stream<pixel_out_t> 
 *
 *   If no enable is active then the module bypasses the first pixel of the incomming frame to the output stream
 */
-static void pool_pooling(int HO, int WO, int enable_maxpooling, int enable_avgpooling, ihc::stream<frame_pool_t> &in, ihc::stream<pixel_out_t> &out) {
+static unsigned long pool_pooling(int HO, int WO, int enable_maxpooling, int enable_avgpooling) {
 	
-	
+	unsigned long cnt = 0;
+
 	int size_out = HO * WO;
 	int size_kernel = KH_POOLING * KW_POOLING;
 	int iterations = size_out;
@@ -177,7 +182,7 @@ static void pool_pooling(int HO, int WO, int enable_maxpooling, int enable_avgpo
 
 
 		// Let's read the input frame
-		kernel = in.read();
+		kernel = stream_pool.read();
 
    //     #ifdef DEBUG_POOL
    //     #ifdef DEBUG_VERBOSE
@@ -212,7 +217,8 @@ static void pool_pooling(int HO, int WO, int enable_maxpooling, int enable_avgpo
 		  out_pix.pixel[cpo] = enable_maxpooling ? maxpool_value : enable_avgpooling ? avgpool_value : kernel.pixel[0].pixel[cpo];
 		}
 
-		out.write(out_pix);
+		out_pooling.write(out_pix);
+    cnt = cnt + 1;
     //    #ifdef DEBUG_POOL
     //    #ifdef DEBUG_VERBOSE
 		//printf("DEBUG_POOL: send pixel: ");
@@ -224,11 +230,13 @@ static void pool_pooling(int HO, int WO, int enable_maxpooling, int enable_avgpo
     //#ifdef DEBUG_POOL
     //printf("DEBUG_POOL: Ends (pooling)\n");
     //#endif
+    return cnt;
 }
+/*
+void pooling(int H, int W, int enable_maxpooling, int enable_avgpooling) {
 
-void pooling(int H, int W, int enable_maxpooling, int enable_avgpooling, ihc::stream<pixel_out_t> &input, ihc::stream<pixel_out_t> &output) {
 
-	static ihc::stream<frame_pool_t> stream_pool;
+	//ihc::stream<frame_pool_t> stream_pool;
     //DO_PRAGMA(HLS STREAM variable=stream_pool depth=2)
 
 	int enable_pooling = enable_maxpooling | enable_avgpooling;
@@ -237,6 +245,8 @@ void pooling(int H, int W, int enable_maxpooling, int enable_avgpooling, ihc::st
 	int HO = enable_pooling ? ((H - KH_POOLING)/SH_POOLING + 1) : H;
 
 	//#pragma HLS DATAFLOW
-	pool_cvt(H, W, enable_pooling, input, stream_pool);
-	pool_pooling(HO, WO, enable_maxpooling, enable_avgpooling, stream_pool, output);
+	pool_cvt(H, W, enable_pooling);
+	pool_pooling(HO, WO, enable_maxpooling, enable_avgpooling);
 }
+
+*/

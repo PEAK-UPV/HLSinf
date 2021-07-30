@@ -9,17 +9,15 @@ void allocate_buffers() {
 
   // First we allocate buffers in CPU
 
-
+  printf("1\n");
   // input data buffer
   size_t size_data_in_bytes = I_input * W * H * sizeof(data_type);
   if (posix_memalign((void **)&data_in, 4096, size_data_in_bytes) != 0) {
     printf("FATAL posix_memalign failed to allocate space for pointer: data_in\n");
     CHECK(1);
   }
-  #ifdef HLS_DEBUG 
-  printf("test buffers data_in_buffer size is %lu bytes\n", size_data_in_bytes);
-  #endif
 
+  printf("2\n");
   // weights buffer (kernel), depending on the type of convolution
   #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
   size_t size_kernel_in_bytes = I_kernel * O_kernel * KW * KH * sizeof(data_type);
@@ -28,6 +26,7 @@ void allocate_buffers() {
     CHECK(1);
   }
   #endif
+  printf("3\n");
   #ifdef DWS_CONV
   size_t size_kernel_dw_in_bytes = (I_kernel * KW * KH) * sizeof(data_type);
   size_t size_kernel_pw_in_bytes = (I_kernel * O_kernel) * sizeof(data_type);
@@ -41,6 +40,7 @@ void allocate_buffers() {
   }
   #endif
 
+  printf("4\n");
   // bias buffer
   size_t size_bias_in_bytes = O_output * sizeof(data_type);
   if( posix_memalign((void **)&bias, 4096, size_bias_in_bytes)!= 0 ) {
@@ -48,6 +48,7 @@ void allocate_buffers() {
     CHECK(1);
   }
 
+  printf("5\n");
   // output buffer for fpga
   size_t size_output_in_bytes;
   if ((enable_maxpooling) || (enable_avgpooling)) {
@@ -56,28 +57,21 @@ void allocate_buffers() {
   } else {
 	size_output_in_bytes = O_output * W * H * sizeof(data_type);
   }
+  printf("6\n");
   if ( posix_memalign((void **)&out, 4096, size_output_in_bytes)!= 0 ) {
     printf("FATAL posix_memalign failed to allocate space for pointer: out\n");
     CHECK(1);
   }
 
+  printf("7\n");
   // output buffer for cpu
   if (posix_memalign((void **)&out_conv_cpu, 4096, O_output * W * H * sizeof(data_type))!= 0 ) {
     printf("FATAL posix_memalign failed to allocate space for pointer: out_conv_cpu\n");
     CHECK(1);
   }
 
-  #ifdef HLS_DEBUG
-  //
-  if (posix_memalign((void **)&dbg_cpu_data_directconv_out, 4096, O_output * W * H * sizeof(data_type))!= 0 ) {
-    printf("FATAL posix_memalign failed to allocate space for pointer: dbg_cpu_data_directconv_out\n");
-    CHECK(1);
-  }
-  #endif
 
-
-
-
+   printf("8\n");
   // output for relu function
   if (enable_relu) {
     if (posix_memalign((void **)&out_relu_cpu, 4096, O_output * W * H * sizeof(data_type))!= 0 ) {
@@ -86,6 +80,7 @@ void allocate_buffers() {
   }
   }
 
+  printf("9\n");
   // output for pool function
   if ((enable_maxpooling) || (enable_avgpooling)) {
 	  if (posix_memalign((void **)&out_pool_cpu, 4096, O_output * (W/2) * (H/2) * sizeof(data_type))!= 0 ) {
@@ -95,113 +90,114 @@ void allocate_buffers() {
   }
 
 #ifdef HLS_DEBUG
+  printf("10\n");
+  // simple type values arrays
+  size_t size_hls_dbg_ul_num_values = NUM_HLS_DBG_VALUE_ARRAY_ENTRIES * MAX_CONVS;
+  size_t size_hls_dbg_ul_in_bytes   = size_hls_dbg_ul_num_values * sizeof(unsigned long); 
+  if (posix_memalign((void **)&hls_dbg_ul, 4096, size_hls_dbg_ul_in_bytes) != 0) {
+    printf("FATAL posix_memalign failed to allocate space for pointer: hls_dbg_ul\n");
+    CHECK(1);
+  }
+  for(int ti=0; ti < size_hls_dbg_ul_num_values; ti++) {
+    hls_dbg_ul[ti] = 0;
+  }
+
+  printf("11\n");
+  size_t size_hls_dbg_dt_num_values = NUM_HLS_DBG_VALUE_ARRAY_ENTRIES * MAX_CONVS;
+  size_t size_hls_dbg_dt_in_bytes   = size_hls_dbg_dt_num_values * sizeof(data_type);
+  if (posix_memalign((void **)&hls_dbg_dt, 4096, size_hls_dbg_dt_in_bytes) != 0) {
+    printf("FATAL posix_memalign failed to allocate space for pointer: hls_dbg_dt\n");
+    CHECK(1);
+  }
+  for(int ti=0; ti < size_hls_dbg_dt_num_values; ti++) {
+    hls_dbg_ul[ti] = 0;
+  }
+
   // data_in 
-    size_t size_dbg_loop_data_in = I_input * W * H * MAX_KERNELS;
-    size_t size_dbg_loop_data_in_bytes = size_dbg_loop_data_in * sizeof(data_type);
-    if (posix_memalign((void **)&dbg_loop_data_in, 4096, size_dbg_loop_data_in_bytes) != 0) {
-      printf("FATAL posix_memalign failed to allocate space for pointer: dbg_loop_data_in[MAX_KERNELS]\n");
-      CHECK(1);
-    }
-    for(int ti=0; ti <  size_dbg_loop_data_in; ti++) {
-      dbg_loop_data_in[ti] = 0;
-    }
-  
+  printf("12\n");
+  size_t size_dbg_loop_data_in = I_input * W * H * MAX_CONVS;
+  size_t size_dbg_loop_data_in_bytes = size_dbg_loop_data_in * sizeof(data_type);
+  if (posix_memalign((void **)&dbg_loop_data_in, 4096, size_dbg_loop_data_in_bytes) != 0) {
+    printf("FATAL posix_memalign failed to allocate space for pointer: dbg_loop_data_in\n");
+    CHECK(1);
+  }
+  for(int ti=0; ti <  size_dbg_loop_data_in; ti++) {
+    dbg_loop_data_in[ti] = 0;
+  }
 
   // values after input_buffer stage of kernel
   // this data has the same format as data_in, it is data after input buffers, to deal with congestion of input
-    size_t size_dbg_loop_data_input_buffer = I_input * W * H * MAX_KERNELS;
-    size_t size_dbg_loop_data_input_buffer_bytes = size_dbg_loop_data_input_buffer * sizeof(data_type);
-    if (posix_memalign((void **)&dbg_loop_data_input_buffer, 4096, size_dbg_loop_data_input_buffer_bytes) != 0) {
-      printf("FATAL posix_memalign failed to allocate space for pointer: dbg_loop_data_input_buffer[MAX_KERNELS]\n");
-      CHECK(1);
-    }
-    for(int ti=0; ti <  size_dbg_loop_data_input_buffer; ti++) {
-      dbg_loop_data_in[ti] = 0;
-    }
+  printf("13\n");
+  size_t size_dbg_loop_data_input_buffer = I_input * W * H * MAX_CONVS;
+  size_t size_dbg_loop_data_input_buffer_bytes = size_dbg_loop_data_input_buffer * sizeof(data_type);
+  if (posix_memalign((void **)&dbg_loop_data_input_buffer, 4096, size_dbg_loop_data_input_buffer_bytes) != 0) {
+    printf("FATAL posix_memalign failed to allocate space for pointer: dbg_loop_data_input_buffer\n");
+    CHECK(1);
+  }
+  for(int ti=0; ti <  size_dbg_loop_data_input_buffer; ti++) {
+    dbg_loop_data_in[ti] = 0;
+  }
   
   // values for internal operations of direct convolution stage: padding, cvt, mul, add
   // padding
-  size_t size_dbg_loop_data_dc_pad_out =  I_input * NUM_OF_I_ITERS * (H + 2) * (W + 2) * MAX_KERNELS;
+  printf("14\n");
+  size_t size_dbg_loop_data_dc_pad_out =  I_input * NUM_OF_I_ITERS * (H + 2) * (W + 2) * MAX_CONVS;
   size_t size_dbg_loop_data_dc_pad_out_bytes = size_dbg_loop_data_dc_pad_out * sizeof(data_type);
   if (posix_memalign((void **)&dbg_loop_data_dc_pad_out, 4096, size_dbg_loop_data_dc_pad_out_bytes) != 0) {
-    printf("FATAL posix_memalign failed to allocate space for pointer: dbg_loop_data_dc_pad_out[MAX_KERNELS]\n");
+    printf("FATAL posix_memalign failed to allocate space for pointer: dbg_loop_data_dc_pad_out\n");
     CHECK(1);
   }
   
   // cvt
   // frame_t consists of 9 pixel_in_t
   // Despite that the main loop in cvt.cpp runs for NUM_OF_I_ITERS * (H + 2) * (W + 2), it writes less data to output buffer
-  size_t size_dbg_loop_data_dc_cvt_out = CPI * NUM_PIXELS_IN_FRAME * NUM_OF_I_ITERS * (H) * (W) * MAX_KERNELS;
+  printf("15\n");
+  size_t size_dbg_loop_data_dc_cvt_out = CPI * NUM_PIXELS_IN_FRAME * NUM_OF_I_ITERS * (H) * (W) * MAX_CONVS;
   size_t size_dbg_loop_data_dc_cvt_out_bytes = size_dbg_loop_data_dc_cvt_out * sizeof(data_type);
   if (posix_memalign((void **)&dbg_loop_data_dc_cvt_out, 4096, size_dbg_loop_data_dc_cvt_out_bytes) != 0) {
-    printf("FATAL posix_memalign failed to allocate space for pointer: dbg_loop_data_dc_cvt_out[MAX_KERNELS]\n");
+    printf("FATAL posix_memalign failed to allocate space for pointer: dbg_loop_data_dc_cvt_out\n");
     CHECK(1);
   }
    
   // mul
-  size_t size_dbg_loop_data_dc_mul_out = O_output * NUM_OF_I_ITERS * W * H * MAX_KERNELS;
+  printf("16\n");
+  size_t size_dbg_loop_data_dc_mul_out = O_output * NUM_OF_I_ITERS * W * H * MAX_CONVS;
   size_t size_dbg_loop_data_dc_mul_out_bytes = size_dbg_loop_data_dc_mul_out * sizeof(data_type);
   if (posix_memalign((void **)&dbg_loop_data_dc_mul_out, 4096, size_dbg_loop_data_dc_mul_out_bytes) != 0) {
-    printf("FATAL posix_memalign failed to allocate space for pointer: my_loop_data_dc_mul_out[MAX_KERNELS]\n");
+    printf("FATAL posix_memalign failed to allocate space for pointer: my_loop_data_dc_mul_out\n");
     CHECK(1);
   }
   
   // add stage output, it is the same as
   // copy of values of directconv (full) stage output 
-  size_t size_dbg_loop_data_out =  O_output * W * H * MAX_KERNELS;
+  
+  printf("17\n");
+  size_t size_dbg_loop_data_out =  O_output * W * H * MAX_CONVS;
   size_t size_dbg_loop_data_out_bytes = size_dbg_loop_data_out * sizeof(data_type);
   if (posix_memalign((void **)&dbg_loop_data_directconv_out, 4096, size_dbg_loop_data_out_bytes) != 0) {
-    printf("FATAL posix_memalign failed to allocate space for pointer: my_loop_data_out[MAX_KERNELS]\n");
+    printf("FATAL posix_memalign failed to allocate space for pointer: my_loop_data_out\n");
     CHECK(1);
   }
+  //
+  printf("18\n");
+  if (posix_memalign((void **)&dbg_cpu_data_directconv_out, 4096, O_output * W * H * sizeof(data_type))!= 0 ) {
+    printf("FATAL posix_memalign failed to allocate space for pointer: dbg_cpu_data_directconv_out\n");
+    CHECK(1);
+  }
+
   for(int ti=0; ti <  size_dbg_loop_data_out; ti++) {
    dbg_loop_data_directconv_out[ti] = 0;
   }
 #endif
 
+
+  // CREATE memroy buffers and link them with the host memory pointer
 #ifdef OPENCL_TEST
-  // Now we allocate those buffers in the FPGA (for OpenCL)
   cl_int err;
-//  data_in_ddr.flags  =  0 /*| XCL_MEM_TOPOLOGY*/;
-//  data_in_ddr.obj = data_in;
-//  data_in_ddr.param = 0;
-//  out_ddr[0].flags  = 0 /*| XCL_MEM_TOPOLOGY*/;
-//  out_ddr[0].obj = out;
-//  out_ddr[0].param = 0;
-//  //out_ddr[0].banks = XCL_MEM_DDR_BANK1;
-  //data_in_ddr. = data_in;
-  //out_ddr[0].  = out;
-#if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
-//  kernel_ddr[0].flags  = 0 /*| XCL_MEM_TOPOLOGY*/;
-//  kernel_ddr[0].obj = kernel;
-//  kernel_ddr[0].param = 0;
-  //kernel_ddr[0]. = ;
-#endif
-#ifdef DWS_CONV
-//  kernel_dw_ddr[0].flags  = 0 /*| XCL_MEM_TOPOLOGY*/;
-//  kernel_dw_ddr[0].obj = dw_kernel;
-//  kernel_dw_ddr[0].param = 0;
-//  kernel_pw_ddr[0].flags  = 0 /*| XCL_MEM_TOPOLOGY*/;
-//  kernel_pw_ddr[0].obj = pw_kernel;
-//  kernel_pw_ddr[0].param = 0;
-  //kernel_dw_ddr[0]. = dw_kernel;
-  //kernel_pw_ddr[0]. = pw_kernel
-#endif
-
-//  bias_ddr[0].flags  = 0 /*| XCL_MEM_TOPOLOGY*/;
-//  bias_ddr[0].obj = bias;
-//  bias_ddr[0].param = 0;
-    //bias_ddr[0]. = bias;
-
   
   OCL_CHECK(err, buffer_i       = new cl::Buffer(context, /*CL_MEM_EXT_PTR_XILINX |*/ CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_data_in_bytes, data_in, &err));
   OCL_CHECK(err, buffer_o[0]    = new cl::Buffer(context, /*CL_MEM_EXT_PTR_XILINX |*/ CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR , size_output_in_bytes, &out[0], &err));
 
-#ifdef HLS_DEBUG
-  printf("JM10  data_in -> buffer_i -> size_in_bytes = %lu\n", size_data_in_bytes);
-  printf("JM10  out     -> buffer_o -> size_in_bytes = %lu\n", size_output_in_bytes);
-  jm10_buffer_size_in_bytes = size_data_in_bytes;
-#endif
   
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
   OCL_CHECK(err, buffer_k[0]    = new cl::Buffer(context, /*CL_MEM_EXT_PTR_XILINX |*/ CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_kernel_in_bytes, &kernel[0], &err));
@@ -215,6 +211,12 @@ void allocate_buffers() {
 
 
 #ifdef HLS_DEBUG
+  printf("JM10  data_in -> buffer_i -> size_in_bytes = %lu\n", size_data_in_bytes);
+  printf("JM10  out     -> buffer_o -> size_in_bytes = %lu\n", size_output_in_bytes);
+
+  OCL_CHECK(err, hls_dbg_ul_buffer[0]      = new cl::Buffer(context, /*CL_MEM_EXT_PTR_XILINX |*/ CL_MEM_WRITE_ONLY  | CL_MEM_USE_HOST_PTR , size_hls_dbg_ul_in_bytes, &hls_dbg_ul[0],  &err));
+  OCL_CHECK(err, hls_dbg_dt_buffer[0]      = new cl::Buffer(context, /*CL_MEM_EXT_PTR_XILINX |*/ CL_MEM_WRITE_ONLY  | CL_MEM_USE_HOST_PTR , size_hls_dbg_dt_in_bytes, &hls_dbg_dt[0],  &err))
+
   OCL_CHECK(err, dbg_loop_data_in_buffer_i[0]           = new cl::Buffer(context, /*CL_MEM_EXT_PTR_XILINX |*/ CL_MEM_WRITE_ONLY  | CL_MEM_USE_HOST_PTR , size_dbg_loop_data_in_bytes,            &dbg_loop_data_in[0],  &err));
   OCL_CHECK(err, dbg_loop_data_input_buffer_buffer[0]   = new cl::Buffer(context, /*CL_MEM_EXT_PTR_XILINX |*/ CL_MEM_WRITE_ONLY  | CL_MEM_USE_HOST_PTR , size_dbg_loop_data_input_buffer_bytes,  &dbg_loop_data_input_buffer[0],  &err));
 
@@ -246,6 +248,8 @@ void deallocate_buffers() {
   }
 
 #ifdef HLS_DEBUG
+  free (hls_dbg_ul);
+  free (hls_dbg_dt);
   free (dbg_loop_data_in);
   free (dbg_loop_data_input_buffer);
   free (dbg_loop_data_dc_pad_out);
@@ -325,14 +329,24 @@ void copy_from_fpga() {
 
 
   #ifdef HLS_DEBUG
-  // This operation only needs to wait for the kernel call.
+  printf("HLS debug enqueue read hls_dbg_ul_buffer migrate operation\n");
+  OCL_CHECK(err, err = q.enqueueMigrateMemObjects({*hls_dbg_ul_buffer[0]}, CL_MIGRATE_MEM_OBJECT_HOST, NULL, &read_events[0]));
+  set_callback(read_events[0], "ooo_queue");
+  OCL_CHECK(err, err = read_events[0].wait());
+  printf("....data moved\n");
+
+  printf("HLS debug enqueue read hls_dbg_dt_buffer migrate operation\n");
+  OCL_CHECK(err, err = q.enqueueMigrateMemObjects({*hls_dbg_dt_buffer[0]}, CL_MIGRATE_MEM_OBJECT_HOST, NULL, &read_events[0]));
+  set_callback(read_events[0], "ooo_queue");
+  OCL_CHECK(err, err = read_events[0].wait());
+  printf("....data moved\n");
+
   printf("HLS debug enqueue read dbg_loop_data_in_buffer migrate operation\n");
   OCL_CHECK(err, err = q.enqueueMigrateMemObjects({*dbg_loop_data_in_buffer_i[0]}, CL_MIGRATE_MEM_OBJECT_HOST, NULL, &read_events[0]));
   set_callback(read_events[0], "ooo_queue");
   OCL_CHECK(err, err = read_events[0].wait());
   printf("....data moved\n");
 
-  // This operation only needs to wait for the kernel call.
   printf("HLS debug enqueue read dbg_loop_data_input_buffer migrate operation\n");
   OCL_CHECK(err, err = q.enqueueMigrateMemObjects({*dbg_loop_data_input_buffer_buffer[0]}, CL_MIGRATE_MEM_OBJECT_HOST, NULL, &read_events[0]));
   set_callback(read_events[0], "ooo_queue");

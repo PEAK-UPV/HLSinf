@@ -14,11 +14,13 @@
 //   b_in  : input stream bias
 //   out   : output stream
 //
-void add(int o_iter, int H, int W, int I_ITER, ihc::stream<pixel_out_t> &in, ihc::stream<pixel_out_t> &b_in, ihc::stream<pixel_out_t> &out) {
+unsigned long add(int o_iter, int H, int W, int I_ITER) {
 
   //#ifdef DEBUG_ADD
   //printf("add: start\n");
   //#endif
+
+  unsigned long cnt = 0;
 
   pixel_out_t bias;
   //DO_PRAGMA(HLS ARRAY_PARTITION variable=bias dim=0 complete)
@@ -27,7 +29,7 @@ void add(int o_iter, int H, int W, int I_ITER, ihc::stream<pixel_out_t> &in, ihc
   int num_iterations = W * H;
 
   // Buffer for all data and CPO channels
-  static pixel_out_t buff_o_channels[WMAX*HMAX];
+   pixel_out_t buff_o_channels[WMAX*HMAX];
   //DO_PRAGMA(HLS AGGREGATE variable=buffer_o_channels)
   //#ifdef ALVEO_U200
   //DO_PRAGMA(HLS bind_storage variable=buffer_o_channels type=ram_t2p impl=uram)
@@ -35,7 +37,7 @@ void add(int o_iter, int H, int W, int I_ITER, ihc::stream<pixel_out_t> &in, ihc
 
 
   // We receive bias in packs of CPO
-  bias = b_in.read();
+  bias = out_read_bias.read();
 
   //#ifdef DEBUG_ADD
   //#ifdef DEBUG_VERBOSE
@@ -63,7 +65,7 @@ void add(int o_iter, int H, int W, int I_ITER, ihc::stream<pixel_out_t> &in, ihc
     for(int it = 0; it<num_iterations; it++){
       //DO_PRAGMA(HLS loop_tripcount  min=1 max=W_REFERENCE*H_REFERENCE)
       pixel_out_t px;
-      px = in.read();
+      px = str_mul_add.read();
       pixel_out_t data_in;
       pixel_out_t data_out;
 
@@ -79,12 +81,16 @@ void add(int o_iter, int H, int W, int I_ITER, ihc::stream<pixel_out_t> &in, ihc
       buff_o_channels[it] = data_out;
 
       if(i_iter ==(I_ITER-1)){
-        out.write(data_out);
+        out_conv.write(data_out);
 
         #ifdef HLS_DEBUG
-        dbg_loop_stream_data_directconv_out[o_iter].write(data_out);
-        dbg_loop_stream_data_dc_add_out_counter = dbg_loop_stream_data_dc_add_out_counter + 1;
-        dbg_elements_per_iter_data_dc_add_out[o_iter] = dbg_elements_per_iter_data_dc_add_out[o_iter] + 1;
+        if(o_iter == HLS_O_ITER_MONITOR)
+        {
+          dbg_loop_stream_data_directconv_out.write(data_out);
+        }
+        //dbg_loop_stream_data_dc_add_out_counter = dbg_loop_stream_data_dc_add_out_counter + 1;
+        //dbg_elements_per_iter_data_dc_add_out[o_iter] = dbg_elements_per_iter_data_dc_add_out[o_iter] + 1;
+        cnt = cnt + 1;
         #endif
       }
     }
@@ -105,6 +111,8 @@ void add(int o_iter, int H, int W, int I_ITER, ihc::stream<pixel_out_t> &in, ihc
   //#ifdef DEBUG_ADD
   //printf("add: end\n");
   //#endif
+  
+  return cnt;
 }
 
 

@@ -18,13 +18,13 @@
 //
 //
 
-void relu(int enable_relu, int enable_clipping, int enable_shift, int min_clip, int max_clip, int direction_shift, int pos_shift,
-		  int H, int W, ihc::stream<pixel_out_t> &in, ihc::stream<pixel_out_t> &out) {
+static unsigned long relu(int enable_relu, int enable_clipping, int enable_shift, int min_clip, int max_clip, int direction_shift, int pos_shift, int H, int W ) {
 
   #ifdef DEBUG_RELU
   printf("relu: start\n");
   #endif
 
+  unsigned long cnt = 0;
 
   int data_size = W * H;
   //DO_PRAGMA(HLS ARRAY_PARTITION variable=data_in complete dim=0)
@@ -39,7 +39,7 @@ void relu(int enable_relu, int enable_clipping, int enable_shift, int min_clip, 
     //#pragma HLS PIPELINE II=1
 
     // Let's read the input data
-    data_in  = in.read();
+    data_in  = out_conv.read();
 
     loop_relu_cpo:
     #pragma unroll
@@ -96,10 +96,12 @@ void relu(int enable_relu, int enable_clipping, int enable_shift, int min_clip, 
     //#endif
     //#endif
 
-    out.write(data_out);
+    out_relu.write(data_out);
+    cnt = cnt + 1;
 }
 
 //#ifdef DEBUG_RELU
 //printf("relu: end\n");
 //#endif
+  return cnt;
 }

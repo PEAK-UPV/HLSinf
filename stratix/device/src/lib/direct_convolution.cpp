@@ -20,16 +20,10 @@
 //
 void direct_conv(int o_iter, int H, int W, int I_ITER, int enable_upper_padding, int enable_lower_padding, ihc::stream<pixel_in_t> &in, ihc::stream<kernel_t> &k_in, ihc::stream<pixel_out_t> &b_in, ihc::stream<pixel_out_t> &out) {
 
-  // streams
-  ihc::stream<pixel_in_t>  str_pad_cvt;  // padding->cvt
-  ihc::stream<frame_t>     str_cvt_mul;  // cvt->mul
-  ihc::stream<pixel_out_t> str_mul_add;  // mul->add
-  //DO_PRAGMA(HLS stream variable=str_pad_cvt depth=STREAMS_DEPTH)
-  //DO_PRAGMA(HLS stream variable=str_cvt_mul depth=STREAMS_DEPTH)
-  //DO_PRAGMA(HLS stream variable=str_mul_add depth=STREAMS_DEPTH)
 
   // topology
   //#pragma HLS dataflow
+  //
   padding(o_iter, H, W, I_ITER, enable_upper_padding, enable_lower_padding, in, str_pad_cvt);   // padding
   cvt(o_iter, H, W, I_ITER, str_pad_cvt, str_cvt_mul);       									// cvt
   mul(o_iter, H, W, I_ITER, str_cvt_mul, k_in, str_mul_add); 									// mul

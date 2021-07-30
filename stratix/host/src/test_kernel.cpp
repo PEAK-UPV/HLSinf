@@ -24,29 +24,13 @@ void run_kernel() {
   printf("HLS DEBUG run_kernel using %d kernels  (o_iter=%d  NUM_KERNELS=%d\n", num_kernels, o_iter, NUM_KERNELS);
 #endif
 
-  /*
-#ifdef HLS_DEBUG
-  unsigned long int my_val[NUM_KERNELS];
-  unsigned long my_ret[NUM_KERNELS];
-  unsigned long my_ret_2[NUM_KERNELS];
-  unsigned long my_ret_3[NUM_KERNELS];
-  unsigned long my_ret_4[NUM_KERNELS];
-  float         my_flt_bias[NUM_KERNELS];
-  float         my_flt_krnl[NUM_KERNELS];
-  float         my_flt_din[NUM_KERNELS];
-  float         my_flt_dout[NUM_KERNELS];
-#endif
-*/
   cl_int my_loop_err;
    // input data buffer
-  
-
-  
+    
   for (int k=0; k<num_kernels; k++) {
 
 #ifdef HLS_DEBUG
-    my_val[k] = jm10_buffer_size_in_bytes;
-    my_ret[k] = 5;
+    my_val[k] = 2;
 #endif
     int o_iter_first = o_iter_per_kernel * k;
     int o_iter_last  = o_iter_first + o_iter_per_kernel - 1;
@@ -97,21 +81,15 @@ void run_kernel() {
 
 #ifdef HLS_DEBUG
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, my_val[k]));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, &my_ret[k]));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, &my_ret_2[k]));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, &my_ret_3[k]));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, &my_ret_4[k]));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, &my_flt_bias[k]));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, &my_flt_krnl[k]));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, &my_flt_din[k]));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, &my_flt_dout[k]));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *hls_dbg_ul_buffer[0]));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *hls_dbg_dt_buffer[0]));
 
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *dbg_loop_data_in_buffer_i[k]));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *dbg_loop_data_input_buffer_buffer[k]));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *dbg_loop_data_dc_pad_out_buffer[k]));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *dbg_loop_data_dc_cvt_out_buffer[k]));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *dbg_loop_data_dc_mul_out_buffer[k]));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *dbg_loop_data_directconv_out_buffer[k]));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *dbg_loop_data_in_buffer_i[0]));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *dbg_loop_data_input_buffer_buffer[0]));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *dbg_loop_data_dc_pad_out_buffer[0]));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *dbg_loop_data_dc_cvt_out_buffer[0]));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *dbg_loop_data_dc_mul_out_buffer[0]));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *dbg_loop_data_directconv_out_buffer[0]));
 #endif
 
 

@@ -1,9 +1,102 @@
+// --------------------------------------------------------------------------------------------------------------
+// HLSinf kernels
+// Version: 1.0
+// copyright (c) 2021, Universidad Politècnica de València (UPV), GAP research group
+// Date: July 2021
+// Authors: GAP Research Group (UPV)
+//     José Flich Cardo
+//     Jorge García Martínez
+//     Izan Catalán Gallarch
+//     Carles Hernández Luz
+//
+// contact: jflich@disca.upv.es
+// All rights reserved
+// --------------------------------------------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+// included files
+//-----------------------------------------------------------------------------
+
 #include "test_conv2D.h"
-
-
 
 #include "hls_debug.h"
 
+//-----------------------------------------------------------------------------
+// MACROS
+//-----------------------------------------------------------------------------
+#define PRINT_DIN
+#define PRINT_DATA_INPUT_BUFFER
+#define PRINT_DATA_DC_PAD_OUT
+//#define PRINT_DATA_DC_CVT_OUT
+#define PRINT_DATA_DC_MUL_OUT
+#define PRINT_DATA_DIRECTCONV_OUT
+
+
+
+
+#define JM10_to_complete (unsigned long)1234
+
+//-----------------------------------------------------------------------------
+// Global variables
+//-----------------------------------------------------------------------------
+unsigned long int my_val[NUM_KERNELS];
+//unsigned long my_ret[NUM_KERNELS];
+//unsigned long my_ret_2[NUM_KERNELS];
+//unsigned long my_ret_3[NUM_KERNELS];
+//unsigned long my_ret_4[NUM_KERNELS];
+//float         my_flt_bias[NUM_KERNELS];
+//float         my_flt_krnl[NUM_KERNELS];
+//float         my_flt_din[NUM_KERNELS];
+//float         my_flt_dout[NUM_KERNELS];
+
+unsigned long *hls_dbg_ul; // array for returning unsigned long values from kernel
+data_type     *hls_dbg_dt; // array for returning data_type values from kernel
+cl::Buffer    *hls_dbg_ul_buffer[MAX_CONVS];
+cl::Buffer    *hls_dbg_dt_buffer[MAX_CONVS];
+
+
+// input data to fpga kernel
+data_type  *dbg_loop_data_in;                         // loop from fpga for Input data buffer (format I x W x H)
+cl::Buffer *dbg_loop_data_in_buffer_i[MAX_CONVS];   // loop from fpga for input buffer
+// input data to fpga kernel after input_buffer stage
+data_type  *dbg_loop_data_input_buffer;                    // loop from fpga for data after input_buffer stage, same format as data_in (format I x W x H)
+cl::Buffer *dbg_loop_data_input_buffer_buffer[MAX_CONVS];   // loop from fpga for input buffer
+
+// output from the padding stage of direct convolution function
+data_type  *dbg_loop_data_dc_pad_out;    // loop from fpga for Input data buffer (format I x W x H)
+cl::Buffer *dbg_loop_data_dc_pad_out_buffer[MAX_CONVS];   // loop from fpga for input buffer
+// output from the cvt stage of the direct convolution function
+data_type  *dbg_loop_data_dc_cvt_out;    // loop from fpga for Input data buffer (format I x W x H)
+cl::Buffer *dbg_loop_data_dc_cvt_out_buffer[MAX_CONVS];   // loop from fpga for input buffer
+// output from the mul stage of the direct convolution function
+data_type  *dbg_loop_data_dc_mul_out;    // loop from fpga for (format O x W x H)
+cl::Buffer *dbg_loop_data_dc_mul_out_buffer[MAX_CONVS];   // loop from fpga for input buffer
+
+// output data from direct convolution stage of the kernel 
+data_type  *dbg_loop_data_directconv_out;                 // loop from fpga for Input data buffer (format I x W x H)
+cl::Buffer *dbg_loop_data_directconv_out_buffer[MAX_CONVS];   // loop from fpga for input buffer
+
+data_type *dbg_cpu_data_directconv_out;
+data_type  dbg_cpu_data_directconv_sum = (data_type)0;
+
+// se puede mejorar contantdo con el formato gwhipi y si i= 1 y o= 1
+// Folowing values have to be updated with values of current sim
+// int i_useful = I_input;
+// int o_useful = O_output;
+int I_useful = 4;
+int O_useful = 1;
+
+//-----------------------------------------------------------------------------
+// Local variables
+//-----------------------------------------------------------------------------
+
+
+
+//-----------------------------------------------------------------------------
+// private functions
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
 int padding_data_address(int i, int h, int w) {
   #ifdef GIHWCPI_DATA_FORMAT
 	int gi = i / (CPI);
@@ -17,81 +110,16 @@ int padding_data_address(int i, int h, int w) {
 	return addr;
 }
 
+//-----------------------------------------------------------------------------
+// public functions
+//-----------------------------------------------------------------------------
 
-
-unsigned long int my_val[NUM_KERNELS];
-unsigned long my_ret[NUM_KERNELS];
-unsigned long my_ret_2[NUM_KERNELS];
-unsigned long my_ret_3[NUM_KERNELS];
-unsigned long my_ret_4[NUM_KERNELS];
-float         my_flt_bias[NUM_KERNELS];
-float         my_flt_krnl[NUM_KERNELS];
-float         my_flt_din[NUM_KERNELS];
-float         my_flt_dout[NUM_KERNELS];
-
-
-size_t jm10_buffer_size_in_bytes; // integration debug purposes
-
-vector<cl::Event> my_loop_read_events(MAX_KERNELS); // (completion)
-data_type  dbg_cpu_data_directconv_sum = (data_type)0;
-
-
-// input data to fpga kernel
-data_type  *dbg_loop_data_in;                         // loop from fpga for Input data buffer (format I x W x H)
-cl::Buffer *dbg_loop_data_in_buffer_i[MAX_KERNELS];   // loop from fpga for input buffer
-// input data to fpga kernel after input_buffer stage
-data_type  *dbg_loop_data_input_buffer;                    // loop from fpga for data after input_buffer stage, same format as data_in (format I x W x H)
-cl::Buffer *dbg_loop_data_input_buffer_buffer[MAX_KERNELS];   // loop from fpga for input buffer
-
-// output from the padding stage of direct convolution function
-data_type  *dbg_loop_data_dc_pad_out;    // loop from fpga for Input data buffer (format I x W x H)
-cl::Buffer *dbg_loop_data_dc_pad_out_buffer[MAX_KERNELS];   // loop from fpga for input buffer
-// output from the cvt stage of the direct convolution function
-data_type  *dbg_loop_data_dc_cvt_out;    // loop from fpga for Input data buffer (format I x W x H)
-cl::Buffer *dbg_loop_data_dc_cvt_out_buffer[MAX_KERNELS];   // loop from fpga for input buffer
-// output from the mul stage of the direct convolution function
-data_type  *dbg_loop_data_dc_mul_out;    // loop from fpga for (format O x W x H)
-cl::Buffer *dbg_loop_data_dc_mul_out_buffer[MAX_KERNELS];   // loop from fpga for input buffer
-
-// output data from direct convolution stage of the kernel 
-data_type  *dbg_loop_data_directconv_out;                 // loop from fpga for Input data buffer (format I x W x H)
-cl::Buffer *dbg_loop_data_directconv_out_buffer[MAX_KERNELS];   // loop from fpga for input buffer
-
-data_type *dbg_cpu_data_directconv_out;
-
-// se puede mejorar contantdo con el formato gwhipi y si i= 1 y o= 1
-// Folowing values have to be updated with values of current sim
-// int i_useful = I_input;
-// int o_useful = O_output;
-int I_useful = 4;
-int O_useful = 1;
-
-#define PRINT_DIN
-#define PRINT_DATA_INPUT_BUFFER
-#define PRINT_DATA_DC_PAD_OUT
-#define PRINT_DATA_DC_CVT_OUT
-//#define PRINT_DATA_DC_MUL_OUT
-//#define PRINT_DATA_DIRECTCONV_OUT
-
+//-----------------------------------------------------------------------------
 void hls_debug(void) {
 
   printf("\n\n");
   printf(KGRN "NOTICE: for this test 4x4x1x1 just one channel with useful data\n" KNRM);
   
-  int num_kernels;
-  if (o_iter < NUM_KERNELS) {
-	  num_kernels = 1;
-  } else {
-	  num_kernels = NUM_KERNELS;
-  }
-
-  for (int k=0; k<num_kernels; k++) {
-    printf("k=%d  my_val=%lu  my_ret=%lu  my_ret_2=%lu  my_ret_3=%lu  my_ret_4=%lu  my_flt_bias = %f  my_flt_krnl = %f  my_flt_din = %f  my_flt_dout = %f \n",
-        k, my_val[k], my_ret[k], my_ret_2[k], my_ret_3[k], my_ret_4[k], my_flt_bias[k], my_flt_krnl[k], my_flt_din[k], my_flt_dout[k]
-        );
-    printf("\n");
-  }
-
 
   // data_in 
   float  dbg_my_loop_data_in_sum = 0.0;
@@ -317,6 +345,103 @@ void hls_debug(void) {
   printf("\n");
 
 
+  int num_kernels;
+  int o_iter_per_kernel;  
+
+  if (o_iter < NUM_KERNELS) {
+	  num_kernels = 1;
+    o_iter_per_kernel = o_iter;
+  } else {
+	  num_kernels = NUM_KERNELS;
+    o_iter_per_kernel = o_iter / num_kernels;
+  }
+
+  for (int k=0; k<num_kernels; k++) {
+    printf ("Kernel #%d   ul and dt array content\n", k);
+
+    int o_iter_first = o_iter_per_kernel * k;
+    int o_iter_last  = o_iter_first + o_iter_per_kernel - 1;
+
+    printf ("   H    =   %lu  (%d)\n", hls_dbg_ul[HLS_DBG_H_IND], H);
+    printf ("   W    =   %lu  (%d)\n", hls_dbg_ul[HLS_DBG_W_IND], W);
+    printf ("   ROWS    =   %lu  (%d)\n", hls_dbg_ul[HLS_DBG_ROWS_IND], rows); 
+    printf ("   I_INPUT     =   %lu  (%d)\n", hls_dbg_ul[HLS_DBG_I_INPUT_IND], I_input);
+    printf ("   O_OUTPUT    =   %lu  (%d)\n", hls_dbg_ul[HLS_DBG_O_OUTPUT_IND], O_output);
+    printf ("   I_ITER      =   %lu  (%d)\n", hls_dbg_ul[HLS_DBG_I_ITER_IND], i_iter);
+    printf ("   O_ITER_FIRST   =   %lu  (%d)\n", hls_dbg_ul[HLS_DBG_O_ITER_FIRST_IND], o_iter_first);
+    printf ("   O_ITER_LAST    =   %lu  (%d)\n", hls_dbg_ul[HLS_DBG_O_ITER_LAST_IND], o_iter_last);
+    printf ("   ENABLE_RELU    =   %lu  (%d)\n", hls_dbg_ul[HLS_DBG_ENABLE_RELU_IND], enable_relu);
+    printf ("   GLOBAL_OFFSET  =   %lu  (%d)\n", hls_dbg_ul[HLS_DBG_GLOBAL_OFFSET_IND], global_offset);
+    printf ("   ENABLE_UPPER_PADDING   =   %lu  (%d)\n", hls_dbg_ul[HLS_DBG_ENABLE_UPPER_PADDING_IND], enable_upper_padding);
+    printf ("   ENABLE_LOWER_PADDING   =   %lu  (%d)\n", hls_dbg_ul[HLS_DBG_ENABLE_LOWER_PADDING_IND], enable_lower_padding);
+    printf ("   ENABLE_MAX_POOLING     =   %lu  (%d)\n", hls_dbg_ul[HLS_DBG_ENABLE_MAX_POOLING_IND], enable_maxpooling);
+    printf ("   ENABLE_AVG_POOLING     =   %lu  (%d)\n", hls_dbg_ul[HLS_DBG_ENABLE_AVG_POOLING_IND], enable_avgpooling);
+    printf ("   ENABLE_CLIPPING  =   %lu  (%d)\n", hls_dbg_ul[HLS_DBG_ENABLE_CLIPPING_IND], enable_clipping);
+    printf ("   ENABLE_SHIFT     =   %lu  (%d)\n", hls_dbg_ul[HLS_DBG_ENABLE_SHIFT_IND], enable_shift);
+    printf ("   MIN_CLIP    =   %lu  (%d)\n", hls_dbg_ul[HLS_DBG_MIN_CLIP_IND], min_clip);
+    printf ("   MAX_CLIP    =   %lu  (%d)\n", hls_dbg_ul[HLS_DBG_MAX_CLIP_IND], max_clip);
+    printf ("   DIR_SHIFT   =   %lu  (%d)\n", hls_dbg_ul[HLS_DBG_DIR_SHIFT_IND], dir_shift);
+    printf ("   POS_SHIFT   =   %lu  (%d)\n", hls_dbg_ul[HLS_DBG_POS_SHIFT_IND], pos_shift);
+
+    printf ("   VALUES_read_from_bias     =   %lu  (%d)\n", hls_dbg_ul[HLS_DBG_VALUES_read_from_bias_IND], 1);
+    printf ("   VALUES_read_from_kernel    =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_read_from_kernel_IND], JM10_to_complete);
+    printf ("   VALUES_read_from_data_in   =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_read_from_data_in_IND], JM10_to_complete);
+
+    printf ("   VALUES_write_to_bias_stream     =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_write_to_bias_stream_IND], JM10_to_complete);
+    printf ("   VALUES_read_from_bias_stream    =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_read_from_bias_stream_IND], JM10_to_complete);
+
+    printf ("   VALUES_write_to_kernel_stream     =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_write_to_kernel_stream_IND], JM10_to_complete);
+    printf ("   VALUES_read_from_kernel_stream    =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_read_from_kernel_stream_IND], JM10_to_complete);
+
+    printf ("   VALUES_write_to_out_read_data_stream     =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_write_to_out_read_data_stream_IND], JM10_to_complete);
+    printf ("   VALUES_read_from_out_read_data_stream    =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_read_from_out_read_data_stream_IND], JM10_to_complete);
+
+    printf ("   VALUES_write_to_out_read_data_from_input_buffer_stream     =   %lu  (%lu)\n", 
+        hls_dbg_ul[HLS_DBG_VALUES_write_to_out_read_data_from_input_buffer_stream_IND], JM10_to_complete);
+    printf ("   VALUES_read_from_out_read_data_from_input_buffer_stream    =   %lu  (%lu)\n", 
+        hls_dbg_ul[HLS_DBG_VALUES_read_from_out_read_data_from_input_buffer_stream_IND], JM10_to_complete);
+
+    printf ("   VALUES_write_to_pad_cvt_stream     =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_write_to_pad_cvt_stream_IND], JM10_to_complete);
+    printf ("   VALUES_read_from_pad_cvt_stream    =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_read_from_pad_cvt_stream_IND], JM10_to_complete);
+
+    printf ("   VALUES_write_to_cvt_mul_stream     =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_write_to_cvt_mul_stream_IND], JM10_to_complete);
+    printf ("   VALUES_read_from_cvt_mul_stream    =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_read_from_cvt_mul_stream_IND], JM10_to_complete);
+
+    printf ("   VALUES_write_to_mul_add_stream     =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_write_to_mul_add_stream_IND], JM10_to_complete);
+    printf ("   VALUES_read_from_mul_add_stream    =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_read_from_mul_add_stream_IND], JM10_to_complete);
+
+    printf ("   VALUES_write_to_out_conv_stream     =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_write_to_out_conv_stream_IND], JM10_to_complete);
+    printf ("   VALUES_read_from_out_conv_stream    =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_read_from_out_conv_stream_IND], JM10_to_complete);
+
+    printf ("   VALUES_write_to_out_relu_stream     =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_write_to_out_relu_stream_IND], JM10_to_complete);
+    printf ("   VALUES_read_from_out_relu_stream    =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_read_from_out_relu_stream_IND], JM10_to_complete);
+
+    printf ("   VALUES_write_to_stream_pool_stream     =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_write_to_stream_pool_stream_IND], JM10_to_complete);
+    printf ("   VALUES_read_from_stream_pool_stream    =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_read_from_stream_pool_stream_IND], JM10_to_complete);
+
+    printf ("   VALUES_write_to_out_pooling_stream     =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_write_to_out_pooling_stream_IND], JM10_to_complete);
+    printf ("   VALUES_read_from_out_polling_stream    =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_read_from_out_polling_stream_IND], JM10_to_complete);
+
+    printf ("   VALUES_write_to_data_out    =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_write_to_data_out_IND], JM10_to_complete);
+
+//
+    printf ("   DT_bias_sum    =   %f  (%f)\n", hls_dbg_dt[HLS_DBG_DT_bias_sum_IND], (float)JM10_to_complete); 
+    printf ("   DT_kernel_sum  =   %f  (%f)\n", hls_dbg_dt[HLS_DBG_DT_kernel_sum_IND], (float)JM10_to_complete);
+    printf ("   DT_din_sum     =   %f  (%f)\n", hls_dbg_dt[HLS_DBG_DT_din_sum_IND], (float)JM10_to_complete);
+    printf ("   DT_dout_sum    =   %f  (%f)\n", hls_dbg_dt[HLS_DBG_DT_dout_sum_IND], (float)JM10_to_complete);
+
+
+
+
+    printf("\n");
+  }
+
+
+
+
+
 }
 
-
+//-----------------------------------------------------------------------------
+// end of file: hls_debug.cpp
+//---------------------------------------------------------------------------
