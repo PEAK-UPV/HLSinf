@@ -4,8 +4,7 @@
 
 #include "test_conv2D.h"
 
-void run_kernel() {
-  
+void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_offset_p, int write_offset_p) {
   int num_kernels;
   int o_iter_per_kernel;
 
@@ -38,11 +37,13 @@ void run_kernel() {
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_i_add));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, H));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, W));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, rows));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, PT));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, PB));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, PL));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, PB));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, HO_final));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, WO_final));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, rows_p));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, PT_p));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, PB_p));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, PL_p));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, PR_p));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, SH));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, SW));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, I_input));
@@ -54,15 +55,16 @@ void run_kernel() {
     OCL_CHECK(err, err = kernel_conv2d[0].setArg(arg++, enable_stm));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, relu_factor));
     #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_k[0]));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_k));
     #endif
     #ifdef DWS_CONV
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_k_dw[0]));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_k_pw[0]));
     #endif
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_bias[0]));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_o[0]));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, global_offset));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_bias));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_o));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, read_offset_p));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, write_offset_p));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_maxpooling));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_avgpooling));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_clipping));
@@ -75,15 +77,18 @@ void run_kernel() {
     OCL_CHECK(err, err = q.enqueueNDRangeKernel(kernel_conv2d[k], 0, 1, 1, NULL, &kernel_events[k]));
     set_callback(kernel_events[k], "ooo_queue");
     #else
-
-    k_conv2D((read_block_t *)data_in, (write_block_t *)data_in_add, H, W, rows, PT, PB, PL, PR, SH, SW, I, O, i_iter, o_iter_first, o_iter_last, enable_relu, enable_stm, relu_factor,
+    k_conv2D((read_block_t *)data_in, (write_block_t *)data_in_add, 
+		    H, W, HO_final, WO_final, rows_p, PT_p, PB_p, PL_p, PR_p, SH, SW, I_input, O_output, i_iter, 
+		    o_iter_first, o_iter_last, 
+		    enable_relu, enable_stm, relu_factor,
           #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
 		  kernel,
           #endif
           #ifdef DWS_CONV
 		  (data_type *)dw_kernel, (read_kernel_pw_t *)pw_kernel,
           #endif
-		  (pixel_out_t *)bias, (write_block_t *)out, global_offset,
+		  (pixel_out_t *)bias, (write_block_t *)out, 
+		   read_offset_p, write_offset_p,
 		   enable_maxpooling, enable_avgpooling,
 		   enable_clipping, enable_shift, enable_add, min_clip, max_clip, dir_shift, pos_shift);
     #endif
@@ -97,4 +102,46 @@ void run_kernel() {
   #endif
 
 }
+
+void compute() {
+
+  char str[200];
+  // Let's check if the input geometry must beWW decomposed in multiple frames
+  if (H > HMAX) {
+    //
+    int num_frames = ceil( (float) HO / (float) HMAX);
+    print_message(str);
+    // 
+    for (int fr=0; fr < num_frames; fr++) {
+      // rows to be produced in this frame
+      int output_rows_frame = HMAX;
+      if ((fr == num_frames-1) && ((HMAX * num_frames) != HO)) output_rows_frame = HO % HMAX;
+      //
+      // padding
+      int PT_frame = (fr==0) ? PT : 0;
+      int PB_frame = (fr == num_frames - 1) ? PB : 0;
+      int PL_frame = PL;
+      int PR_frame = PR;
+      //
+      // rows to read for this frame
+      int first_row_to_read = (fr == 0) ? 0 : (fr * HMAX) - (KH - 1);
+      int rows_to_read = output_rows_frame * SH - PT_frame - PB_frame - SH + KH;
+      if (first_row_to_read + rows_to_read > H) {
+	PB_frame = PB_frame + (first_row_to_read + rows_to_read - H);
+	if (PB_frame > PB) PB_frame = PB;
+        rows_to_read = H - first_row_to_read;
+      }
+      //
+      // read offset
+      int read_offset_frame = (fr * W * HMAX) - ( (fr==0) ? 0 : (W * (KH - 1)) );
+      int write_offset_frame = (fr * HMAX * W);
+      sprintf(str, "Frame %d: HxW = %3dx%3d, Pad = %1d-%1d-%1d-%1d, off_rd %d, off_wr %d, rows_to_read %d", fr, H, W, PT_frame, PB_frame, PL_frame, PR_frame, read_offset_frame, write_offset_frame, rows_to_read);
+      print_message(str);
+      run_kernel(rows_to_read, PT_frame, PB_frame, PL_frame, PR_frame, read_offset_frame, write_offset_frame);
+    }
+  } else {
+    run_kernel(rows, PT, PB, PL, PR, 0, 0);
+  }
+}
+
 

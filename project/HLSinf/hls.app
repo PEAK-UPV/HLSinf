@@ -15,7 +15,6 @@
         <file name="../../../src/test_buffers.cpp" sc="0" tb="1" cflags=" -DCONF_ALVEO_U200_4x4_DIRECT_STM_FP32 -Wno-unknown-pragmas" csimflags=" -Wno-unknown-pragmas" blackbox="false"/>
         <file name="../../../src/test_arguments.cpp" sc="0" tb="1" cflags=" -DCONF_ALVEO_U200_4x4_DIRECT_STM_FP32 -Wno-unknown-pragmas" csimflags=" -Wno-unknown-pragmas" blackbox="false"/>
         <file name="../../../src/data_test.cpp" sc="0" tb="1" cflags=" -DCONF_ALVEO_U200_4x4_DIRECT_STM_FP32 -Wno-unknown-pragmas" csimflags=" -Wno-unknown-pragmas" blackbox="false"/>
-        <file name="../src/stm.cpp" sc="0" tb="false" cflags="-DCONF_ALVEO_U200_4x4_DIRECT_STM_FP32" csimflags="" blackbox="false"/>
         <file name="../src/write.cpp" sc="0" tb="false" cflags="-DCONF_ALVEO_U200_4x4_DIRECT_STM_FP32" csimflags="" blackbox="false"/>
         <file name="../src/winograd_convolution.cpp" sc="0" tb="false" cflags="-DCONF_ALVEO_U200_4x4_DIRECT_STM_FP32" csimflags="" blackbox="false"/>
         <file name="../src/serialization.cpp" sc="0" tb="false" cflags="-DCONF_ALVEO_U200_4x4_DIRECT_STM_FP32" csimflags="" blackbox="false"/>
@@ -30,6 +29,7 @@
         <file name="../src/direct_convolution.cpp" sc="0" tb="false" cflags="-DCONF_ALVEO_U200_4x4_DIRECT_STM_FP32" csimflags="" blackbox="false"/>
         <file name="../src/cvt.cpp" sc="0" tb="false" cflags="-DCONF_ALVEO_U200_4x4_DIRECT_STM_FP32" csimflags="" blackbox="false"/>
         <file name="../src/conv2D.h" sc="0" tb="false" cflags="-DCONF_ALVEO_U200_4x4_DIRECT_STM_FP32" csimflags="" blackbox="false"/>
+        <file name="../src/stm.cpp" sc="0" tb="false" cflags="-DCONF_ALVEO_U200_4x4_DIRECT_STM_FP32" csimflags="" blackbox="false"/>
         <file name="../src/add_data.cpp" sc="0" tb="false" cflags="-DCONF_ALVEO_U200_4x4_DIRECT_STM_FP32" csimflags="" blackbox="false"/>
         <file name="../src/add.cpp" sc="0" tb="false" cflags="-DCONF_ALVEO_U200_4x4_DIRECT_STM_FP32" csimflags="" blackbox="false"/>
     </files>

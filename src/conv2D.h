@@ -86,7 +86,7 @@
 #define CPI                          4
 #define CPO                          4
 #define LOG2_CPO                     2
-#define WMAX                       256
+#define WMAX                      1024   
 #define HMAX                       256
 #define READ_BURST_SIZE              4
 #define STREAMS_DEPTH                4
@@ -617,14 +617,14 @@ struct kernel_pw_t {
 
 // -----------------------------------------------------------------------------------------------------------
 // function prototypes
-extern "C" void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W, int rows, int PT, int PB, int PL, int PR, int SH, int SW, int I, int O, int I_ITER, int o_iter_first, int o_iter_last, int enable_relu, int enable_stm, data_type relu_factor,
+extern "C" void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W, int HO, int WO, int rows, int PT, int PB, int PL, int PR, int SH, int SW, int I, int O, int I_ITER, int o_iter_first, int o_iter_last, int enable_relu, int enable_stm, data_type relu_factor,
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
                          data_type *ptr_kernel,
 #endif
 #ifdef DWS_CONV
 						 data_type *ptr_dw_kernel, read_kernel_pw_t *ptr_pw_kernel,
 #endif
-						 pixel_out_t *ptr_bias, write_block_t *ptr_out, int global_offset, int enable_maxpooling, int enable_avgpooling,
+						 pixel_out_t *ptr_bias, write_block_t *ptr_out, int read_offset, int write_offset, int enable_maxpooling, int enable_avgpooling,
 						 int enable_clipping, int enable_shift, int enable_add, int min_clip, int max_clip, int dir_shift, int pos_shift);
 
 // read and write functions
@@ -637,7 +637,8 @@ void write_data_channels(int num_pixels, int channel_offset, write_block_t *ptr,
 #endif
 
 #ifdef GIHWCPI_DATA_FORMAT
-void read_data_channels_gihwcpi(int num_pixels, int offset, read_block_t *ptr, hls::stream<pixel_in_t> &out, int enable);
+//void read_data_channels_gihwcpi(int num_pixels, int offset, read_block_t *ptr, hls::stream<pixel_in_t> &out, int enable);
+void read_data_channels_gihwcpi(int num_pixels, int offset, int I_ITER, int cpi_group_offset, read_block_t *ptr, hls::stream<pixel_in_t> &out, int enable);
 void read_data_channels_gihwcpi(int num_pixels, int offset, write_block_t *ptr, hls::stream<pixel_out_t> &out, int enable);
 void write_data_channels_gihwcpi(int num_pixels, int offset, write_block_t *ptr, hls::stream<pixel_out_t> &in);
 #endif

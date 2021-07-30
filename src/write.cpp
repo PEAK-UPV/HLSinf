@@ -75,7 +75,8 @@ void write_data_channels_gihwcpi(int num_pixels, int offset, write_block_t *ptr,
 
   #ifdef DEBUG_WRITE_DATA
   printf("WRITE_DATA: starts (gihwcpi data format)\n");
-  printf("WRITE_DATA: num_pixels %d\n", num_pixels);
+  printf("  num_pixels %d\n", num_pixels);
+  printf("  offset %d\n", offset);
   #endif
 
   write_data_channels_loop_pixels:

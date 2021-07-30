@@ -122,7 +122,7 @@ void print_output() {
     printf("channel %d:\n", o);
     for (int h=0; h<HO_final; h++) {
       for (int w=0; w<WO_final; w++) {
-        int addr_o = output_data_address_div(o, h, w);
+        int addr_o = output_data_address(o, h, w, HO_final, WO_final);
         printf("%6.4f (%6.4f) ", float(out[addr_o]), float(cpu_out[addr_o]));
       }
       printf("\n");
