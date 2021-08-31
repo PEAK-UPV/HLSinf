@@ -643,7 +643,7 @@ void write_data_channels(int num_pixels, int channel_offset, write_block_t *ptr,
 #ifdef GIHWCPI_DATA_FORMAT
 //void read_data_channels_gihwcpi(int num_pixels, int offset, read_block_t *ptr, hls::stream<pixel_in_t> &out, int enable);
 void read_data_channels_gihwcpi(int num_pixels, int offset, int I_ITER, int cpi_group_offset, read_block_t *ptr, hls::stream<pixel_in_t> &out, int enable);
-void read_data_channels_gihwcpi(int num_pixels, int offset, write_block_t *ptr, hls::stream<pixel_out_t> &out, int enable);
+void read_input_add_gihwcpi(int num_pixels, int offset, write_block_t *ptr, hls::stream<pixel_out_t> &out, int enable);
 void write_data_channels_gihwcpi(int num_pixels, int offset, write_block_t *ptr, hls::stream<pixel_out_t> &in);
 #endif
 

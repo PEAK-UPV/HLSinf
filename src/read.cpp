@@ -366,7 +366,7 @@ void read_data_channels_gihwcpi(int num_pixels, int offset, int I_ITER, int cpi_
 }
 
 // ---------------------------------------------------------------------------------------
-// read_data_channels_gihwcpi. Reads all input data assuming GIxHxWxCPO input data format
+// read_input_add_gihwcpi. Reads all input data assuming GIxHxWxCPO input data format
 // Read pixels are sent out through the output stream
 //
 // Arguments:
@@ -377,7 +377,7 @@ void read_data_channels_gihwcpi(int num_pixels, int offset, int I_ITER, int cpi_
 //   enable              : enable for the read operation
 //
 
-void read_data_channels_gihwcpi(int num_pixels, int offset, write_block_t *ptr, hls::stream<pixel_out_t> &out, int enable) {
+void read_input_add_gihwcpi(int num_pixels, int offset, write_block_t *ptr, hls::stream<pixel_out_t> &out, int enable) {
 
   #ifdef DEBUG_READ_DATA
   printf("READ_DATA: starts (gihwcpi format)\n");

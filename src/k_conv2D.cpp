@@ -266,7 +266,7 @@ void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W,
     //read_data_channels_gihwcpi(read_pixels_total, offset_read_data_channel, ptr_data, out_read_data, enable_read);
     read_data_channels_gihwcpi(read_pixels, offset_read_data_channel, I_ITER, offset_data_in_group_cpi, ptr_data, out_read_data, enable_read);
     input_buffer(read_pixels_total, write_to_input_buffer, read_from_input_buffer, out_read_data, out_read_data_1);
-    read_data_channels_gihwcpi(write_pixels, o_iter_write_offset, ptr_data_add, out_read_data_add, enable_add);
+    read_input_add_gihwcpi(write_pixels, o_iter_write_offset, ptr_data_add, out_read_data_add, enable_add);
     #endif
 
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------
