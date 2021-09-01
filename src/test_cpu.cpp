@@ -215,6 +215,9 @@ void cpu_conv2D() {
 		  #ifdef API8_DATA_TYPE
           data_type max_v = -256;
 		  #endif
+			#ifdef API4_DATA_TYPE
+			data_type max_v = -16;
+			#endif
 		  #ifdef API16_DATA_TYPE
           data_type max_v = -65536;
 		  #endif

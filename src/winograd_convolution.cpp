@@ -992,9 +992,9 @@ void winograd_conv(int H, int W, int I_ITER, int enable_upper_padding, int enabl
 		static hls::stream<frame_winograd> 	str_mul_add;  		// mult_A_AT -> add_winograd
 		DO_PRAGMA(HLS stream variable=str_mul_add      depth=STREAMS_DEPTH)
 	#endif
-	DO_PRAGMA(HLS stream variable=str_pad_cvt      depth=64)
-	DO_PRAGMA(HLS stream variable=cvt_frameConvert depth=64)
-	DO_PRAGMA(HLS stream variable=str_cvt_mul_cTc  depth=STREAMS_DEPTH)
+	DO_PRAGMA(HLS stream variable=str_pad_cvt      depth=STREAMS_DEPTH)
+	DO_PRAGMA(HLS stream variable=cvt_frameConvert depth=8)
+	DO_PRAGMA(HLS stream variable=str_cvt_mul_cTc  depth=8)
 	//DO_PRAGMA(HLS stream variable=kernels_multWise depth=STREAMS_DEPTH)
 	//DO_PRAGMA(HLS stream variable=mult_data_res    depth=STREAMS_DEPTH)
 	DO_PRAGMA(HLS stream variable=mult_wise_res    depth=STREAMS_DEPTH)

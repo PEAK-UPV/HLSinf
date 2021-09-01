@@ -28,11 +28,13 @@
 //#define CONF_ALVEO_U200_16x16_DIRECT_APF8               // Direct convolution 16x16 kernel with APF8
 //#define CONF_ALVEO_U200_16x16_DIRECT_API8               // Direct convolution 16x16 kernel with API8
 
+//#define CONF_ALVEO_U200_32x32_DIRECT_API8               // Direct convolution 32x32 kernel with API8
+
 //#define CONF_ALVEO_U200_4x4_WINOGRAD_API16        		// Winograd convolution 16x16 kernel with API8
 
 //#define CONF_ALVEO_U200_4x4_WINOGRAD_FP32        	   // Winograd convolution 4x4 kernel with FP32
 //#define CONF_ALVEO_U200_4x4_WINOGRAD_APF8            // Winograd convolution 4x4 kernel with API8 ->fail precision
-//#define CONF_ALVEO_U200_4x4_WINOGRAD_API8            // Winograd convolution 4x4 kernel with API8
+#define CONF_ALVEO_U200_4x4_WINOGRAD_API8            // Winograd convolution 4x4 kernel with API8
 
 //#define CONF_ALVEO_U200_8x8_WINOGRAD_FP32        	   // Winograd convolution 8x8 kernel with FP32
 //#define CONF_ALVEO_U200_8x8_WINOGRAD_APF8            // Winograd convolution 8x8 kernel with APF8
@@ -49,12 +51,11 @@
 
 //#define CONF_ALVEO_U200_4x4_DWS_FP32             		// DeepWise Separable 4x4 kernel with FP32 -> fail
 //#define CONF_ALVEO_U200_4x4_DWS_APF8             		// DeepWise Separable 4x4 kernel with APF8 -> fail
-#define CONF_ALVEO_U200_4x4_DWS_API8             		// DeepWise Separable 4x4 kernel with API8
-//#define CONF_ALVEO_U200_4x4_DWS_FP32                      // DeepWise Separable 4x4 kernel with FP32
+//#define CONF_ALVEO_U200_4x4_DWS_API8             		// DeepWise Separable 4x4 kernel with API8
 
 //#define CONF_ALVEO_U200_8x8_DWS_FP32             		// DeepWise Separable 8x8 kernel with FP32 -> fail
 //#define CONF_ALVEO_U200_8x8_DWS_APF8             		// DeepWise Separable 8x8 kernel with APF8 -> fail
-//#define CONF_ALVEO_U200_8x8_DWS_API4             		// DeepWise Separable 8x8 kernel with API8
+//#define CONF_ALVEO_U200_8x8_DWS_API8             		// DeepWise Separable 8x8 kernel with API8
 
 //#define CONF_ALVEO_U200_16x16_DWS_FP32             		// DeepWise Separable 16x16 kernel with FP32 -> fail
 //#define CONF_ALVEO_U200_16x16_DWS_APF8             		// DeepWise Separable 16x16 kernel with APF8 -> fail
@@ -104,7 +105,7 @@
 //#define DEBUG_WRITE_DATA
 //#define DEBUG_RELU
 //#define DEBUG_POOL
-#define DEBUG_CPU
+//#define DEBUG_CPU
 
 // -----------------------------------------------------------------------------------------------------------
 // Automatic defines (do not change; add new ones if needed)
@@ -192,7 +193,7 @@
 #define HMAX                       256
 #define READ_BURST_SIZE              4
 #define STREAMS_DEPTH                4
-#define INPUT_BUFFER_SIZE        65536 //524288
+#define INPUT_BUFFER_SIZE        32768 //524288
 #endif
 
 #ifdef CONF_ALVEO_U200_8x8_DIRECT_APF8
@@ -242,7 +243,7 @@
 #define HMAX             256
 #define READ_BURST_SIZE    4
 #define STREAMS_DEPTH      4
-#define INPUT_BUFFER_SIZE  65536 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define INPUT_BUFFER_SIZE  131072 // 32 rows x 32 cols x (512/CPI) pixels_in
 #endif
 
 #ifdef CONF_ALVEO_U200_16x16_DIRECT_API8
@@ -260,7 +261,25 @@
 #define HMAX             256
 #define READ_BURST_SIZE    16
 #define STREAMS_DEPTH      16
-#define INPUT_BUFFER_SIZE  32768 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define INPUT_BUFFER_SIZE  65536 // 32 rows x 32 cols x (512/CPI) pixels_in
+#endif
+
+#ifdef CONF_ALVEO_U200_32x32_DIRECT_API8
+#define ALVEO_U200
+#define DIRECT_CONV
+#define API8_DATA_TYPE
+#define USE_RELU
+#define USE_CLIPPING
+#define USE_SHIFT
+#define USE_POOLING
+#define CPI                32
+#define CPO                32
+#define LOG2_CPO           5
+#define WMAX             256
+#define HMAX             256
+#define READ_BURST_SIZE    32
+#define STREAMS_DEPTH      32
+#define INPUT_BUFFER_SIZE  65536 // 32 rows x 32 cols x (512/CPI) pixels_in
 #endif
 
 #ifdef CONF_ALVEO_U200_4x4_WINOGRAD_API8
@@ -559,6 +578,28 @@
 #define DWS_STREAM_DEPTH            64
 #endif
 
+#ifdef CONF_ALVEO_U200_8x8_DWS_API8
+#define ALVEO_U200
+#define DWS_CONV
+#define API8_DATA_TYPE
+#define USE_RELU
+#define USE_CLIPPING
+#define USE_SHIFT
+#define USE_POOLING
+#define CPI                          8
+#define CPO                          8
+#define LOG2_CPO                     3
+#define WMAX                       256
+#define HMAX                       256
+#define READ_BURST_SIZE              8
+#define STREAMS_DEPTH                8
+#define INPUT_BUFFER_SIZE      131072    // 256x256x(512/CPI) pixels
+#define MAX_KERNELS_DW         512/CPI
+#define DW_KERNEL_STREAM_DEPTH       8      // 512 DW kernels
+#define PW_KERNEL_STREAM_DEPTH       8      // 512 * 512 PW kernels
+#define DWS_STREAM_DEPTH            64
+#endif
+
 #ifdef CONF_ALVEO_U200_4x4_DWS_FP32
 #define ALVEO_U200
 #define DWS_CONV
@@ -572,11 +613,31 @@
 #define HMAX                       256
 #define READ_BURST_SIZE              4
 #define STREAMS_DEPTH                4
-#define INPUT_BUFFER_SIZE      8388608    // 256x256x(512/CPI) pixels
+#define INPUT_BUFFER_SIZE      131072    // 256x256x(512/CPI) pixels
 #define MAX_KERNELS_DW         512/CPI
 #define DW_KERNEL_STREAM_DEPTH       4      // 512 DW kernels
 #define PW_KERNEL_STREAM_DEPTH       4      // 512 * 512 PW kernels
-#define DWS_STREAM_DEPTH            64
+#define DWS_STREAM_DEPTH            16
+#endif
+
+#ifdef CONF_ALVEO_U200_8x8_DWS_FP32
+#define ALVEO_U200
+#define DWS_CONV
+#define FP32_DATA_TYPE
+#define USE_RELU
+#define USE_POOLING
+#define CPI                          8
+#define CPO                          8
+#define LOG2_CPO                     3
+#define WMAX                       256
+#define HMAX                       256
+#define READ_BURST_SIZE              8
+#define STREAMS_DEPTH                8
+#define INPUT_BUFFER_SIZE      131072    // 256x256x(512/CPI) pixels
+#define MAX_KERNELS_DW         512/CPI
+#define DW_KERNEL_STREAM_DEPTH       8      // 512 DW kernels
+#define PW_KERNEL_STREAM_DEPTH       8      // 512 * 512 PW kernels
+#define DWS_STREAM_DEPTH            16
 #endif
 
 #ifdef CONF_ALVEO_U200_4x4_DWS_APF8
@@ -763,11 +824,11 @@
 // -----------------------------------------------------------------------------------------------------------
 // defines for C simulation and C/RTL co-simulation
 // -----------------------------------------------------------------------------------------------------------
-#define W_SIM         256 //WMAX
-#define H_SIM         256 //HMAX
-#define I_SIM         CPI  //I_REFERENCE
-#define O_SIM         CPO  //O_REFERENCE
-#define INSTANCES_SIM 2   //2
+#define W_SIM         128 //WMAX
+#define H_SIM         128 //HMAX
+#define I_SIM         4  //I_REFERENCE
+#define O_SIM         4  //O_REFERENCE
+#define INSTANCES_SIM 1   //2
 
 // -----------------------------------------------------------------------------------------------------------
 // Direction defines (for shift operations)
