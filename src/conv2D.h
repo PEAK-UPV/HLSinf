@@ -95,10 +95,6 @@
 #define READ_BURST_SIZE              4
 #define STREAMS_DEPTH                4
 #define INPUT_BUFFER_SIZE        65536 		//524288
-#define MAX_KERNELS_DW         512/CPI
-#define DW_KERNEL_STREAM_DEPTH       4      // 512 DW kernels
-#define PW_KERNEL_STREAM_DEPTH       4      // 512 * 512 PW kernels
-#define DWS_STREAM_DEPTH            64
 #endif
 
 #ifdef CONF_ALVEO_U200_4x4_DIRECT_FP32
