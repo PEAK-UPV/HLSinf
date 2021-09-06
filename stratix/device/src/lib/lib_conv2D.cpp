@@ -85,7 +85,10 @@ ihc::stream<frame_pool_t, ihc::buffer<TASK_STREAM_BUFFER_CAPACITY_WORDS>> stream
 ihc::stream<pixel_in_t,  ihc::buffer<HLS_DBG_SB_CAPACITY_W>>   dbg_loop_stream_data_input_buffer;
 // direct convolution streams
 ihc::stream<pixel_in_t,  ihc::buffer<HLS_DBG_SB_CAPACITY_W>>   dbg_loop_stream_data_dc_pad_out;  // pixels write to output stream of padding task
-//ihc::stream<frame_t,     ihc::buffer<HLS_DBG_SB_CAPACITY_W>>   dbg_loop_stream_data_dc_cvt_out;  // frames write to output stream of cvt task
+ihc::stream<frame_t,     ihc::buffer<HLS_DBG_SB_CAPACITY_W>>   dbg_loop_stream_data_dc_cvt_out;  // frames write to output stream of cvt task
+ihc::stream<hls_cvt_sbs_control_t,   ihc::buffer<HLS_DBG_SB_CAPACITY_W>>   dbg_loop_stream_data_dc_cvt_sbs_control_out;  // frames write to output stream of cvt task
+ihc::stream<frame_t,                 ihc::buffer<HLS_DBG_SB_CAPACITY_W>>   dbg_loop_stream_data_dc_cvt_sbs_frame_out;  // frames write to output stream of cvt task
+
 ihc::stream<pixel_out_t, ihc::buffer<HLS_DBG_SB_CAPACITY_W>>   dbg_loop_stream_data_dc_mul_out;  // pixels write to output stream of mul task
 //ihc::stream<pixel_out_t, ihc::buffer<HLS_DBG_SB_CAPACITY_W>    dbg_loop_stream_dc_add_out; directconv_out
 ihc::stream<pixel_out_t, ihc::buffer<HLS_DBG_SB_CAPACITY_W>>   dbg_loop_stream_data_directconv_out;  // pixels write to output stream of dicrect convolution (add) task
@@ -93,6 +96,7 @@ ihc::stream<pixel_out_t, ihc::buffer<HLS_DBG_SB_CAPACITY_W>>   dbg_loop_stream_d
 
 unsigned long dbg_loop_stream_data_dc_pad_out_counter;
 unsigned long dbg_loop_stream_data_dc_cvt_out_counter;
+unsigned long dbg_loop_stream_data_dc_cvt_sbs_out_counter;
 unsigned long dbg_loop_stream_data_dc_mul_out_counter;
 unsigned long dbg_loop_stream_data_dc_add_out_counter;
 
@@ -102,11 +106,13 @@ unsigned long int dbg_elements_per_iter_bias[MAX_O_ITERS];
 unsigned long int dbg_elements_per_iter_data_input_buffer[MAX_O_ITERS];
 unsigned long int dbg_elements_per_iter_data_dc_pad_out[MAX_O_ITERS];
 unsigned long int dbg_elements_per_iter_data_dc_cvt_out[MAX_O_ITERS];
+unsigned long int dbg_elements_per_iter_data_dc_cvt_sbs_out[MAX_O_ITERS];
 unsigned long int dbg_elements_per_iter_data_dc_mul_out[MAX_O_ITERS];
 unsigned long int dbg_elements_per_iter_data_dc_add_out[MAX_O_ITERS];
 unsigned long int dbg_elements_per_iter_data_dc_direcconv_out[MAX_O_ITERS];
 unsigned long int dbg_elements_per_iter_data_relu_out[MAX_O_ITERS];
 unsigned long int dbg_elements_per_iter_data_pool_cvt_out[MAX_O_ITERS];
+unsigned long int dbg_elements_per_iter_data_pool_cvt_sbs_out[MAX_O_ITERS];
 unsigned long int dbg_elements_per_iter_data_pool_pooling_out[MAX_O_ITERS];
 unsigned long int dbg_elements_per_iter_data_out[MAX_O_ITERS];
 #endif
@@ -204,6 +210,8 @@ HLS_EXTERNAL void lib_conv2D(
       OCL_ADDRSP_GLOBAL read_block_t   *dbg_loop_ptr_data_input_buffer,
       OCL_ADDRSP_GLOBAL read_block_t   *dbg_loop_ptr_data_dc_pad_out,
       OCL_ADDRSP_GLOBAL frame_t        *dbg_loop_ptr_data_dc_cvt_out,
+      OCL_ADDRSP_GLOBAL hls_cvt_sbs_control_t   *dbg_loop_ptr_data_dc_cvt_sbs_control_out,
+      OCL_ADDRSP_GLOBAL frame_t                 *dbg_loop_ptr_data_dc_cvt_sbs_frame_out,
       OCL_ADDRSP_GLOBAL write_block_t  *dbg_loop_ptr_data_dc_mul_out,
       OCL_ADDRSP_GLOBAL write_block_t  *dbg_loop_ptr_data_directconv_out
 #endif
@@ -214,6 +222,7 @@ HLS_EXTERNAL void lib_conv2D(
  
   dbg_loop_stream_data_dc_pad_out_counter = (unsigned long)0;
   dbg_loop_stream_data_dc_cvt_out_counter = (unsigned long)0;
+  dbg_loop_stream_data_dc_cvt_sbs_out_counter = (unsigned long) 0;
   dbg_loop_stream_data_dc_mul_out_counter = (unsigned long)0;
   dbg_loop_stream_data_dc_add_out_counter = (unsigned long)0;
 
@@ -235,6 +244,7 @@ HLS_EXTERNAL void lib_conv2D(
     dbg_elements_per_iter_data_input_buffer[ind] = 0;
     dbg_elements_per_iter_data_dc_pad_out[ind] = 0;
     dbg_elements_per_iter_data_dc_cvt_out[ind] = 0;
+    dbg_elements_per_iter_data_dc_cvt_sbs_out[ind] = 0;
     dbg_elements_per_iter_data_dc_mul_out[ind] = 0;
     dbg_elements_per_iter_data_dc_add_out[ind] = 0;
     dbg_elements_per_iter_data_dc_direcconv_out[ind] = 0;
@@ -473,12 +483,17 @@ HLS_EXTERNAL void lib_conv2D(
 
     dbg_elements_per_iter_data_input_buffer[o_iter] = ihc::collect<input_buffer>();
     dbg_elements_per_iter_data_dc_pad_out[o_iter]   = ihc::collect<padding>();
-    dbg_elements_per_iter_data_dc_cvt_out[o_iter]   = ihc::collect<cvt>();
-    dbg_elements_per_iter_data_dc_mul_out[o_iter]   = ihc::collect<mul>();
-    dbg_elements_per_iter_data_dc_add_out[o_iter]   = ihc::collect<add>();
-    dbg_elements_per_iter_data_relu_out[o_iter]     = ihc::collect<relu>();
-    dbg_elements_per_iter_data_pool_cvt_out[o_iter] = ihc::collect<pool_cvt>();
+    dbg_elements_per_iter_data_dc_cvt_out[o_iter]     = ihc::collect<cvt>();
+    //unsigned long cvt_ul                            = ihc::collect<cvt>();
+    //dbg_elements_per_iter_data_dc_cvt_out[o_iter]     = ((0xFF00 & cvt_ul) >> 16) & (unsigned long)0x00FF;
+    //dbg_elements_per_iter_data_dc_cvt_sbs_out[o_iter] = ( 0x00FF & cvt_ul)        & (unsigned long)0x00FF;
+    dbg_elements_per_iter_data_dc_mul_out[o_iter]     = ihc::collect<mul>();
+    dbg_elements_per_iter_data_dc_add_out[o_iter]     = ihc::collect<add>();
+    dbg_elements_per_iter_data_relu_out[o_iter]       = ihc::collect<relu>();
+    dbg_elements_per_iter_data_pool_cvt_out[o_iter]   = ihc::collect<pool_cvt>();
     dbg_elements_per_iter_data_pool_pooling_out[o_iter] = ihc::collect<pool_pooling>();
+
+    dbg_elements_per_iter_data_dc_cvt_sbs_out[o_iter] = dbg_elements_per_iter_data_dc_pad_out[o_iter]; // will read the same number of pixels as the padding stage wrote to the channel
 
 
     
@@ -582,6 +597,8 @@ HLS_EXTERNAL void lib_conv2D(
    
     dbg_ptr_ul[HLS_DBG_VALUES_write_to_data_out_IND] =dbg_elements_per_iter_data_out[HLS_O_ITER_MONITOR];   
 
+    dbg_ptr_ul[HLS_DBG_VALUES_write_to_out_conv_sbs_stream_IND] =  dbg_elements_per_iter_data_dc_cvt_sbs_out[HLS_O_ITER_MONITOR]; 
+
     my_flt_bias = dbg_flt_bias_sum[HLS_O_ITER_MONITOR];
     my_flt_krnl = dbg_flt_krnl_sum[HLS_O_ITER_MONITOR];
     my_flt_din  = dbg_flt_din_sum[HLS_O_ITER_MONITOR];
@@ -644,24 +661,59 @@ HLS_EXTERNAL void lib_conv2D(
         }
 
 
-//        // values after cvt stage
-//        {
-//          unsigned long bytes_to_copy = sizeof(frame_t); // 9 pixels
-//          // Despite that the main loop in cvt.cpp runs for I_ITER * (H + 2) * (W + 2), it writes less data to output buffer
-//          int elements_to_copy = I_ITER * (H) * (W); // value from cvt.cpp
-//          //int elements_to_copy = dbg_elements_per_iter_data_dc_cvt_out[o_iter];
-//
-//          for (int i = 0; i < elements_to_copy; i++) {
-//             frame_t fr_loop;
-//             fr_loop = dbg_loop_stream_data_dc_cvt_out.read();
-//             //memcpy((void*)&dbg_loop_ptr_data_dc_cvt_out[i], (void*)&(fr_loop), bytes_to_copy);
-//              for (int j = 0; j < 9; j++)
-//                for (int k = 0; k < CPI; k++) // pixel_in_t
-//                  dbg_loop_ptr_data_dc_cvt_out[i].frame[j].pixel[k] = fr_loop.pixel[j].pixel[k];
-//             
-//           }
-//        }
-        
+        // values after cvt stage
+        {
+          unsigned long bytes_to_copy = sizeof(frame_t); // 9 pixels
+          // Despite that the main loop in cvt.cpp runs for I_ITER * (H + 2) * (W + 2), it writes less data to output buffer
+          //int elements_to_copy = I_ITER * (H) * (W); // value from cvt.cpp
+          int elements_to_copy = dbg_elements_per_iter_data_dc_cvt_out[HLS_O_ITER_MONITOR];
+          //int elements_to_copy = dbg_elements_per_iter_data_dc_cvt_out[o_iter];
+
+          for (int i = 0; i < elements_to_copy; i++) {
+            frame_t fr_loop;
+            fr_loop = dbg_loop_stream_data_dc_cvt_out.read();
+            //memcpy((void*)&dbg_loop_ptr_data_dc_cvt_out[i], (void*)&(fr_loop), bytes_to_copy);
+            for (int j = 0; j < 9; j++)
+              for (int k = 0; k < CPI; k++) // pixel_in_t
+                dbg_loop_ptr_data_dc_cvt_out[i].pixel[j].pixel[k] = fr_loop.pixel[j].pixel[k];
+
+          }
+        }
+
+        //step by step frame debug
+        {
+          int elements_to_copy = dbg_elements_per_iter_data_dc_cvt_sbs_out[HLS_O_ITER_MONITOR];
+
+          for (int i = 0; i < elements_to_copy; i++) {
+            hls_cvt_sbs_control_t ctrl_loop;
+            ctrl_loop = dbg_loop_stream_data_dc_cvt_sbs_control_out.read();
+
+            dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].iter              = ctrl_loop.iter;
+            dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].pin_row           = ctrl_loop.pin_row;
+            dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].pin_col           = ctrl_loop.pin_col;
+            dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].row0_buffer_write = ctrl_loop.row0_buffer_write;
+            dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].row1_buffer_write = ctrl_loop.row1_buffer_write;
+            dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].row2_buffer_write = ctrl_loop.row2_buffer_write;
+            dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].p                 = ctrl_loop.p;
+            dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].pin_col0          = ctrl_loop.pin_col0;
+            dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].pin_col1          = ctrl_loop.pin_col1;
+            dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].row0              = ctrl_loop.row0;
+            dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].row1              = ctrl_loop.row1;
+            dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].shift_frame       = ctrl_loop.shift_frame;
+            dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].send_frame        = ctrl_loop.send_frame;
+          }
+
+          for (int i = 0; i < elements_to_copy; i++) {
+            frame_t fr_loop;
+            fr_loop = dbg_loop_stream_data_dc_cvt_sbs_frame_out.read();
+            for (int j = 0; j < 9; j++)
+              for (int k = 0; k < CPI; k++) // pixel_in_t
+                dbg_loop_ptr_data_dc_cvt_sbs_frame_out[i].pixel[j].pixel[k] = fr_loop.pixel[j].pixel[k];
+          }
+        }
+
+
+       
 
         // values after mul stage
         {

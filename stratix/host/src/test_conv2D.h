@@ -22,11 +22,6 @@
 //#include <vector>
 #include <sys/time.h>
 
-//#ifdef OPENCL_TEST
-//#include "CL/cl_ext_xilinx.h"  XILINX
-//#include "xcl2.hpp"            XILINX
-//#endif
-
 
 // color codes for nice printf
 #define KNRM  "\x1B[0m"
@@ -39,7 +34,7 @@
 #define KWHT  "\x1B[37m"
 #define KRST  "\033[0m"
 
-#define CHECK(X) assert(CL_SUCCESS == (X))
+//#define CHECK(X) assert(CL_SUCCESS == (X))
 
 
 const char *getErrorString(cl_int error); //function in opencl.cpp
@@ -52,6 +47,8 @@ const char *getErrorString(cl_int error); //function in opencl.cpp
     exit(EXIT_FAILURE);                                                                 \
   }
 
+
+#define CHECK(X) OCL_CHECK(X, "not-specified")
 
 // Global variables
 extern int CONVS;       // Number of convolutional layers
@@ -84,55 +81,72 @@ extern int o_iter;					 // number of output iterations
 extern int global_offset;    // global offset for the output data for the kernel
 extern int GI;							 // number of groups for input channels
 extern int GO;							 // number of groups for output channels
-extern data_type *data_in;   // Input data buffer (format I x W x H)
-extern data_type *out;       // Output data buffer (format O x W x H)
-extern data_type *kernel;    // Conv kernel buffers (format GO x GI x CPO x CPI x KW x KH) - for DirectConv and WinogradConv
-extern data_type *dw_kernel;             // DW kernel (format I x KH x KW) - for DWS
-extern data_type *pw_kernel;             // PW kernel (format GO x GI x CPO x CPI) - for DWS
-extern data_type *bias;                  // Conv bias buffers (format O)
-extern data_type *out_conv_cpu;          // Output data buffer for cpu (format O x W x H)
-extern data_type *out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
-extern data_type *out_pool_cpu;		     // Output data fuffer for pool for cpu (format O x W/2 x H/2)
+
+//extern data_type *data_in;   // Input data buffer (format I x W x H)
+//extern data_type *out;       // Output data buffer (format O x W x H)
+//extern data_type *kernel;    // Conv kernel buffers (format GO x GI x CPO x CPI x KW x KH) - for DirectConv and WinogradConv
+//extern data_type *dw_kernel;             // DW kernel (format I x KH x KW) - for DWS
+//extern data_type *pw_kernel;             // PW kernel (format GO x GI x CPO x CPI) - for DWS
+//extern data_type *bias;                  // Conv bias buffers (format O)
+//extern data_type *out_conv_cpu;          // Output data buffer for cpu (format O x W x H)
+//extern data_type *out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
+//extern data_type *out_pool_cpu;		     // Output data fuffer for pool for cpu (format O x W/2 x H/2)
+extern scoped_aligned_ptr<data_type> data_in;   // Input data buffer (format I x W x H)
+extern scoped_aligned_ptr<data_type> out;       // Output data buffer (format O x W x H)
+extern scoped_aligned_ptr<data_type> kernel;    // Conv kernel buffers (format GO x GI x CPO x CPI x KW x KH) - for DirectConv and WinogradConv
+extern scoped_aligned_ptr<data_type> dw_kernel;             // DW kernel (format I x KH x KW) - for DWS
+extern scoped_aligned_ptr<data_type> pw_kernel;             // PW kernel (format GO x GI x CPO x CPI) - for DWS
+extern scoped_aligned_ptr<data_type> bias;                  // Conv bias buffers (format O)
+extern scoped_aligned_ptr<data_type> out_conv_cpu;          // Output data buffer for cpu (format O x W x H)
+extern scoped_aligned_ptr<data_type> out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
+extern scoped_aligned_ptr<data_type> out_pool_cpu;		     // Output data fuffer for pool for cpu (format O x W/2 x H/2)
+
 extern char *input_data_file;            // file with input parameters
+
 extern int deterministic_input_values;   // whether input data is randomly generated or not (deterministic needed in co-simulation)
 
 extern FILE *fp;
 
 #ifdef OPENCL_TEST
+
 extern int use_emulator;
 // OpenCL variables
-extern cl::Context context;                          // Context
-extern cl::CommandQueue q;                           // Command queue
-extern cl::Program program;                          // Program
-extern std::string binaryFile;                       // Binary file
-extern cl::Kernel kernel_conv2d[MAX_KERNELS];        // FPGA kernels
-extern vector<cl::Event> kernel_events;              // Kernel events (completion)
-extern vector<cl::Event> read_events;                // Read events
-extern vector<cl::Event> write_events;               // Write events
-extern cl::Buffer *buffer_i;                         // input buffer
-extern cl::Buffer *buffer_o[MAX_CONVS];              // output buffers
-extern cl::Buffer *buffer_k[MAX_CONVS];              // Conv kernel buffers
-extern cl::Buffer *buffer_k_dw[MAX_CONVS];           // Conv kernel buffers (deepwise)
-extern cl::Buffer *buffer_k_pw[MAX_CONVS];           // Conv kernel buffers (pointwise)
-extern cl::Buffer *buffer_bias[MAX_CONVS];           // Conv bias buffers
+//extern cl::Context context;                          // Context
+//extern cl::CommandQueue q;                           // Command queue
+//extern cl::Program program;                          // Program
+//extern std::string binaryFile;                       // Binary file
+//extern cl::Kernel kernel_conv2d[MAX_KERNELS];        // FPGA kernels
+//extern vector<cl::Event> kernel_events;              // Kernel events (completion)
+//extern vector<cl::Event> read_events;                // Read events
+//extern vector<cl::Event> write_events;               // Write events
+//extern cl::Buffer *buffer_i;                         // input buffer
+//extern cl::Buffer *buffer_o[MAX_CONVS];              // output buffers
+//extern cl::Buffer *buffer_k[MAX_CONVS];              // Conv kernel buffers
+//extern cl::Buffer *buffer_k_dw[MAX_CONVS];           // Conv kernel buffers (deepwise)
+//extern cl::Buffer *buffer_k_pw[MAX_CONVS];           // Conv kernel buffers (pointwise)
+//extern cl::Buffer *buffer_bias[MAX_CONVS];           // Conv bias buffers
 
+extern cl_platform_id   platform;
+extern cl_device_id     device;
+extern cl_context       context;
+extern cl_command_queue q;
+extern cl_program       program;
+extern char            *binaryFile;                       // kernel Binary file
+//extern static cl_kernel        kernel[MAX_KERNELS];
+//extern static cl_event         kernel_events[MAX_KERNELS]; // Kernel events (completion)
+extern cl_kernel        kernel_conv2D;
+extern cl_event         kernel_events; // Kernel events (completion)
 
-// DDR assignment
-/*
-extern cl_mem_ext_ptr_t data_in_ddr;                 // input data buffer
-extern cl_mem_ext_ptr_t out_ddr[MAX_CONVS];          // output data buffers
-extern cl_mem_ext_ptr_t kernel_ddr[MAX_CONVS];       // Conv kernel buffers
-extern cl_mem_ext_ptr_t kernel_pw_ddr[MAX_CONVS];    // DeepWise conv kernel buffers
-extern cl_mem_ext_ptr_t kernel_dw_ddr[MAX_CONVS];    // PointWise conv kernel buffers
-extern cl_mem_ext_ptr_t bias_ddr[MAX_CONVS];         // Conv bias buffers
-*/
-//extern cl_mem_ext_host_ptr data_in_ddr;                 // input data buffer
-//extern cl_mem_ext_host_ptr out_ddr[MAX_CONVS];          // output data buffers
-//extern cl_mem_ext_host_ptr kernel_ddr[MAX_CONVS];       // Conv kernel buffers
-//extern cl_mem_ext_host_ptr kernel_pw_ddr[MAX_CONVS];    // DeepWise conv kernel buffers
-//extern cl_mem_ext_host_ptr kernel_dw_ddr[MAX_CONVS];    // PointWise conv kernel buffers
-//extern cl_mem_ext_host_ptr bias_ddr[MAX_CONVS];         // Conv bias buffers
+//extern cl_event         read_events[24];                // Read events
+//extern int              num_write_events_before_kernel_execution;
+//extern cl_event         write_events[5];            // Write events
 
+extern cl_mem buffer_i;                         // input buffer
+extern cl_mem buffer_o;//[MAX_CONVS];              // output buffers
+extern cl_mem buffer_k;//[MAX_CONVS];              // Conv kernel buffers
+extern cl_mem buffer_bias;//[MAX_CONVS];           // Conv bias buffers
+extern cl_mem buffer_k_dw;//[MAX_CONVS];           // Conv kernel buffers (deepwise)
+extern cl_mem buffer_k_pw;//[MAX_CONVS];           // Conv kernel buffers (pointwise)
 
 
 
@@ -170,8 +184,10 @@ void deallocate_buffers_opencl();
 int  fn_init_fpga();
 void copy_to_fpga();
 void copy_from_fpga();
-void set_callback(cl::Event event, const char *queue_name);
-void event_cb(cl_event event1, cl_int cmd_status, void *data);
+//void set_callback(cl::Event event, const char *queue_name);
+//void event_cb(cl_event event1, cl_int cmd_status, void *data);
 #endif
+
+
 
 

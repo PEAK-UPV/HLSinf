@@ -69,16 +69,19 @@ int GO = O_SIM/CPO;				 // number of groups for output channels
 char *input_data_file;           // input data file with configurations to test
 int deterministic_input_values;  // whether input data is randomly generated or not (deterministic needed in co-simulation)
 
+
+
+
 // buffers
-data_type *data_in;               // Input data buffer (format I x W x H)
-data_type *out;                   // Output data buffer (format O x W x H)
-data_type *kernel;                // Conv kernel buffers (format GO x GI x CPO x CPI x KH x KW) - for DirectConv and WinogradConv
-data_type *dw_kernel;             // DW kernel (format I x KH x KW) - for DWS
-data_type *pw_kernel;             // PW kernel (format GO x GI x CPO x CPI) - for DWS
-data_type *bias;                  // Conv bias buffers (format O)
-data_type *out_conv_cpu;          // Output data buffer for cpu (format O x W x H)
-data_type *out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
-data_type *out_pool_cpu;		  // Output data fuffer for pool for cpu (format O x W/2 x H/2)
+scoped_aligned_ptr<data_type> data_in;               // Input data buffer (format I x W x H)
+scoped_aligned_ptr<data_type> out;                   // Output data buffer (format O x W x H)
+scoped_aligned_ptr<data_type> kernel;                // Conv kernel buffers (format GO x GI x CPO x CPI x KH x KW) - for DirectConv and WinogradConv
+scoped_aligned_ptr<data_type> dw_kernel;             // DW kernel (format I x KH x KW) - for DWS
+scoped_aligned_ptr<data_type> pw_kernel;             // PW kernel (format GO x GI x CPO x CPI) - for DWS
+scoped_aligned_ptr<data_type> bias;                  // Conv bias buffers (format O)
+scoped_aligned_ptr<data_type> out_conv_cpu;          // Output data buffer for cpu (format O x W x H)
+scoped_aligned_ptr<data_type> out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
+scoped_aligned_ptr<data_type> out_pool_cpu;		  // Output data fuffer for pool for cpu (format O x W/2 x H/2)
 
 FILE *fp;
 
@@ -87,40 +90,43 @@ int use_emulator = 0;
 
 #ifdef OPENCL_TEST
 
-
 // OpenCL variables
-cl::Context context;                          // Context
-cl::CommandQueue q;                           // Command queue
-cl::Program program;                          // Program
-std::string binaryFile;                       // Binary file
-cl::Kernel kernel_conv2d[MAX_KERNELS];        // FPGA kernels
-vector<cl::Event> kernel_events(MAX_KERNELS); // Kernel events (completion)
-vector<cl::Event> read_events(1);             // Read events
-vector<cl::Event> write_events(3);            // Write events
-cl::Buffer *buffer_i;                         // input buffer
-cl::Buffer *buffer_o[MAX_CONVS];              // output buffers
-cl::Buffer *buffer_k[MAX_CONVS];              // Conv kernel buffers
-cl::Buffer *buffer_bias[MAX_CONVS];           // Conv bias buffers
-cl::Buffer *buffer_k_dw[MAX_CONVS];           // Conv kernel buffers (deepwise)
-cl::Buffer *buffer_k_pw[MAX_CONVS];           // Conv kernel buffers (pointwise)
+//cl::Context context;                          // Context
+//cl::CommandQueue q;                           // Command queue
+//cl::Program program;                          // Program
+//std::string binaryFile;                       // Binary file
+//cl::Kernel kernel_conv2d[MAX_KERNELS];        // FPGA kernels
+//vector<cl::Event> kernel_events(MAX_KERNELS); // Kernel events (completion)
+//vector<cl::Event> read_events(1);             // Read events
+//vector<cl::Event> write_events(3);            // Write events
+//cl::Buffer *buffer_i;                         // input buffer
+//cl::Buffer *buffer_o[MAX_CONVS];              // output buffers
+//cl::Buffer *buffer_k[MAX_CONVS];              // Conv kernel buffers
+//cl::Buffer *buffer_bias[MAX_CONVS];           // Conv bias buffers
+//cl::Buffer *buffer_k_dw[MAX_CONVS];           // Conv kernel buffers (deepwise)
+//cl::Buffer *buffer_k_pw[MAX_CONVS];           // Conv kernel buffers (pointwise)
+
+cl_platform_id   platform = NULL;
+cl_device_id     device   = NULL;
+cl_context       context  = NULL;
+cl_command_queue q        = NULL;
+cl_program       program  = NULL;
+char   *binaryFile;                       // Binary file
+//static cl_kernel        kernel[MAX_KERNELS];
+//static cl_event         kernel_events[MAX_KERNELS]; // Kernel events (completion)
+cl_kernel        kernel_conv2D = NULL;
+cl_event         kernel_events; // Kernel events (completion)
+
+//cl_event         read_events[24];                // Read events
+//cl_event         write_events[5];            // Write events
 
 
-
-// DDR assignment
-/*
-cl_mem_ext_ptr_t data_in_ddr;                 // input data buffer
-cl_mem_ext_ptr_t out_ddr[MAX_CONVS];          // output data buffers
-cl_mem_ext_ptr_t kernel_ddr[MAX_CONVS];       // Conv kernel buffers
-cl_mem_ext_ptr_t kernel_pw_ddr[MAX_CONVS];    // DeepWise conv kernel buffers
-cl_mem_ext_ptr_t kernel_dw_ddr[MAX_CONVS];    // PointWise conv kernel buffers
-cl_mem_ext_ptr_t bias_ddr[MAX_CONVS];         // Conv bias buffers
-*/
-//cl_mem_ext_host_ptr data_in_ddr;                 // input data buffer
-//cl_mem_ext_host_ptr out_ddr[MAX_CONVS];          // output data buffers
-//cl_mem_ext_host_ptr kernel_ddr[MAX_CONVS];       // Conv kernel buffers
-//cl_mem_ext_host_ptr kernel_pw_ddr[MAX_CONVS];    // DeepWise conv kernel buffers
-//cl_mem_ext_host_ptr kernel_dw_ddr[MAX_CONVS];    // PointWise conv kernel buffers
-//cl_mem_ext_host_ptr bias_ddr[MAX_CONVS];         // Conv bias buffers
+cl_mem buffer_i = NULL;                         // input buffer
+cl_mem buffer_o = NULL;//[MAX_CONVS];              // output buffers
+cl_mem buffer_k = NULL;//[MAX_CONVS];              // Conv kernel buffers
+cl_mem buffer_bias = NULL;//[MAX_CONVS];           // Conv bias buffers
+cl_mem buffer_k_dw = NULL;//[MAX_CONVS];           // Conv kernel buffers (deepwise)
+cl_mem buffer_k_pw = NULL;//[MAX_CONVS];           // Conv kernel buffers (pointwise)
 
 
 #endif
@@ -233,8 +239,9 @@ void compute(int *enable, int *cpu, int *retval) {
       #ifdef OPENCL_TEST
       // OpenCL kernel time
       cl_ulong time_start, time_end;
-      kernel_events[0].getProfilingInfo(CL_PROFILING_COMMAND_START, &time_start);
-      kernel_events[0].getProfilingInfo(CL_PROFILING_COMMAND_END, &time_end);
+      printf(KRED "WARNING under devel events profiling info disabled\n\n" KNRM);
+      //kernel_events[0].getProfilingInfo(CL_PROFILING_COMMAND_START, &time_start);
+      //kernel_events[0].getProfilingInfo(CL_PROFILING_COMMAND_END, &time_end);
       double diff = time_end-time_start;
       std::cout<< "TIME KERNEL = " << (diff/1000000)<<" ms \n"<<std::endl;
       #endif
@@ -313,15 +320,25 @@ int main(int argc, char **argv) {
     parse_arguments(argc, argv);
 
     #ifdef OPENCL_TEST
+
+    // reubicar este bucle
+    printf(KRED "JM10 work in progress, reubicar este bucle\n" KNRM);
+    //for (int i = 0; i < MAX_KERNELS; i++) {
+    //kernel[i] = NULL;
+    //}
+
+
     enable = fn_init_fpga();
     if (!enable) {
-      printf("Error initializing fpga device\n");
+      printf(KRED "Error initializing fpga device\n" KNRM);
     } 
     else {
       printf(KGRN "OpenCL device succesfully initialized for test\n" KRST);
     }
     #endif
 
+
+  
     printf("open test input data configuration file\n");
     if (open_test_file() == 1) {
       return 1;
@@ -352,6 +369,7 @@ int main(int argc, char **argv) {
 
     close_test_file();
   }
+  
 
   printf("\n\n");
   printf(KCYN "End of test\n" KNRM);
@@ -367,6 +385,8 @@ int main(int argc, char **argv) {
  // Return 0 if outputs are correct
  return global_retval;
 }
+
+
 
 
 

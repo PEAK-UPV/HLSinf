@@ -13,6 +13,10 @@ printf("\n");
 
 }
 
+
+
+/*
+
 #ifdef OPENCL_TEST
 // OpenCL event callback function printing message
 void event_cb(cl_event event1, cl_int cmd_status, void *data) {
@@ -23,25 +27,27 @@ void event_cb(cl_event event1, cl_int cmd_status, void *data) {
   OCL_CHECK(err, err = event.getInfo(CL_EVENT_COMMAND_TYPE, &command));
   cl_int status;
   OCL_CHECK(err, err = event.getInfo(CL_EVENT_COMMAND_EXECUTION_STATUS, &status));
-  /*const char *command_str;
-  const char *status_str;
-  switch (command) {
-    case CL_COMMAND_READ_BUFFER:          command_str = "buffer read"; break;
-    case CL_COMMAND_WRITE_BUFFER:         command_str = "buffer write"; break;
-    case CL_COMMAND_NDRANGE_KERNEL:       command_str = "kernel"; break;
-    case CL_COMMAND_MAP_BUFFER:           command_str = "kernel"; break;
-    case CL_COMMAND_COPY_BUFFER:          command_str = "kernel"; break;
-    case CL_COMMAND_MIGRATE_MEM_OBJECTS:  command_str = "buffer migrate"; break;
-    default:                              command_str = "unknown";
-  }
-  switch (status) {
-    case CL_QUEUED:       status_str = "Queued"; break;
-    case CL_SUBMITTED:    status_str = "Submitted"; break;
-    case CL_RUNNING:      status_str = "Executing"; break;
-    case CL_COMPLETE:     status_str = "Completed"; break;
-  }
-  printf("[%s]: %s %s\n", reinterpret_cast<char *>(data), status_str, command_str);
-  fflush(stdout);*/
+  
+ // const char *command_str;
+ // const char *status_str;
+ // switch (command) {
+ //   case CL_COMMAND_READ_BUFFER:          command_str = "buffer read"; break;
+ //   case CL_COMMAND_WRITE_BUFFER:         command_str = "buffer write"; break;
+ //   case CL_COMMAND_NDRANGE_KERNEL:       command_str = "kernel"; break;
+ //   case CL_COMMAND_MAP_BUFFER:           command_str = "kernel"; break;
+ //   case CL_COMMAND_COPY_BUFFER:          command_str = "kernel"; break;
+ //   case CL_COMMAND_MIGRATE_MEM_OBJECTS:  command_str = "buffer migrate"; break;
+ //   default:                              command_str = "unknown";
+ // }
+ // switch (status) {
+ //   case CL_QUEUED:       status_str = "Queued"; break;
+ //   case CL_SUBMITTED:    status_str = "Submitted"; break;
+ //   case CL_RUNNING:      status_str = "Executing"; break;
+ //   case CL_COMPLETE:     status_str = "Completed"; break;
+ // }
+ // printf("[%s]: %s %s\n", reinterpret_cast<char *>(data), status_str, command_str);
+ // fflush(stdout);
+  
 }
 #endif
 
@@ -125,7 +131,7 @@ read_binary_file(const std::string &xclbin_file_name) {
   bin_file.read(reinterpret_cast<char *>(buf.data()), nb);
   return buf;
 }
-
+*/
 
 const char *getErrorString(cl_int error)
 {
@@ -204,73 +210,202 @@ switch(error){
     }
 }
 
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+unsigned char* load_file(const char *filename, size_t *size_ret) {
+  FILE *fp = fopen(filename, "rb");
+  if(!fp) {
+    printf("Failed to open the input file: %s.\n", filename);
+    return NULL;
+  }
+  long size;
+  unsigned char *buffer;
+
+  fseek(fp, 0, SEEK_END);
+  size = ftell(fp);
+  fseek(fp, 0, SEEK_SET);
+  buffer = (unsigned char*)malloc(size);
+  assert(buffer && "Malloc failed");
+  size_t fread_sz = fread(buffer, size, 1, fp);
+  if (fread_sz == 0) {
+    printf("Failed to read from the AOCX file (fread).\n");
+    fclose(fp);
+    free(const_cast<unsigned char*>(buffer));
+    return NULL;
+  }
+  fclose(fp);
+  *size_ret = size;
+  return buffer;
+}
+
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
 #ifdef OPENCL_TEST
-int fn_init_fpga() {
-  cl_int err;
+//int fn_init_fpga() {
+//  cl_int err;
+//
+//  printf(KGRN "Initializing OpenCL\n" KRST);
+//  //  Set the current working directory to be the same as the directory
+//  //  containing the running executable.
+//    if (!setCwdToExeDir()) {
+//      return false;
+//    }
+//  auto devices = get_altera_devices();
+//  auto device = devices[0];
+//  
+//  std::string device_name = device.getInfo<CL_DEVICE_NAME>();
+//
+//  printf("Create context...\n");
+//  OCL_CHECK(err, context = cl::Context(device, NULL, NULL, NULL, &err));
+//
+//
+//  printf("Create command queue...\n");
+//  OCL_CHECK(err, q = cl::CommandQueue(context, device, CL_QUEUE_PROFILING_ENABLE/* | CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE*/, &err));
+//
+//  printf("Reading kernel binary file\n");
+//  auto fileBuf = read_binary_file(binaryFile);
+//
+//  printf("Creating binary file\n");
+//  cl::Program::Binaries bins{{fileBuf.data(), fileBuf.size()}};
+//  printf("  bins size : %ld\n", bins.size());
+//  devices.resize(1);
+//
+//  printf("Creating program\n");
+//  OCL_CHECK(err, cl::Program program(context, devices, bins, NULL, &err));
+//  //cl::Program program(context, devices, bins, &bins_status, &err);
+//
+//  printf("Building program\n");
+//  program.build(NULL, NULL, NULL);
+//
+//  
+//  // kernels
+//  printf("Creating kernels\n");
+//  //OCL_CHECK(err, kernel_conv2d[0] = cl::Kernel(program, "k_relu", &err));
+//  printf("Macro NUM_KERNELS set to: %d\n", NUM_KERNELS); 
+//  const char*  k_name = "k_conv2D";
+//  for (int krnl=0; krnl<NUM_KERNELS; krnl++) {
+//    // Create the kernel with the program that was just built.
+//    char c_k_name[50];
+//    //sprintf(c_k_name, "kernel:{k_%d_%s}", krnl+1, k_name);
+//    sprintf(c_k_name, "%s", k_name);
+//    printf("Creating %s  index %d\n", c_k_name, krnl);   
+//    OCL_CHECK(err, kernel_conv2d[krnl] = cl::Kernel(program, c_k_name, &err));
+//    std::cout << "Kernel sucessfully created" << std::endl ; 
+//  }
+//
+//  printf("OpenCL for device \"%s\" initialized\n", device_name.c_str() );
+//  return true;
+//
+//}
 
-  printf(KGRN "Initializing OpenCL\n" KRST);
-  //  Set the current working directory to be the same as the directory
-  //  containing the running executable.
-    if (!setCwdToExeDir()) {
-      return false;
-    }
-  auto devices = get_altera_devices();
-  auto device = devices[0];
-  
-  std::string device_name = device.getInfo<CL_DEVICE_NAME>();
+int fn_init_fpga(){
+    printf(KGRN "Initializing OpenCL environment for Altera \n" KRST);
+  cl_int status = 0;
+  cl_int bin_status = 0;
+  const unsigned char *bin_file;
+  size_t bin_file_len = 0;
+  char * device_name = NULL;
 
+  //  // Set the current working directory to be the same as the directory
+  //  // containing the running executable.
+  if (!setCwdToExeDir()) {
+    return false;
+  }
+
+  // Find platform 
+  // This code assumes there is just ONE Intel/Altera platform, or at least the Intel platform is the first one on the list
+  // get the OpenCL platform ID
+  printf("Searching platform...\n");
+  if (use_emulator) {
+    printf("      ... intel emulation platform\n");
+    platform = findPlatform("Intel(R) FPGA Emulation Platform for OpenCL(TM)");
+
+  } else {
+    printf("      ... intel fpga physical platform\n");
+    platform = findPlatform("Intel(R) FPGA SDK for OpenCL(TM)");
+  }
+  if(platform == NULL) {
+    printf("ERROR: Unable to find Intel(R) FPGA OpenCL platform.\n");
+    cleanup();
+    return false;
+  }
+
+  printf("Get device id for platform id...\n");
+  // Get Device ID from platform
+  CHECK(clGetDeviceIDs(platform, CL_DEVICE_TYPE_ALL, 1, &device, 0));
+  /*
+  // get device name for "print info" purposes
+  //std::string device_name = device->getInfo<CL_DEVICE_NAME>();
+  size_t valueSize;
+  clGetDeviceInfo(device, CL_DEVICE_NAME, 0, NULL, &valueSize);
+  device_name = (char*) malloc(valueSize);
+  clGetDeviceInfo(device, CL_DEVICE_NAME, valueSize, device_name, NULL);
+  printf("Device: %s\n", device_name);
+   */
   printf("Create context...\n");
-  OCL_CHECK(err, context = cl::Context(device, NULL, NULL, NULL, &err));
-
+  // Create the context.
+  context = clCreateContext(0, 1, &device, &oclContextCallback, 0, &status);
+  CHECK(status);
 
   printf("Create command queue...\n");
-  OCL_CHECK(err, q = cl::CommandQueue(context, device, CL_QUEUE_PROFILING_ENABLE/* | CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE*/, &err));
+  // Create the command queue
+  //cq = clCreateCommandQueue(context, device, 0, &status);
+  q = clCreateCommandQueue(context, device, CL_QUEUE_PROFILING_ENABLE | CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE, &status);
+  CHECK(status);
 
-  printf("Reading kernel binary file\n");
-  auto fileBuf = read_binary_file(binaryFile);
+  printf("Loading kernel binary file\n");
+  //bin_file = load_file(binary_file_path, &bin_file_len);
+  bin_file = load_file(binaryFile, &bin_file_len);
 
-  printf("Creating binary file\n");
-  cl::Program::Binaries bins{{fileBuf.data(), fileBuf.size()}};
-  printf("  bins size : %ld\n", bins.size());
-  devices.resize(1);
+  // Create the program.
+  printf("Creating program with binary file\n");
+  program = clCreateProgramWithBinary(context, 1, &device, &bin_file_len, &bin_file, &bin_status, &status);
+  printf("create program status  %d\n", status);
+  fflush(stdout);
+  CHECK(status);
 
-  printf("Creating program\n");
-  OCL_CHECK(err, cl::Program program(context, devices, bins, NULL, &err));
-  //cl::Program program(context, devices, bins, &bins_status, &err);
+  // Build the program that was just created.
+  printf("Building kernel program\n");
+  CHECK(clBuildProgram(program, 1, &device, "", NULL, NULL));
 
-  printf("Building program\n");
-  program.build(NULL, NULL, NULL);
 
+  //char*  k_name = "k_conv2D";
+  printf(KRED "JM10 work in progress, fn_init_fpga kernel creation\n" KNRM);
   
-  // kernels
-  printf("Creating kernels\n");
-/*  for (int kernel=0; kernel<NUM_KERNELS; kernel++) {
-    char dummy[50];
-    //sprintf(dummy, "k_conv2D:{k_conv2D_%d}", kernel+1);
-    strcpy (dummy, "k_relu");
-  //  printf("dummy %s\n", dummy);
-    OCL_CHECK(err, kernel_conv2d[kernel] = cl::Kernel(program, dummy, &err));
-    std::cout << "Kernel sucessfully created" << std::endl ;
+  if (NUM_KERNELS != 1) {
+    printf(KRED "ERROR fn_init_fpga unexpected number of kernels, under_devel mode only supports 1 kernel, macro NUM_KERNELS set to %d\n\n" KNRM, NUM_KERNELS);
+    return -1;
   }
-*/
 
-
-  //OCL_CHECK(err, kernel_conv2d[0] = cl::Kernel(program, "k_relu", &err));
-  printf("Macro NUM_KERNELS set to: %d\n", NUM_KERNELS); 
-  const char*  k_name = "k_conv2D";
   for (int krnl=0; krnl<NUM_KERNELS; krnl++) {
     // Create the kernel with the program that was just built.
     char c_k_name[50];
     //sprintf(c_k_name, "kernel:{k_%d_%s}", krnl+1, k_name);
-    sprintf(c_k_name, "%s", k_name);
-    printf("Creating %s  index %d\n", c_k_name, krnl);   
-    OCL_CHECK(err, kernel_conv2d[krnl] = cl::Kernel(program, c_k_name, &err));
-    std::cout << "Kernel sucessfully created" << std::endl ;
-  
+    //sprintf(c_k_name, "%s", k_name);
+    sprintf(c_k_name, "%s", "k_conv2D");
+    printf("Creating %s\n", c_k_name);   
+
+    // formar correctamente la asignacion del kernel al array.....
+    //kernel[krnl] = clCreateKernel(program, c_k_name, &status);
+    kernel_conv2D = clCreateKernel(program, c_k_name, &status);
+    CHECK(status);
+  }
+  //··········
+
+
+
+  // release mem pointers
+  if (device_name != NULL) {
+    free (device_name);
   }
 
-  printf("OpenCL for device \"%s\" initialized\n", device_name.c_str() );
+  printf("OpenCL initialized\n");
   return true;
 
 }
+
 #endif
+
+

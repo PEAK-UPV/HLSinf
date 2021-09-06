@@ -58,6 +58,8 @@ void lib_conv2D(
       global read_block_t   *dbg_loop_ptr_data_input_buffer,
       global read_block_t   *dbg_loop_ptr_data_dc_pad_out,
       global frame_t        *dbg_loop_ptr_data_dc_cvt_out,
+      global hls_cvt_sbs_control_t  * dbg_loop_ptr_data_dc_cvt_sbs_control_out,
+      global frame_t                * dbg_loop_ptr_data_dc_cvt_sbs_frame_out,
       global write_block_t  *dbg_loop_ptr_data_dc_mul_out,
       global write_block_t  *dbg_loop_ptr_data_directconv_out
       #endif

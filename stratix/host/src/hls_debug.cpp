@@ -27,7 +27,8 @@
 #define PRINT_DIN
 #define PRINT_DATA_INPUT_BUFFER
 #define PRINT_DATA_DC_PAD_OUT
-//#define PRINT_DATA_DC_CVT_OUT
+#define PRINT_DATA_DC_CVT_OUT
+#define PRINT_DATA_DC_CVT_SBS_OUT
 #define PRINT_DATA_DC_MUL_OUT
 #define PRINT_DATA_DIRECTCONV_OUT
 
@@ -40,43 +41,49 @@
 // Global variables
 //-----------------------------------------------------------------------------
 unsigned long int my_val[NUM_KERNELS];
-//unsigned long my_ret[NUM_KERNELS];
-//unsigned long my_ret_2[NUM_KERNELS];
-//unsigned long my_ret_3[NUM_KERNELS];
-//unsigned long my_ret_4[NUM_KERNELS];
-//float         my_flt_bias[NUM_KERNELS];
-//float         my_flt_krnl[NUM_KERNELS];
-//float         my_flt_din[NUM_KERNELS];
-//float         my_flt_dout[NUM_KERNELS];
-
-unsigned long *hls_dbg_ul; // array for returning unsigned long values from kernel
-data_type     *hls_dbg_dt; // array for returning data_type values from kernel
-cl::Buffer    *hls_dbg_ul_buffer[MAX_CONVS];
-cl::Buffer    *hls_dbg_dt_buffer[MAX_CONVS];
 
 
-// input data to fpga kernel
-data_type  *dbg_loop_data_in;                         // loop from fpga for Input data buffer (format I x W x H)
-cl::Buffer *dbg_loop_data_in_buffer_i[MAX_CONVS];   // loop from fpga for input buffer
-// input data to fpga kernel after input_buffer stage
-data_type  *dbg_loop_data_input_buffer;                    // loop from fpga for data after input_buffer stage, same format as data_in (format I x W x H)
-cl::Buffer *dbg_loop_data_input_buffer_buffer[MAX_CONVS];   // loop from fpga for input buffer
+scoped_aligned_ptr<unsigned long> hls_dbg_ul; // array for returning unsigned long values from kernel
+scoped_aligned_ptr<data_type>     hls_dbg_dt; // array for returning data_type values from kernel
+cl_mem                            hls_dbg_ul_buffer;
+cl_mem                            hls_dbg_dt_buffer;
 
-// output from the padding stage of direct convolution function
-data_type  *dbg_loop_data_dc_pad_out;    // loop from fpga for Input data buffer (format I x W x H)
-cl::Buffer *dbg_loop_data_dc_pad_out_buffer[MAX_CONVS];   // loop from fpga for input buffer
-// output from the cvt stage of the direct convolution function
-data_type  *dbg_loop_data_dc_cvt_out;    // loop from fpga for Input data buffer (format I x W x H)
-cl::Buffer *dbg_loop_data_dc_cvt_out_buffer[MAX_CONVS];   // loop from fpga for input buffer
-// output from the mul stage of the direct convolution function
-data_type  *dbg_loop_data_dc_mul_out;    // loop from fpga for (format O x W x H)
-cl::Buffer *dbg_loop_data_dc_mul_out_buffer[MAX_CONVS];   // loop from fpga for input buffer
+scoped_aligned_ptr<data_type> dbg_loop_data_in;            // loop from fpga for data_in read from memory
+cl_mem                        dbg_loop_data_in_buffer_i;   // loop from fpga for 
 
-// output data from direct convolution stage of the kernel 
-data_type  *dbg_loop_data_directconv_out;                 // loop from fpga for Input data buffer (format I x W x H)
-cl::Buffer *dbg_loop_data_directconv_out_buffer[MAX_CONVS];   // loop from fpga for input buffer
+scoped_aligned_ptr<data_type> dbg_loop_data_input_buffer;       // loop from fpga for Input data buffer (format I x W x H)
+cl_mem                        dbg_loop_data_input_buffer_buffer;
 
-data_type *dbg_cpu_data_directconv_out;
+// references to variables of buffers related to direct convolution stage 
+scoped_aligned_ptr<data_type>  dbg_loop_data_dc_pad_out;          // loop from fpga for
+cl_mem                         dbg_loop_data_dc_pad_out_buffer;   // loop from fpga for
+
+scoped_aligned_ptr<data_type>  dbg_loop_data_dc_cvt_out;          // loop from fpga for
+cl_mem                         dbg_loop_data_dc_cvt_out_buffer;   // loop from fpga for
+
+scoped_aligned_ptr<hls_cvt_sbs_control_t>  dbg_loop_data_dc_cvt_sbs_control_out;  // loop from fpga for step by step frame conformation, control signals
+cl_mem                             dbg_loop_data_dc_cvt_sbs_control_out_buffer;  // loop from fpga for step by step frame conformation, control signals,
+scoped_aligned_ptr<frame_t>      dbg_loop_data_dc_cvt_sbs_frame_out;           // loop from fpga for step by step frame conformation, frame value
+cl_mem                             dbg_loop_data_dc_cvt_sbs_frame_out_buffer;    // loop from fpga for step by step frame conformation, frame value, 
+
+
+scoped_aligned_ptr<data_type>  dbg_loop_data_dc_mul_out;          // loop from fpga for
+cl_mem                         dbg_loop_data_dc_mul_out_buffer;   // loop from fpga for
+
+scoped_aligned_ptr<data_type>  dbg_loop_data_directconv_out;          // loop from fpga for 
+cl_mem                         dbg_loop_data_directconv_out_buffer;   // loop from fpga for 
+
+scoped_aligned_ptr<data_type>  dbg_loop_data_relu_out;          // loop from fpga for
+cl_mem                         dbg_loop_data_relu_out_buffer;   // loop from fpga for 
+
+scoped_aligned_ptr<data_type>  dbg_loop_data_pooling_out;          // loop from fpga for 
+cl_mem                         dbg_loop_data_pooling_out_buffer;   // loop from fpga for 
+
+scoped_aligned_ptr<data_type>  dbg_cpu_data_directconv_out;
+
+
+
+
 data_type  dbg_cpu_data_directconv_sum = (data_type)0;
 
 // se puede mejorar contantdo con el formato gwhipi y si i= 1 y o= 1
@@ -152,13 +159,11 @@ void hls_debug(void) {
   //  //  }
   //  //
   
-
-
-
-  printf("\n");
-  printf(KCYN "HOST SIDE calculated - data in matrix sent to FPGA\n" KNRM);
  
   #ifdef PRINT_DIN
+  printf("\n");
+  printf(KCYN "HOST SIDE calculated - data in matrix sent to FPGA\n" KNRM);
+
   for (int i=0; i<I_useful; i++) {
     printf("W  ");
     for (int w=0; w<W; w++) printf(" %5d ", w);
@@ -175,10 +180,11 @@ void hls_debug(void) {
   }
   #endif 
 
+  #ifdef PRINT_DIN  
   printf("\n");
   printf(KCYN "data in matrix looped from FPGA to host\n" KNRM);
   printf("dbg_loop_data_in\n"); 
-  #ifdef PRINT_DIN  
+
   for (int i=0; i<I_useful; i++) {
     printf("W  ");
     for (int w=0; w<W; w++) printf(" %5d ", w);
@@ -194,6 +200,7 @@ void hls_debug(void) {
     }
   }
   #endif
+
   //for (int i = 0; i < size_data_in_bytes; i++) 
   for (int i = 0; i < size_data_in; i++)
   {
@@ -202,10 +209,11 @@ void hls_debug(void) {
   }
 
   // input buffer 
+  #ifdef PRINT_DATA_INPUT_BUFFER
   printf("\n");
   printf(KCYN "data in matrix after input_buffer stage from FPGA to host\n" KNRM);
   printf("dbg_loop_data_input_buffer\n"); 
-  #ifdef PRINT_DATA_INPUT_BUFFER
+
   for (int i=0; i<I_useful; i++) {
     printf("W  ");
     for (int w=0; w<W; w++) printf(" %5d ", w);
@@ -234,10 +242,12 @@ void hls_debug(void) {
   // ---
   // DIRECT CONVOLUTION stages
   // data after padding stage
+
+  #ifdef PRINT_DATA_DC_PAD_OUT
   printf("\n");
   printf(KCYN "data matrix after DC padding stage from FPGA to host\n" KNRM);
   printf("dbg_loop_data_dc_pad_out\n"); 
-  #ifdef PRINT_DATA_DC_PAD_OUT
+
   //for (int i=0; i<I_useful; i++) {
   for (int i=0; i<I_input; i++) {
     printf("In channel  %2d\n", i);
@@ -262,6 +272,8 @@ void hls_debug(void) {
   //  //}
 
   // data after cvt stage, frame composition
+
+  #ifdef PRINT_DATA_DC_CVT_OUT
   printf("\n");
   printf(KCYN "data matrix after CVT stage from FPGA to host\n" KNRM);
   printf("dbg_loop_data_dc_cvt_out\n");
@@ -270,11 +282,9 @@ void hls_debug(void) {
   size_t size_data_dc_cvt = I_input * NUM_PIXELS_IN_FRAME * NUM_OF_I_ITERS * (H) * (W) * MAX_KERNELS; // size values: pixels * channels_in
   size_t size_data_dc_cvt_bytes  = size_data_dc_cvt + sizeof(data_type);
 
-
-
   printf("num values of data_type in frames: %lu\n", size_data_dc_cvt);
   printf("  only %d kernels used, so %lu first values must be checked\n", NUM_KERNELS, (size_data_dc_cvt/MAX_KERNELS));
-  #ifdef PRINT_DATA_DC_CVT_OUT
+
   for (int i=0; i<NUM_KERNELS; i++) {
     printf("Kernel %d\n", i);
     //printf("  H /  W     ");
@@ -292,8 +302,9 @@ void hls_debug(void) {
         //printf("  %2.2f ",  dbg_loop_data_input_buffer[addr]);
         int index_base = index_base_curr_kernel + ((frame_index ) * NUM_PIXELS_IN_FRAME * CPI) ;
         printf ("FRAME %d  h %2d / w %2d  index_base = %d\n", frame_index, h, w , index_base);
-        for (int k = 0; k < CPI; k++) { printf(" cpi %2d\n", k);
-        //for (int k = 0; k < 1; k++) {printf(" cpi %2d    " KYEL "WARNING printing only cpi 0 of [%2d,%2d]\n" KNRM, k, k, CPI);
+        for (int k = 0; k < CPI; k++) { 
+          printf(" cpi %2d\n", k);
+          //for (int k = 0; k < 1; k++) {printf(" cpi %2d    " KYEL "WARNING printing only cpi 0 of [%2d,%2d]\n" KNRM, k, k, CPI);
 
           //for (int l = 0; l < NUM_PIXELS_IN_FRAME; l++) {
           //  int cvt_index = index_base + (l * CPI) + k;
@@ -310,6 +321,59 @@ void hls_debug(void) {
   }
   #endif
 
+
+  #ifdef PRINT_DATA_DC_CVT_SBS_OUT
+  printf("\n");
+  printf(KCYN "data matrix after CVT stage from FPGA to host\n" KNRM);
+  printf("STEP BY STEP frame composition\n");
+  printf("WARNING: ONLY ONE KERNEL SUPPORTED");
+
+  for (int i=0; i<NUM_KERNELS; i++) {
+    printf("Kernel %d\n", i);
+    int frames_in_kernel = (i_iter * (H + 2) * (W + 2) );
+    int index_base =  frames_in_kernel  * i;
+    
+    for (int j = 0; j < frames_in_kernel; j++) {
+      printf ("SBS_frame %d   index_base = %d\n", j, index_base);
+        for (int k = 0; k < CPI; k++) {
+          printf(" cpi %2d\n", k);
+          printf("  %4.2f  %4.2f  %4.2f\n", dbg_loop_data_dc_cvt_sbs_frame_out[j].pixel[0].pixel[k], dbg_loop_data_dc_cvt_sbs_frame_out[j].pixel[1].pixel[k], dbg_loop_data_dc_cvt_sbs_frame_out[j].pixel[2].pixel[k]);
+          printf("  %4.2f  %4.2f  %4.2f\n", dbg_loop_data_dc_cvt_sbs_frame_out[j].pixel[3].pixel[k], dbg_loop_data_dc_cvt_sbs_frame_out[j].pixel[4].pixel[k], dbg_loop_data_dc_cvt_sbs_frame_out[j].pixel[5].pixel[k]);
+          printf("  %4.2f  %4.2f  %4.2f\n", dbg_loop_data_dc_cvt_sbs_frame_out[j].pixel[6].pixel[k], dbg_loop_data_dc_cvt_sbs_frame_out[j].pixel[7].pixel[k], dbg_loop_data_dc_cvt_sbs_frame_out[j].pixel[8].pixel[k]);
+        }
+    }
+  }
+
+  #endif
+
+
+  // data after mult stage, value before bias, relu and pooling
+  #ifdef PRINT_DATA_DC_MUL_OUT
+  printf("\n");
+  printf(KCYN "data matrix after MUL  stage from FPGA to host\n" KNRM);
+  printf("dbg_loop_data_mul_out\n");
+  size_t size_dbg_loop_data_dc_mul_out = O_output * NUM_OF_I_ITERS * W * H * MAX_CONVS;
+  size_t size_dbg_loop_data_dc_mul_out_bytes = size_dbg_loop_data_dc_mul_out * sizeof(data_type);
+// 	for (int cout=0; cout < O_output; cout++) {
+//    for (int h=0; h<H; h++) {
+//      for (int w=0; w<W; w++) {
+
+  //for (int cout=0; cout<O_output; cout++) {
+  for (int cout=0; cout<O_useful; cout++) {
+    printf("W  ");
+    for (int w=0; w<W; w++) printf(" %5d ", w);
+    printf("\n");
+
+    for (int h=0; h<H; h++) {
+      printf ("H %2d ", h);
+      for (int w=0; w<W; w++) {       
+        int addr_o = output_data_address(cout, h, w);
+        printf("  %2.2f ",   dbg_loop_data_dc_mul_out[addr_o]);
+      }
+      printf("\n");
+    }
+  }
+  #endif
 
   // direct convolution data out
   printf("\n");
@@ -401,10 +465,10 @@ void hls_debug(void) {
     printf ("   VALUES_read_from_out_read_data_from_input_buffer_stream    =   %lu  (%lu)\n", 
         hls_dbg_ul[HLS_DBG_VALUES_read_from_out_read_data_from_input_buffer_stream_IND], JM10_to_complete);
 
-    printf ("   VALUES_write_to_pad_cvt_stream     =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_write_to_pad_cvt_stream_IND], JM10_to_complete);
+    printf ("   VALUES_write_to_pad_cvt_stream     =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_write_to_pad_cvt_stream_IND], (unsigned long)(i_iter * (H + 2) * (W + 2) ));
     printf ("   VALUES_read_from_pad_cvt_stream    =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_read_from_pad_cvt_stream_IND], JM10_to_complete);
 
-    printf ("   VALUES_write_to_cvt_mul_stream     =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_write_to_cvt_mul_stream_IND], JM10_to_complete);
+    printf ("   VALUES_write_to_cvt_mul_stream     =   %lu  (%lu)\n", (hls_dbg_ul[HLS_DBG_VALUES_write_to_cvt_mul_stream_IND]), JM10_to_complete);
     printf ("   VALUES_read_from_cvt_mul_stream    =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_read_from_cvt_mul_stream_IND], JM10_to_complete);
 
     printf ("   VALUES_write_to_mul_add_stream     =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_write_to_mul_add_stream_IND], JM10_to_complete);
@@ -424,24 +488,23 @@ void hls_debug(void) {
 
     printf ("   VALUES_write_to_data_out    =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_write_to_data_out_IND], JM10_to_complete);
 
+    printf ("   VALUES_write_to_out_conv_sbs_stream = %lu (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_write_to_out_conv_sbs_stream_IND], (unsigned long)(i_iter * (H + 2) * (W + 2) ));
+
 //
+    printf ("\n");
     printf ("   DT_bias_sum    =   %f  (%f)\n", hls_dbg_dt[HLS_DBG_DT_bias_sum_IND], (float)JM10_to_complete); 
     printf ("   DT_kernel_sum  =   %f  (%f)\n", hls_dbg_dt[HLS_DBG_DT_kernel_sum_IND], (float)JM10_to_complete);
     printf ("   DT_din_sum     =   %f  (%f)\n", hls_dbg_dt[HLS_DBG_DT_din_sum_IND], (float)JM10_to_complete);
     printf ("   DT_dout_sum    =   %f  (%f)\n", hls_dbg_dt[HLS_DBG_DT_dout_sum_IND], (float)JM10_to_complete);
 
-
-
-
     printf("\n");
   }
-
-
-
 
 
 }
 
 //-----------------------------------------------------------------------------
 // end of file: hls_debug.cpp
-//---------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+

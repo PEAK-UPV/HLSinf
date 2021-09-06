@@ -45,8 +45,14 @@ unsigned long cvt(int o_iter, int H, int W, int I_ITER) {
   // manually flattened loop (for the purposes of getting the expected pipelined design)
   int p = 0;
   int num_iters = I_ITER * num_pixels;
+
+  // build the frame
+  pixel_in_t p0, p1, p2, p3, p4, p5, p6, p7, p8;
+
+  
   cvt_loop:
   for(int i_iter = 0; i_iter < num_iters; i_iter++){
+
     //DO_PRAGMA(HLS loop_tripcount  min=1 max=(I_REFERENCE/CPI) * (H_REFERENCE+2)*(W_REFERENCE+2))
     //DO_PRAGMA(HLS PIPELINE II=1)
 
@@ -77,8 +83,7 @@ unsigned long cvt(int o_iter, int H, int W, int I_ITER) {
     if (row1_buffer_write) buffer1[pin_col] = pixel;
     if (row2_buffer_write) buffer2[pin_col] = pixel;
 
-    // build the frame
-    pixel_in_t p0, p1, p2, p3, p4, p5, p6, p7, p8;
+
 
     int shift_frame = (pin_row>1) & (pin_col > 2);
     int send_frame = (pin_row>1) & (pin_col > 1);
@@ -106,13 +111,13 @@ unsigned long cvt(int o_iter, int H, int W, int I_ITER) {
       frame.pixel[6] = p6; frame.pixel[7] = p7; frame.pixel[8] = p8;
       str_cvt_mul.write(frame);
 
-      #ifdef HLS_DEBUG //#ifdef laguasa
-//      //if(o_iter == HLS_O_ITER_MONITOR)
-//      {
-//        dbg_loop_stream_data_dc_cvt_out.write(frame);
-//      }
-//      dbg_loop_stream_data_dc_cvt_out_counter = dbg_loop_stream_data_dc_cvt_out_counter + 1;
-//      dbg_elements_per_iter_data_dc_cvt_out[o_iter] = dbg_elements_per_iter_data_dc_cvt_out[o_iter] + 1;
+      #ifdef HLS_DEBUG
+      if(o_iter == HLS_O_ITER_MONITOR)
+      {
+        dbg_loop_stream_data_dc_cvt_out.write(frame);
+      }
+      //dbg_loop_stream_data_dc_cvt_out_counter = dbg_loop_stream_data_dc_cvt_out_counter + 1;
+      //dbg_elements_per_iter_data_dc_cvt_out[o_iter] = dbg_elements_per_iter_data_dc_cvt_out[o_iter] + 1;
       cnt = cnt + 1;
       #endif
 
@@ -128,6 +133,34 @@ unsigned long cvt(int o_iter, int H, int W, int I_ITER) {
       //#endif
       //#endif
     }
+
+    #ifdef HLS_DEBUG
+    {
+      hls_cvt_sbs_control_t build_ctrl;
+      build_ctrl.iter    = i_iter;
+      build_ctrl.pin_row = pin_row;
+      build_ctrl.pin_col = pin_col;
+      build_ctrl.row0_buffer_write = row0_buffer_write;
+      build_ctrl.row1_buffer_write = row1_buffer_write;
+      build_ctrl.row2_buffer_write = row2_buffer_write;
+      build_ctrl.p        = p;
+      build_ctrl.pin_col0 = pin_col0;
+      build_ctrl.pin_col1 = pin_col1;
+      build_ctrl.row0     = row0;
+      build_ctrl.row1     = row1;
+      build_ctrl.shift_frame = shift_frame;
+      build_ctrl.send_frame  = send_frame;
+      dbg_loop_stream_data_dc_cvt_sbs_control_out.write(build_ctrl);
+
+      frame_t  build_frame;
+      build_frame.pixel[0] = p0; build_frame.pixel[1] = p1; build_frame.pixel[2] = p2;
+      build_frame.pixel[3] = p3; build_frame.pixel[4] = p4; build_frame.pixel[5] = p5;
+      build_frame.pixel[6] = p6; build_frame.pixel[7] = p7; build_frame.pixel[8] = p8;
+      dbg_loop_stream_data_dc_cvt_sbs_frame_out.write(build_frame);
+    }
+    #endif
+
+
     pin_col++;
     int pin_col_curr = pin_col;
     if (pin_col_curr == WW) {
@@ -147,10 +180,13 @@ unsigned long cvt(int o_iter, int H, int W, int I_ITER) {
     }
     p = p + 1;
     if (p == num_pixels) p = 0;
+   
   } //i_iter
 
   //#ifdef DEBUG_CVT
   //printf("cvt: end\n");
   //#endif
+
+  
   return cnt;
 }

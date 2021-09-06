@@ -85,6 +85,8 @@
 
 #define HLS_DBG_VALUES_write_to_data_out_IND  45
 
+#define HLS_DBG_VALUES_write_to_out_conv_sbs_stream_IND  46
+
 //
 #define HLS_DBG_DT_bias_sum_IND              0
 #define HLS_DBG_DT_kernel_sum_IND            1
@@ -93,11 +95,24 @@
 
 
 // max index in both arrays (plus one)
-#define NUM_HLS_DBG_VALUE_ARRAY_ENTRIES  46
+#define NUM_HLS_DBG_VALUE_ARRAY_ENTRIES  47
 
 
+#define NUM_HLS_DBG_SBS_CONTROL_iter_IND                  0
+#define NUM_HLS_DBG_SBS_CONTROL_pin_row_IND               1
+#define NUM_HLS_DBG_SBS_CONTROL_pin_col_IND               2
+#define NUM_HLS_DBG_SBS_CONTROL_row0_buffer_write_IND     3
+#define NUM_HLS_DBG_SBS_CONTROL_row1_buffer_write_IND     4
+#define NUM_HLS_DBG_SBS_CONTROL_row2_buffer_write_IND     5
+#define NUM_HLS_DBG_SBS_CONTROL_p_IND                     6
+#define NUM_HLS_DBG_SBS_CONTROL_pin_col0_IND              7
+#define NUM_HLS_DBG_SBS_CONTROL_pin_col1_IND              8
+#define NUM_HLS_DBG_SBS_CONTROL_row0_IND                  9
+#define NUM_HLS_DBG_SBS_CONTROL_row1_IND                 10
+#define NUM_HLS_DBG_SBS_CONTROL_shift_frame_IND          11
+#define NUM_HLS_DBG_SBS_CONTROL_send_frame_IND           12
 
-
+#define NUM_HLS_DBG_SBS_CONTROL_ARRAY_ENTRIES            13
 
 
 //----end of HLS debug macros
@@ -110,8 +125,12 @@
 
 
 // constants
-#define MAX_CONVS        8  // Maximum number of convolutional layers
-#define MAX_KERNELS      4  // Maximum number of kernels implemented
+//#define MAX_CONVS        8  // Maximum number of convolutional layers
+//#define MAX_KERNELS      4  // Maximum number of kernels implemented
+#define MAX_CONVS        1  // Maximum number of convolutional layers
+#define MAX_KERNELS      1  // Maximum number of kernels implemented
+
+
 #define MAX_WORK_ITEMS 512  // Maximum number of work items to process
 //#define NUM_KERNELS      2   //JM10
 #define NUM_KERNELS      1   //JM10
@@ -450,6 +469,27 @@ struct kernel_pw_t_st {
 };
 typedef struct kernel_pw_t_st kernel_pw_t;
 
+#ifdef HLS_DEBUG
+// kernel struct (pointwise)
+struct hls_cvt_sbs_control_t_st {
+  unsigned long iter;//                  0
+  unsigned long pin_row;//               1
+  unsigned long pin_col;//               2
+  unsigned long row0_buffer_write;//     3
+  unsigned long row1_buffer_write;//     4
+  unsigned long row2_buffer_write;//     5
+  unsigned long p;//                     6
+  unsigned long pin_col0;//              7
+  unsigned long pin_col1;//              8
+  unsigned long row0;//                  9
+  unsigned long row1;//                 10
+  unsigned long shift_frame;//          11
+  unsigned long send_frame;//           12
+
+}__attribute__((packed));
+typedef struct hls_cvt_sbs_control_t_st hls_cvt_sbs_control_t;
+#endif
+
 #define read_kernel_pw_t ac_int<CPI*DATA_TYPE_WIDTH>
 // typedef ac_int<CPI*DATA_TYPE_WIDTH> read_kernel_pw_t;
 
@@ -478,5 +518,7 @@ typedef struct kernel_pw_t_st kernel_pw_t;
 
 
 #endif
+
+
 
 

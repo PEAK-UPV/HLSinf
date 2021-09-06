@@ -135,6 +135,7 @@ fi
 echo ""
 echo -e "${CYAN} Moving to executable folder: bin ${NC}"
 cd bin
+echo "  current path is: $PWD"
 
 echo "\n\n\n"
 echo "##############################################################"

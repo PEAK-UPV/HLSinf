@@ -49,6 +49,8 @@ __kernel void k_conv2D(
       global read_block_t   * restrict dbg_loop_ptr_data_input_buffer,
       global read_block_t   * restrict dbg_loop_ptr_data_dc_pad_out,
       global frame_t        * restrict dbg_loop_ptr_data_dc_cvt_out,
+      global hls_cvt_sbs_control_t  * restrict dbg_loop_ptr_data_dc_cvt_sbs_control_out,
+      global frame_t                * restrict dbg_loop_ptr_data_dc_cvt_sbs_frame_out,
       global write_block_t  * restrict dbg_loop_ptr_data_dc_mul_out,
       global write_block_t  * restrict dbg_loop_ptr_data_directconv_out
 #endif
@@ -104,6 +106,8 @@ __kernel void k_conv2D(
       dbg_loop_ptr_data_input_buffer,
       dbg_loop_ptr_data_dc_pad_out,
       dbg_loop_ptr_data_dc_cvt_out,
+      dbg_loop_ptr_data_dc_cvt_sbs_control_out,
+      dbg_loop_ptr_data_dc_cvt_sbs_frame_out,
       dbg_loop_ptr_data_dc_mul_out,
       dbg_loop_ptr_data_directconv_out
       #endif
