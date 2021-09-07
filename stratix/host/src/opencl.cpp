@@ -406,6 +406,29 @@ int fn_init_fpga(){
 
 }
 
+//-----------------------------------------------------------------------------
+// release variables initialized in fpga_init() function
+//-----------------------------------------------------------------------------
+void fn_release_fpga( void ){
+    printf(KGRN "Releasing OpenCL environment for Altera \n" KRST);
+
+  if (program) {
+    clReleaseProgram(program);
+    program = NULL;
+  }
+  if (q) {
+    clReleaseCommandQueue(q);
+    q = NULL;
+  }
+  if (context) {
+    clReleaseContext(context);
+    context = NULL;
+  }
+}
+
 #endif
 
+//-----------------------------------------------------------------------------
+// end of file: opencl.cpp
+//-----------------------------------------------------------------------------
 

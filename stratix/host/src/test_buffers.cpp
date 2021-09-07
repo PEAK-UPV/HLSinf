@@ -336,20 +336,6 @@ void deallocate_buffers() {
     dbg_loop_data_directconv_out_buffer = NULL;
   }
 #endif
-
-  if (program) {
-    clReleaseProgram(program);
-    program = NULL;
-  }
-  if (q) {
-    clReleaseCommandQueue(q);
-    q = NULL;
-  }
-  if (context) {
-    clReleaseContext(context);
-    context = NULL;
-  }
-
 }
 
 

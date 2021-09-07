@@ -369,7 +369,10 @@ int main(int argc, char **argv) {
 
     close_test_file();
   }
-  
+ 
+  #ifdef OPENCL_TEST
+  fn_release_fpga();
+  #endif
 
   printf("\n\n");
   printf(KCYN "End of test\n" KNRM);

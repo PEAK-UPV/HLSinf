@@ -182,6 +182,7 @@ void parse_arguments(int argc, char **argv);
 void allocate_buffers_opencl();
 void deallocate_buffers_opencl();
 int  fn_init_fpga();
+void fn_release_fpga();
 void copy_to_fpga();
 void copy_from_fpga();
 //void set_callback(cl::Event event, const char *queue_name);
