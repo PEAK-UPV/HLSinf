@@ -361,7 +361,7 @@ int main(int argc, char **argv) {
       }
 
       if (enable) {
-        global_retval = global_retval || retval;
+        global_retval = global_retval + retval;
       }
       
       file_line++;
@@ -369,6 +369,8 @@ int main(int argc, char **argv) {
 
     close_test_file();
   }
+
+    printf(KGRN "Finished reading input data file\n");
  
   #ifdef OPENCL_TEST
   fn_release_fpga();
@@ -378,10 +380,10 @@ int main(int argc, char **argv) {
   printf(KCYN "End of test\n" KNRM);
  if(global_retval == 0){
    printf(" \n");
-   printf(KGRN "  Results are good \n" KNRM);
+   printf(KGRN "  Results are good for all entries in input file \n" KNRM);
  } else {
    printf("\n");
-   printf(KRED "  ERROR: Results mismatch, retval=%d \n" KNRM, retval);
+   printf(KRED "  ERROR: Results mismatch detected, retval=%d \n" KNRM, retval);
  }
    printf(" \n");
 

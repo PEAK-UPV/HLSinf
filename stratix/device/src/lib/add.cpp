@@ -55,11 +55,23 @@ unsigned long add(int o_iter, int H, int W, int I_ITER) {
   //#endif
   //#endif
 
+/*
+  //// JM10 debe inicializarse a zero en cada i_iter ??
+  pixel_out_t pout_zero;
+  for (int i = 0; i < CPO; i++) {
+     pout_zero.pixel[i] = (data_type)0;  
+  }
+  // JM10 debe inicializarse a zero  ??
+  for(int it = 0; it<num_iterations; it++){ 
+    buff_o_channels[it] = pout_zero;
+  } 
+*/
   // All input data have effect into output add
   add_i_iter_loop:
   for (int i_iter = 0; i_iter < I_ITER; i_iter++){
     //DO_PRAGMA(HLS loop_tripcount  min=1 max=I_REFERENCE/CPI)
-    pixel_out_t data_out;
+    //pixel_out_t data_out;
+
     //#pragma HLS loop_flatten off
     add_load_data_it_loop:
     for(int it = 0; it<num_iterations; it++){
@@ -88,9 +100,9 @@ unsigned long add(int o_iter, int H, int W, int I_ITER) {
         {
           dbg_loop_stream_data_directconv_out.write(data_out);
         }
+        cnt = cnt + 1;
         //dbg_loop_stream_data_dc_add_out_counter = dbg_loop_stream_data_dc_add_out_counter + 1;
         //dbg_elements_per_iter_data_dc_add_out[o_iter] = dbg_elements_per_iter_data_dc_add_out[o_iter] + 1;
-        cnt = cnt + 1;
         #endif
       }
     }

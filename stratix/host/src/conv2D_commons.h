@@ -6,23 +6,23 @@
 
 
 
-#define DEBUG_READ_BIAS
-#define DEBUG_READ_KERNEL
-#define DEBUG_READ_DATA
-//#define DEBUG_SERIALIZE
-//#define DEBUG_JOIN
-//#define DEBUG_INPUT_BUFFER
-//#define DEBUG_PADDING
-//#define DEBUG_CVT
-//#define DEBUG_MUL
-//#define DEBUG_ADD
-//#define DEBUG_SPLIT
-//#define DEBUG_BLOCK
-#define DEBUG_WRITE_DATA
-//#define DEBUG_RELU
-//#define DEBUG_POOL
-#define DEBUG_CPU
-//#define DEBUG_CHECK
+//#define DEBUG_READ_BIAS
+//#define DEBUG_READ_KERNEL
+//#define DEBUG_READ_DATA
+////#define DEBUG_SERIALIZE
+////#define DEBUG_JOIN
+////#define DEBUG_INPUT_BUFFER
+////#define DEBUG_PADDING
+////#define DEBUG_CVT
+////#define DEBUG_MUL
+////#define DEBUG_ADD
+////#define DEBUG_SPLIT
+////#define DEBUG_BLOCK
+//#define DEBUG_WRITE_DATA
+////#define DEBUG_RELU
+////#define DEBUG_POOL
+//#define DEBUG_CPU
+////#define DEBUG_CHECK
 
 // HLS DEBUG MACROS
 #define HLS_DBG_H_IND          0
@@ -469,7 +469,7 @@ struct kernel_pw_t_st {
 };
 typedef struct kernel_pw_t_st kernel_pw_t;
 
-#ifdef HLS_DEBUG
+//#ifdef HLS_DEBUG
 // kernel struct (pointwise)
 struct hls_cvt_sbs_control_t_st {
   unsigned long iter;//                  0
@@ -488,7 +488,7 @@ struct hls_cvt_sbs_control_t_st {
 
 }__attribute__((packed));
 typedef struct hls_cvt_sbs_control_t_st hls_cvt_sbs_control_t;
-#endif
+//#endif
 
 #define read_kernel_pw_t ac_int<CPI*DATA_TYPE_WIDTH>
 // typedef ac_int<CPI*DATA_TYPE_WIDTH> read_kernel_pw_t;

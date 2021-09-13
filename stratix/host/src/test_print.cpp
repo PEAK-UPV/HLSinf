@@ -6,14 +6,14 @@
 #include "test_conv2D.h"
 
 void print_bias() {
-  printf("Bias: ");
+  printf("Bias: \n");
   for (int o=0; o<O_output; o++) printf("%6.4f ", float(bias[o]));
   printf("\n");
 }
 
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
 void print_kernel() {
-  printf("Kernels: ");
+  printf("Kernels: \n");
   for (int c=0; c<I_input; c++) {
     for (int cout=0; cout<O_output; cout++) {
       printf("i=%d o=%d:\n", c, cout);
@@ -41,7 +41,7 @@ void print_kernel() {
 
 #ifdef DWS_CONV
 void print_kernel() {
-  printf("Kernels (dw): ");
+  printf("Kernels (dw): \n");
   for (int c=0; c<I_input; c++) {
     printf("i=%d: ", c);
     for (int kh=0; kh<KH; kh++) {
@@ -76,7 +76,8 @@ void print_input() {
   if (W > 5) Wmax = 5;
 
   printf("Input:\n");
-  for (int i=0; i<I_input; i++) {
+  //for (int i=0; i<I_input; i++) {
+  for (int i=0; i<I; i++) {
     printf("channel %d:\n", i);
 	for (int h=0; h<Hmax; h++) {
 	  for (int w=0; w<Wmax; w++) {
@@ -97,7 +98,8 @@ void print_output() {
 
   if ((enable_maxpooling) || (enable_avgpooling)) {
     printf("Output:\n");
-    for (int o=0; o<O_output; o++) {
+    //for (int o=0; o<O_output; o++) {
+    for (int o=0; o<O; o++) {
       printf("channel %d:\n", o);
       for (int h=0; h<H/2; h++) {
         for (int w=0; w<W/2; w++) {
@@ -115,7 +117,8 @@ void print_output() {
 
   } else {
     printf("Output:\n");
-    for (int o=0; o<O_output; o++) {
+    //for (int o=0; o<O_output; o++) {
+    for (int o=0; o<O; o++) {
       printf("channel %d:\n", o);
       for (int h=0; h<H; h++) {
         for (int w=0; w<W; w++) {

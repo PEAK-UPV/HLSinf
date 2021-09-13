@@ -57,16 +57,17 @@ unsigned long padding(int o_iter, int H, int W, int I_ITER, int enable_upper_pad
     {
       dbg_loop_stream_data_dc_pad_out.write(data);
     }
+    cnt = cnt + 1;
     //dbg_loop_stream_data_dc_pad_out_counter = dbg_loop_stream_data_dc_pad_out_counter + 1;
     //dbg_elements_per_iter_data_dc_pad_out[o_iter] = dbg_elements_per_iter_data_dc_pad_out[o_iter] + 1;
-    cnt = cnt + 1;
     #endif
     
     w = w+1;
-    if (w == W+2) {
+
+    if (w >= (W+2)) {
       w = 0;
       h = h + 1;
-      if (h == H+2) {
+      if (h >= (H+2)) {
         h = 0;
       }
     }

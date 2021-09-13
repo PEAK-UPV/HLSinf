@@ -26,7 +26,7 @@
 
 #ifdef HLS_DEBUG
 
-#define HLS_O_ITER_MONITOR (int)0
+#define HLS_O_ITER_MONITOR (int)1
 //     ihc::stream<pixel_in_t>   dbg_loop_stream_data_in;
 //extern ihc::stream<pixel_in_t>   dbg_loop_stream_data_input_buffer;
 // direct convolution streams

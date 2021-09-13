@@ -122,7 +122,12 @@ static unsigned long pool_cvt(int H, int W, int enable_pooling) {
 			if (pin_row == H) pin_row = 0;
 		  }
 
+
+
 		  if (send_frame) {
+        // struct frame_pool_t { pixel_out_t pixel[KW_POOLING * KH_POOLING]; };
+        // #define KW_POOLING	   2   // Maxpooling kernel width
+        // #define KH_POOLING     2   // Maxpooling kernel heigh
      	  kernel.pixel[0] = p0; kernel.pixel[1] = p1;
 			  kernel.pixel[2] = p2; kernel.pixel[3] = p3;
 			  stream_pool.write(kernel);

@@ -38,12 +38,13 @@
 #include <string.h>
 
 
-#define HLS_DBG_SB_CAPACITY_W 1024 // stream buffer capacity in words
+#define HLS_DBG_SB_CAPACITY_W 2048 // stream buffer capacity in words
 
 extern "C" {
 
 
 // streams for read-from write to memroy and pass data between tasks
+/*
 ihc::stream<pixel_in_t>   out_read_data;
 ihc::stream<pixel_in_t>   out_read_data_from_input_buffer;
 ihc::stream<kernel_t>     out_read_kernel;
@@ -55,7 +56,21 @@ ihc::stream<pixel_out_t>  str_mul_add;  // mul->add
 ihc::stream<pixel_out_t>  out_relu;
 ihc::stream<pixel_out_t>  out_pooling;
 ihc::stream<frame_pool_t> stream_pool;
+*/
 
+
+// streams for read-from write to memroy and pass data between tasks
+ihc::stream<pixel_in_t,   ihc::buffer<STREAMS_DEPTH>>  out_read_data;
+ihc::stream<pixel_in_t,   ihc::buffer<STREAMS_DEPTH>>  out_read_data_from_input_buffer;
+ihc::stream<kernel_t,     ihc::buffer<STREAMS_DEPTH>>  out_read_kernel;
+ihc::stream<pixel_out_t,  ihc::buffer<STREAMS_DEPTH>>  out_read_bias;
+ihc::stream<pixel_out_t,  ihc::buffer<STREAMS_DEPTH>>  out_conv;
+ihc::stream<pixel_in_t,   ihc::buffer<STREAMS_DEPTH>>  str_pad_cvt;  // padding->cvt
+ihc::stream<frame_t,      ihc::buffer<STREAMS_DEPTH>>  str_cvt_mul;  // cvt->mul
+ihc::stream<pixel_out_t,  ihc::buffer<STREAMS_DEPTH>>  str_mul_add;  // mul->add
+ihc::stream<pixel_out_t,  ihc::buffer<STREAMS_DEPTH>>  out_relu;
+ihc::stream<pixel_out_t,  ihc::buffer<STREAMS_DEPTH>>  out_pooling;
+ihc::stream<frame_pool_t, ihc::buffer<STREAMS_DEPTH>>  stream_pool;
 
 
 /*
@@ -321,7 +336,7 @@ HLS_EXTERNAL void lib_conv2D(
     #endif
 
   
-    unsigned long int  hld_dbg_buffer_input_counter;
+    //unsigned long int  hld_dbg_buffer_input_counter;
 
 
     // we first need to launch the tasks
@@ -348,7 +363,7 @@ HLS_EXTERNAL void lib_conv2D(
     // read bias
     {
       pixel_out_t bias;
-      memcpy((void*)&bias, (void*)&ptr_bias[offset_bias], sizeof(pixel_out_t));
+      //memcpy((void*)&bias, (void*)&ptr_bias[offset_bias], sizeof(pixel_out_t));
       for (int i = 0; i < CPO; i++) {
         bias.pixel[i] = ptr_bias[offset_bias].pixel[i];
       }
@@ -409,7 +424,7 @@ HLS_EXTERNAL void lib_conv2D(
 
 
     // JM10 debug, la forma correcta és activar el if(enable read)
-    //if (enable_read)
+    if (enable_read)
     { 
       unsigned long rdclp_bytes_to_copy = sizeof(pixel_in_t);
 
@@ -476,11 +491,14 @@ HLS_EXTERNAL void lib_conv2D(
         for(int j = 0; j < CPO; j++) {
           ptr_out[o_iter_write_offset+i].pixel[j] = bx.pixel[j];
         }
+        #ifdef HLS_DEBUG
         dbg_elements_per_iter_data_out[o_iter] = dbg_elements_per_iter_data_out[o_iter] + 1;
+        #endif
 
       }
     //}
 
+    #ifdef HLS_DEBUG
     dbg_elements_per_iter_data_input_buffer[o_iter] = ihc::collect<input_buffer>();
     dbg_elements_per_iter_data_dc_pad_out[o_iter]   = ihc::collect<padding>();
     dbg_elements_per_iter_data_dc_cvt_out[o_iter]     = ihc::collect<cvt>();
@@ -494,7 +512,7 @@ HLS_EXTERNAL void lib_conv2D(
     dbg_elements_per_iter_data_pool_pooling_out[o_iter] = ihc::collect<pool_pooling>();
 
     dbg_elements_per_iter_data_dc_cvt_sbs_out[o_iter] = dbg_elements_per_iter_data_dc_pad_out[o_iter]; // will read the same number of pixels as the padding stage wrote to the channel
-
+    #endif
 
     
 
@@ -510,56 +528,7 @@ HLS_EXTERNAL void lib_conv2D(
     // printf("kernel finishes\n");
     // #endif
 
-#ifdef laguasa //#ifdef HLS_DEBUG
-//    *my_ret   = (int)dbg_elements_per_iter_data_in[0];
-//    *my_ret_2 = (int)dbg_elements_per_iter_data_in[1];
-//    *my_ret_3 = (int)dbg_elements_per_iter_data_in[2];
-//    *my_ret_4 = (int)dbg_elements_per_iter_data_in[3];
-
-//    *my_ret   = (int)dbg_elements_per_iter_kernel[0];
-//    *my_ret_2 = (int)dbg_elements_per_iter_kernel[1];
-//    *my_ret_3 = (int)dbg_elements_per_iter_kernel[2];
-//    *my_ret_4 = (int)dbg_elements_per_iter_kernel[3];
-
-//    *my_ret   = (int)dbg_elements_per_iter_bias[0];
-//    *my_ret_2 = (int)dbg_elements_per_iter_bias[1];
-//    *my_ret_3 = (int)dbg_elements_per_iter_bias[2];
-//    *my_ret_4 = (int)dbg_elements_per_iter_bias[3];
-
-//    *my_ret   = (int)dbg_elements_per_iter_data_input_buffer[0];
-//    *my_ret_2 = (int)dbg_elements_per_iter_data_input_buffer[1];
-//    *my_ret_3 = (int)dbg_elements_per_iter_data_input_buffer[2];
-//    *my_ret_4 = (int)dbg_elements_per_iter_data_input_buffer[3];
-
-//    *my_ret   = (int)dbg_elements_per_iter_data_dc_pad_out[0];
-//    *my_ret_2 = (int)dbg_elements_per_iter_data_dc_pad_out[1];
-//    *my_ret_3 = (int)dbg_elements_per_iter_data_dc_pad_out[2];
-//    *my_ret_4 = (int)dbg_elements_per_iter_data_dc_pad_out[3];
-
-
-//    *my_ret   = (int)dbg_elements_per_iter_data_dc_cvt_out[0];
-//    *my_ret_2 = (int)dbg_elements_per_iter_data_dc_cvt_out[1];
-//    *my_ret_3 = (int)dbg_elements_per_iter_data_dc_cvt_out[2];
-//    *my_ret_4 = (int)dbg_elements_per_iter_data_dc_cvt_out[3];
-
-//    *my_ret   = (int)dbg_elements_per_iter_data_dc_mul_out[0];
-//    *my_ret_2 = (int)dbg_elements_per_iter_data_dc_mul_out[1];
-//    *my_ret_3 = (int)dbg_elements_per_iter_data_dc_mul_out[2];
-//    *my_ret_4 = (int)dbg_elements_per_iter_data_dc_mul_out[3];
-
-//    *my_ret   = (int)dbg_elements_per_iter_data_dc_add_out[0];
-//    *my_ret_2 = (int)dbg_elements_per_iter_data_dc_add_out[1];
-//    *my_ret_3 = (int)dbg_elements_per_iter_data_dc_add_out[2];
-//    *my_ret_4 = (int)dbg_elements_per_iter_data_dc_add_out[3];
-
-//    *my_ret   = (int)dbg_elements_per_iter_data_dc_direcconv_out[0];
-//    *my_ret_2 = (int)dbg_elements_per_iter_data_dc_direcconv_out[1];
-//    *my_ret_3 = (int)dbg_elements_per_iter_data_dc_direcconv_out[2];
-//    *my_ret_4 = (int)dbg_elements_per_iter_data_dc_direcconv_out[3];
-
-#endif
-#ifdef HLS_DEBUG
-
+    #ifdef HLS_DEBUG
     dbg_ptr_ul[HLS_DBG_H_IND] = H;
     dbg_ptr_ul[HLS_DBG_W_IND] = W;
     dbg_ptr_ul[HLS_DBG_ROWS_IND] = rows;
@@ -608,146 +577,119 @@ HLS_EXTERNAL void lib_conv2D(
     dbg_ptr_dt[HLS_DBG_DT_din_sum_IND]  = my_flt_din;
     dbg_ptr_dt[HLS_DBG_DT_dout_sum_IND] = my_flt_dout;
     
-#endif
-
-#ifdef laguasa //#ifdef HLS_DEBUG
-//        // the correct one is the complete, but it would require to send the number of reads back to the host app to know how many data read from memory
-//        //if(enable_read)  or  if ( (o_iter == 0)|| (!enable_buffer))
-//        {
-//          // values read from memory
-//          //// copy ptr_data buffer to output
-//          //   for this case cpi and cpo have the same value 
-//          //unsigned long rdclp_bytes_to_copy = sizeof(struct pixel_in_t);
-//          unsigned long rdclp_bytes_to_copy = sizeof(read_block_t);
-//          for (int i = 0; i < dbg_elements_per_iter_data_in[HLS_O_ITER_MONITOR]; i++) {
-//            pixel_in_t px_loop;
-//            px_loop = dbg_loop_stream_data_in.read();
-//            //memcpy((void*)&(dbg_loop_ptr_data_in[i]), (void*)&(px_loop), rdclp_bytes_to_copy);
-//            for (int j = 0; j < CPI; j++) {
-//              dbg_loop_ptr_data_in[i].pixel[j] = px_loop.pixel[j];
-//            }
-//          }
-//        }
-#endif
-#ifdef HLS_DEBUG
-        // values after input_buffer state
-        {
-          //// copy ptr_data_input buffer to output
-          //unsigned long rdclp_bytes_to_copy = sizeof(struct pixel_in_t);
-          unsigned long rdclp_bytes_to_copy = sizeof(read_block_t);
-          for (int i = 0; i < dbg_elements_per_iter_data_input_buffer[HLS_O_ITER_MONITOR]; i++) {
-            pixel_in_t px_loop;
-            px_loop = dbg_loop_stream_data_input_buffer.read();
-            //memcpy((void*)&(dbg_loop_ptr_data_input_buffer[i]), (void*)&(px_loop), rdclp_bytes_to_copy);
-            for (int j = 0; j < CPI; j++) {
-              dbg_loop_ptr_data_input_buffer[i].pixel[j] = px_loop.pixel[j];
-            }
-          }
+    // values after input_buffer state
+    {
+      //// copy ptr_data_input buffer to output
+      //unsigned long rdclp_bytes_to_copy = sizeof(struct pixel_in_t);
+      //unsigned long rdclp_bytes_to_copy = sizeof(read_block_t);
+      for (int i = 0; i < dbg_elements_per_iter_data_input_buffer[HLS_O_ITER_MONITOR]; i++) {
+        pixel_in_t px_loop;
+        px_loop = dbg_loop_stream_data_input_buffer.read();
+        //memcpy((void*)&(dbg_loop_ptr_data_input_buffer[i]), (void*)&(px_loop), rdclp_bytes_to_copy);
+        for (int j = 0; j < CPI; j++) {
+          dbg_loop_ptr_data_input_buffer[i].pixel[j] = px_loop.pixel[j];
         }
+      }
+    }
 
-       // values after padding stage
-        {
-           unsigned long bytes_to_copy = sizeof(read_block_t);
-           int elements_to_copy =  I_ITER * (H + 2) * (W + 2); // value from padding.cp
-           //int elements_to_copy =  dbg_elements_per_iter_data_dc_pad_out[o_iter];
-           for (int i = 0; i < elements_to_copy; i++) {
-             pixel_in_t px_loop;
-             px_loop = dbg_loop_stream_data_dc_pad_out.read();
-             //memcpy((void*)&dbg_loop_ptr_data_dc_pad_out[i], (void*)&(px_loop), bytes_to_copy);
-             for (int j = 0; j < CPI; j++) {
-               dbg_loop_ptr_data_dc_pad_out[i].pixel[j] = px_loop.pixel[j];
-             }
-           }
+    // values after padding stage
+    {
+      unsigned long bytes_to_copy = sizeof(read_block_t);
+      //int elements_to_copy =  I_ITER * (H + 2) * (W + 2); // value from padding.cp
+      int elements_to_copy =  dbg_elements_per_iter_data_dc_pad_out[HLS_O_ITER_MONITOR];
+      for (int i = 0; i < elements_to_copy; i++) {
+        pixel_in_t px_loop;
+        px_loop = dbg_loop_stream_data_dc_pad_out.read();
+        //memcpy((void*)&dbg_loop_ptr_data_dc_pad_out[i], (void*)&(px_loop), bytes_to_copy);
+        for (int j = 0; j < CPI; j++) {
+          dbg_loop_ptr_data_dc_pad_out[i].pixel[j] = px_loop.pixel[j];
         }
+      }
+    }
 
 
-        // values after cvt stage
-        {
-          unsigned long bytes_to_copy = sizeof(frame_t); // 9 pixels
-          // Despite that the main loop in cvt.cpp runs for I_ITER * (H + 2) * (W + 2), it writes less data to output buffer
-          //int elements_to_copy = I_ITER * (H) * (W); // value from cvt.cpp
-          int elements_to_copy = dbg_elements_per_iter_data_dc_cvt_out[HLS_O_ITER_MONITOR];
-          //int elements_to_copy = dbg_elements_per_iter_data_dc_cvt_out[o_iter];
+    // values after cvt stage
+    {
+      unsigned long bytes_to_copy = sizeof(frame_t); // 9 pixels
+      // Despite that the main loop in cvt.cpp runs for I_ITER * (H + 2) * (W + 2), it writes less data to output buffer
+      //int elements_to_copy = I_ITER * (H) * (W); // value from cvt.cpp
+      int elements_to_copy = dbg_elements_per_iter_data_dc_cvt_out[HLS_O_ITER_MONITOR];
+      //int elements_to_copy = dbg_elements_per_iter_data_dc_cvt_out[o_iter];
 
-          for (int i = 0; i < elements_to_copy; i++) {
-            frame_t fr_loop;
-            fr_loop = dbg_loop_stream_data_dc_cvt_out.read();
-            //memcpy((void*)&dbg_loop_ptr_data_dc_cvt_out[i], (void*)&(fr_loop), bytes_to_copy);
-            for (int j = 0; j < 9; j++)
-              for (int k = 0; k < CPI; k++) // pixel_in_t
-                dbg_loop_ptr_data_dc_cvt_out[i].pixel[j].pixel[k] = fr_loop.pixel[j].pixel[k];
+      for (int i = 0; i < elements_to_copy; i++) {
+        frame_t fr_loop;
+        fr_loop = dbg_loop_stream_data_dc_cvt_out.read();
+        //memcpy((void*)&dbg_loop_ptr_data_dc_cvt_out[i], (void*)&(fr_loop), bytes_to_copy);
+        for (int j = 0; j < 9; j++)
+          for (int k = 0; k < CPI; k++) // pixel_in_t
+            dbg_loop_ptr_data_dc_cvt_out[i].pixel[j].pixel[k] = fr_loop.pixel[j].pixel[k];
+       }
+    }
 
-          }
+    //step by step frame debug
+    {
+      int elements_to_copy = dbg_elements_per_iter_data_dc_cvt_sbs_out[HLS_O_ITER_MONITOR];
+      for (int i = 0; i < elements_to_copy; i++) {
+        hls_cvt_sbs_control_t ctrl_loop;
+        ctrl_loop = dbg_loop_stream_data_dc_cvt_sbs_control_out.read();
+
+        dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].iter              = ctrl_loop.iter;
+        dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].pin_row           = ctrl_loop.pin_row;
+        dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].pin_col           = ctrl_loop.pin_col;
+        dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].row0_buffer_write = ctrl_loop.row0_buffer_write;
+        dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].row1_buffer_write = ctrl_loop.row1_buffer_write;
+        dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].row2_buffer_write = ctrl_loop.row2_buffer_write;
+        dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].p                 = ctrl_loop.p;
+        dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].pin_col0          = ctrl_loop.pin_col0;
+        dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].pin_col1          = ctrl_loop.pin_col1;
+        dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].row0              = ctrl_loop.row0;
+        dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].row1              = ctrl_loop.row1;
+        dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].shift_frame       = ctrl_loop.shift_frame;
+        dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].send_frame        = ctrl_loop.send_frame;
+      }
+
+      for (int i = 0; i < elements_to_copy; i++) {
+        frame_t fr_loop;
+        fr_loop = dbg_loop_stream_data_dc_cvt_sbs_frame_out.read();
+        for (int j = 0; j < 9; j++)
+          for (int k = 0; k < CPI; k++) // pixel_in_t
+            dbg_loop_ptr_data_dc_cvt_sbs_frame_out[i].pixel[j].pixel[k] = fr_loop.pixel[j].pixel[k];
+      }
+    }
+
+
+    // values after mul stage
+    {
+      unsigned long bytes_to_copy = sizeof(write_block_t);
+      //int elements_to_copy = I_ITER * H * W; // value from mul.cpp
+      int elements_to_copy = dbg_elements_per_iter_data_dc_mul_out[HLS_O_ITER_MONITOR];
+      for (int i = 0; i < elements_to_copy; i++) {
+        pixel_out_t px_loop;
+        px_loop = dbg_loop_stream_data_dc_mul_out.read();
+        //memcpy((void*)&(dbg_loop_ptr_data_dc_mul_out[i]), (void*)&(px_loop), bytes_to_copy);
+        for (int j = 0; j < CPO; j++) {
+          dbg_loop_ptr_data_dc_mul_out[i].pixel[j] = px_loop.pixel[j];
         }
+      }
+    }
 
-        //step by step frame debug
-        {
-          int elements_to_copy = dbg_elements_per_iter_data_dc_cvt_sbs_out[HLS_O_ITER_MONITOR];
-
-          for (int i = 0; i < elements_to_copy; i++) {
-            hls_cvt_sbs_control_t ctrl_loop;
-            ctrl_loop = dbg_loop_stream_data_dc_cvt_sbs_control_out.read();
-
-            dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].iter              = ctrl_loop.iter;
-            dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].pin_row           = ctrl_loop.pin_row;
-            dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].pin_col           = ctrl_loop.pin_col;
-            dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].row0_buffer_write = ctrl_loop.row0_buffer_write;
-            dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].row1_buffer_write = ctrl_loop.row1_buffer_write;
-            dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].row2_buffer_write = ctrl_loop.row2_buffer_write;
-            dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].p                 = ctrl_loop.p;
-            dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].pin_col0          = ctrl_loop.pin_col0;
-            dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].pin_col1          = ctrl_loop.pin_col1;
-            dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].row0              = ctrl_loop.row0;
-            dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].row1              = ctrl_loop.row1;
-            dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].shift_frame       = ctrl_loop.shift_frame;
-            dbg_loop_ptr_data_dc_cvt_sbs_control_out[i].send_frame        = ctrl_loop.send_frame;
-          }
-
-          for (int i = 0; i < elements_to_copy; i++) {
-            frame_t fr_loop;
-            fr_loop = dbg_loop_stream_data_dc_cvt_sbs_frame_out.read();
-            for (int j = 0; j < 9; j++)
-              for (int k = 0; k < CPI; k++) // pixel_in_t
-                dbg_loop_ptr_data_dc_cvt_sbs_frame_out[i].pixel[j].pixel[k] = fr_loop.pixel[j].pixel[k];
-          }
+    // values after add stage
+    // this is the same output as for the direct convolution
+    {
+      //// copy ptr_data buffer to output
+      //   for this case cpi and cpo have the same value 
+      //unsigned long rdclp_bytes_to_copy = sizeof(struct pixel_out_t);
+      unsigned long rdclp_bytes_to_copy = sizeof(write_block_t);
+      //int elements_to_copy = dbg_elements_per_iter_data_dc_add_out[o_iter];
+      for (int i = 0; i < dbg_elements_per_iter_data_out[HLS_O_ITER_MONITOR]; i++) {
+        pixel_out_t px_loop;
+        px_loop = dbg_loop_stream_data_directconv_out.read();
+        //memcpy((void*)&(dbg_loop_ptr_data_directconv_out[i]), (void*)&(px_loop), rdclp_bytes_to_copy);
+        for (int j = 0; j < CPO; j++) {
+          dbg_loop_ptr_data_directconv_out[i].pixel[j] = px_loop.pixel[j];
         }
-
-
-       
-
-        // values after mul stage
-        {
-          unsigned long bytes_to_copy = sizeof(write_block_t);
-          int elements_to_copy = I_ITER * H * W; // value from mul.cpp
-          //int elements_to_copy = dbg_elements_per_iter_data_dc_mul_out[o_iter];
-          for (int i = 0; i < elements_to_copy; i++) {
-            pixel_out_t px_loop;
-            px_loop = dbg_loop_stream_data_dc_mul_out.read();
-            //memcpy((void*)&(dbg_loop_ptr_data_dc_mul_out[i]), (void*)&(px_loop), bytes_to_copy);
-            for (int j = 0; j < CPO; j++) {
-              dbg_loop_ptr_data_dc_mul_out[i].pixel[j] = px_loop.pixel[j];
-            }
-
-          }
-        }
-
-        // values after add stage
-        // this is the same output as for the direct convolution
-        {
-          //// copy ptr_data buffer to output
-          //   for this case cpi and cpo have the same value 
-          //unsigned long rdclp_bytes_to_copy = sizeof(struct pixel_out_t);
-          unsigned long rdclp_bytes_to_copy = sizeof(write_block_t);
-          //int elements_to_copy = dbg_elements_per_iter_data_dc_add_out[o_iter];
-          for (int i = 0; i < dbg_elements_per_iter_data_out[HLS_O_ITER_MONITOR]; i++) {
-            pixel_out_t px_loop;
-            px_loop = dbg_loop_stream_data_directconv_out.read();
-            //memcpy((void*)&(dbg_loop_ptr_data_directconv_out[i]), (void*)&(px_loop), rdclp_bytes_to_copy);
-            for (int j = 0; j < CPO; j++) {
-              dbg_loop_ptr_data_directconv_out[i].pixel[j] = px_loop.pixel[j];
-            }
-          }
-        }
+      }
+    }
 
 #endif
 

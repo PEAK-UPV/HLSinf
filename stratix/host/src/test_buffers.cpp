@@ -13,20 +13,20 @@ void allocate_buffers() {
 
 
   // NOTE that scoped_aligned_ptr vector reset function sets the number of of elements in array of type "template"
-  printf("1\n");
+  //printf("1\n");
   // input data buffer
   size_t size_data_num_values = I_input * W * H;
   size_t size_data_in_bytes   = size_data_num_values * sizeof(data_type);
   data_in.reset(size_data_num_values);
 
-  printf("2\n");
+  //printf("2\n");
   // weights buffer (kernel), depending on the type of convolution
   #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
   size_t size_kernel_num_values = I_kernel * O_kernel * KW * KH;
   size_t size_kernel_in_bytes   = size_kernel_num_values * sizeof(data_type);
   kernel.reset(size_kernel_num_values);
   #endif
-  printf("3\n");
+  //printf("3\n");
   #ifdef DWS_CONV
   size_t size_kernel_dw_num_values = (I_kernel * KW * KH);
   size_t size_kernel_dw_in_bytes   = size_kernel_dw_num_values * sizeof(data_type);
@@ -36,13 +36,14 @@ void allocate_buffers() {
   pw_kernel.reset(size_kernel_pw_num_values);
   #endif
 
-  printf("4\n");
+  //printf("4\n");
   // bias buffer
   size_t size_bias_num_values = O_output;
   size_t size_bias_in_bytes   = size_bias_num_values * sizeof(data_type);
   bias.reset(size_bias_num_values);
+  for(size_t i = 0; i < size_bias_num_values; i++) bias[i] = (data_type)0;
 
-  printf("5\n");
+  //printf("5\n");
   // output buffer for fpga
   size_t size_output_num_values;
   size_t size_output_in_bytes;
@@ -53,20 +54,23 @@ void allocate_buffers() {
     size_output_num_values = O_output * W * H;
     size_output_in_bytes   = size_output_num_values * sizeof(data_type);
   }
-  printf("6\n");
+  //printf("6\n");
   out.reset(size_output_num_values);
+  for(size_t i = 0; i < size_output_num_values; i++) out[i] = (data_type)0;
 
-  printf("7\n");
+  //printf("7\n");
   out_conv_cpu.reset(O_output * W * H);
+  for(size_t i = 0; i < (O_output * W * H); i++) out_conv_cpu[i] = (data_type)0;
 
 
-   printf("8\n");
+  // printf("8\n");
   // output for relu function
   if (enable_relu) {
     out_relu_cpu.reset(O_output * W * H );
+    for(size_t i = 0; i < (O_output * W * H); i++) out_relu_cpu[i] = (data_type)0;
   }
 
-  printf("9\n");
+  //printf("9\n");
   // output for pool function
   if ((enable_maxpooling) || (enable_avgpooling)) {
     out_pool_cpu.reset(O_output * (W/2) * (H/2));
@@ -74,7 +78,7 @@ void allocate_buffers() {
   }
 
 #ifdef HLS_DEBUG
-  printf("10\n");
+  //printf("10\n");
   // simple type values arrays
   size_t size_hls_dbg_ul_num_values = NUM_HLS_DBG_VALUE_ARRAY_ENTRIES * MAX_CONVS;
   size_t size_hls_dbg_ul_in_bytes   = size_hls_dbg_ul_num_values * sizeof(unsigned long); 
@@ -83,7 +87,7 @@ void allocate_buffers() {
     hls_dbg_ul[ti] = (unsigned long)0;
   }
 
-  printf("11\n");
+  //printf("11\n");
   size_t size_hls_dbg_dt_num_values = NUM_HLS_DBG_VALUE_ARRAY_ENTRIES * MAX_CONVS;
   size_t size_hls_dbg_dt_in_bytes   = size_hls_dbg_dt_num_values * sizeof(data_type);
   hls_dbg_dt.reset(size_hls_dbg_dt_num_values);
@@ -92,7 +96,7 @@ void allocate_buffers() {
   }
 
   // data_in 
-  printf("12\n");
+  //printf("12\n");
   size_t size_dbg_loop_data_in = I_input * W * H * MAX_CONVS;
   size_t size_dbg_loop_data_in_bytes = size_dbg_loop_data_in * sizeof(data_type);
   dbg_loop_data_in.reset(size_dbg_loop_data_in);
@@ -102,7 +106,7 @@ void allocate_buffers() {
 
   // values after input_buffer stage of kernel
   // this data has the same format as data_in, it is data after input buffers, to deal with congestion of input
-  printf("13\n");
+  //printf("13\n");
   size_t size_dbg_loop_data_input_buffer = I_input * W * H * MAX_CONVS;
   size_t size_dbg_loop_data_input_buffer_bytes = size_dbg_loop_data_input_buffer * sizeof(data_type);
   dbg_loop_data_input_buffer.reset(size_dbg_loop_data_input_buffer);
@@ -112,8 +116,8 @@ void allocate_buffers() {
   
   // values for internal operations of direct convolution stage: padding, cvt, mul, add
   // padding
-  printf("14\n");
-  size_t size_dbg_loop_data_dc_pad_out =  I_input * NUM_OF_I_ITERS * (H + 2) * (W + 2) * MAX_CONVS;
+  //printf("14\n");
+  size_t size_dbg_loop_data_dc_pad_out =  I_input * i_iter * (H + 2) * (W + 2) * MAX_CONVS;
   size_t size_dbg_loop_data_dc_pad_out_bytes = size_dbg_loop_data_dc_pad_out * sizeof(data_type);
   dbg_loop_data_dc_pad_out.reset(size_dbg_loop_data_dc_pad_out);
   for(int ti=0; ti < size_dbg_loop_data_dc_pad_out; ti++) {
@@ -122,19 +126,19 @@ void allocate_buffers() {
   
   // cvt
   // frame_t consists of 9 pixel_in_t
-  // Despite that the main loop in cvt.cpp runs for NUM_OF_I_ITERS * (H + 2) * (W + 2), it writes less data to output buffer
-  printf("15\n");
-  size_t size_dbg_loop_data_dc_cvt_out = CPI * NUM_PIXELS_IN_FRAME * NUM_OF_I_ITERS * (H) * (W) * MAX_CONVS;
+  // Despite that the main loop in cvt.cpp runs for i_iter * (H + 2) * (W + 2), it writes less data to output buffer
+  //printf("15\n");
+  size_t size_dbg_loop_data_dc_cvt_out = CPI * NUM_PIXELS_IN_FRAME * i_iter * (H) * (W) * MAX_CONVS;
   size_t size_dbg_loop_data_dc_cvt_out_bytes = size_dbg_loop_data_dc_cvt_out * sizeof(data_type);
   dbg_loop_data_dc_cvt_out.reset(size_dbg_loop_data_dc_cvt_out_bytes);
   for ( int ti = 0; ti < size_dbg_loop_data_dc_cvt_out; ti++) {
     dbg_loop_data_dc_cvt_out[ti] = (data_type)0;
   }
 
-  printf("15-a\n");
+  //printf("15-a\n");
   // int num_extra_rowscols already calculated for padding vector
   // the number of elements in this vector matches the the number of elements of padding stream * xxx (number of
-  size_t size_dbg_loop_data_dc_cvt_sbs_control_out = CPI * NUM_OF_I_ITERS * (H + 2) * (W + 2) * MAX_CONVS;
+  size_t size_dbg_loop_data_dc_cvt_sbs_control_out = CPI * i_iter * (H + 2) * (W + 2) * MAX_CONVS;
   size_t size_dbg_loop_data_dc_cvt_sbs_control_out_bytes = size_dbg_loop_data_dc_cvt_out * sizeof(hls_cvt_sbs_control_t); 
   dbg_loop_data_dc_cvt_sbs_control_out.reset(size_dbg_loop_data_dc_cvt_sbs_control_out_bytes);
   for(int ti = 0; ti < size_dbg_loop_data_dc_cvt_sbs_control_out; ti++){
@@ -153,10 +157,10 @@ void allocate_buffers() {
     dbg_loop_data_dc_cvt_sbs_control_out[ti].send_frame = (unsigned long) 0;//           12
   }
 
-  printf("15-b\n");
+  //printf("15-b\n");
   // int num_extra_rowscols already calculated for padding vector
   // the number of elements in this vector matches the the number of elements of padding stream 
-  size_t size_dbg_loop_data_dc_cvt_sbs_frame_out = CPI *  NUM_OF_I_ITERS * (H + 2) * (W + 2) * MAX_CONVS;
+  size_t size_dbg_loop_data_dc_cvt_sbs_frame_out = CPI *  i_iter * (H + 2) * (W + 2) * MAX_CONVS;
   size_t size_dbg_loop_data_dc_cvt_sbs_frame_out_bytes = size_dbg_loop_data_dc_cvt_sbs_frame_out * sizeof(frame_t); 
   dbg_loop_data_dc_cvt_sbs_frame_out.reset(size_dbg_loop_data_dc_cvt_sbs_frame_out_bytes);
   //for (int ti = 0; ti < size_dbg_loop_data_dc_cvt_sbs_frame_out; ti++) {
@@ -164,8 +168,8 @@ void allocate_buffers() {
   //}
 
   // mul
-  printf("16\n");
-  size_t size_dbg_loop_data_dc_mul_out = O_output * NUM_OF_I_ITERS * W * H * MAX_CONVS;
+  //printf("16\n");
+  size_t size_dbg_loop_data_dc_mul_out = O_output * i_iter * W * H * MAX_CONVS;
   size_t size_dbg_loop_data_dc_mul_out_bytes = size_dbg_loop_data_dc_mul_out * sizeof(data_type);
   dbg_loop_data_dc_mul_out.reset(size_dbg_loop_data_dc_mul_out);
   for(int ti = 0; ti < size_dbg_loop_data_dc_mul_out; ti++) {
@@ -175,7 +179,7 @@ void allocate_buffers() {
   // add stage output, it is the same as
   // copy of values of directconv (full) stage output 
   
-  printf("17\n");
+  //printf("17\n");
   size_t size_dbg_loop_data_out =  O_output * W * H * MAX_CONVS;
   size_t size_dbg_loop_data_out_bytes = size_dbg_loop_data_out * sizeof(data_type);
   dbg_loop_data_directconv_out.reset(size_dbg_loop_data_out);
@@ -184,7 +188,7 @@ void allocate_buffers() {
   }
   
   //
-  printf("18\n");
+  //printf("18\n");
   dbg_cpu_data_directconv_out.reset(O_output * W * H * sizeof(data_type));
   for(int ti=0; ti <  O_output * W * H * sizeof(data_type); ti++) {
    dbg_cpu_data_directconv_out[ti] = (data_type)0;
@@ -470,35 +474,35 @@ void copy_from_fpga() {
   CHECK(err);
 
   printf("HLS debug enqueue read dbg_loop_data_dc_pad_out_buffer migrate operation\n");
-  size_t size_dbg_loop_data_dc_pad_out =  I_input * NUM_OF_I_ITERS * (H + 2) * (W + 2) * MAX_CONVS;
+  size_t size_dbg_loop_data_dc_pad_out =  I_input * i_iter * (H + 2) * (W + 2) * MAX_CONVS;
   size_t size_dbg_loop_data_dc_pad_out_bytes = size_dbg_loop_data_dc_pad_out * sizeof(data_type);
   err = clEnqueueReadBuffer(q, dbg_loop_data_dc_pad_out_buffer, CL_FALSE, 0, size_dbg_loop_data_dc_pad_out_bytes, dbg_loop_data_dc_pad_out, 0, NULL, &read_events[num_events_to_wait]);
   num_events_to_wait++;
   CHECK(err);
 
   printf("HLS debug enqueue read dbg_loop_data_dc_cvt_out_buffer migrate operation\n");
-  size_t size_dbg_loop_data_dc_cvt_out = CPI * NUM_PIXELS_IN_FRAME * NUM_OF_I_ITERS * (H) * (W) * MAX_CONVS;
+  size_t size_dbg_loop_data_dc_cvt_out = CPI * NUM_PIXELS_IN_FRAME * i_iter * (H) * (W) * MAX_CONVS;
   size_t size_dbg_loop_data_dc_cvt_out_bytes = size_dbg_loop_data_dc_cvt_out * sizeof(data_type);
   err = clEnqueueReadBuffer(q, dbg_loop_data_dc_cvt_out_buffer, CL_FALSE, 0, size_dbg_loop_data_dc_cvt_out_bytes, dbg_loop_data_dc_cvt_out, 0, NULL, &read_events[num_events_to_wait]);
   num_events_to_wait++;
   CHECK(err);
 
   printf("HLS debug enqueue read dbg_loop_data_dc_cvt_sbs_control_out migrate operation\n"); fflush(stdout);
-  size_t size_dbg_loop_data_dc_cvt_sbs_control_out = CPI * NUM_OF_I_ITERS * (H + 2) * (W + 2) * MAX_CONVS;
+  size_t size_dbg_loop_data_dc_cvt_sbs_control_out = CPI * i_iter * (H + 2) * (W + 2) * MAX_CONVS;
   size_t size_dbg_loop_data_dc_cvt_sbs_control_out_bytes = size_dbg_loop_data_dc_cvt_out * sizeof(hls_cvt_sbs_control_t); 
   err = clEnqueueReadBuffer(q, dbg_loop_data_dc_cvt_sbs_control_out_buffer, CL_FALSE, 0, size_dbg_loop_data_dc_cvt_sbs_control_out_bytes, dbg_loop_data_dc_cvt_sbs_control_out, 0, NULL, &read_events[num_events_to_wait]);
   num_events_to_wait++;
   CHECK(err);
 
   printf("HLS debug enqueue read dbg_loop_data_dc_cvt_sbs_frame_out migrate operation\n"); fflush(stdout);
-  size_t size_dbg_loop_data_dc_cvt_sbs_frame_out = CPI *  NUM_OF_I_ITERS * (H + 2) * (W + 2) * MAX_CONVS; 
+  size_t size_dbg_loop_data_dc_cvt_sbs_frame_out = CPI *  i_iter * (H + 2) * (W + 2) * MAX_CONVS; 
   size_t size_dbg_loop_data_dc_cvt_sbs_frame_out_bytes = size_dbg_loop_data_dc_cvt_sbs_frame_out * sizeof(frame_t);
   err = clEnqueueReadBuffer(q, dbg_loop_data_dc_cvt_sbs_frame_out_buffer, CL_FALSE, 0, size_dbg_loop_data_dc_cvt_sbs_frame_out_bytes, dbg_loop_data_dc_cvt_sbs_frame_out, 0, NULL, &read_events[num_events_to_wait]);
   num_events_to_wait++;
   CHECK(err);
 
   printf("HLS debug enqueue read dbg_loop_data_dc_mul_out_buffer migrate operation\n");
-  size_t size_dbg_loop_data_dc_mul_out = O_output * NUM_OF_I_ITERS * W * H * MAX_CONVS;
+  size_t size_dbg_loop_data_dc_mul_out = O_output * i_iter * W * H * MAX_CONVS;
   size_t size_dbg_loop_data_dc_mul_out_bytes = size_dbg_loop_data_dc_mul_out * sizeof(data_type);
   err = clEnqueueReadBuffer(q, dbg_loop_data_dc_mul_out_buffer, CL_FALSE, 0, size_dbg_loop_data_dc_mul_out_bytes, dbg_loop_data_dc_mul_out, 0, NULL, &read_events[num_events_to_wait]);
   num_events_to_wait++;

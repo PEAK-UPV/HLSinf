@@ -24,13 +24,13 @@
 //-----------------------------------------------------------------------------
 // MACROS
 //-----------------------------------------------------------------------------
-#define PRINT_DIN
-#define PRINT_DATA_INPUT_BUFFER
-#define PRINT_DATA_DC_PAD_OUT
-#define PRINT_DATA_DC_CVT_OUT
-#define PRINT_DATA_DC_CVT_SBS_OUT
-#define PRINT_DATA_DC_MUL_OUT
-#define PRINT_DATA_DIRECTCONV_OUT
+//#define PRINT_DIN
+//#define PRINT_DATA_INPUT_BUFFER
+//#define PRINT_DATA_DC_PAD_OUT
+////#define PRINT_DATA_DC_CVT_OUT
+////#define PRINT_DATA_DC_CVT_SBS_OUT
+//#define PRINT_DATA_DC_MUL_OUT
+//#define PRINT_DATA_DIRECTCONV_OUT
 
 
 
@@ -90,7 +90,7 @@ data_type  dbg_cpu_data_directconv_sum = (data_type)0;
 // Folowing values have to be updated with values of current sim
 // int i_useful = I_input;
 // int o_useful = O_output;
-int I_useful = 4;
+int I_useful = 8;
 int O_useful = 1;
 
 //-----------------------------------------------------------------------------
@@ -125,7 +125,13 @@ int padding_data_address(int i, int h, int w) {
 void hls_debug(void) {
 
   printf("\n\n");
-  printf(KGRN "NOTICE: for this test 4x4x1x1 just one channel with useful data\n" KNRM);
+  printf(KGRN "NOTICE: for this test %dx%dx%dx%d\n" KNRM, H, W, I, O);
+  printf(KGRN "   %d (of %d) input  channels with useful data\n" KNRM, I, I_input);
+  printf(KGRN "   %d (of %d) output channels with useful data\n" KNRM, O, O_output);
+  printf("\n");
+
+  I_useful = I;
+  O_useful = O;
   
 
   // data_in 
@@ -248,8 +254,8 @@ void hls_debug(void) {
   printf(KCYN "data matrix after DC padding stage from FPGA to host\n" KNRM);
   printf("dbg_loop_data_dc_pad_out\n"); 
 
-  //for (int i=0; i<I_useful; i++) {
-  for (int i=0; i<I_input; i++) {
+  for (int i=0; i<I_useful; i++) {
+  //for (int i=0; i<I_input; i++) {
     printf("In channel  %2d\n", i);
     printf("W    ");
     for (int w=0; w<(W+2); w++) printf(" %5d ", w -1);
@@ -278,8 +284,8 @@ void hls_debug(void) {
   printf(KCYN "data matrix after CVT stage from FPGA to host\n" KNRM);
   printf("dbg_loop_data_dc_cvt_out\n");
   
-  // buffer created with    I_input * NUM_PIXELS_IN_FRAME * NUM_OF_I_ITERS * (H) * (W) * MAX_KERNELS  * sizeof(data_type);
-  size_t size_data_dc_cvt = I_input * NUM_PIXELS_IN_FRAME * NUM_OF_I_ITERS * (H) * (W) * MAX_KERNELS; // size values: pixels * channels_in
+  // buffer created with    I_input * NUM_PIXELS_IN_FRAME * i_iter * (H) * (W) * MAX_KERNELS  * sizeof(data_type);
+  size_t size_data_dc_cvt = I_input * NUM_PIXELS_IN_FRAME * i_iter * (H) * (W) * MAX_KERNELS; // size values: pixels * channels_in
   size_t size_data_dc_cvt_bytes  = size_data_dc_cvt + sizeof(data_type);
 
   printf("num values of data_type in frames: %lu\n", size_data_dc_cvt);
@@ -293,7 +299,7 @@ void hls_debug(void) {
     //}
     //printf("\n");
 
-    int index_base_curr_kernel = (CPI * NUM_PIXELS_IN_FRAME * NUM_OF_I_ITERS * (H) * (W)) * i;
+    int index_base_curr_kernel = (CPI * NUM_PIXELS_IN_FRAME * i_iter * (H) * (W)) * i;
     for (int h=0; h<H; h++) {
       for (int w=0; w<W; w++) {
         int frame_index = (h*W)+w;
@@ -352,7 +358,7 @@ void hls_debug(void) {
   printf("\n");
   printf(KCYN "data matrix after MUL  stage from FPGA to host\n" KNRM);
   printf("dbg_loop_data_mul_out\n");
-  size_t size_dbg_loop_data_dc_mul_out = O_output * NUM_OF_I_ITERS * W * H * MAX_CONVS;
+  size_t size_dbg_loop_data_dc_mul_out = O_output * i_iter * W * H * MAX_CONVS;
   size_t size_dbg_loop_data_dc_mul_out_bytes = size_dbg_loop_data_dc_mul_out * sizeof(data_type);
 // 	for (int cout=0; cout < O_output; cout++) {
 //    for (int h=0; h<H; h++) {

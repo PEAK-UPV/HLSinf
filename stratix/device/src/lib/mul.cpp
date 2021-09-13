@@ -111,10 +111,8 @@ unsigned long mul(int o_iter, int H, int W, int I_ITER) {
     #ifdef HLS_DEBUG
     if (o_iter == HLS_O_ITER_MONITOR)
     {
-      dbg_loop_stream_data_dc_mul_out.write(p_out);
+      dbg_loop_stream_data_dc_mul_out.write(p_out);      
     }
-    //dbg_loop_stream_data_dc_mul_out_counter = dbg_loop_stream_data_dc_mul_out_counter + 1;
-    //dbg_elements_per_iter_data_dc_mul_out[o_iter] = dbg_elements_per_iter_data_dc_mul_out[o_iter] + 1;
     cnt = cnt + 1;
     #endif
     iter_load_kernel++;

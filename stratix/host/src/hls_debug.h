@@ -25,8 +25,6 @@
 // MACROS
 //-----------------------------------------------------------------------------
 // for debuging purposes: number of i iterations for buffers size
-#define NUM_OF_I_ITERS 1
-#define NUM_OF_O_ITERS 2  // must match o_iters in lib_conv2D.cpp function call
 
 #define NUM_PIXELS_IN_FRAME 9
 

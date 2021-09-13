@@ -21,7 +21,7 @@ void run_kernel() {
   }
 
 #ifdef HLS_DEBUG
-  printf("HLS DEBUG run_kernel using %d kernels  (o_iter=%d  NUM_KERNELS=%d\n", num_kernels, o_iter, NUM_KERNELS);
+  printf("HLS DEBUG run_kernel using %d kernels  (o_iter=%d  (max_)NUM_KERNELS=%d) \n", num_kernels, o_iter, NUM_KERNELS);
 #endif
 
   if (num_kernels != 1) {
@@ -42,7 +42,7 @@ void run_kernel() {
     print_message(str);
 
    
-    #ifdef OPENCL_TEST
+#ifdef OPENCL_TEST
     // set kernel arguments
     #ifdef HLS_DEBUG
     printf("setting kernel Arguments\n");
@@ -82,7 +82,7 @@ void run_kernel() {
     CHECK(clSetKernelArg(kernel_conv2D, arg++, sizeof(pos_shift), &pos_shift));
 
 
-#ifdef HLS_DEBUG
+    #ifdef HLS_DEBUG
     CHECK(clSetKernelArg(kernel_conv2D, arg++, sizeof(dbg_val),   &dbg_val));
     CHECK(clSetKernelArg(kernel_conv2D, arg++, sizeof(hls_dbg_ul_buffer), (void*)&hls_dbg_ul_buffer));
     CHECK(clSetKernelArg(kernel_conv2D, arg++, sizeof(hls_dbg_dt_buffer), (void*)&hls_dbg_dt_buffer));
@@ -95,10 +95,10 @@ void run_kernel() {
     CHECK(clSetKernelArg(kernel_conv2D, arg++, sizeof(dbg_loop_data_dc_cvt_sbs_frame_out_buffer),   (void*)&dbg_loop_data_dc_cvt_sbs_frame_out_buffer));
     CHECK(clSetKernelArg(kernel_conv2D, arg++, sizeof(dbg_loop_data_dc_mul_out_buffer),     (void*)&dbg_loop_data_dc_mul_out_buffer));
     CHECK(clSetKernelArg(kernel_conv2D, arg++, sizeof(dbg_loop_data_directconv_out_buffer), (void*)&dbg_loop_data_directconv_out_buffer));
-#endif
+    #endif
 
 
-const double krnl_start_time = getCurrentTimestamp();
+    const double krnl_start_time = getCurrentTimestamp();
 
     //
     #ifdef HLS_DEBUG
@@ -117,14 +117,13 @@ const double krnl_start_time = getCurrentTimestamp();
     #ifdef HLS_DEBUG
     printf("JM10 OPENCL test mode enabled, kernel execution completed\n");
     #endif
-  const double krnl_end_time = getCurrentTimestamp(); 
+    const double krnl_end_time = getCurrentTimestamp(); 
   
-  //krnl_elapsed_time = krnl_end_time - krnl_start_time;
-  printf(KGRN "JM10 OPENCL test mode enabled kernel  completed in : %0.3f ms\n" KRST, (krnl_end_time - krnl_start_time) * 1e3);
+    //krnl_elapsed_time = krnl_end_time - krnl_start_time;
+    printf(KGRN "JM10 OPENCL test mode enabled kernel  completed in : %0.3f ms\n" KRST, (krnl_end_time - krnl_start_time) * 1e3);
 
 
-
-    #else
+#else
     k_conv2D((read_block_t *)data_in, H, W, rows, I, O, i_iter, o_iter_first, o_iter_last, enable_relu,
     #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
 		kernel,
@@ -135,7 +134,7 @@ const double krnl_start_time = getCurrentTimestamp();
 		(pixel_out_t *)bias, (write_block_t *)out, global_offset,
 		 enable_upper_padding, enable_lower_padding, enable_maxpooling, enable_avgpooling,
 		 enable_clipping, enable_shift, min_clip, max_clip, dir_shift, pos_shift, my_val, &my_ret[k]);
-    #endif
+#endif
   }
 
   #ifdef OPENCL_TEST

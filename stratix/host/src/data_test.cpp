@@ -60,6 +60,7 @@ void init_data() {
   #ifdef HLS_DEBUG
   // for this case number of kernels is 1, and input and output channels are one, so
   printf(KRED "warning: forced to display I=0 and O=0 for kernel, skipping other input and output kernel channels\n" KNRM);
+  printf(KCYN "I_kernel = %d   O_kernel = %d   KH = %d   KW = %d\n" KNRM, I_kernel, O_kernel, KH, KW);
   printf(KCYN "kernel matrix\n" KNRM);
   #endif
 

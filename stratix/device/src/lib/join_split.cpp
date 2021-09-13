@@ -67,6 +67,8 @@ void join(int H, int W, int I_ITER, int num_extra_rows, int enable, ihc::stream<
 }
 #endif
 
+
+pixel_in_t buffer_din[INPUT_BUFFER_SIZE];
 unsigned long input_buffer(int o_iter, int read_pixels_total, int write_to_buff, int read_from_buff) {
 
   //#ifdef DEBUG_INPUT_BUFFER
@@ -74,7 +76,6 @@ unsigned long input_buffer(int o_iter, int read_pixels_total, int write_to_buff,
   //#endif
   unsigned long cnt = 0;
 
-  pixel_in_t buffer[INPUT_BUFFER_SIZE];
   //DO_PRAGMA(HLS aggregate variable=buffer)
 
   #ifdef ALVEO_U200
@@ -92,21 +93,25 @@ unsigned long input_buffer(int o_iter, int read_pixels_total, int write_to_buff,
   
     //DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE * W_REFERENCE * H_REFERENCE / CPI)
     //  DO_PRAGMA(HLS pipeline)
-
-    if (!read_from_buff) px_input = out_read_data.read();
-    if (read_from_buff)  px_buff = buffer[p];
-    if (write_to_buff)   buffer[p] = px_input;
+    
+    if (read_from_buff) {
+      px_buff = buffer_din[p];
+    }
+    else {
+      px_input = out_read_data.read();
+      if (write_to_buff) {
+        buffer_din[p] = px_input;
+      }
+    }
 
     if (read_from_buff) {
       out_read_data_from_input_buffer.write(px_buff);
       #ifdef HLS_DEBUG //#ifdef laguasa 
       if(o_iter == HLS_O_ITER_MONITOR)  
       {
-        dbg_loop_stream_data_input_buffer.write(px_buff);
+        dbg_loop_stream_data_input_buffer.write(px_buff); 
       }
-      //dbg_elements_per_iter_data_input_buffer[o_iter] = dbg_elements_per_iter_data_input_buffer[o_iter] + 1;
-      cnt = cnt +1;
-
+      cnt = cnt + 1;
       #endif
     } else {
       out_read_data_from_input_buffer.write(px_input);
@@ -115,8 +120,7 @@ unsigned long input_buffer(int o_iter, int read_pixels_total, int write_to_buff,
       {
         dbg_loop_stream_data_input_buffer.write(px_input);
       }
-      //dbg_elements_per_iter_data_input_buffer[o_iter] = dbg_elements_per_iter_data_input_buffer[o_iter] + 1;
-      cnt = cnt +1;
+      cnt = cnt + 1;
       
       #endif
     }

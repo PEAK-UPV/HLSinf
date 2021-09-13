@@ -20,9 +20,9 @@
 
 static unsigned long relu(int enable_relu, int enable_clipping, int enable_shift, int min_clip, int max_clip, int direction_shift, int pos_shift, int H, int W ) {
 
-  #ifdef DEBUG_RELU
-  printf("relu: start\n");
-  #endif
+  //#ifdef DEBUG_RELU
+  //printf("relu: start\n");
+  //#endif
 
   unsigned long cnt = 0;
 

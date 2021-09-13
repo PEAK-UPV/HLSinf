@@ -30,6 +30,11 @@
   #include <math.h>
   #include <vector>
 
+// to prevent warning message  
+//host/src/opencl.cpp:355:120: warning: ‘_cl_command_queue* clCreateCommandQueue(cl_context, cl_device_id, cl_command_queue_properties, cl_int*)’ is deprecated [-Wdeprecated-declarations]
+  #define CL_USE_DEPRECATED_OPENCL_1_2_APIS
+  #include <CL/cl.h>
+
   #include "CL/opencl.h"
   //#include <CL/cl2.hpp>  // related to opencl in c++ 
   //#include <CL/cl.hpp>   // related to opencl in c++

@@ -116,9 +116,9 @@ unsigned long cvt(int o_iter, int H, int W, int I_ITER) {
       {
         dbg_loop_stream_data_dc_cvt_out.write(frame);
       }
+      cnt = cnt + 1;
       //dbg_loop_stream_data_dc_cvt_out_counter = dbg_loop_stream_data_dc_cvt_out_counter + 1;
       //dbg_elements_per_iter_data_dc_cvt_out[o_iter] = dbg_elements_per_iter_data_dc_cvt_out[o_iter] + 1;
-      cnt = cnt + 1;
       #endif
 
       //#ifdef DEBUG_CVT
@@ -136,27 +136,29 @@ unsigned long cvt(int o_iter, int H, int W, int I_ITER) {
 
     #ifdef HLS_DEBUG
     {
-      hls_cvt_sbs_control_t build_ctrl;
-      build_ctrl.iter    = i_iter;
-      build_ctrl.pin_row = pin_row;
-      build_ctrl.pin_col = pin_col;
-      build_ctrl.row0_buffer_write = row0_buffer_write;
-      build_ctrl.row1_buffer_write = row1_buffer_write;
-      build_ctrl.row2_buffer_write = row2_buffer_write;
-      build_ctrl.p        = p;
-      build_ctrl.pin_col0 = pin_col0;
-      build_ctrl.pin_col1 = pin_col1;
-      build_ctrl.row0     = row0;
-      build_ctrl.row1     = row1;
-      build_ctrl.shift_frame = shift_frame;
-      build_ctrl.send_frame  = send_frame;
-      dbg_loop_stream_data_dc_cvt_sbs_control_out.write(build_ctrl);
+      if(o_iter == HLS_O_ITER_MONITOR) {
+        hls_cvt_sbs_control_t build_ctrl;
+        build_ctrl.iter    = i_iter;
+        build_ctrl.pin_row = pin_row;
+        build_ctrl.pin_col = pin_col;
+        build_ctrl.row0_buffer_write = row0_buffer_write;
+        build_ctrl.row1_buffer_write = row1_buffer_write;
+        build_ctrl.row2_buffer_write = row2_buffer_write;
+        build_ctrl.p        = p;
+        build_ctrl.pin_col0 = pin_col0;
+        build_ctrl.pin_col1 = pin_col1;
+        build_ctrl.row0     = row0;
+        build_ctrl.row1     = row1;
+        build_ctrl.shift_frame = shift_frame;
+        build_ctrl.send_frame  = send_frame;
+        dbg_loop_stream_data_dc_cvt_sbs_control_out.write(build_ctrl);
 
-      frame_t  build_frame;
-      build_frame.pixel[0] = p0; build_frame.pixel[1] = p1; build_frame.pixel[2] = p2;
-      build_frame.pixel[3] = p3; build_frame.pixel[4] = p4; build_frame.pixel[5] = p5;
-      build_frame.pixel[6] = p6; build_frame.pixel[7] = p7; build_frame.pixel[8] = p8;
-      dbg_loop_stream_data_dc_cvt_sbs_frame_out.write(build_frame);
+        frame_t  build_frame;
+        build_frame.pixel[0] = p0; build_frame.pixel[1] = p1; build_frame.pixel[2] = p2;
+        build_frame.pixel[3] = p3; build_frame.pixel[4] = p4; build_frame.pixel[5] = p5;
+        build_frame.pixel[6] = p6; build_frame.pixel[7] = p7; build_frame.pixel[8] = p8;
+        dbg_loop_stream_data_dc_cvt_sbs_frame_out.write(build_frame);
+      }
     }
     #endif
 

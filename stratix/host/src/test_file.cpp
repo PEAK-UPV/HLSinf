@@ -40,6 +40,7 @@ int read_test_file(int *enable, int *cpu) {
  #ifdef GIHWCPI_DATA_FORMAT
  I_input = ((I + (CPI - 1)) / CPI) * CPI;
  O_output = ((O + (CPO - 1)) / CPO) * CPO;
+ //printf(KCYN "  JM10 test_file.cpp  O_output = ((O + (CPO - 1)) / CPO) * CPO =   ((%d + (%d - 1)) / %d) * %d = %d\n\n" KNRM, O,CPO, CPO,CPO, O_output);
  #endif
 
  return 0;
