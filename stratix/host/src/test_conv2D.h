@@ -132,14 +132,9 @@ extern cl_context       context;
 extern cl_command_queue q;
 extern cl_program       program;
 extern char            *binaryFile;                       // kernel Binary file
-//extern static cl_kernel        kernel[MAX_KERNELS];
-//extern static cl_event         kernel_events[MAX_KERNELS]; // Kernel events (completion)
-extern cl_kernel        kernel_conv2D;
-extern cl_event         kernel_events; // Kernel events (completion)
 
-//extern cl_event         read_events[24];                // Read events
-//extern int              num_write_events_before_kernel_execution;
-//extern cl_event         write_events[5];            // Write events
+extern cl_kernel        kernel_conv2D[MAX_KERNELS];
+extern cl_event         kernel_events[MAX_KERNELS]; // Kernel events (completion)
 
 extern cl_mem buffer_i;                         // input buffer
 extern cl_mem buffer_o;//[MAX_CONVS];              // output buffers
@@ -147,7 +142,6 @@ extern cl_mem buffer_k;//[MAX_CONVS];              // Conv kernel buffers
 extern cl_mem buffer_bias;//[MAX_CONVS];           // Conv bias buffers
 extern cl_mem buffer_k_dw;//[MAX_CONVS];           // Conv kernel buffers (deepwise)
 extern cl_mem buffer_k_pw;//[MAX_CONVS];           // Conv kernel buffers (pointwise)
-
 
 
 #endif

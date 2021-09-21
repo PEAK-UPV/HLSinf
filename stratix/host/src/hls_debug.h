@@ -33,13 +33,12 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-extern unsigned long int my_val[NUM_KERNELS];
 
 
 extern int I_useful;
 extern int O_useful;
 
-
+extern unsigned long hls_dbg_streams_mask;
 
 
 extern scoped_aligned_ptr<unsigned long> hls_dbg_ul; // array for returning unsigned long values from kernel

@@ -16,12 +16,13 @@
 // changes log:
 //  hls::stream     ihc::stream
 // no prinf support
-unsigned long cvt(int o_iter, int H, int W, int I_ITER) {
+unsigned long cvt(int o_iter, unsigned long dbg_loop_stream_mask, int H, int W, int I_ITER) {
 
   //#ifdef DEBUG_CVT
   //printf("cvt: start\n");
   //#endif
   unsigned long cnt = 0;
+  unsigned long dbg_loop_stream_o_iter_monitor = dbg_loop_stream_mask & HLS_DBG_ENABLE_STREAM_hls_o_iter_monitor_MASK;
 
   int HH=H+2;
   int WW=W+2;
@@ -112,13 +113,13 @@ unsigned long cvt(int o_iter, int H, int W, int I_ITER) {
       str_cvt_mul.write(frame);
 
       #ifdef HLS_DEBUG
-      if(o_iter == HLS_O_ITER_MONITOR)
+      if(o_iter == dbg_loop_stream_o_iter_monitor)
       {
-        dbg_loop_stream_data_dc_cvt_out.write(frame);
+        if ((unsigned long)dbg_loop_stream_mask & HLS_DBG_ENABLE_STREAM_dc_cvt_out_MASK) {
+          dbg_loop_stream_data_dc_cvt_out.write(frame);
+        }
       }
       cnt = cnt + 1;
-      //dbg_loop_stream_data_dc_cvt_out_counter = dbg_loop_stream_data_dc_cvt_out_counter + 1;
-      //dbg_elements_per_iter_data_dc_cvt_out[o_iter] = dbg_elements_per_iter_data_dc_cvt_out[o_iter] + 1;
       #endif
 
       //#ifdef DEBUG_CVT
@@ -135,8 +136,8 @@ unsigned long cvt(int o_iter, int H, int W, int I_ITER) {
     }
 
     #ifdef HLS_DEBUG
-    {
-      if(o_iter == HLS_O_ITER_MONITOR) {
+    if (dbg_loop_stream_mask & HLS_DBG_ENABLE_STREAM_dc_cvt_sbs_control_out_MASK){
+      if(o_iter == dbg_loop_stream_o_iter_monitor) {
         hls_cvt_sbs_control_t build_ctrl;
         build_ctrl.iter    = i_iter;
         build_ctrl.pin_row = pin_row;

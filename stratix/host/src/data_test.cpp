@@ -46,7 +46,7 @@ void init_data() {
       data_in[addr] = value;
       my_flt_din = my_flt_din + data_in[addr];
 
-      #ifdef HLS_DEBUG
+      #ifdef PRINT_DIN
       if (I_input < I_useful )printf("  i = %2d   h = %2d   w = %2d   addr = %2d   data_in[%2d] = %2.2f \n", i, h, w, addr, addr, (float)value);
       #endif
 
@@ -57,11 +57,12 @@ void init_data() {
   }
 
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
-  #ifdef HLS_DEBUG
+  #ifdef PRINT_KERNEL_MATRIX
   // for this case number of kernels is 1, and input and output channels are one, so
-  printf(KRED "warning: forced to display I=0 and O=0 for kernel, skipping other input and output kernel channels\n" KNRM);
-  printf(KCYN "I_kernel = %d   O_kernel = %d   KH = %d   KW = %d\n" KNRM, I_kernel, O_kernel, KH, KW);
-  printf(KCYN "kernel matrix\n" KNRM);
+  printf("NOTICE:\n");
+  printf("HLS DEBUG forced to display I=0 and O=0 for kernel, skipping other input and output kernel channels\n");
+  printf("I_kernel = %d   O_kernel = %d   KH = %d   KW = %d\n", I_kernel, O_kernel, KH, KW);
+  printf("kernel matrix\n");
   #endif
 
   int kernel_id = 1;
@@ -84,12 +85,12 @@ void init_data() {
 
           // for direct conv kernel
           my_flt_krnl = my_flt_krnl + kernel[addr_k];
-          #ifdef HLS_DEBUG
+          #ifdef PRINT_KERNEL_MATRIX
           // for this case number of kernels is 1, and input and output channels are one, so
           if ((i == 0) && (o == 0))printf(" %3.3f ", kernel[addr_k]);
           #endif
 	    }
-        #ifdef HLS_DEBUG
+        #ifdef PRINT_KERNEL_MATRIX
         if ((i == 0) && (o == 0)) printf("\n"); // printf of kernel values, next row
         #endif
 	  }
@@ -126,7 +127,7 @@ void init_data() {
   for (int cout=0; cout<O; cout++) 
     bias[cout] = deterministic_input_values?(cout%20)-10:dist(gen);
 
-  #ifdef HLS_DEBUG
+  #ifdef PRINT_BIAS_MATRIX
   // for bias
   printf(KCYN "bias matrix\n" KNRM);
 

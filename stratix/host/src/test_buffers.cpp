@@ -80,7 +80,7 @@ void allocate_buffers() {
 #ifdef HLS_DEBUG
   //printf("10\n");
   // simple type values arrays
-  size_t size_hls_dbg_ul_num_values = NUM_HLS_DBG_VALUE_ARRAY_ENTRIES * MAX_CONVS;
+  size_t size_hls_dbg_ul_num_values = NUM_HLS_DBG_VALUE_ARRAY_ENTRIES * MAX_CONVS * MAX_KERNELS;
   size_t size_hls_dbg_ul_in_bytes   = size_hls_dbg_ul_num_values * sizeof(unsigned long); 
   hls_dbg_ul.reset(size_hls_dbg_ul_num_values);
   for(int ti=0; ti < size_hls_dbg_ul_num_values; ti++) {
@@ -88,7 +88,7 @@ void allocate_buffers() {
   }
 
   //printf("11\n");
-  size_t size_hls_dbg_dt_num_values = NUM_HLS_DBG_VALUE_ARRAY_ENTRIES * MAX_CONVS;
+  size_t size_hls_dbg_dt_num_values = NUM_HLS_DBG_VALUE_ARRAY_ENTRIES * MAX_CONVS * MAX_KERNELS;
   size_t size_hls_dbg_dt_in_bytes   = size_hls_dbg_dt_num_values * sizeof(data_type);
   hls_dbg_dt.reset(size_hls_dbg_dt_num_values);
   for(int ti=0; ti < size_hls_dbg_dt_num_values; ti++) {
@@ -222,37 +222,63 @@ void allocate_buffers() {
 
 
 #ifdef HLS_DEBUG
-  printf("JM10  data_in -> buffer_i -> size_in_bytes = %lu\n", size_data_in_bytes);
-  printf("JM10  out     -> buffer_o -> size_in_bytes = %lu\n", size_output_in_bytes);
-
+  #ifdef PRINT_HLS_LOG_BUFFERS 
   printf("  hls_dbg_ul_buffer\n");
+  #endif
   hls_dbg_ul_buffer = clCreateBuffer(context, CL_MEM_WRITE_ONLY, size_hls_dbg_ul_in_bytes, NULL, &err);
   CHECK(err);
+  
+  #ifdef PRINT_HLS_LOG_BUFFERS 
   printf("  hls_dbg_dt_buffer\n");
+  #endif
   hls_dbg_dt_buffer = clCreateBuffer(context, CL_MEM_WRITE_ONLY, size_hls_dbg_dt_in_bytes, NULL, &err);
   CHECK(err);
+  
+  #ifdef PRINT_HLS_LOG_BUFFERS 
   printf("  dbg_loop_data_in_buffer_i\n");
+  #endif
   dbg_loop_data_in_buffer_i = clCreateBuffer(context, CL_MEM_WRITE_ONLY, size_dbg_loop_data_in_bytes, NULL, &err);
   CHECK(err);
+  
+  #ifdef PRINT_HLS_LOG_BUFFERS 
   printf("  dbg_loop_data_input_buffer_buffer\n");
+  #endif
   dbg_loop_data_input_buffer_buffer = clCreateBuffer(context, CL_MEM_WRITE_ONLY, size_dbg_loop_data_input_buffer_bytes, NULL, &err);
   CHECK(err);
+  
+  #ifdef PRINT_HLS_LOG_BUFFERS 
   printf("  dbg_loop_data_dc_pad_out_buffer\n");
+  #endif
   dbg_loop_data_dc_pad_out_buffer = clCreateBuffer(context, CL_MEM_WRITE_ONLY, size_dbg_loop_data_dc_pad_out_bytes, NULL, &err);
   CHECK(err);
+  
+  #ifdef PRINT_HLS_LOG_BUFFERS 
   printf("  dbg_loop_data_dc_cvt_out_buffer\n");
+  #endif
   dbg_loop_data_dc_cvt_out_buffer = clCreateBuffer(context, CL_MEM_WRITE_ONLY, size_dbg_loop_data_dc_cvt_out_bytes, NULL, &err);
   CHECK(err);
+  
+  #ifdef PRINT_HLS_LOG_BUFFERS 
   printf("  dbg_loop_data_dc_cvt_sbs_control_out_buffer\n");
+  #endif
   dbg_loop_data_dc_cvt_sbs_control_out_buffer = clCreateBuffer(context, CL_MEM_WRITE_ONLY, size_dbg_loop_data_dc_cvt_sbs_control_out_bytes, NULL, &err);
   CHECK(err);
+  
+  #ifdef PRINT_HLS_LOG_BUFFERS 
   printf("  dbg_loop_data_dc_cvt_sbs_frame_out_buffer\n");
+  #endif
   dbg_loop_data_dc_cvt_sbs_frame_out_buffer   = clCreateBuffer(context, CL_MEM_WRITE_ONLY, size_dbg_loop_data_dc_cvt_sbs_frame_out_bytes, NULL, &err);
   CHECK(err);
+  
+  #ifdef PRINT_HLS_LOG_BUFFERS 
   printf("  dbg_loop_data_dc_mul_out_buffer\n");
+  #endif
   dbg_loop_data_dc_mul_out_buffer = clCreateBuffer(context, CL_MEM_WRITE_ONLY, size_dbg_loop_data_dc_mul_out_bytes, NULL, &err);
   CHECK(err);
+  
+  #ifdef PRINT_HLS_LOG_BUFFERS 
   printf("  dbg_loop_data_directconv_out_buffer\n");
+  #endif
   dbg_loop_data_directconv_out_buffer = clCreateBuffer(context, CL_MEM_WRITE_ONLY, size_dbg_loop_data_out_bytes, NULL, &err);
   CHECK(err);
 #endif
@@ -265,7 +291,7 @@ void allocate_buffers() {
 //-----------------------------------------------------------------------------
 void deallocate_buffers() {
 
-  printf(KGRN "Release host memory resources\n" KNRM);
+  printf("Release host memory resources\n");
   if(buffer_i) {
     clReleaseMemObject(buffer_i);
     buffer_i = NULL;
@@ -353,38 +379,38 @@ void copy_to_fpga() {
   int       num_write_events_before_kernel_execution = 0;
 
   printf("Write data from buffers into fpga memory\n");
-  #ifdef HLS_DEBUG
+  #ifdef PRINT_HLS_LOG_BUFFERS
   printf("enqueue buffer-din migrate operation\n");
   #endif
   size_t size_data_in_bytes = I_input * W * H * sizeof(data_type);
   err = clEnqueueWriteBuffer(q, buffer_i, CL_FALSE, 0, size_data_in_bytes, data_in, 0, NULL, &write_events[0]);
   num_write_events_before_kernel_execution++;
   CHECK(err);
-  #ifdef HLS_DEBUG
+  #ifdef PRINT_HLS_LOG_BUFFERS
   printf("....data moved\n");
   #endif
 
-  #ifdef HLS_DEBUG
+  #ifdef PRINT_HLS_LOG_BUFFERS
   printf("enqueue buffer-bias migrate operation\n");
   #endif
   size_t size_bias_in_bytes = O_output * sizeof(data_type);
   err = clEnqueueWriteBuffer(q, buffer_bias, CL_FALSE, 0, size_bias_in_bytes, bias, 0, NULL, &write_events[1]);
   num_write_events_before_kernel_execution++;
   CHECK(err);
-  #ifdef HLS_DEBUG
+  #ifdef PRINT_HLS_LOG_BUFFERS
   printf("....data moved\n");
   #endif
 
 
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
-  #ifdef HLS_DEBUG
+  #ifdef PRINT_HLS_LOG_BUFFERS
   printf("enqueue buffer-kernel migrate operation\n");
   #endif
   size_t size_kernel_in_bytes = I_kernel * O_kernel * KW * KH * sizeof(data_type);
   err = clEnqueueWriteBuffer(q, buffer_k, CL_FALSE, 0, size_kernel_in_bytes, kernel, 0, NULL, &write_events[2]);
   num_write_events_before_kernel_execution++;
   CHECK(err);
-  #ifdef HLS_DEBUG
+  #ifdef PRINT_HLS_LOG_BUFFERS
   printf("....datamoved\n");
   #endif
 #endif
@@ -400,18 +426,18 @@ void copy_to_fpga() {
 
 #endif
 
-  #ifdef HLS_DEBUG
+  #ifdef PRINT_HLS_LOG_BUFFERS
   printf("copy to fpga: triggered write operation for %d buffers\n", num_write_events_before_kernel_execution);
   #endif
   err = clWaitForEvents(num_write_events_before_kernel_execution, write_events);
   CHECK(err);
-  #ifdef HLS_DEBUG
+  #ifdef PRINT_HLS_LOG_BUFFERS
   printf("write buffers to fpga completed\n" );
   #endif
 
 
   //finished, releasing vents
-  printf(KRED "JM10 TO-DO: release write events\n" KNRM);
+  //printf(KRED "JM10 TO-DO: release write events\n" KNRM);
   //for (int i = 0, i < 4; i++) {
   //  clReleaseEvent[i]
   //}
@@ -425,10 +451,10 @@ void copy_from_fpga() {
   cl_int     err;
   int        num_events_to_wait = 0;
 
-  printf (KGRN "Enqueue read-data operation from device memory via DMA\n" KRST);
+  printf ("Enqueue read-data operation from device memory via DMA\n");
 
   // This operation only needs to wait for the kernel call.
-  #ifdef HLS_DEBUG
+  #ifdef PRINT_HLS_LOG_BUFFERS
   printf("HLS debug enqueue read buffer_o migrate operation\n");
   #endif
   size_t size_output_in_bytes;
@@ -445,70 +471,90 @@ void copy_from_fpga() {
   CHECK(err);
 
   #ifdef HLS_DEBUG
+  #ifdef PRINT_HLS_LOG_BUFFERS
   printf("HLS debug enqueue read hls_dbg_ul_buffer migrate operation\n");
-  size_t size_hls_dbg_ul_num_values = NUM_HLS_DBG_VALUE_ARRAY_ENTRIES * MAX_CONVS;
+  #endif
+  size_t size_hls_dbg_ul_num_values = NUM_HLS_DBG_VALUE_ARRAY_ENTRIES * MAX_CONVS * MAX_KERNELS;
   size_t size_hls_dbg_ul_in_bytes   = size_hls_dbg_ul_num_values * sizeof(unsigned long);  
   err = clEnqueueReadBuffer(q, hls_dbg_ul_buffer, CL_FALSE, 0, size_hls_dbg_ul_in_bytes, hls_dbg_ul, 0, NULL, &read_events[num_events_to_wait]);
   num_events_to_wait++;
   CHECK(err);
 
+  #ifdef PRINT_HLS_LOG_BUFFERS
   printf("HLS debug enqueue read hls_dbg_dt_buffer migrate operation\n");
-  size_t size_hls_dbg_dt_num_values = NUM_HLS_DBG_VALUE_ARRAY_ENTRIES * MAX_CONVS;
+  #endif
+  size_t size_hls_dbg_dt_num_values = NUM_HLS_DBG_VALUE_ARRAY_ENTRIES * MAX_CONVS * MAX_KERNELS;
   size_t size_hls_dbg_dt_in_bytes   = size_hls_dbg_dt_num_values * sizeof(data_type);
   err = clEnqueueReadBuffer(q, hls_dbg_dt_buffer, CL_FALSE, 0, size_hls_dbg_dt_in_bytes, hls_dbg_dt, 0, NULL, &read_events[num_events_to_wait]);
   num_events_to_wait++;
   CHECK(err);
 
+  #ifdef PRINT_HLS_LOG_BUFFERS
   printf("HLS debug enqueue read dbg_loop_data_in_buffer migrate operation\n");
+  #endif
   size_t size_dbg_loop_data_in = I_input * W * H * MAX_CONVS;
   size_t size_dbg_loop_data_in_bytes = size_dbg_loop_data_in * sizeof(data_type);
   err = clEnqueueReadBuffer(q, dbg_loop_data_in_buffer_i, CL_FALSE, 0, size_dbg_loop_data_in_bytes, dbg_loop_data_in, 0, NULL, &read_events[num_events_to_wait]);
   num_events_to_wait++;
   CHECK(err);
 
+  #ifdef PRINT_HLS_LOG_BUFFERS
   printf("HLS debug enqueue read dbg_loop_data_input_buffer migrate operation\n");
+  #endif
   size_t size_dbg_loop_data_input_buffer = I_input * W * H * MAX_CONVS;
   size_t size_dbg_loop_data_input_buffer_bytes = size_dbg_loop_data_input_buffer * sizeof(data_type);
   err = clEnqueueReadBuffer(q, dbg_loop_data_input_buffer_buffer, CL_FALSE, 0, size_dbg_loop_data_input_buffer_bytes, dbg_loop_data_input_buffer, 0, NULL, &read_events[num_events_to_wait]);
   num_events_to_wait++;
   CHECK(err);
 
+  #ifdef PRINT_HLS_LOG_BUFFERS
   printf("HLS debug enqueue read dbg_loop_data_dc_pad_out_buffer migrate operation\n");
+  #endif
   size_t size_dbg_loop_data_dc_pad_out =  I_input * i_iter * (H + 2) * (W + 2) * MAX_CONVS;
   size_t size_dbg_loop_data_dc_pad_out_bytes = size_dbg_loop_data_dc_pad_out * sizeof(data_type);
   err = clEnqueueReadBuffer(q, dbg_loop_data_dc_pad_out_buffer, CL_FALSE, 0, size_dbg_loop_data_dc_pad_out_bytes, dbg_loop_data_dc_pad_out, 0, NULL, &read_events[num_events_to_wait]);
   num_events_to_wait++;
   CHECK(err);
 
+  #ifdef PRINT_HLS_LOG_BUFFERS
   printf("HLS debug enqueue read dbg_loop_data_dc_cvt_out_buffer migrate operation\n");
+  #endif
   size_t size_dbg_loop_data_dc_cvt_out = CPI * NUM_PIXELS_IN_FRAME * i_iter * (H) * (W) * MAX_CONVS;
   size_t size_dbg_loop_data_dc_cvt_out_bytes = size_dbg_loop_data_dc_cvt_out * sizeof(data_type);
   err = clEnqueueReadBuffer(q, dbg_loop_data_dc_cvt_out_buffer, CL_FALSE, 0, size_dbg_loop_data_dc_cvt_out_bytes, dbg_loop_data_dc_cvt_out, 0, NULL, &read_events[num_events_to_wait]);
   num_events_to_wait++;
   CHECK(err);
 
-  printf("HLS debug enqueue read dbg_loop_data_dc_cvt_sbs_control_out migrate operation\n"); fflush(stdout);
+  #ifdef PRINT_HLS_LOG_BUFFERS
+  printf("HLS debug enqueue read dbg_loop_data_dc_cvt_sbs_control_out migrate operation\n");
+  #endif
   size_t size_dbg_loop_data_dc_cvt_sbs_control_out = CPI * i_iter * (H + 2) * (W + 2) * MAX_CONVS;
   size_t size_dbg_loop_data_dc_cvt_sbs_control_out_bytes = size_dbg_loop_data_dc_cvt_out * sizeof(hls_cvt_sbs_control_t); 
   err = clEnqueueReadBuffer(q, dbg_loop_data_dc_cvt_sbs_control_out_buffer, CL_FALSE, 0, size_dbg_loop_data_dc_cvt_sbs_control_out_bytes, dbg_loop_data_dc_cvt_sbs_control_out, 0, NULL, &read_events[num_events_to_wait]);
   num_events_to_wait++;
   CHECK(err);
 
-  printf("HLS debug enqueue read dbg_loop_data_dc_cvt_sbs_frame_out migrate operation\n"); fflush(stdout);
+  #ifdef PRINT_HLS_LOG_BUFFERS
+  printf("HLS debug enqueue read dbg_loop_data_dc_cvt_sbs_frame_out migrate operation\n");
+  #endif
   size_t size_dbg_loop_data_dc_cvt_sbs_frame_out = CPI *  i_iter * (H + 2) * (W + 2) * MAX_CONVS; 
   size_t size_dbg_loop_data_dc_cvt_sbs_frame_out_bytes = size_dbg_loop_data_dc_cvt_sbs_frame_out * sizeof(frame_t);
   err = clEnqueueReadBuffer(q, dbg_loop_data_dc_cvt_sbs_frame_out_buffer, CL_FALSE, 0, size_dbg_loop_data_dc_cvt_sbs_frame_out_bytes, dbg_loop_data_dc_cvt_sbs_frame_out, 0, NULL, &read_events[num_events_to_wait]);
   num_events_to_wait++;
   CHECK(err);
 
+  #ifdef PRINT_HLS_LOG_BUFFERS
   printf("HLS debug enqueue read dbg_loop_data_dc_mul_out_buffer migrate operation\n");
+  #endif
   size_t size_dbg_loop_data_dc_mul_out = O_output * i_iter * W * H * MAX_CONVS;
   size_t size_dbg_loop_data_dc_mul_out_bytes = size_dbg_loop_data_dc_mul_out * sizeof(data_type);
   err = clEnqueueReadBuffer(q, dbg_loop_data_dc_mul_out_buffer, CL_FALSE, 0, size_dbg_loop_data_dc_mul_out_bytes, dbg_loop_data_dc_mul_out, 0, NULL, &read_events[num_events_to_wait]);
   num_events_to_wait++;
   CHECK(err);
 
+  #ifdef PRINT_HLS_LOG_BUFFERS
   printf("HLS debug enqueue read dbg_loop_data_directconv_out_buffer migrate operation\n");
+  #endif
   size_t size_dbg_loop_data_out =  O_output * W * H * MAX_CONVS;
   size_t size_dbg_loop_data_out_bytes = size_dbg_loop_data_out * sizeof(data_type);
   err = clEnqueueReadBuffer(q, dbg_loop_data_directconv_out_buffer, CL_FALSE, 0, size_dbg_loop_data_out_bytes, dbg_loop_data_directconv_out, 0, NULL, &read_events[num_events_to_wait]);

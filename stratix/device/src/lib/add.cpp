@@ -14,13 +14,14 @@
 //   b_in  : input stream bias
 //   out   : output stream
 //
-unsigned long add(int o_iter, int H, int W, int I_ITER) {
+unsigned long add(int o_iter, unsigned long dbg_loop_stream_mask, int H, int W, int I_ITER) {
 
   //#ifdef DEBUG_ADD
   //printf("add: start\n");
   //#endif
 
   unsigned long cnt = 0;
+  unsigned long dbg_loop_stream_o_iter_monitor = dbg_loop_stream_mask & HLS_DBG_ENABLE_STREAM_hls_o_iter_monitor_MASK;
 
   pixel_out_t bias;
   //DO_PRAGMA(HLS ARRAY_PARTITION variable=bias dim=0 complete)
@@ -96,13 +97,13 @@ unsigned long add(int o_iter, int H, int W, int I_ITER) {
         out_conv.write(data_out);
 
         #ifdef HLS_DEBUG
-        if(o_iter == HLS_O_ITER_MONITOR)
+        if(o_iter == dbg_loop_stream_o_iter_monitor)
         {
-          dbg_loop_stream_data_directconv_out.write(data_out);
+          if ((unsigned long)dbg_loop_stream_mask & HLS_DBG_ENABLE_STREAM_data_directconv_out_MASK) {
+            dbg_loop_stream_data_directconv_out.write(data_out);
+          }
         }
         cnt = cnt + 1;
-        //dbg_loop_stream_data_dc_add_out_counter = dbg_loop_stream_data_dc_add_out_counter + 1;
-        //dbg_elements_per_iter_data_dc_add_out[o_iter] = dbg_elements_per_iter_data_dc_add_out[o_iter] + 1;
         #endif
       }
     }

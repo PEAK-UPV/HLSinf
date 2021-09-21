@@ -177,7 +177,9 @@ void cpu_conv2D() {
         // bias operation
         dbg_cpu_data_directconv_sum +=out_conv_cpu[addr_o];
         dbg_cpu_data_directconv_out[addr_o] = out_conv_cpu[addr_o];
+        #ifdef PRINT_DATA_DIRECTCONV_CPU
         if (O_output < O_useful)printf("dbg_cpu_data_directconv_out[%2d] = %f\n", addr_o, dbg_cpu_data_directconv_out[addr_o]);
+        #endif
       }
     }
   }

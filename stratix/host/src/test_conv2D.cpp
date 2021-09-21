@@ -112,10 +112,9 @@ cl_context       context  = NULL;
 cl_command_queue q        = NULL;
 cl_program       program  = NULL;
 char   *binaryFile;                       // Binary file
-//static cl_kernel        kernel[MAX_KERNELS];
-//static cl_event         kernel_events[MAX_KERNELS]; // Kernel events (completion)
-cl_kernel        kernel_conv2D = NULL;
-cl_event         kernel_events; // Kernel events (completion)
+
+cl_kernel        kernel_conv2D[MAX_KERNELS];
+cl_event         kernel_events[MAX_KERNELS]; // Kernel events (completion)
 
 //cl_event         read_events[24];                // Read events
 //cl_event         write_events[5];            // Write events
@@ -237,13 +236,18 @@ void compute(int *enable, int *cpu, int *retval) {
       print_timings(time, time_per_iteration, expected_time, efficiency);
 
       #ifdef OPENCL_TEST
+      cl_int f_ret;
+      cl_ulong time_start;
+      cl_ulong time_end;
+      cl_ulong diff;
       // OpenCL kernel time
-      cl_ulong time_start, time_end;
-      printf(KRED "WARNING under devel events profiling info disabled\n\n" KNRM);
-      //kernel_events[0].getProfilingInfo(CL_PROFILING_COMMAND_START, &time_start);
-      //kernel_events[0].getProfilingInfo(CL_PROFILING_COMMAND_END, &time_end);
-      double diff = time_end-time_start;
-      std::cout<< "TIME KERNEL = " << (diff/1000000)<<" ms \n"<<std::endl;
+      f_ret = clGetEventProfilingInfo(kernel_events[0], CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
+      if (f_ret != CL_SUCCESS) printf(KRED " Error reading kernel event info PROFILING_COMMAND_START \n" KNRM);
+      f_ret = clGetEventProfilingInfo(kernel_events[0], CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
+      if (f_ret != CL_SUCCESS) printf(KRED " Error reading kernel event info PROFILING_COMMAND_END \n" KNRM);
+      diff = time_end - time_start;
+      printf("TIME KERNEL = %lu ns  (%lf ms)\n", diff, ((double)diff/(double)1000000.0));
+      
       #endif
 
       if (*cpu) {
@@ -263,9 +267,7 @@ void compute(int *enable, int *cpu, int *retval) {
 
 
 #ifdef HLS_DEBUG
-      printf("\n");
       hls_debug();
-      printf("\n\n");
 #endif
 
 
@@ -290,6 +292,10 @@ int main(int argc, char **argv) {
   int global_retval = 0;
   int cpu;
   int enable;
+  int total_processed_lines;
+  int total_errors = 0;
+  int total_success = 0;
+  vector <string> log_err;
 
 
   if (argc == 1) {
@@ -307,7 +313,6 @@ int main(int argc, char **argv) {
     printf("File-based test...\n");
     deterministic_input_values = 0;
 
-
     //#ifdef HLS_DEBUG
     printf("\n\n");
     //printf(KRED "HLS DEBUG ENABLED\n" KNRM);
@@ -316,16 +321,9 @@ int main(int argc, char **argv) {
     deterministic_input_values = 1;
     //#endif
 
-
     parse_arguments(argc, argv);
 
     #ifdef OPENCL_TEST
-
-    // reubicar este bucle
-    printf(KRED "JM10 work in progress, reubicar este bucle\n" KNRM);
-    //for (int i = 0; i < MAX_KERNELS; i++) {
-    //kernel[i] = NULL;
-    //}
 
 
     enable = fn_init_fpga();
@@ -338,30 +336,38 @@ int main(int argc, char **argv) {
     #endif
 
 
-  
     printf("open test input data configuration file\n");
     if (open_test_file() == 1) {
       return 1;
     }
 
-    printf("Process test intput data file\n");
+    printf("Process test intput data file (index starts at #1)\n");
     int file_line = 0;
     while (!read_test_file(&enable, &cpu)) {
     //while (!read_test_file(&enable, &cpu) && (file_line < 1)) {
-      printf("Process test intput data file line #%2d\n", file_line);
+      printf("\n-------------------------\n");
+      printf("Process test intput data file line #%2d (index starts at #1)\n", file_line + 1);
 
       // Launh kernel wiht configuration read from file (one line contains the configuration of a "computation")
       compute(&enable, &cpu, &retval);
       
       printf("Test check results returned\n");
       if(retval == 0){
-        printf(KGRN "  OK: RESULTS match for input file line #%d\n" KNRM, file_line + 1);
+        printf(KGRN "  OK: RESULTS match for input file line #%d (index starts at #1)\n" KNRM, file_line + 1);
       } else {
-        printf(KRED "  ERROR: RESULTS mismatch, retval=%d  for input file line #%d \n" KNRM, retval, file_line + 1);
+        std::ostringstream string_err;
+        string_err << "input file line #" << file_line + 1 << "(index starts at #1)" << endl; 
+        log_err.push_back(string_err.str());
+        printf(KRED "  ERROR: RESULTS mismatch, retval= %d %s \n" KNRM, retval, (string_err.str()).c_str());
       }
 
       if (enable) {
+        total_processed_lines = total_processed_lines + 1;
         global_retval = global_retval + retval;
+        if (retval == 0)
+          total_success = total_success + 1;
+        else
+          total_errors = total_errors + 1;
       }
       
       file_line++;
@@ -370,7 +376,7 @@ int main(int argc, char **argv) {
     close_test_file();
   }
 
-    printf(KGRN "Finished reading input data file\n");
+  printf("Finished reading input data file\n");
  
   #ifdef OPENCL_TEST
   fn_release_fpga();
@@ -378,14 +384,20 @@ int main(int argc, char **argv) {
 
   printf("\n\n");
   printf(KCYN "End of test\n" KNRM);
- if(global_retval == 0){
-   printf(" \n");
-   printf(KGRN "  Results are good for all entries in input file \n" KNRM);
- } else {
-   printf("\n");
-   printf(KRED "  ERROR: Results mismatch detected, retval=%d \n" KNRM, retval);
- }
-   printf(" \n");
+  printf("Total proccessed lines in input file: %d\n", total_processed_lines);
+  printf("      matches: %d\n", total_success);
+  printf("      errors:  %d\n", total_errors);
+  if(global_retval == 0){
+    printf(" \n");
+    printf(KGRN "  Results are good\n" KNRM);
+  } else {
+    printf("\n");
+    printf(KRED "  ERROR: Results mismatch detected\n" KNRM);
+    for (size_t i = 0; i < log_err.size(); i++) {
+      printf("    %s", log_err[i].c_str());
+    }
+  }
+  printf(" \n");
 
  // Return 0 if outputs are correct
  return global_retval;

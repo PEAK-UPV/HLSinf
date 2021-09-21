@@ -15,12 +15,13 @@
 //
 // This module is used in the Direct Convolution method
 //
-unsigned long mul(int o_iter, int H, int W, int I_ITER) {
+unsigned long mul(int o_iter, unsigned long dbg_loop_stream_mask, int H, int W, int I_ITER) {
 
   //#ifdef DEBUG_MUL
   //printf("mul: start\n");
   //#endif
   unsigned long cnt = 0;
+  unsigned long dbg_loop_stream_o_iter_monitor = dbg_loop_stream_mask & HLS_DBG_ENABLE_STREAM_hls_o_iter_monitor_MASK;
 
   kernel_t kernel;
   
@@ -109,9 +110,11 @@ unsigned long mul(int o_iter, int H, int W, int I_ITER) {
     //#endif
     str_mul_add.write(p_out);
     #ifdef HLS_DEBUG
-    if (o_iter == HLS_O_ITER_MONITOR)
+    if (o_iter == dbg_loop_stream_o_iter_monitor)
     {
-      dbg_loop_stream_data_dc_mul_out.write(p_out);      
+      if ((unsigned long)dbg_loop_stream_mask & HLS_DBG_ENABLE_STREAM_dc_mul_out_MASK) {
+        dbg_loop_stream_data_dc_mul_out.write(p_out);      
+      }
     }
     cnt = cnt + 1;
     #endif

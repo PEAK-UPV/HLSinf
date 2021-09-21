@@ -42,7 +42,7 @@ __kernel void k_conv2D(
       int pos_shift
 #ifdef HLS_DEBUG
       ,
-      unsigned long         my_val,
+      unsigned long           dbg_streams_mask,
       global unsigned long  * restrict dbg_ptr_ul,
       global data_type      * restrict dbg_ptr_dt,
       global read_block_t   * restrict dbg_loop_ptr_data_in,
@@ -56,7 +56,6 @@ __kernel void k_conv2D(
 #endif
       ) {
 
-    //printf("OCL kernel entry point received value=%lu  ret=%lu\n\n", my_val, *my_ret);
     #ifdef HLS_DEBUG
      printf("\n\n");
      printf("OpenCL k_conv2D H %d   W %d   rows %d   I %d   O %d   I_ITER %d   o_iter_first %d   o_iter_last %d   enable_relu %d   global_offset %d\n",
@@ -99,7 +98,7 @@ __kernel void k_conv2D(
       pos_shift
       #ifdef HLS_DEBUG
       ,
-      my_val,
+      dbg_streams_mask,
       dbg_ptr_ul,
       dbg_ptr_dt,
       dbg_loop_ptr_data_in,

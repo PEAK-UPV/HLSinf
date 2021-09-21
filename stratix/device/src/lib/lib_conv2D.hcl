@@ -51,7 +51,7 @@ void lib_conv2D(
       int pos_shift
       #ifdef HLS_DEBUG
       ,
-      unsigned long          my_val,
+      unsigned long          dbg_streams_mask,
       global unsigned long  *dbg_ptr_ul,
       global data_type      *dbg_ptr_dt,
       global read_block_t   *dbg_loop_ptr_data_in,

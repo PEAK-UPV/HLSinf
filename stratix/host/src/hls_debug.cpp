@@ -32,16 +32,34 @@
 //#define PRINT_DATA_DC_MUL_OUT
 //#define PRINT_DATA_DIRECTCONV_OUT
 
+// macros to print host application generated data
+//#define PRINT_BIAS_MATRIX
+//#define PRINT_KERNEL_MATRIX
+//#define PRINT_DATA_DIRECTCONV_CPU
 
 
+// define PRINT_HLS_LOG_BUFFERS
 
-#define JM10_to_complete (unsigned long)1234
+#define JM10_to_complete (unsigned long)999999
+#define HLS_O_ITER_MONITOR (int)0
+
+
 
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-unsigned long int my_val[NUM_KERNELS];
 
+unsigned long hls_dbg_streams_mask =
+   (HLS_O_ITER_MONITOR & HLS_DBG_ENABLE_STREAM_hls_o_iter_monitor_MASK)
+// | HLS_DBG_ENABLE_STREAM_data_in_MASK
+// | HLS_DBG_ENABLE_STREAM_input_buffer_MASK
+// | HLS_DBG_ENABLE_STREAM_dc_pad_out_MASK
+// | HLS_DBG_ENABLE_STREAM_dc_cvt_out_MASK
+// | HLS_DBG_ENABLE_STREAM_dc_cvt_sbs_control_out_MASK
+// | HLS_DBG_ENABLE_STREAM_dc_cvt_sbs_frame_out_MASK
+// | HLS_DBG_ENABLE_STREAM_dc_mul_out_MASK
+// | HLS_DBG_ENABLE_STREAM_data_directconv_out_MASK
+ ;
 
 scoped_aligned_ptr<unsigned long> hls_dbg_ul; // array for returning unsigned long values from kernel
 scoped_aligned_ptr<data_type>     hls_dbg_dt; // array for returning data_type values from kernel
@@ -62,9 +80,9 @@ scoped_aligned_ptr<data_type>  dbg_loop_data_dc_cvt_out;          // loop from f
 cl_mem                         dbg_loop_data_dc_cvt_out_buffer;   // loop from fpga for
 
 scoped_aligned_ptr<hls_cvt_sbs_control_t>  dbg_loop_data_dc_cvt_sbs_control_out;  // loop from fpga for step by step frame conformation, control signals
-cl_mem                             dbg_loop_data_dc_cvt_sbs_control_out_buffer;  // loop from fpga for step by step frame conformation, control signals,
-scoped_aligned_ptr<frame_t>      dbg_loop_data_dc_cvt_sbs_frame_out;           // loop from fpga for step by step frame conformation, frame value
-cl_mem                             dbg_loop_data_dc_cvt_sbs_frame_out_buffer;    // loop from fpga for step by step frame conformation, frame value, 
+cl_mem                         dbg_loop_data_dc_cvt_sbs_control_out_buffer;  // loop from fpga for step by step frame conformation, control signals,
+scoped_aligned_ptr<frame_t>    dbg_loop_data_dc_cvt_sbs_frame_out;           // loop from fpga for step by step frame conformation, frame value
+cl_mem                         dbg_loop_data_dc_cvt_sbs_frame_out_buffer;    // loop from fpga for step by step frame conformation, frame value, 
 
 
 scoped_aligned_ptr<data_type>  dbg_loop_data_dc_mul_out;          // loop from fpga for
@@ -124,16 +142,15 @@ int padding_data_address(int i, int h, int w) {
 //-----------------------------------------------------------------------------
 void hls_debug(void) {
 
-  printf("\n\n");
-  printf(KGRN "NOTICE: for this test %dx%dx%dx%d\n" KNRM, H, W, I, O);
-  printf(KGRN "   %d (of %d) input  channels with useful data\n" KNRM, I, I_input);
-  printf(KGRN "   %d (of %d) output channels with useful data\n" KNRM, O, O_output);
-  printf("\n");
+  printf("HLS DEBUG enabled\n");
+  printf("NOTICE: for this test %dx%dx%dx%d\n" KNRM, H, W, I, O);
+  printf("   %d (of %d) input  channels with useful data\n" KNRM, I, I_input);
+  printf("   %d (of %d) output channels with useful data\n" KNRM, O, O_output);
+  printf("   HLS o_iter_monitor %lu\n" KNRM,  hls_dbg_streams_mask & HLS_DBG_ENABLE_STREAM_hls_o_iter_monitor_MASK);
 
   I_useful = I;
   O_useful = O;
   
-
   // data_in 
   float  dbg_my_loop_data_in_sum = 0.0;
   size_t size_data_in       = I_input * W * H ;
@@ -453,7 +470,7 @@ void hls_debug(void) {
     printf ("   DIR_SHIFT   =   %lu  (%d)\n", hls_dbg_ul[HLS_DBG_DIR_SHIFT_IND], dir_shift);
     printf ("   POS_SHIFT   =   %lu  (%d)\n", hls_dbg_ul[HLS_DBG_POS_SHIFT_IND], pos_shift);
 
-    printf ("   VALUES_read_from_bias     =   %lu  (%d)\n", hls_dbg_ul[HLS_DBG_VALUES_read_from_bias_IND], 1);
+    printf ("   VALUES_read_from_bias     =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_read_from_bias_IND], JM10_to_complete);
     printf ("   VALUES_read_from_kernel    =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_read_from_kernel_IND], JM10_to_complete);
     printf ("   VALUES_read_from_data_in   =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_read_from_data_in_IND], JM10_to_complete);
 
@@ -498,11 +515,22 @@ void hls_debug(void) {
 
 //
     printf ("\n");
+    printf ("Summary for all o_iters\n");
     printf ("   DT_bias_sum    =   %f  (%f)\n", hls_dbg_dt[HLS_DBG_DT_bias_sum_IND], (float)JM10_to_complete); 
     printf ("   DT_kernel_sum  =   %f  (%f)\n", hls_dbg_dt[HLS_DBG_DT_kernel_sum_IND], (float)JM10_to_complete);
     printf ("   DT_din_sum     =   %f  (%f)\n", hls_dbg_dt[HLS_DBG_DT_din_sum_IND], (float)JM10_to_complete);
     printf ("   DT_dout_sum    =   %f  (%f)\n", hls_dbg_dt[HLS_DBG_DT_dout_sum_IND], (float)JM10_to_complete);
-
+    printf ("   \n");
+    printf ("   words_write_to_out_read_data_stream                    =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_words_write_to_out_read_data_stream_IND], (unsigned long)(H*W*o_iter));
+    printf ("   words_write_to_out_read_data_from_input_buffer_stream  =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_words_write_to_out_read_data_from_input_buffer_stream_IND],(unsigned long)(H*W*o_iter));
+    printf ("   words_write_to_pad_cvt_strean     =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_words_write_to_pad_cvt_stream_IND], (unsigned long)((H+2)*(W+2)*o_iter));
+    printf ("   words_write_to_cvt_mul_stream     =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_words_write_to_cvt_mul_stream_IND], JM10_to_complete);
+    printf ("   words_write_to_mul_add_stream     =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_words_write_to_mul_add_stream_IND], JM10_to_complete);
+    printf ("   words_write_to_out_conv_stream    =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_words_write_to_out_conv_stream_IND], JM10_to_complete);
+    printf ("   words_write_to_out_relu_stream    =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_words_write_to_out_relu_stream_IND], JM10_to_complete);
+    printf ("   words_write_to_stream_pool_stream =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_words_write_to_stream_pool_stream_IND], JM10_to_complete);
+    printf ("   words_write_to_out_pooling_stream =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_words_write_to_out_pooling_stream_IND], JM10_to_complete);
+    printf ("   words_write_to_data_out           =   %lu  (%lu)\n", hls_dbg_ul[HLS_DBG_VALUES_words_write_to_data_out_IND], JM10_to_complete);
     printf("\n");
   }
 

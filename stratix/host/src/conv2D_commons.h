@@ -2,10 +2,6 @@
 #define _LIB_CONV2D_COMMONS_H_
 
 
-#define HLS_DEBUG
-
-
-
 //#define DEBUG_READ_BIAS
 //#define DEBUG_READ_KERNEL
 //#define DEBUG_READ_DATA
@@ -22,9 +18,12 @@
 ////#define DEBUG_RELU
 ////#define DEBUG_POOL
 //#define DEBUG_CPU
-////#define DEBUG_CHECK
+#define DEBUG_CHECK
 
 // HLS DEBUG MACROS
+#define HLS_DEBUG
+
+
 #define HLS_DBG_H_IND          0
 #define HLS_DBG_W_IND          1
 #define HLS_DBG_ROWS_IND       2
@@ -83,9 +82,22 @@
 #define HLS_DBG_VALUES_write_to_out_pooling_stream_IND  43
 #define HLS_DBG_VALUES_read_from_out_polling_stream_IND 44
 
-#define HLS_DBG_VALUES_write_to_data_out_IND  45
+#define HLS_DBG_VALUES_write_to_data_out_IND   45
 
 #define HLS_DBG_VALUES_write_to_out_conv_sbs_stream_IND  46
+
+#define HLS_DBG_VALUES_words_write_to_out_read_data_stream_IND    47
+#define HLS_DBG_VALUES_words_write_to_out_read_data_from_input_buffer_stream_IND    48
+#define HLS_DBG_VALUES_words_write_to_pad_cvt_stream_IND      49
+#define HLS_DBG_VALUES_words_write_to_cvt_mul_stream_IND      50
+#define HLS_DBG_VALUES_words_write_to_mul_add_stream_IND      51
+#define HLS_DBG_VALUES_words_write_to_out_conv_stream_IND     52
+#define HLS_DBG_VALUES_words_write_to_out_relu_stream_IND     53
+#define HLS_DBG_VALUES_words_write_to_stream_pool_stream_IND  54
+#define HLS_DBG_VALUES_words_write_to_out_pooling_stream_IND  55
+#define HLS_DBG_VALUES_words_write_to_data_out_IND            56
+
+
 
 //
 #define HLS_DBG_DT_bias_sum_IND              0
@@ -95,7 +107,7 @@
 
 
 // max index in both arrays (plus one)
-#define NUM_HLS_DBG_VALUE_ARRAY_ENTRIES  47
+#define NUM_HLS_DBG_VALUE_ARRAY_ENTRIES  57
 
 
 #define NUM_HLS_DBG_SBS_CONTROL_iter_IND                  0
@@ -114,6 +126,15 @@
 
 #define NUM_HLS_DBG_SBS_CONTROL_ARRAY_ENTRIES            13
 
+#define HLS_DBG_ENABLE_STREAM_hls_o_iter_monitor_MASK      (unsigned long)63
+#define HLS_DBG_ENABLE_STREAM_data_in_MASK                 (unsigned long)64
+#define HLS_DBG_ENABLE_STREAM_input_buffer_MASK            (unsigned long)128
+#define HLS_DBG_ENABLE_STREAM_dc_pad_out_MASK              (unsigned long)256
+#define HLS_DBG_ENABLE_STREAM_dc_cvt_out_MASK              (unsigned long)512
+#define HLS_DBG_ENABLE_STREAM_dc_cvt_sbs_control_out_MASK  (unsigned long)1024
+#define HLS_DBG_ENABLE_STREAM_dc_cvt_sbs_frame_out_MASK    (unsigned long)2048
+#define HLS_DBG_ENABLE_STREAM_dc_mul_out_MASK              (unsigned long)4096
+#define HLS_DBG_ENABLE_STREAM_data_directconv_out_MASK     (unsigned long)8192
 
 //----end of HLS debug macros
 
@@ -149,7 +170,7 @@
 #define WMAX                       256
 #define HMAX                       256
 #define READ_BURST_SIZE              4
-#define STREAMS_DEPTH                4
+#define STREAMS_DEPTH                4 //4
 #define INPUT_BUFFER_SIZE        65536 //524288
 #define MAX_KERNELS_DW         512/CPI
 #define DW_KERNEL_STREAM_DEPTH       4      // 512 DW kernels

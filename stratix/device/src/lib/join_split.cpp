@@ -69,12 +69,13 @@ void join(int H, int W, int I_ITER, int num_extra_rows, int enable, ihc::stream<
 
 
 pixel_in_t buffer_din[INPUT_BUFFER_SIZE];
-unsigned long input_buffer(int o_iter, int read_pixels_total, int write_to_buff, int read_from_buff) {
+unsigned long input_buffer(int o_iter, unsigned long dbg_loop_stream_mask, int read_pixels_total, int write_to_buff, int read_from_buff) {
 
   //#ifdef DEBUG_INPUT_BUFFER
   //printf("INPUT_BUFFER: starts (%d pixels; write_to_buff %d; read_from_buff %d)\n", read_pixels_total, write_to_buff, read_from_buff);
   //#endif
   unsigned long cnt = 0;
+  unsigned long dbg_loop_stream_o_iter_monitor = dbg_loop_stream_mask & HLS_DBG_ENABLE_STREAM_hls_o_iter_monitor_MASK;
 
   //DO_PRAGMA(HLS aggregate variable=buffer)
 
@@ -93,32 +94,41 @@ unsigned long input_buffer(int o_iter, int read_pixels_total, int write_to_buff,
   
     //DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE * W_REFERENCE * H_REFERENCE / CPI)
     //  DO_PRAGMA(HLS pipeline)
-    
-    if (read_from_buff) {
-      px_buff = buffer_din[p];
-    }
-    else {
-      px_input = out_read_data.read();
-      if (write_to_buff) {
-        buffer_din[p] = px_input;
-      }
-    }
+   
+    if (!read_from_buff) px_input = out_read_data.read();
+    if (read_from_buff)  px_buff  = buffer_din[p];
+    if (write_to_buff)   buffer_din[p] = px_input;
+
+
+    //if (read_from_buff) {
+    //  px_buff = buffer_din[p];
+    //}
+    //else {
+    //  px_input = out_read_data.read();
+    //  if (write_to_buff) {
+    //    buffer_din[p] = px_input;
+    //  }
+    //}
 
     if (read_from_buff) {
       out_read_data_from_input_buffer.write(px_buff);
       #ifdef HLS_DEBUG //#ifdef laguasa 
-      if(o_iter == HLS_O_ITER_MONITOR)  
+      if((unsigned long)o_iter == dbg_loop_stream_o_iter_monitor)
       {
-        dbg_loop_stream_data_input_buffer.write(px_buff); 
+        if ((unsigned long)dbg_loop_stream_mask & HLS_DBG_ENABLE_STREAM_input_buffer_MASK) {
+          dbg_loop_stream_data_input_buffer.write(px_buff); 
+        }
       }
       cnt = cnt + 1;
       #endif
     } else {
       out_read_data_from_input_buffer.write(px_input);
       #ifdef HLS_DEBUG //#ifdef laguasa
-      if(o_iter == HLS_O_ITER_MONITOR) 
+      if(o_iter == dbg_loop_stream_o_iter_monitor) 
       {
-        dbg_loop_stream_data_input_buffer.write(px_input);
+        if ((unsigned long)dbg_loop_stream_mask & HLS_DBG_ENABLE_STREAM_input_buffer_MASK) {
+          dbg_loop_stream_data_input_buffer.write(px_input);
+        }
       }
       cnt = cnt + 1;
       

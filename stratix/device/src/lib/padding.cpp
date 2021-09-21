@@ -10,12 +10,13 @@
 //   in                : input stream
 //   out               : output stream
 //
-unsigned long padding(int o_iter, int H, int W, int I_ITER, int enable_upper_padding, int enable_lower_padding) {
+unsigned long padding(int o_iter, unsigned long dbg_loop_stream_mask, int H, int W, int I_ITER, int enable_upper_padding, int enable_lower_padding) {
 
   //#ifdef DEBUG_PADDING
   //printf("PADDING: start\n");
   //#endif
   unsigned long cnt = 0;
+  unsigned long dbg_loop_stream_o_iter_monitor = dbg_loop_stream_mask & HLS_DBG_ENABLE_STREAM_hls_o_iter_monitor_MASK;
 
   int num_iters;
   int h;
@@ -53,13 +54,13 @@ unsigned long padding(int o_iter, int H, int W, int I_ITER, int enable_upper_pad
     str_pad_cvt.write(data);
 
     #ifdef HLS_DEBUG 
-    if(o_iter == HLS_O_ITER_MONITOR)
+    if(o_iter == dbg_loop_stream_o_iter_monitor)
     {
-      dbg_loop_stream_data_dc_pad_out.write(data);
+      if ((unsigned long)dbg_loop_stream_mask & HLS_DBG_ENABLE_STREAM_dc_pad_out_MASK) {
+        dbg_loop_stream_data_dc_pad_out.write(data);
+      }
     }
     cnt = cnt + 1;
-    //dbg_loop_stream_data_dc_pad_out_counter = dbg_loop_stream_data_dc_pad_out_counter + 1;
-    //dbg_elements_per_iter_data_dc_pad_out[o_iter] = dbg_elements_per_iter_data_dc_pad_out[o_iter] + 1;
     #endif
     
     w = w+1;
