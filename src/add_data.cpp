@@ -39,7 +39,7 @@ void add_data(int enable_add, int num_pixels, hls::stream<pixel_out_t> &in_r, hl
 		  loop_add_data_cpo:
 		  for(int cpo = 0; cpo<CPO; cpo++){
 			  DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO)
-		  	  #pragma HLS PIPELINE II=1
+		  	  #pragma HLS UNROLL
 
 			  data_type v_in_a, v_in_b, v_out;
 			  v_in_a = data_in_r.pixel[cpo];
