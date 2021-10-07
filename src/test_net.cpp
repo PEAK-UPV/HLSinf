@@ -43,6 +43,7 @@ int main(int argc, char **argv) {
  // The data in memory is aligned to 16 bytes, so we add space for a fourth channel!
  float *src;
  posix_memalign((void **)&src, 4096, H * W * (C+1) * sizeof(float));
+ memset(src, 0, sizeof(float) * H * W * (C+1));
  for (int h=0; h<H; h++) {
    for (int w=0; w<W; w++) {
      for (int c=0; c<3; c++) {
