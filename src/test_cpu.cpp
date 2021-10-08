@@ -273,7 +273,7 @@ void cpu_conv2D() {
   }
 
   if (enable_add) {
-    for (int cout=0; cout<O; cout++) {
+    for (int cout=0; cout<O_output; cout++) {
       for (int h=0; h<HO_final; h++) {
         for (int w=0; w<WO_final; w++) {
   	  int addr_o = output_data_address(cout, h, w, HO_final, WO_final);
@@ -292,7 +292,7 @@ void cpu_conv2D() {
   }
 
   // We now copy the output to the final output for the cpu
-  for (int cout = 0; cout < O; cout++) {
+  for (int cout = 0; cout < O_output; cout++) {
     for (int h = 0; h < HO_final; h++) {
       for (int w = 0; w < WO_final; w++) {
         int addr_out = output_data_address(cout, h, w, HO_final, WO_final);

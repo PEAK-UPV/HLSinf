@@ -107,41 +107,51 @@ void compute() {
 
   char str[200];
   // Let's check if the input geometry must beWW decomposed in multiple frames
-  if (H > HMAX) {
+  if (HO > HMAX) {
     //
     int num_frames = ceil( (float) HO / (float) HMAX);
+    sprintf(str, "Launching multiframes mode (%d frames)...", num_frames);
     print_message(str);
     // 
     for (int fr=0; fr < num_frames; fr++) {
+
+      // first output row for this frame
+      int row_o = fr * HMAX;
+
       // rows to be produced in this frame
       int output_rows_frame = HMAX;
       if ((fr == num_frames-1) && ((HMAX * num_frames) != HO)) output_rows_frame = HO % HMAX;
-      //
+
       // padding
       int PT_frame = (fr==0) ? PT : 0;
       int PB_frame = (fr == num_frames - 1) ? PB : 0;
       int PL_frame = PL;
       int PR_frame = PR;
+
+      // first input row to read for this frame
+      // row_i = (row_o * SH) - PT
+      // We correct if negative (because of padding)
       //
+      int row_i = (row_o * SH) - PT;
+      if (row_i < 0) row_i = 0;
+
       // rows to read for this frame
-      int first_row_to_read = (fr == 0) ? 0 : (fr * HMAX) - (KH - 1);
-      int rows_to_read = output_rows_frame * SH - PT_frame - PB_frame - SH + KH;
-      if (first_row_to_read + rows_to_read > H) {
-	PB_frame = PB_frame + (first_row_to_read + rows_to_read - H);
-	if (PB_frame > PB) PB_frame = PB;
-        rows_to_read = H - first_row_to_read;
-      }
-      //
-      // read offset
-      int read_offset_frame = (fr * W * HMAX) - ( (fr==0) ? 0 : (W * (KH - 1)) );
-      int write_offset_frame = (fr * HMAX * W);
+      int rows_to_read = (output_rows_frame * SH) - PT_frame - PB_frame + (KH - 1);
+
+      // read and write offsets
+      int read_offset_frame = row_i * W;
+      int write_offset_frame = (fr * HMAX * WO);
+
       sprintf(str, "Frame %d: HxW = %3dx%3d, Pad = %1d-%1d-%1d-%1d, off_rd %d, off_wr %d, rows_to_read %d", fr, H, W, PT_frame, PB_frame, PL_frame, PR_frame, read_offset_frame, write_offset_frame, rows_to_read);
       print_message(str);
+
+      // run kernel
       run_kernel(rows_to_read, PT_frame, PB_frame, PL_frame, PR_frame, read_offset_frame, write_offset_frame);
     }
   } else {
     run_kernel(rows, PT, PB, PL, PR, 0, 0);
   }
 }
+
 
 
