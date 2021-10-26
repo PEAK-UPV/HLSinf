@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<autopilotfilemapping:AutoPilotFileMapping xmlns:autopilotfilemapping="www.autoesl.com/autopilotfilemapping">
+  <source>
+    <originFiles name="write.cpp" path="/nfs/drodagu/HLSinf/src/write.cpp"/>
+    <originFiles name="winograd_convolution.cpp" path="/nfs/drodagu/HLSinf/src/winograd_convolution.cpp"/>
+    <originFiles name="serialization.cpp" path="/nfs/drodagu/HLSinf/src/serialization.cpp"/>
+    <originFiles name="relu.cpp" path="/nfs/drodagu/HLSinf/src/relu.cpp"/>
+    <originFiles name="read.cpp" path="/nfs/drodagu/HLSinf/src/read.cpp"/>
+    <originFiles name="pooling.cpp" path="/nfs/drodagu/HLSinf/src/pooling.cpp"/>
+    <originFiles name="padding.cpp" path="/nfs/drodagu/HLSinf/src/padding.cpp"/>
+    <originFiles name="mul.cpp" path="/nfs/drodagu/HLSinf/src/mul.cpp"/>
+    <originFiles name="lib_hlsm.cpp" path="/nfs/drodagu/HLSinf/src/lib_hlsm.cpp"/>
+    <originFiles name="k_conv2D.cpp" path="/nfs/drodagu/HLSinf/src/k_conv2D.cpp"/>
+    <originFiles name="join_split.cpp" path="/nfs/drodagu/HLSinf/src/join_split.cpp"/>
+    <originFiles name="dws_convolution.cpp" path="/nfs/drodagu/HLSinf/src/dws_convolution.cpp"/>
+    <originFiles name="direct_convolution.cpp" path="/nfs/drodagu/HLSinf/src/direct_convolution.cpp"/>
+    <originFiles name="cvt.cpp" path="/nfs/drodagu/HLSinf/src/cvt.cpp"/>
+    <originFiles name="conv2D.h" path="/nfs/drodagu/HLSinf/src/conv2D.h"/>
+    <originFiles name="batch_normalization.cpp" path="/nfs/drodagu/HLSinf/src/batch_normalization.cpp"/>
+    <originFiles name="add.cpp" path="/nfs/drodagu/HLSinf/src/add.cpp"/>
+  </source>
+  <testbench>
+    <originFiles name="test_print.cpp" path="/nfs/drodagu/HLSinf/src/test_print.cpp"/>
+    <originFiles name="test_kernel.cpp" path="/nfs/drodagu/HLSinf/src/test_kernel.cpp"/>
+    <originFiles name="test_file.cpp" path="/nfs/drodagu/HLSinf/src/test_file.cpp"/>
+    <originFiles name="test_cpu.cpp" path="/nfs/drodagu/HLSinf/src/test_cpu.cpp"/>
+    <originFiles name="test_conv2D.h" path="/nfs/drodagu/HLSinf/src/test_conv2D.h"/>
+    <originFiles name="test_conv2D.cpp" path="/nfs/drodagu/HLSinf/src/test_conv2D.cpp"/>
+    <originFiles name="test_check.cpp" path="/nfs/drodagu/HLSinf/src/test_check.cpp"/>
+    <originFiles name="test_buffers.cpp" path="/nfs/drodagu/HLSinf/src/test_buffers.cpp"/>
+    <originFiles name="test_arguments.cpp" path="/nfs/drodagu/HLSinf/src/test_arguments.cpp"/>
+    <originFiles name="data_test.cpp" path="/nfs/drodagu/HLSinf/src/data_test.cpp"/>
+  </testbench>
+</autopilotfilemapping:AutoPilotFileMapping>

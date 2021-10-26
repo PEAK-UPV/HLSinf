@@ -45,6 +45,7 @@ extern int enable_shift;				 // enables applying shift to the output
 extern int dir_shift;			         // shift direction (left or right)
 extern int pos_shift;					 // positions to shift
 extern int enable_clipping;			     // enables applying clipping to the output
+extern int enable_batch_norm;			 // enables batch normalization
 extern int enable_maxpooling;			 // enables the maxpooling layer
 extern int enable_avgpooling;			 // enables the avgpooling layer
 extern int min_clip;				 	 // minimum clip value
@@ -60,8 +61,10 @@ extern data_type *kernel;                // Conv kernel buffers (format GO x GI 
 extern data_type *dw_kernel;             // DW kernel (format I x KH x KW) - for DWS
 extern data_type *pw_kernel;             // PW kernel (format GO x GI x CPO x CPI) - for DWS
 extern data_type *bias;                  // Conv bias buffers (format O)
+extern data_type *batch_norm_values;	 // Values used in the batch normalization layer *
 extern data_type *out_conv_cpu;          // Output data buffer for cpu (format O x W x H)
 extern data_type *out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
+extern data_type *out_batch_norm_cpu;	 // Output data buffer for cpu (format O x W x H)
 extern data_type *out_pool_cpu;		     // Output data fuffer for pool for cpu (format O x W/2 x H/2)
 extern char *input_data_file;            // file with input parameters
 extern int deterministic_input_values;   // whether input data is randomly generated or not (deterministic needed in co-simulation)
@@ -99,6 +102,7 @@ void deallocate_buffers();
 int filter_address_direct_conv(int i, int o, int kh, int kw);
 void cpu_conv2D();
 void print_bias();
+void print_batch_norm();
 void print_input();
 void print_output();
 void print_kernel();

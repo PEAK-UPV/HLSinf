@@ -85,5 +85,18 @@ void init_data() {
   }
 #endif
 
+  // Generating bias values
   for (int cout=0; cout<O; cout++) bias[cout] = deterministic_input_values?(cout%20)-10:dist(gen);
+
+  #ifdef USE_BATCH_NORM
+  // Generating values for batch normalization layer
+  for (int cout=0; cout<O_kernel-1*4; cout++) {
+	  if (cout < O) {
+		  batch_norm_values[cout] = deterministic_input_values?(cout%20)-10:dist(gen);
+	  } else {
+		  batch_norm_values[cout] = 0;
+	  }
+  }
+  #endif
+
 }

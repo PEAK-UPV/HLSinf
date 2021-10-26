@@ -203,6 +203,22 @@ void cpu_conv2D() {
     }
   }
 
+  // apply batch normalization
+  if (enable_batch_norm) {
+	  for (int cout=0; cout<O_output; cout++) {
+		  for (int h=0; h<H; h++) {
+			  for (int w=0; w<W; w++) {
+				  int addr_o = output_data_address(cout, h, w);
+				  int index = addr_o % CPO;
+				  data_type std, xn;
+				  std = sqrtf(batch_norm_values[(index*4)+3] + pow(1, -5));
+				  xn = (out_relu_cpu[addr_o] - batch_norm_values[(index*4)+2]) / std;
+				  out_batch_norm_cpu[addr_o] = batch_norm_values[(index*4)+1] * xn + batch_norm_values[index*4];
+			  }
+		  }
+	  }
+  }
+
   // apply maxpooling or avgpooling
   if (enable_maxpooling) {
     for (int o=0; o<O_output; o++) {
@@ -217,6 +233,7 @@ void cpu_conv2D() {
               int addr_in = input_data_address(o, h_in, w_in);
               if (enable_relu) {
                 if (out_relu_cpu[addr_in] > max_v) max_v = out_relu_cpu[addr_in];
+                //if (out_batch_norm_cpu[addr_in] > max_v) max_v = out_batch_norm_cpu[addr_in];
               } else {
             	if (out_conv_cpu[addr_in] > max_v) max_v = out_conv_cpu[addr_in];
               }
@@ -240,7 +257,8 @@ void cpu_conv2D() {
     		  int w_in = (w * 2) + kw;
               int addr_in = input_data_address(o, h_in, w_in);
               if (enable_relu) {
-            	sum_v += out_relu_cpu[addr_in];
+            	//sum_v += out_relu_cpu[addr_in];
+            	  sum_v += out_batch_norm_cpu[addr_in];
               } else {
             	sum_v += out_conv_cpu[addr_in];
               }

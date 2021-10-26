@@ -7,6 +7,11 @@
 #include <ap_fixed.h>
 #include <ap_int.h>
 #include <hls_stream.h>
+// Provisional
+#include <cmath>
+#include "hls_math.h"
+
+//using namespace std;
 
 // -----------------------------------------------------------------------------------------------------------
 // Configuration selection.
@@ -40,11 +45,12 @@
 // -----------------------------------------------------------------------------------------------------------
 // defines for debug (DEBUG_ALL activates all debug defines)
 // -----------------------------------------------------------------------------------------------------------
-//#define DEBUG_ALL
+#define DEBUG_ALL
 
 //#define DEBUG_VERBOSE
 
 //#define DEBUG_READ_BIAS
+//#define DEBUG_READ_BATCH_NORM
 //#define DEBUG_READ_KERNEL
 //#define DEBUG_READ_DATA
 //#define DEBUG_SERIALIZE
@@ -58,6 +64,7 @@
 //#define DEBUG_BLOCK
 //#define DEBUG_WRITE_DATA
 //#define DEBUG_RELU
+//#define DEBUG_BATCH_NORM
 //#define DEBUG_POOL
 //#define DEBUG_CPU
 
@@ -69,6 +76,7 @@
 #define DIRECT_CONV
 #define FP32_DATA_TYPE
 #define USE_RELU
+#define USE_BATCH_NORM
 #define USE_POOLING
 #define CPI                          4
 #define CPO                          4
@@ -309,6 +317,7 @@
 #define DEBUG_READ_BIAS
 #define DEBUG_READ_KERNEL
 #define DEBUG_READ_DATA
+#define DEBUG_READ_BATCH_NORM
 #define DEBUG_SERIALIZE
 #define DEBUG_JOIN
 #define DEBUG_INPUT_BUFFER
@@ -320,6 +329,7 @@
 #define DEBUG_BLOCK
 #define DEBUG_WRITE_DATA
 #define DEBUG_RELU
+#define DEBUG_BATCH_NORM
 #define DEBUG_POOL
 #define DEBUG_CPU
 #endif
@@ -339,6 +349,12 @@ struct pixel_out_t {
 // Data type for output data from the conv_winograd module
 struct pixel_in_t2 {           // pixel in
   data_type pixel[CPI/2];
+};
+
+// -----------------------------------------------------------------------------------------------------------
+// Data type for input values to the batch_norm module
+struct batch_norm_in_t {
+  data_type values[CPO*4];
 };
 
 // -----------------------------------------------------------------------------------------------------------
@@ -410,20 +426,21 @@ struct kernel_pw_t {
 
 // -----------------------------------------------------------------------------------------------------------
 // function prototypes
-extern "C" void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int I, int O, int I_ITER, int o_iter_first, int o_iter_last, int enable_relu,
+extern "C" void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int I, int O, int I_ITER, int o_iter_first, int o_iter_last, int enable_relu, int enable_batch_norm,
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
                          data_type *ptr_kernel,
 #endif
 #ifdef DWS_CONV
 						 data_type *ptr_dw_kernel, read_kernel_pw_t *ptr_pw_kernel,
 #endif
-						 pixel_out_t *ptr_bias, write_block_t *ptr_out, int global_offset, int enable_upper_padding,
+						 pixel_out_t *ptr_bias, batch_norm_in_t *b_ptr, write_block_t *ptr_out, int global_offset, int enable_upper_padding,
 						 int enable_lower_padding, int enable_maxpooling, int enable_avgpooling,
 						 int enable_clipping, int enable_shift, int min_clip, int max_clip, int dir_shift, int pos_shift);
 
 
 // read and write functions
 void read_bias(int offset_bias, pixel_out_t *b_ptr, hls::stream<pixel_out_t> &out);
+void read_batch_norm(int offset_batchnorm, batch_norm_in_t *b_ptr, hls::stream<batch_norm_in_t> &out);
 void read_kernel(int I_ITER, int offset_kernel, data_type *k_ptr, hls::stream<kernel_t> &k_out);
 
 #ifdef IHW_DATA_FORMAT
@@ -482,6 +499,9 @@ void input_buffer(int num_pixels, int write_to_buff, int read_from_buff, hls::st
 // activation functions
 void relu(int enable_relu, int enable_clipping, int enable_shift, int min_clip, int max_clip, int direction_shift, int pos_shift,
 		  int H, int W, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &out);
+
+// Batch normalization function
+void batch_norm(int enable_batch_norm, int H, int W, hls::stream<pixel_out_t> &in, hls::stream<batch_norm_in_t> &bn_values, hls::stream<pixel_out_t> &out);
 
 // pooling function
 void pooling(int H, int W, int enable_maxpooling, int enable_avgpooling, hls::stream<pixel_out_t> &input, hls::stream<pixel_out_t> &output);

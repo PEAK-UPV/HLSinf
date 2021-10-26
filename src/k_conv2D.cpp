@@ -30,14 +30,14 @@ void set_channel_write_blocks(int num_channel_write_blocks[CPO], int H, int W) {
 }
 
 extern "C" {
-void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int I, int O, int I_ITER, int o_iter_first, int o_iter_last, int enable_relu,
+void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int I, int O, int I_ITER, int o_iter_first, int o_iter_last, int enable_relu, int enable_batch_norm,
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
                          data_type *ptr_kernel,
 #endif
 #ifdef DWS_CONV
 						 data_type *ptr_dw_kernel, read_kernel_pw_t *ptr_pw_kernel,
 #endif
-              pixel_out_t *ptr_bias, write_block_t *ptr_out, int global_offset, int enable_upper_padding,
+              pixel_out_t *ptr_bias, batch_norm_in_t *b_ptr, write_block_t *ptr_out, int global_offset, int enable_upper_padding,
 			  int enable_lower_padding, int enable_maxpooling, int enable_avgpooling,
 			  int enable_clipping, int enable_shift, int min_clip, int max_clip, int dir_shift, int pos_shift) {
 
@@ -123,11 +123,21 @@ void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int I, int O, int 
     DO_PRAGMA(HLS STREAM variable=out_read_bias depth=STREAMS_DEPTH)
     DO_PRAGMA(HLS STREAM variable=out_conv depth=STREAMS_DEPTH)
 
+	#ifdef USE_BATCH_NORM
+    static hls::stream<batch_norm_in_t>  out_read_batch_norm;
+	DO_PRAGMA(HLS STREAM variable=out_read_batch_norm depth=STREAMS_DEPTH)
+	#endif
+
 	// RELU, CLIPPING, and SHIFT support
     #if defined(USE_RELU) || defined(USE_CLIPPING) || defined(USE_SHIFT)
     static hls::stream<pixel_out_t>  out_relu;
     DO_PRAGMA(HLS STREAM variable=out_relu depth=STREAMS_DEPTH)
     #endif
+
+	#ifdef USE_BATCH_NORM
+    static hls::stream<pixel_out_t>  out_batch_norm;
+    DO_PRAGMA(HLS STREAM variable=out_batch_norm depth=STREAMS_DEPTH)
+	#endif
 
     // MAXPOOLING, AVGPOOLING
     #ifdef USE_POOLING
@@ -222,6 +232,13 @@ void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int I, int O, int 
     read_bias(offset_bias, ptr_bias, out_read_bias);
 
     // -------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    // This does not go here
+    // read batch normalization values
+	//#ifdef USE_BATCH_NORM
+    //read_batch_norm(b_ptr, out_read_batch_norm);
+	//#endif
+
+    // -------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // read kernel (different version based on the type of convolution)
     #ifdef DIRECT_CONV
     read_kernel(I_ITER, offset_kernel, ptr_kernel, out_read_kernel);
@@ -264,9 +281,14 @@ void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int I, int O, int 
     // Relu, Clipping, shift, and pooling
     #if defined(USE_RELU) || defined(USE_CLIPPING) || defined(USE_SHIFT)
     relu(enable_relu, enable_clipping, enable_shift, min_clip, max_clip, dir_shift, pos_shift, rows, W, out_conv, out_relu);
+    // Batch Normalization
+	  #ifdef USE_BATCH_NORM
+      batch_norm(enable_batch_norm, rows, W, out_relu, out_read_batch_norm, out_batch_norm);
+	  #endif
       // Pooling: avgpooling or maxpooling
       #ifdef USE_POOLING
-      pooling(H, W, enable_maxpooling, enable_avgpooling, out_relu, out_pooling);
+      //pooling(H, W, enable_maxpooling, enable_avgpooling, out_relu, out_pooling);
+      pooling(H, W, enable_maxpooling, enable_avgpooling, out_batch_norm, out_pooling);
       #endif
     #else
       // Pooling: avgpooling or maxpooling

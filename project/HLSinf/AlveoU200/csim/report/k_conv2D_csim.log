@@ -1,0 +1,29 @@
+INFO: [SIM 2] *************** CSIM start ***************
+INFO: [SIM 4] CSIM will launch GCC as the compiler.
+   Compiling ../../../../../src/test_print.cpp in debug mode
+   Compiling ../../../../../src/test_kernel.cpp in debug mode
+   Compiling ../../../../../src/test_file.cpp in debug mode
+   Compiling ../../../../../src/test_cpu.cpp in debug mode
+   Compiling ../../../../../src/test_conv2D.cpp in debug mode
+   Compiling ../../../../../src/test_check.cpp in debug mode
+   Compiling ../../../../../src/test_buffers.cpp in debug mode
+   Compiling ../../../../../src/test_arguments.cpp in debug mode
+   Compiling ../../../../../src/data_test.cpp in debug mode
+   Compiling ../../../../../src/write.cpp in debug mode
+   Compiling ../../../../../src/winograd_convolution.cpp in debug mode
+   Compiling ../../../../../src/serialization.cpp in debug mode
+   Compiling ../../../../../src/relu.cpp in debug mode
+   Compiling ../../../../../src/read.cpp in debug mode
+   Compiling ../../../../../src/pooling.cpp in debug mode
+   Compiling ../../../../../src/padding.cpp in debug mode
+   Compiling ../../../../../src/mul.cpp in debug mode
+   Compiling ../../../../../src/k_conv2D.cpp in debug mode
+   Compiling ../../../../../src/join_split.cpp in debug mode
+   Compiling ../../../../../src/dws_convolution.cpp in debug mode
+   Compiling ../../../../../src/direct_convolution.cpp in debug mode
+   Compiling ../../../../../src/cvt.cpp in debug mode
+   Compiling ../../../../../src/batch_normalization.cpp in debug mode
+   Compiling ../../../../../src/add.cpp in debug mode
+   Generating csim.exe
+INFO: [SIM 1] CSim file generation done with 0 errors.
+INFO: [SIM 3] *************** CSIM finish ***************

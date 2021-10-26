@@ -1,0 +1,1703 @@
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+INFO: [SYN 201-201] Setting up clock 'default' with a period of 3.33ns.
+INFO: [HLS 200-10] Setting target device to 'xcu200-fsgd2104-2-e'
+INFO: [HLS 200-1505] Using flow_target 'vitis'
+INFO: [HLS 200-1464] Running solution command: config_interface -default_interface=kernel
+INFO: [HLS 200-1464] Running solution command: config_interface -default_slave_interface=s_axilite
+INFO: [HLS 200-1464] Running solution command: config_interface -m_axi_alignment_byte_size=64
+INFO: [HLS 200-1464] Running solution command: config_interface -m_axi_latency=64
+INFO: [HLS 200-1464] Running solution command: config_interface -m_axi_max_widen_bitwidth=512
+INFO: [HLS 200-1464] Running solution command: config_interface -m_axi_offset=slave
+INFO: [HLS 200-1464] Running solution command: config_rtl -register_reset_num=3
+INFO: [HLS 200-1510] Running: set_part xcu200-fsgd2104-2-e 
+INFO: [HLS 200-1510] Running: create_clock -period 3.33 -name default 
+INFO: [HLS 200-1510] Running: config_interface -default_slave_interface s_axilite -m_axi_alignment_byte_size 64 -m_axi_latency 64 -m_axi_max_widen_bitwidth 512 -m_axi_offset slave 
+INFO: [HLS 200-1510] Running: config_rtl -register_reset_num 3 
+INFO: [HLS 200-1510] Running: csynth_design 
+INFO: [HLS 200-111] Finished File checks and directory preparation: CPU user time: 0.03 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.03 seconds; current allocated memory: 193.110 MB.
+INFO: [HLS 200-10] Analyzing design file '../src/write.cpp' ... 
+INFO: [HLS 200-10] Analyzing design file '../src/winograd_convolution.cpp' ... 
+INFO: [HLS 200-10] Analyzing design file '../src/serialization.cpp' ... 
+INFO: [HLS 200-10] Analyzing design file '../src/relu.cpp' ... 
+WARNING: [HLS 207-5301] unused parameter 'enable_clipping': ../src/relu.cpp:23:32
+WARNING: [HLS 207-5301] unused parameter 'enable_shift': ../src/relu.cpp:23:53
+WARNING: [HLS 207-5301] unused parameter 'min_clip': ../src/relu.cpp:23:71
+WARNING: [HLS 207-5301] unused parameter 'max_clip': ../src/relu.cpp:23:85
+WARNING: [HLS 207-5301] unused parameter 'direction_shift': ../src/relu.cpp:23:99
+WARNING: [HLS 207-5301] unused parameter 'pos_shift': ../src/relu.cpp:23:120
+INFO: [HLS 200-10] Analyzing design file '../src/read.cpp' ... 
+INFO: [HLS 200-10] Analyzing design file '../src/padding.cpp' ... 
+INFO: [HLS 200-10] Analyzing design file '../src/mul.cpp' ... 
+INFO: [HLS 200-10] Analyzing design file '../src/k_conv2D.cpp' ... 
+WARNING: [HLS 214-110] As the loop bound is not a constant or function argument, the compiler may not successfully process the dataflow loop: ../src/k_conv2D.cpp:90:31
+WARNING: [HLS 200-471] Dataflow form checks found 1 issue(s) in file ../src/k_conv2D.cpp
+INFO: [HLS 200-10] Analyzing design file '../src/join_split.cpp' ... 
+INFO: [HLS 200-10] Analyzing design file '../src/dws_convolution.cpp' ... 
+INFO: [HLS 200-10] Analyzing design file '../src/direct_convolution.cpp' ... 
+INFO: [HLS 200-10] Analyzing design file '../src/cvt.cpp' ... 
+INFO: [HLS 200-10] Analyzing design file '../src/batch_normalization.cpp' ... 
+WARNING: [HLS 207-5301] unused parameter 'out': ../src/batch_normalization.cpp:13:87
+INFO: [HLS 200-10] Analyzing design file '../src/add.cpp' ... 
+INFO: [HLS 200-111] Finished Source Code Analysis and Preprocessing: CPU user time: 31.86 seconds. CPU system time: 3.87 seconds. Elapsed time: 52.04 seconds; current allocated memory: 196.176 MB.
+INFO: [HLS 200-777] Using interface defaults for 'Vitis' flow target.
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::write(pixel_out_t const&)' into 'hls::stream<pixel_out_t, 0>::operator<<(pixel_out_t const&)' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:129:9)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::operator<<(pixel_out_t const&)' into 'read_bias(int, pixel_out_t*, hls::stream<pixel_out_t, 0>&)' (../src/read.cpp:23:7)
+INFO: [HLS 214-131] Inlining function 'hls::stream<kernel_t, 0>::write(kernel_t const&)' into 'hls::stream<kernel_t, 0>::operator<<(kernel_t const&)' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:129:9)
+INFO: [HLS 214-131] Inlining function 'hls::stream<kernel_t, 0>::operator<<(kernel_t const&)' into 'read_kernel(int, int, float*, hls::stream<kernel_t, 0>&)' (../src/read.cpp:74:10)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_in_t, 0>::write(pixel_in_t const&)' into 'hls::stream<pixel_in_t, 0>::operator<<(pixel_in_t const&)' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:129:9)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_in_t, 0>::operator<<(pixel_in_t const&)' into 'read_data_channels_gihwcpi(int, int, pixel_in_t*, hls::stream<pixel_in_t, 0>&, int)' (../src/read.cpp:338:9)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_in_t, 0>::read(pixel_in_t&)' into 'hls::stream<pixel_in_t, 0>::read()' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:156:9)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_in_t, 0>::read()' into 'input_buffer(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&)' (../src/join_split.cpp:92:37)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_in_t, 0>::operator<<(pixel_in_t const&)' into 'input_buffer(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&)' (../src/join_split.cpp:97:11)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_in_t, 0>::operator<<(pixel_in_t const&)' into 'input_buffer(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&)' (../src/join_split.cpp:96:26)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_in_t, 0>::read()' into 'padding(int, int, int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&)' (../src/padding.cpp:45:73)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_in_t, 0>::operator<<(pixel_in_t const&)' into 'padding(int, int, int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&)' (../src/padding.cpp:46:9)
+INFO: [HLS 214-131] Inlining function 'hls::stream<frame_t, 0>::write(frame_t const&)' into 'hls::stream<frame_t, 0>::operator<<(frame_t const&)' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:129:9)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_in_t, 0>::read()' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:61:13)
+INFO: [HLS 214-131] Inlining function 'hls::stream<frame_t, 0>::operator<<(frame_t const&)' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:100:11)
+INFO: [HLS 214-131] Inlining function 'hls::stream<kernel_t, 0>::read(kernel_t&)' into 'hls::stream<kernel_t, 0>::read()' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:156:9)
+INFO: [HLS 214-131] Inlining function 'hls::stream<frame_t, 0>::read(frame_t&)' into 'hls::stream<frame_t, 0>::read()' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:156:9)
+INFO: [HLS 214-131] Inlining function 'hls::stream<kernel_t, 0>::read()' into 'mul(int, int, int, hls::stream<frame_t, 0>&, hls::stream<kernel_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/mul.cpp:44:21)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::operator<<(pixel_out_t const&)' into 'mul(int, int, int, hls::stream<frame_t, 0>&, hls::stream<kernel_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/mul.cpp:101:9)
+INFO: [HLS 214-131] Inlining function 'hls::stream<frame_t, 0>::read()' into 'mul(int, int, int, hls::stream<frame_t, 0>&, hls::stream<kernel_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/mul.cpp:69:18)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::read(pixel_out_t&)' into 'hls::stream<pixel_out_t, 0>::read()' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:156:9)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::read()' into 'add(int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/add.cpp:36:14)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::operator<<(pixel_out_t const&)' into 'add(int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/add.cpp:80:13)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::read()' into 'add(int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/add.cpp:64:15)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_in_t, 0>::stream()' into 'direct_conv(int, int, int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<kernel_t, 0>&, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/direct_convolution.cpp:23:34)
+INFO: [HLS 214-131] Inlining function 'hls::stream<frame_t, 0>::stream()' into 'direct_conv(int, int, int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<kernel_t, 0>&, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/direct_convolution.cpp:24:31)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::stream()' into 'direct_conv(int, int, int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<kernel_t, 0>&, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/direct_convolution.cpp:25:35)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::read()' into 'relu(int, int, int, int, int, int, int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/relu.cpp:42:15)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::operator<<(pixel_out_t const&)' into 'relu(int, int, int, int, int, int, int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/relu.cpp:98:9)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::read()' into 'batch_norm(int, int, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/batch_normalization.cpp:38:15)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::read()' into 'write_data_channels_gihwcpi(int, int, pixel_out_t*, hls::stream<pixel_out_t, 0>&)' (../src/write.cpp:85:22)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_in_t, 0>::stream()' into 'k_conv2D' (../src/k_conv2D.cpp:97:36)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_in_t, 0>::stream()' into 'k_conv2D' (../src/k_conv2D.cpp:98:36)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_in_t, 0>::stream()' into 'k_conv2D' (../src/k_conv2D.cpp:99:36)
+INFO: [HLS 214-131] Inlining function 'hls::stream<kernel_t, 0>::stream()' into 'k_conv2D' (../src/k_conv2D.cpp:107:31)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::stream()' into 'k_conv2D' (../src/k_conv2D.cpp:121:34)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::stream()' into 'k_conv2D' (../src/k_conv2D.cpp:122:37)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::stream()' into 'k_conv2D' (../src/k_conv2D.cpp:128:34)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::stream()' into 'k_conv2D' (../src/k_conv2D.cpp:133:34)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::stream()' into 'k_conv2D' (../src/k_conv2D.cpp:139:34)
+INFO: [HLS 214-210] Disaggregating variable 'bias'
+INFO: [HLS 214-210] Disaggregating variable 'k'
+INFO: [HLS 214-210] Disaggregating variable 'data'
+INFO: [HLS 214-210] Disaggregating variable 'pixel'
+INFO: [HLS 214-210] Disaggregating variable 'frame'
+INFO: [HLS 214-210] Disaggregating variable 'kernel'
+INFO: [HLS 214-210] Disaggregating variable 'bias'
+INFO: [HLS 214-210] Disaggregating variable 'data_out'
+INFO: [HLS 214-210] Disaggregating variable 'data_in'
+INFO: [HLS 214-210] Disaggregating variable 'data_out'
+INFO: [HLS 214-210] Disaggregating variable 'data_in'
+INFO: [HLS 214-210] Disaggregating variable 'zero'
+INFO: [HLS 214-241] Aggregating bram variable 'add(int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&)::buff_o_channels' with field byte alignment mode in 128-bits (../src/add.cpp:28:0)
+INFO: [HLS 214-241] Aggregating bram variable 'buffer0' with field byte alignment mode in 128-bits
+INFO: [HLS 214-241] Aggregating bram variable 'buffer1' with field byte alignment mode in 128-bits
+INFO: [HLS 214-241] Aggregating bram variable 'buffer2' with field byte alignment mode in 128-bits
+INFO: [HLS 214-241] Aggregating scalar variable 'px_input' with field bit alignment mode in 128-bits
+INFO: [HLS 214-241] Aggregating scalar variable 'px_buff' with field bit alignment mode in 128-bits
+INFO: [HLS 214-241] Aggregating bram variable 'buffer' with field byte alignment mode in 128-bits
+INFO: [HLS 214-186] Unrolling loop 'loop_relu_cpo' (../src/relu.cpp:45:5) in function 'relu' completely with a factor of 4 (../src/relu.cpp:45:5)
+INFO: [HLS 214-186] Unrolling loop 'mul_loop_2' (../src/mul.cpp:63:5) in function 'mul' completely with a factor of 4 (../src/mul.cpp:63:5)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpi' (../src/mul.cpp:72:5) in function 'mul' completely with a factor of 4 (../src/mul.cpp:72:5)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_j' (../src/mul.cpp:76:7) in function 'mul' completely with a factor of 9 (../src/mul.cpp:76:7)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_j' (../src/mul.cpp:76:7) in function 'mul' completely with a factor of 9 (../src/mul.cpp:76:7)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_j' (../src/mul.cpp:76:7) in function 'mul' completely with a factor of 9 (../src/mul.cpp:76:7)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_j' (../src/mul.cpp:76:7) in function 'mul' completely with a factor of 9 (../src/mul.cpp:76:7)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'VITIS_LOOP_88_1' (../src/mul.cpp:88:22) in function 'mul' completely with a factor of 4 (../src/mul.cpp:88:22)
+INFO: [HLS 214-186] Unrolling loop 'set_write_enables_loop' (../src/k_conv2D.cpp:7:3) in function 'set_write_enables' completely with a factor of 4 (../src/k_conv2D.cpp:7:3)
+INFO: [HLS 214-186] Unrolling loop 'set_reading_channel_offsets_loop' (../src/k_conv2D.cpp:16:2) in function 'set_reading_channel_offsets' completely with a factor of 4 (../src/k_conv2D.cpp:16:2)
+INFO: [HLS 214-186] Unrolling loop 'set_channel_write_blocks_loop' (../src/k_conv2D.cpp:26:3) in function 'set_channel_write_blocks' completely with a factor of 4 (../src/k_conv2D.cpp:26:3)
+INFO: [HLS 214-186] Unrolling loop 'loop_batch_norm_cpo' (../src/batch_normalization.cpp:41:3) in function 'batch_norm' completely with a factor of 4 (../src/batch_normalization.cpp:41:3)
+INFO: [HLS 214-186] Unrolling loop 'add_load_data_cpo_loop' (../src/add.cpp:71:7) in function 'add' completely with a factor of 4 (../src/add.cpp:71:7)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bits.i128.s_struct.pixel_out_ts' into 'input_buffer(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&)' (../src/join_split.cpp:69:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.unpack.bytes.s_struct.pixel_out_ts.i128' into 'input_buffer(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&)' (../src/join_split.cpp:69:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bits.i128.s_struct.pixel_out_ts' into 'input_buffer(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&)' (../src/join_split.cpp:69:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.unpack.bits.s_struct.pixel_out_ts.i128' into 'input_buffer(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&)' (../src/join_split.cpp:69:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i128.s_struct.pixel_out_ts' into 'input_buffer(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&)' (../src/join_split.cpp:69:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.unpack.bits.s_struct.pixel_out_ts.i128' into 'input_buffer(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&)' (../src/join_split.cpp:69:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.unpack.bits.s_struct.pixel_out_ts.i128' into 'input_buffer(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&)' (../src/join_split.cpp:69:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i32.f32' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i32.f32' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i32.f32' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i32.f32' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i32.f32' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i32.f32' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i32.f32' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i32.f32' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i32.f32' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i32.f32' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i32.f32' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i32.f32' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.unpack.bytes.s_struct.pixel_out_ts.i128' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.unpack.bytes.s_struct.pixel_out_ts.i128' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.unpack.bytes.s_struct.pixel_out_ts.i128' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.unpack.bytes.s_struct.pixel_out_ts.i128' into 'add(int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/add.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i128.s_struct.pixel_out_ts' into 'add(int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/add.cpp:15:0)
+ERROR: [HLS 214-194] in function 'k_conv2D': Undefined function pooling (../src/k_conv2D.cpp:277:7)
+ERROR: [HLS 214-135] Syn check fail!
+INFO: [HLS 200-111] Finished Command csynth_design CPU user time: 36.3 seconds. CPU system time: 4.34 seconds. Elapsed time: 63.09 seconds; current allocated memory: 197.896 MB.
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+INFO: [SYN 201-201] Setting up clock 'default' with a period of 3.33ns.
+INFO: [HLS 200-10] Setting target device to 'xcu200-fsgd2104-2-e'
+INFO: [HLS 200-1505] Using flow_target 'vitis'
+INFO: [HLS 200-1464] Running solution command: config_interface -default_interface=kernel
+INFO: [HLS 200-1464] Running solution command: config_interface -default_slave_interface=s_axilite
+INFO: [HLS 200-1464] Running solution command: config_interface -m_axi_alignment_byte_size=64
+INFO: [HLS 200-1464] Running solution command: config_interface -m_axi_latency=64
+INFO: [HLS 200-1464] Running solution command: config_interface -m_axi_max_widen_bitwidth=512
+INFO: [HLS 200-1464] Running solution command: config_interface -m_axi_offset=slave
+INFO: [HLS 200-1464] Running solution command: config_rtl -register_reset_num=3
+INFO: [HLS 200-1510] Running: set_part xcu200-fsgd2104-2-e 
+INFO: [HLS 200-1510] Running: create_clock -period 3.33 -name default 
+INFO: [HLS 200-1510] Running: config_interface -default_slave_interface s_axilite -m_axi_alignment_byte_size 64 -m_axi_latency 64 -m_axi_max_widen_bitwidth 512 -m_axi_offset slave 
+INFO: [HLS 200-1510] Running: config_rtl -register_reset_num 3 
+INFO: [HLS 200-1510] Running: csynth_design 
+INFO: [HLS 200-111] Finished File checks and directory preparation: CPU user time: 0.02 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.03 seconds; current allocated memory: 193.149 MB.
+INFO: [HLS 200-10] Analyzing design file '../src/write.cpp' ... 
+INFO: [HLS 200-10] Analyzing design file '../src/winograd_convolution.cpp' ... 
+INFO: [HLS 200-10] Analyzing design file '../src/serialization.cpp' ... 
+INFO: [HLS 200-10] Analyzing design file '../src/relu.cpp' ... 
+WARNING: [HLS 207-5301] unused parameter 'enable_clipping': ../src/relu.cpp:23:32
+WARNING: [HLS 207-5301] unused parameter 'enable_shift': ../src/relu.cpp:23:53
+WARNING: [HLS 207-5301] unused parameter 'min_clip': ../src/relu.cpp:23:71
+WARNING: [HLS 207-5301] unused parameter 'max_clip': ../src/relu.cpp:23:85
+WARNING: [HLS 207-5301] unused parameter 'direction_shift': ../src/relu.cpp:23:99
+WARNING: [HLS 207-5301] unused parameter 'pos_shift': ../src/relu.cpp:23:120
+INFO: [HLS 200-10] Analyzing design file '../src/read.cpp' ... 
+INFO: [HLS 200-10] Analyzing design file '../src/pooling.cpp' ... 
+INFO: [HLS 200-10] Analyzing design file '../src/padding.cpp' ... 
+INFO: [HLS 200-10] Analyzing design file '../src/mul.cpp' ... 
+INFO: [HLS 200-10] Analyzing design file '../src/k_conv2D.cpp' ... 
+WARNING: [HLS 214-110] As the loop bound is not a constant or function argument, the compiler may not successfully process the dataflow loop: ../src/k_conv2D.cpp:90:31
+WARNING: [HLS 200-471] Dataflow form checks found 1 issue(s) in file ../src/k_conv2D.cpp
+INFO: [HLS 200-10] Analyzing design file '../src/join_split.cpp' ... 
+INFO: [HLS 200-10] Analyzing design file '../src/dws_convolution.cpp' ... 
+INFO: [HLS 200-10] Analyzing design file '../src/direct_convolution.cpp' ... 
+INFO: [HLS 200-10] Analyzing design file '../src/cvt.cpp' ... 
+INFO: [HLS 200-10] Analyzing design file '../src/batch_normalization.cpp' ... 
+INFO: [HLS 200-10] Analyzing design file '../src/add.cpp' ... 
+INFO: [HLS 200-111] Finished Source Code Analysis and Preprocessing: CPU user time: 34.42 seconds. CPU system time: 4.41 seconds. Elapsed time: 58.16 seconds; current allocated memory: 196.471 MB.
+INFO: [HLS 200-777] Using interface defaults for 'Vitis' flow target.
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::write(pixel_out_t const&)' into 'hls::stream<pixel_out_t, 0>::operator<<(pixel_out_t const&)' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:129:9)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::operator<<(pixel_out_t const&)' into 'read_bias(int, pixel_out_t*, hls::stream<pixel_out_t, 0>&)' (../src/read.cpp:23:7)
+INFO: [HLS 214-131] Inlining function 'hls::stream<kernel_t, 0>::write(kernel_t const&)' into 'hls::stream<kernel_t, 0>::operator<<(kernel_t const&)' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:129:9)
+INFO: [HLS 214-131] Inlining function 'hls::stream<kernel_t, 0>::operator<<(kernel_t const&)' into 'read_kernel(int, int, float*, hls::stream<kernel_t, 0>&)' (../src/read.cpp:74:10)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_in_t, 0>::write(pixel_in_t const&)' into 'hls::stream<pixel_in_t, 0>::operator<<(pixel_in_t const&)' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:129:9)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_in_t, 0>::operator<<(pixel_in_t const&)' into 'read_data_channels_gihwcpi(int, int, pixel_in_t*, hls::stream<pixel_in_t, 0>&, int)' (../src/read.cpp:338:9)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_in_t, 0>::read(pixel_in_t&)' into 'hls::stream<pixel_in_t, 0>::read()' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:156:9)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_in_t, 0>::read()' into 'input_buffer(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&)' (../src/join_split.cpp:92:37)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_in_t, 0>::operator<<(pixel_in_t const&)' into 'input_buffer(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&)' (../src/join_split.cpp:97:11)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_in_t, 0>::operator<<(pixel_in_t const&)' into 'input_buffer(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&)' (../src/join_split.cpp:96:26)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_in_t, 0>::read()' into 'padding(int, int, int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&)' (../src/padding.cpp:45:73)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_in_t, 0>::operator<<(pixel_in_t const&)' into 'padding(int, int, int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&)' (../src/padding.cpp:46:9)
+INFO: [HLS 214-131] Inlining function 'hls::stream<frame_t, 0>::write(frame_t const&)' into 'hls::stream<frame_t, 0>::operator<<(frame_t const&)' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:129:9)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_in_t, 0>::read()' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:61:13)
+INFO: [HLS 214-131] Inlining function 'hls::stream<frame_t, 0>::operator<<(frame_t const&)' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:100:11)
+INFO: [HLS 214-131] Inlining function 'hls::stream<kernel_t, 0>::read(kernel_t&)' into 'hls::stream<kernel_t, 0>::read()' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:156:9)
+INFO: [HLS 214-131] Inlining function 'hls::stream<frame_t, 0>::read(frame_t&)' into 'hls::stream<frame_t, 0>::read()' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:156:9)
+INFO: [HLS 214-131] Inlining function 'hls::stream<kernel_t, 0>::read()' into 'mul(int, int, int, hls::stream<frame_t, 0>&, hls::stream<kernel_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/mul.cpp:44:21)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::operator<<(pixel_out_t const&)' into 'mul(int, int, int, hls::stream<frame_t, 0>&, hls::stream<kernel_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/mul.cpp:101:9)
+INFO: [HLS 214-131] Inlining function 'hls::stream<frame_t, 0>::read()' into 'mul(int, int, int, hls::stream<frame_t, 0>&, hls::stream<kernel_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/mul.cpp:69:18)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::read(pixel_out_t&)' into 'hls::stream<pixel_out_t, 0>::read()' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:156:9)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::read()' into 'add(int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/add.cpp:36:14)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::operator<<(pixel_out_t const&)' into 'add(int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/add.cpp:80:13)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::read()' into 'add(int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/add.cpp:64:15)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_in_t, 0>::stream()' into 'direct_conv(int, int, int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<kernel_t, 0>&, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/direct_convolution.cpp:23:34)
+INFO: [HLS 214-131] Inlining function 'hls::stream<frame_t, 0>::stream()' into 'direct_conv(int, int, int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<kernel_t, 0>&, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/direct_convolution.cpp:24:31)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::stream()' into 'direct_conv(int, int, int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<kernel_t, 0>&, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/direct_convolution.cpp:25:35)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::read()' into 'relu(int, int, int, int, int, int, int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/relu.cpp:42:15)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::operator<<(pixel_out_t const&)' into 'relu(int, int, int, int, int, int, int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/relu.cpp:98:9)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::read()' into 'batch_norm(int, int, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/batch_normalization.cpp:38:15)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::operator<<(pixel_out_t const&)' into 'batch_norm(int, int, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/batch_normalization.cpp:64:7)
+INFO: [HLS 214-131] Inlining function 'hls::stream<frame_pool_t, 0>::write(frame_pool_t const&)' into 'hls::stream<frame_pool_t, 0>::operator<<(frame_pool_t const&)' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:129:9)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::read()' into 'pool_cvt(int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<frame_pool_t, 0>&)' (../src/pooling.cpp:69:13)
+INFO: [HLS 214-131] Inlining function 'hls::stream<frame_pool_t, 0>::operator<<(frame_pool_t const&)' into 'pool_cvt(int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<frame_pool_t, 0>&)' (../src/pooling.cpp:130:15)
+INFO: [HLS 214-131] Inlining function 'hls::stream<frame_pool_t, 0>::operator<<(frame_pool_t const&)' into 'pool_cvt(int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<frame_pool_t, 0>&)' (../src/pooling.cpp:120:8)
+INFO: [HLS 214-131] Inlining function 'hls::stream<frame_pool_t, 0>::read(frame_pool_t&)' into 'hls::stream<frame_pool_t, 0>::read()' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:156:9)
+INFO: [HLS 214-131] Inlining function 'hls::stream<frame_pool_t, 0>::read()' into 'pool_pooling(int, int, int, int, hls::stream<frame_pool_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/pooling.cpp:173:14)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::operator<<(pixel_out_t const&)' into 'pool_pooling(int, int, int, int, hls::stream<frame_pool_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/pooling.cpp:207:7)
+INFO: [HLS 214-131] Inlining function 'hls::stream<frame_pool_t, 0>::stream()' into 'pooling(int, int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/pooling.cpp:223:35)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::read()' into 'write_data_channels_gihwcpi(int, int, pixel_out_t*, hls::stream<pixel_out_t, 0>&)' (../src/write.cpp:85:22)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_in_t, 0>::stream()' into 'k_conv2D' (../src/k_conv2D.cpp:97:36)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_in_t, 0>::stream()' into 'k_conv2D' (../src/k_conv2D.cpp:98:36)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_in_t, 0>::stream()' into 'k_conv2D' (../src/k_conv2D.cpp:99:36)
+INFO: [HLS 214-131] Inlining function 'hls::stream<kernel_t, 0>::stream()' into 'k_conv2D' (../src/k_conv2D.cpp:107:31)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::stream()' into 'k_conv2D' (../src/k_conv2D.cpp:121:34)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::stream()' into 'k_conv2D' (../src/k_conv2D.cpp:122:37)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::stream()' into 'k_conv2D' (../src/k_conv2D.cpp:128:34)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::stream()' into 'k_conv2D' (../src/k_conv2D.cpp:133:34)
+INFO: [HLS 214-131] Inlining function 'hls::stream<pixel_out_t, 0>::stream()' into 'k_conv2D' (../src/k_conv2D.cpp:139:34)
+INFO: [HLS 214-210] Disaggregating variable 'bias'
+INFO: [HLS 214-210] Disaggregating variable 'k'
+INFO: [HLS 214-210] Disaggregating variable 'data'
+INFO: [HLS 214-210] Disaggregating variable 'pixel'
+INFO: [HLS 214-210] Disaggregating variable 'frame'
+INFO: [HLS 214-210] Disaggregating variable 'kernel'
+INFO: [HLS 214-210] Disaggregating variable 'bias'
+INFO: [HLS 214-210] Disaggregating variable 'data_out'
+INFO: [HLS 214-210] Disaggregating variable 'data_in'
+INFO: [HLS 214-210] Disaggregating variable 'data_out'
+INFO: [HLS 214-210] Disaggregating variable 'data_in'
+INFO: [HLS 214-210] Disaggregating variable 'zero'
+INFO: [HLS 214-241] Aggregating bram variable 'buffer0' with field byte alignment mode in 128-bits
+INFO: [HLS 214-241] Aggregating bram variable 'buffer1' with field byte alignment mode in 128-bits
+INFO: [HLS 214-241] Aggregating bram variable 'add(int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&)::buff_o_channels' with field byte alignment mode in 128-bits (../src/add.cpp:28:0)
+INFO: [HLS 214-241] Aggregating bram variable 'buffer0' with field byte alignment mode in 128-bits
+INFO: [HLS 214-241] Aggregating bram variable 'buffer1' with field byte alignment mode in 128-bits
+INFO: [HLS 214-241] Aggregating bram variable 'buffer2' with field byte alignment mode in 128-bits
+INFO: [HLS 214-241] Aggregating scalar variable 'px_input' with field bit alignment mode in 128-bits
+INFO: [HLS 214-241] Aggregating scalar variable 'px_buff' with field bit alignment mode in 128-bits
+INFO: [HLS 214-241] Aggregating bram variable 'buffer' with field byte alignment mode in 128-bits
+INFO: [HLS 214-186] Unrolling loop 'loop_relu_cpo' (../src/relu.cpp:45:5) in function 'relu' completely with a factor of 4 (../src/relu.cpp:45:5)
+INFO: [HLS 214-186] Unrolling loop 'pooling_loop_cpo' (../src/pooling.cpp:187:3) in function 'pool_pooling' completely with a factor of 4 (../src/pooling.cpp:187:3)
+INFO: [HLS 214-186] Unrolling loop 'mul_loop_2' (../src/mul.cpp:63:5) in function 'mul' completely with a factor of 4 (../src/mul.cpp:63:5)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpi' (../src/mul.cpp:72:5) in function 'mul' completely with a factor of 4 (../src/mul.cpp:72:5)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_j' (../src/mul.cpp:76:7) in function 'mul' completely with a factor of 9 (../src/mul.cpp:76:7)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_j' (../src/mul.cpp:76:7) in function 'mul' completely with a factor of 9 (../src/mul.cpp:76:7)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_j' (../src/mul.cpp:76:7) in function 'mul' completely with a factor of 9 (../src/mul.cpp:76:7)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_j' (../src/mul.cpp:76:7) in function 'mul' completely with a factor of 9 (../src/mul.cpp:76:7)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'loop_mul_cpo' (../src/mul.cpp:80:9) in function 'mul' completely with a factor of 4 (../src/mul.cpp:80:9)
+INFO: [HLS 214-186] Unrolling loop 'VITIS_LOOP_88_1' (../src/mul.cpp:88:22) in function 'mul' completely with a factor of 4 (../src/mul.cpp:88:22)
+INFO: [HLS 214-186] Unrolling loop 'set_write_enables_loop' (../src/k_conv2D.cpp:7:3) in function 'set_write_enables' completely with a factor of 4 (../src/k_conv2D.cpp:7:3)
+INFO: [HLS 214-186] Unrolling loop 'set_reading_channel_offsets_loop' (../src/k_conv2D.cpp:16:2) in function 'set_reading_channel_offsets' completely with a factor of 4 (../src/k_conv2D.cpp:16:2)
+INFO: [HLS 214-186] Unrolling loop 'set_channel_write_blocks_loop' (../src/k_conv2D.cpp:26:3) in function 'set_channel_write_blocks' completely with a factor of 4 (../src/k_conv2D.cpp:26:3)
+INFO: [HLS 214-186] Unrolling loop 'loop_batch_norm_cpo' (../src/batch_normalization.cpp:41:3) in function 'batch_norm' completely with a factor of 4 (../src/batch_normalization.cpp:41:3)
+INFO: [HLS 214-186] Unrolling loop 'add_load_data_cpo_loop' (../src/add.cpp:71:7) in function 'add' completely with a factor of 4 (../src/add.cpp:71:7)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bits.i128.s_struct.pixel_out_ts' into 'input_buffer(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&)' (../src/join_split.cpp:69:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.unpack.bytes.s_struct.pixel_out_ts.i128' into 'input_buffer(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&)' (../src/join_split.cpp:69:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bits.i128.s_struct.pixel_out_ts' into 'input_buffer(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&)' (../src/join_split.cpp:69:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.unpack.bits.s_struct.pixel_out_ts.i128' into 'input_buffer(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&)' (../src/join_split.cpp:69:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i128.s_struct.pixel_out_ts' into 'input_buffer(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&)' (../src/join_split.cpp:69:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.unpack.bits.s_struct.pixel_out_ts.i128' into 'input_buffer(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&)' (../src/join_split.cpp:69:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.unpack.bits.s_struct.pixel_out_ts.i128' into 'input_buffer(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&)' (../src/join_split.cpp:69:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i32.f32' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i32.f32' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i32.f32' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i32.f32' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i32.f32' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i32.f32' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i32.f32' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i32.f32' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i32.f32' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i32.f32' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i32.f32' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i32.f32' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.unpack.bytes.s_struct.pixel_out_ts.i128' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.unpack.bytes.s_struct.pixel_out_ts.i128' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.unpack.bytes.s_struct.pixel_out_ts.i128' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&)' (../src/cvt.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.unpack.bytes.s_struct.pixel_out_ts.i128' into 'add(int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/add.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i128.s_struct.pixel_out_ts' into 'add(int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&)' (../src/add.cpp:15:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i128.s_struct.pixel_out_ts' into 'pool_cvt(int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<frame_pool_t, 0>&)' (../src/pooling.cpp:34:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.unpack.bytes.s_struct.pixel_out_ts.i128' into 'pool_cvt(int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<frame_pool_t, 0>&)' (../src/pooling.cpp:34:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.pack.bytes.i128.s_struct.pixel_out_ts' into 'pool_cvt(int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<frame_pool_t, 0>&)' (../src/pooling.cpp:34:0)
+INFO: [HLS 214-178] Inlining function '_llvm.fpga.unpack.bytes.s_struct.pixel_out_ts.i128' into 'pool_cvt(int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<frame_pool_t, 0>&)' (../src/pooling.cpp:34:0)
+INFO: [HLS 214-115] Multiple burst reads of variable length and bit width 32 in loop 'VITIS_LOOP_61_1'(../src/read.cpp:61:19) has been inferred on port 'gmem1' (../src/read.cpp:61:19)
+INFO: [HLS 214-115] Multiple burst reads of variable length and bit width 128 in loop 'read_data_channels_loop_pixels'(../src/read.cpp:332:3) has been inferred on port 'gmem' (../src/read.cpp:332:3)
+INFO: [HLS 214-115] Multiple burst writes of variable length and bit width 128 in loop 'write_data_channels_loop_pixels'(../src/write.cpp:82:3) has been inferred on port 'gmem3' (../src/write.cpp:82:3)
+INFO: [HLS 214-131] Inlining function '_llvm.fpga.pack.none.i128.s_struct.pixel_out_ts' into 'read_bias(int, pixel_out_t*, hls::stream<pixel_out_t, 0>&) (.1)' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:174:9)
+INFO: [HLS 214-131] Inlining function '_llvm.fpga.pack.none.i4608.s_struct.kernel_ts' into 'read_kernel(int, int, float*, hls::stream<kernel_t, 0>&) (.1)' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:174:9)
+INFO: [HLS 214-131] Inlining function '_llvm.fpga.pack.none.i128.s_struct.pixel_out_ts' into 'input_buffer(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&) (.1)' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:174:9)
+INFO: [HLS 214-131] Inlining function '_llvm.fpga.pack.none.i128.s_struct.pixel_out_ts' into 'input_buffer(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&) (.1)' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:174:9)
+INFO: [HLS 214-131] Inlining function '_llvm.fpga.pack.none.i128.s_struct.pixel_out_ts' into 'padding(int, int, int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<pixel_in_t, 0>&) (.1)' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:174:9)
+INFO: [HLS 214-131] Inlining function '_llvm.fpga.pack.none.i128.s_struct.pixel_out_ts' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&) (.1)' (../src/cvt.cpp:85:93)
+INFO: [HLS 214-131] Inlining function '_llvm.fpga.pack.none.i1152.s_struct.frame_ts' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&) (.1)' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:174:9)
+INFO: [HLS 214-131] Inlining function '_llvm.fpga.pack.none.i128.s_struct.pixel_out_ts' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&) (.1)' (../src/cvt.cpp:85:57)
+INFO: [HLS 214-131] Inlining function '_llvm.fpga.pack.none.i128.s_struct.pixel_out_ts' into 'cvt(int, int, int, hls::stream<pixel_in_t, 0>&, hls::stream<frame_t, 0>&) (.1)' (../src/cvt.cpp:85:93)
+INFO: [HLS 214-131] Inlining function '_llvm.fpga.pack.none.i128.s_struct.pixel_out_ts' into 'mul(int, int, int, hls::stream<frame_t, 0>&, hls::stream<kernel_t, 0>&, hls::stream<pixel_out_t, 0>&) (.1)' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:174:9)
+INFO: [HLS 214-131] Inlining function '_llvm.fpga.pack.none.i128.s_struct.pixel_out_ts' into 'add(int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&) (.1)' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:174:9)
+INFO: [HLS 214-131] Inlining function '_llvm.fpga.pack.none.i128.s_struct.pixel_out_ts' into 'relu(int, int, int, int, int, int, int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&) (.1)' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:174:9)
+INFO: [HLS 214-131] Inlining function '_llvm.fpga.pack.none.i128.s_struct.pixel_out_ts' into 'batch_norm(int, int, hls::stream<pixel_out_t, 0>&, hls::stream<pixel_out_t, 0>&) (.1)' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:174:9)
+INFO: [HLS 214-131] Inlining function '_llvm.fpga.pack.none.i128.s_struct.pixel_out_ts' into 'pool_cvt(int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<frame_pool_t, 0>&) (.1)'
+INFO: [HLS 214-131] Inlining function '_llvm.fpga.pack.none.i512.s_struct.frame_winograds' into 'pool_cvt(int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<frame_pool_t, 0>&) (.1)' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:174:9)
+INFO: [HLS 214-131] Inlining function '_llvm.fpga.pack.none.i512.s_struct.frame_winograds' into 'pool_cvt(int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<frame_pool_t, 0>&) (.1)' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:174:9)
+INFO: [HLS 214-131] Inlining function '_llvm.fpga.pack.none.i128.s_struct.pixel_out_ts' into 'pool_cvt(int, int, int, hls::stream<pixel_out_t, 0>&, hls::stream<frame_pool_t, 0>&) (.1)'
+INFO: [HLS 214-131] Inlining function '_llvm.fpga.pack.none.i128.s_struct.pixel_out_ts' into 'pool_pooling(int, int, int, int, hls::stream<frame_pool_t, 0>&, hls::stream<pixel_out_t, 0>&) (.1)' (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:174:9)
+INFO: [HLS 200-111] Finished Compiling Optimization and Transform: CPU user time: 8.37 seconds. CPU system time: 0.43 seconds. Elapsed time: 18.19 seconds; current allocated memory: 208.198 MB.
+INFO: [HLS 200-111] Finished Checking Pragmas: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.01 seconds; current allocated memory: 208.200 MB.
+INFO: [HLS 200-10] Starting code transformations ...
+INFO: [HLS 200-111] Finished Standard Transforms: CPU user time: 0.45 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.74 seconds; current allocated memory: 215.480 MB.
+INFO: [HLS 200-10] Checking synthesizability ...
+INFO: [HLS 200-111] Finished Checking Synthesizability: CPU user time: 0.98 seconds. CPU system time: 0.01 seconds. Elapsed time: 1.3 seconds; current allocated memory: 216.297 MB.
+INFO: [XFORM 203-510] Pipelining loop 'add_load_data_it_loop' (../src/add.cpp:61) in function 'add' automatically.
+INFO: [XFORM 203-502] Unrolling all sub-loops inside loop 'pooling_loop_iter' (../src/pooling.cpp:168) in function 'pool_pooling' for pipelining.
+INFO: [HLS 200-489] Unrolling loop 'pooling_loop_kernel' (../src/pooling.cpp:190) in function 'pool_pooling' completely with a factor of 4.
+INFO: [XFORM 203-102] Partitioning array 'kernel.pixel.pixel' (../src/pooling.cpp:155) in dimension 1 automatically.
+INFO: [XFORM 203-102] Partitioning array 'kernel.pixel.pixel.0' (../src/pooling.cpp:155) automatically.
+INFO: [XFORM 203-102] Partitioning array 'kernel.pixel.pixel.1' (../src/pooling.cpp:155) automatically.
+INFO: [XFORM 203-102] Partitioning array 'kernel.pixel.pixel.2' (../src/pooling.cpp:155) automatically.
+INFO: [XFORM 203-102] Partitioning array 'kernel.pixel.pixel.3' (../src/pooling.cpp:155) automatically.
+INFO: [XFORM 203-101] Partitioning array 'k.pixel' (../src/read.cpp:57) in dimension 1 completely.
+INFO: [XFORM 203-101] Partitioning array 'kernel.pixel' (../src/mul.cpp:22) in dimension 1 completely.
+INFO: [XFORM 203-101] Partitioning array 'enable_write'  in dimension 1 completely.
+INFO: [XFORM 203-101] Partitioning array 'offset_read_data_channel_i'  in dimension 1 completely.
+INFO: [XFORM 203-101] Partitioning array 'num_channel_write_blocks'  in dimension 1 completely.
+INFO: [XFORM 203-101] Partitioning array 'k.pixel' (../src/read.cpp:57) in dimension 2 completely.
+INFO: [XFORM 203-101] Partitioning array 'kernel.pixel' (../src/mul.cpp:22) in dimension 2 completely.
+INFO: [XFORM 203-101] Partitioning array 'k.pixel' (../src/read.cpp:57) in dimension 3 completely.
+INFO: [XFORM 203-101] Partitioning array 'kernel.pixel' (../src/mul.cpp:22) in dimension 3 completely.
+INFO: [XFORM 203-721] Extract dataflow region from loop o_iter_loop (../src/k_conv2D.cpp:94)  of function 'k_conv2D'.
+INFO: [XFORM 203-712] Applying dataflow to function 'direct_conv' (../src/direct_convolution.cpp:20:121), detected/extracted 4 process function(s): 
+	 'padding'
+	 'cvt'
+	 'mul'
+	 'add'.
+INFO: [XFORM 203-712] Applying dataflow to function 'pooling' (../src/pooling.cpp:221:100), detected/extracted 3 process function(s): 
+	 'pooling_Block_.split7_proc'
+	 'pool_cvt'
+	 'pool_pooling'.
+INFO: [XFORM 203-712] Applying dataflow to function 'dataflow_in_loop_o_iter_loop' (../src/k_conv2D.cpp:94:9), detected/extracted 13 process function(s): 
+	 'dataflow_in_loop_o_iter_loop.entry25'
+	 'set_write_enables'
+	 'set_reading_channel_offsets'
+	 'set_channel_write_blocks'
+	 'read_bias'
+	 'read_kernel'
+	 'read_data_channels_gihwcpi'
+	 'input_buffer'
+	 'direct_conv'
+	 'relu'
+	 'batch_norm'
+	 'pooling'
+	 'write_data_channels_gihwcpi'.
+INFO: [XFORM 203-401] Performing if-conversion on hyperblock in function 'pooling_Block_.split7_proc'... converting 3 basic blocks.
+INFO: [XFORM 203-401] Performing if-conversion on hyperblock from (../src/pooling.cpp:50:22) to (../src/pooling.cpp:117:9) in function 'pool_cvt'... converting 3 basic blocks.
+INFO: [XFORM 203-401] Performing if-conversion on hyperblock from (/opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:174:9) in function 'padding'... converting 3 basic blocks.
+INFO: [XFORM 203-401] Performing if-conversion on hyperblock from (../src/cvt.cpp:113:22) in function 'cvt'... converting 4 basic blocks.
+INFO: [XFORM 203-401] Performing if-conversion on hyperblock from (../src/add.cpp:61:13) to (../src/add.cpp:78:10) in function 'add'... converting 3 basic blocks.
+INFO: [XFORM 203-11] Balancing expressions in function 'padding' (../src/padding.cpp:13:35)...3 expression(s) balanced.
+INFO: [HLS 200-111] Finished Loop, function and other optimizations: CPU user time: 4.55 seconds. CPU system time: 0.02 seconds. Elapsed time: 6.18 seconds; current allocated memory: 243.406 MB.
+INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_66_3' (../src/read.cpp:66:31) in function 'read_kernel'.
+INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_65_2' (../src/read.cpp:65:28) in function 'read_kernel'.
+INFO: [HLS 200-472] Inferring partial write operation for 'buffer0.i.i' (../src/pooling.cpp:91:26)
+INFO: [HLS 200-472] Inferring partial write operation for 'buffer1.i.i' (../src/pooling.cpp:95:26)
+INFO: [HLS 200-472] Inferring partial write operation for 'buffer.i.i.i' (../src/join_split.cpp:94:31)
+INFO: [HLS 200-472] Inferring partial write operation for 'buffer0.i' (../src/cvt.cpp:69:45)
+INFO: [HLS 200-472] Inferring partial write operation for 'buffer1.i' (../src/cvt.cpp:70:45)
+INFO: [HLS 200-472] Inferring partial write operation for 'buffer2.i' (../src/cvt.cpp:71:45)
+INFO: [HLS 200-472] Inferring partial write operation for 'buff_o_channels' (../src/add.cpp:76:27)
+WARNING: [HLS 200-1614] Cosimulation may deadlock if process padding has a streamed top-level array input and has predecessor processes. If a deadlock occurs, please consider converting the streamed array into an hls::stream or using '::common::get_param hls.config_cosim.top_streamed_array true' in the TCL script.
+WARNING: [HLS 200-1614] Cosimulation may deadlock if process mul has a streamed top-level array input and has predecessor processes. If a deadlock occurs, please consider converting the streamed array into an hls::stream or using '::common::get_param hls.config_cosim.top_streamed_array true' in the TCL script.
+WARNING: [HLS 200-1614] Cosimulation may deadlock if process add has a streamed top-level array input and has predecessor processes. If a deadlock occurs, please consider converting the streamed array into an hls::stream or using '::common::get_param hls.config_cosim.top_streamed_array true' in the TCL script.
+WARNING: [HLS 200-1614] Cosimulation may deadlock if process pool_cvt has a streamed top-level array input and has predecessor processes. If a deadlock occurs, please consider converting the streamed array into an hls::stream or using '::common::get_param hls.config_cosim.top_streamed_array true' in the TCL script.
+WARNING: [HLS 200-1449] Process read_bias has both a predecessor and reads an input from its caller (see the GUI dataflow viewer). This may lead to lower throughput. Consider copying this input via a predecessor process.
+WARNING: [HLS 200-1449] Process read_kernel has both a predecessor and reads an input from its caller (see the GUI dataflow viewer). This may lead to lower throughput. Consider copying this input via a predecessor process.
+WARNING: [HLS 200-1449] Process read_data_channels_gihwcpi has both a predecessor and reads an input from its caller (see the GUI dataflow viewer). This may lead to lower throughput. Consider copying this input via a predecessor process.
+WARNING: [HLS 200-1449] Process dataflow_in_loop_o_iter_loop has both a predecessor and reads an input from its caller (see the GUI dataflow viewer). This may lead to lower throughput. Consider copying this input via a predecessor process.
+INFO: [HLS 200-111] Finished Architecture Synthesis: CPU user time: 3.49 seconds. CPU system time: 0.05 seconds. Elapsed time: 4.52 seconds; current allocated memory: 451.476 MB.
+INFO: [HLS 200-10] Starting hardware synthesis ...
+INFO: [HLS 200-10] Synthesizing 'k_conv2D' ...
+WARNING: [SYN 201-103] Legalizing function name 'dataflow_in_loop_o_iter_loop.entry8' to 'dataflow_in_loop_o_iter_loop_entry8'.
+WARNING: [SYN 201-103] Legalizing function name 'dataflow_in_loop_o_iter_loop.entry25' to 'dataflow_in_loop_o_iter_loop_entry25'.
+WARNING: [SYN 201-103] Legalizing function name 'direct_conv.entry5' to 'direct_conv_entry5'.
+WARNING: [SYN 201-103] Legalizing function name 'pooling_Block_.split7_proc' to 'pooling_Block_split7_proc'.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'dataflow_in_loop_o_iter_loop_entry8' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.14 seconds. CPU system time: 0.02 seconds. Elapsed time: 0.67 seconds; current allocated memory: 453.299 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.05 seconds. CPU system time: 0 seconds. Elapsed time: 0.41 seconds; current allocated memory: 453.449 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'dataflow_in_loop_o_iter_loop_entry25' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.08 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.57 seconds; current allocated memory: 453.562 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.07 seconds. CPU system time: 0 seconds. Elapsed time: 0.4 seconds; current allocated memory: 453.926 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'read_bias' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.18 seconds. CPU system time: 0 seconds. Elapsed time: 0.56 seconds; current allocated memory: 454.137 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.28 seconds. CPU system time: 0 seconds. Elapsed time: 0.67 seconds; current allocated memory: 454.468 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'read_kernel' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_65_2_VITIS_LOOP_66_3_VITIS_LOOP_67_4'.
+INFO: [HLS 200-1470] Pipelining result : Target II = 1, Final II = 1, Depth = 2, loop 'VITIS_LOOP_65_2_VITIS_LOOP_66_3_VITIS_LOOP_67_4'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.49 seconds. CPU system time: 0 seconds. Elapsed time: 0.95 seconds; current allocated memory: 456.881 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.48 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.97 seconds; current allocated memory: 459.836 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'read_data_channels_gihwcpi' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'read_data_channels_loop_pixels'.
+INFO: [HLS 200-1470] Pipelining result : Target II = 1, Final II = 1, Depth = 3, loop 'read_data_channels_loop_pixels'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.43 seconds. CPU system time: 0 seconds. Elapsed time: 0.99 seconds; current allocated memory: 460.227 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.29 seconds. CPU system time: 0 seconds. Elapsed time: 0.67 seconds; current allocated memory: 460.764 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'input_buffer' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'input_buffer_loop_pixels'.
+INFO: [HLS 200-1470] Pipelining result : Target II = 1, Final II = 1, Depth = 3, loop 'input_buffer_loop_pixels'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.25 seconds. CPU system time: 0.02 seconds. Elapsed time: 0.7 seconds; current allocated memory: 461.065 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+WARNING: [BIND 205-102] The specified resource core for memory 'buffer_i_i_i' will be ignored if a simpler one can be used.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.17 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.57 seconds; current allocated memory: 461.476 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'direct_conv_entry5' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.16 seconds. CPU system time: 0 seconds. Elapsed time: 0.53 seconds; current allocated memory: 461.521 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.06 seconds. CPU system time: 0 seconds. Elapsed time: 0.42 seconds; current allocated memory: 461.626 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'padding' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'padding_loop'.
+INFO: [HLS 200-1470] Pipelining result : Target II = 1, Final II = 1, Depth = 3, loop 'padding_loop'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.15 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.58 seconds; current allocated memory: 461.861 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.14 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.5 seconds; current allocated memory: 462.226 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'cvt' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'cvt_loop'.
+INFO: [SCHED 204-61] Discarding stage scheduling solution.
+INFO: [HLS 200-1470] Pipelining result : Target II = 1, Final II = 1, Depth = 38, loop 'cvt_loop'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.33 seconds. CPU system time: 0 seconds. Elapsed time: 0.84 seconds; current allocated memory: 462.780 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.32 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.71 seconds; current allocated memory: 463.612 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'mul' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'mul_loop_1'.
+INFO: [HLS 200-1470] Pipelining result : Target II = 1, Final II = 1, Depth = 259, loop 'mul_loop_1'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 2.35 seconds. CPU system time: 0.02 seconds. Elapsed time: 2.87 seconds; current allocated memory: 467.920 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 2.35 seconds. CPU system time: 0 seconds. Elapsed time: 2.95 seconds; current allocated memory: 476.246 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'add' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'add_load_data_it_loop'.
+INFO: [HLS 200-1470] Pipelining result : Target II = 1, Final II = 1, Depth = 10, loop 'add_load_data_it_loop'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 2.32 seconds. CPU system time: 0.02 seconds. Elapsed time: 3.02 seconds; current allocated memory: 476.522 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.15 seconds. CPU system time: 0 seconds. Elapsed time: 0.69 seconds; current allocated memory: 476.973 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'direct_conv' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.18 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.55 seconds; current allocated memory: 477.128 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 1.74 seconds. CPU system time: 0.01 seconds. Elapsed time: 2.22 seconds; current allocated memory: 477.417 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'relu' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'loop_relu_pixels'.
+INFO: [HLS 200-1470] Pipelining result : Target II = 1, Final II = 1, Depth = 5, loop 'loop_relu_pixels'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 1.33 seconds. CPU system time: 0.01 seconds. Elapsed time: 1.84 seconds; current allocated memory: 477.690 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.15 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.5 seconds; current allocated memory: 478.120 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'batch_norm' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'loop_batch_norm_pixels'.
+INFO: [HLS 200-1470] Pipelining result : Target II = 1, Final II = 1, Depth = 7, loop 'loop_batch_norm_pixels'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.28 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.74 seconds; current allocated memory: 478.303 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.14 seconds. CPU system time: 0 seconds. Elapsed time: 0.52 seconds; current allocated memory: 478.560 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'pooling_Block_split7_proc' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.17 seconds. CPU system time: 0 seconds. Elapsed time: 0.53 seconds; current allocated memory: 478.685 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.12 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.46 seconds; current allocated memory: 478.858 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'pool_cvt' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'cvt_pooling_iterations'.
+INFO: [HLS 200-1470] Pipelining result : Target II = 1, Final II = 1, Depth = 5, loop 'cvt_pooling_iterations'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.23 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.68 seconds; current allocated memory: 479.343 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+WARNING: [BIND 205-102] The specified resource core for memory 'buffer0_i_i' will be ignored if a simpler one can be used.
+WARNING: [BIND 205-102] The specified resource core for memory 'buffer1_i_i' will be ignored if a simpler one can be used.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.2 seconds. CPU system time: 0 seconds. Elapsed time: 0.67 seconds; current allocated memory: 480.032 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'pool_pooling' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'pooling_loop_iter'.
+INFO: [HLS 200-1470] Pipelining result : Target II = 1, Final II = 1, Depth = 35, loop 'pooling_loop_iter'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.46 seconds. CPU system time: 0.02 seconds. Elapsed time: 1.01 seconds; current allocated memory: 481.130 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.5 seconds. CPU system time: 0 seconds. Elapsed time: 0.87 seconds; current allocated memory: 482.876 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'pooling' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.62 seconds. CPU system time: 0.01 seconds. Elapsed time: 1.06 seconds; current allocated memory: 482.969 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.5 seconds. CPU system time: 0 seconds. Elapsed time: 0.91 seconds; current allocated memory: 483.154 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'write_data_channels_gihwcpi' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'write_data_channels_loop_pixels'.
+INFO: [HLS 200-1470] Pipelining result : Target II = 1, Final II = 1, Depth = 3, loop 'write_data_channels_loop_pixels'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.63 seconds. CPU system time: 0 seconds. Elapsed time: 1.12 seconds; current allocated memory: 483.510 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.29 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.68 seconds; current allocated memory: 483.992 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'dataflow_in_loop_o_iter_loop' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.2 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.61 seconds; current allocated memory: 484.274 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 4.81 seconds. CPU system time: 0.01 seconds. Elapsed time: 5.24 seconds; current allocated memory: 485.052 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'dataflow_parent_loop_proc' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 1.97 seconds. CPU system time: 0 seconds. Elapsed time: 2.44 seconds; current allocated memory: 485.230 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.71 seconds. CPU system time: 0.01 seconds. Elapsed time: 1.14 seconds; current allocated memory: 485.528 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'k_conv2D' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 1.91 seconds. CPU system time: 0.01 seconds. Elapsed time: 2.37 seconds; current allocated memory: 485.752 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.74 seconds. CPU system time: 0.01 seconds. Elapsed time: 1.14 seconds; current allocated memory: 486.461 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'dataflow_in_loop_o_iter_loop_entry8' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [RTGEN 206-100] Finished creating RTL model for 'dataflow_in_loop_o_iter_loop_entry8'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1.92 seconds. CPU system time: 0.02 seconds. Elapsed time: 2.36 seconds; current allocated memory: 486.715 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'dataflow_in_loop_o_iter_loop_entry25' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [RTGEN 206-100] Finished creating RTL model for 'dataflow_in_loop_o_iter_loop_entry25'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.13 seconds. CPU system time: 0 seconds. Elapsed time: 0.8 seconds; current allocated memory: 487.441 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'read_bias' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [RTGEN 206-100] Finished creating RTL model for 'read_bias'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.16 seconds. CPU system time: 0 seconds. Elapsed time: 0.86 seconds; current allocated memory: 488.826 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'read_kernel' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [RTGEN 206-100] Generating core module 'mul_32s_32s_32_2_1': 1 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'read_kernel'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.28 seconds. CPU system time: 0.02 seconds. Elapsed time: 0.96 seconds; current allocated memory: 493.681 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'read_data_channels_gihwcpi' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [RTGEN 206-100] Generating core module 'mul_32s_31s_32_2_1': 1 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'mul_32s_32s_32_2_1': 2 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'read_data_channels_gihwcpi'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.65 seconds. CPU system time: 0.01 seconds. Elapsed time: 1.58 seconds; current allocated memory: 505.667 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'input_buffer' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [RTGEN 206-100] Generating core module 'mul_32s_31s_32_2_1': 1 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'mul_32s_32s_32_2_1': 2 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'input_buffer'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.39 seconds. CPU system time: 0.01 seconds. Elapsed time: 1.14 seconds; current allocated memory: 507.559 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'direct_conv_entry5' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [RTGEN 206-100] Finished creating RTL model for 'direct_conv_entry5'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.34 seconds. CPU system time: 0.01 seconds. Elapsed time: 1.01 seconds; current allocated memory: 508.938 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'padding' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [RTGEN 206-100] Generating core module 'mul_32s_32s_32_2_1': 2 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'padding'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.14 seconds. CPU system time: 0 seconds. Elapsed time: 0.81 seconds; current allocated memory: 509.796 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'cvt' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [RTGEN 206-104] Estimated max fanout for 'cvt' is 12846 from HDL expression: (1'b0 == ap_block_pp0_stage0_11001)
+INFO: [RTGEN 206-100] Generating core module 'mul_32s_32s_32_2_1': 2 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'srem_32ns_3ns_3_36_1': 1 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'cvt'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.42 seconds. CPU system time: 0.01 seconds. Elapsed time: 1.22 seconds; current allocated memory: 512.884 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'mul' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [RTGEN 206-104] Estimated max fanout for 'mul' is 564736 from HDL expression: (1'b0 == ap_block_pp0_stage0_11001)
+INFO: [RTGEN 206-100] Generating core module 'fadd_32ns_32ns_32_7_full_dsp_1': 144 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'fmul_32ns_32ns_32_4_max_dsp_1': 144 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'mul_32s_32s_32_2_1': 2 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'mul'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 5.89 seconds. CPU system time: 0.05 seconds. Elapsed time: 6.99 seconds; current allocated memory: 556.830 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'add' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [RTGEN 206-100] Generating core module 'fadd_32ns_32ns_32_7_full_dsp_1': 4 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'mul_32s_32s_32_2_1': 1 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'add'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 5.03 seconds. CPU system time: 0.04 seconds. Elapsed time: 6.4 seconds; current allocated memory: 574.081 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'direct_conv' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [RTGEN 206-100] Finished creating RTL model for 'direct_conv'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.34 seconds. CPU system time: 0.01 seconds. Elapsed time: 1.03 seconds; current allocated memory: 575.859 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'relu' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [RTGEN 206-100] Generating core module 'fcmp_32ns_32ns_1_2_no_dsp_1': 4 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'mul_32s_32s_32_2_1': 1 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'relu'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1.35 seconds. CPU system time: 0.01 seconds. Elapsed time: 2.21 seconds; current allocated memory: 577.303 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'batch_norm' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [RTGEN 206-100] Generating core module 'fmul_32ns_32ns_32_4_max_dsp_1': 4 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'mul_32s_32s_32_2_1': 1 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'batch_norm'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.4 seconds. CPU system time: 0.02 seconds. Elapsed time: 1.18 seconds; current allocated memory: 579.167 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'pooling_Block_split7_proc' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [RTGEN 206-100] Finished creating RTL model for 'pooling_Block_split7_proc'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.26 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.94 seconds; current allocated memory: 580.310 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'pool_cvt' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [RTGEN 206-100] Generating core module 'mul_32s_32s_32_2_1': 1 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'pool_cvt'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.27 seconds. CPU system time: 0.01 seconds. Elapsed time: 1.31 seconds; current allocated memory: 581.954 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'pool_pooling' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [RTGEN 206-104] Estimated max fanout for 'pool_pooling' is 12072 from HDL expression: (1'b0 == ap_block_pp0_stage0_11001)
+INFO: [RTGEN 206-100] Generating core module 'fadd_32ns_32ns_32_7_full_dsp_1': 16 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'fcmp_32ns_32ns_1_2_no_dsp_1': 16 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'fmul_32ns_32ns_32_4_max_dsp_1': 4 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'mul_32s_32s_32_2_1': 1 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'pool_pooling'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.61 seconds. CPU system time: 0.01 seconds. Elapsed time: 1.49 seconds; current allocated memory: 589.130 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'pooling' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+WARNING: [RTGEN 206-101] RTL name 'fifo_w32_d2_S' is changed to 'fifo_w32_d2_S_x' due to conflict.
+INFO: [RTGEN 206-100] Finished creating RTL model for 'pooling'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1.53 seconds. CPU system time: 0.02 seconds. Elapsed time: 2.45 seconds; current allocated memory: 595.214 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'write_data_channels_gihwcpi' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [RTGEN 206-100] Generating core module 'mul_32s_32s_32_2_1': 2 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'write_data_channels_gihwcpi'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.56 seconds. CPU system time: 0.02 seconds. Elapsed time: 1.29 seconds; current allocated memory: 596.787 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'dataflow_in_loop_o_iter_loop' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+WARNING: [RTGEN 206-101] RTL name 'fifo_w32_d2_S' is changed to 'fifo_w32_d2_S_x0' due to conflict.
+WARNING: [RTGEN 206-101] RTL name 'fifo_w128_d4_S' is changed to 'fifo_w128_d4_S_x' due to conflict.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem2_AWVALID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem2_AWADDR' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem2_AWID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem2_AWLEN' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem2_AWSIZE' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem2_AWBURST' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem2_AWLOCK' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem2_AWCACHE' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem2_AWPROT' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem2_AWQOS' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem2_AWREGION' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem2_AWUSER' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem2_WVALID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem2_WDATA' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem2_WSTRB' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem2_WLAST' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem2_WID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem2_WUSER' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem2_BREADY' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem1_AWVALID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem1_AWADDR' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem1_AWID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem1_AWLEN' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem1_AWSIZE' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem1_AWBURST' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem1_AWLOCK' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem1_AWCACHE' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem1_AWPROT' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem1_AWQOS' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem1_AWREGION' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem1_AWUSER' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem1_WVALID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem1_WDATA' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem1_WSTRB' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem1_WLAST' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem1_WID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem1_WUSER' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem1_BREADY' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem_AWVALID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem_AWADDR' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem_AWID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem_AWLEN' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem_AWSIZE' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem_AWBURST' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem_AWLOCK' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem_AWCACHE' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem_AWPROT' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem_AWQOS' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem_AWREGION' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem_AWUSER' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem_WVALID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem_WDATA' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem_WSTRB' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem_WLAST' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem_WID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem_WUSER' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem_BREADY' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem3_ARVALID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem3_ARADDR' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem3_ARID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem3_ARLEN' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem3_ARSIZE' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem3_ARBURST' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem3_ARLOCK' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem3_ARCACHE' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem3_ARPROT' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem3_ARQOS' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem3_ARREGION' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem3_ARUSER' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_in_loop_o_iter_loop/m_axi_gmem3_RREADY' to 0.
+INFO: [RTGEN 206-100] Finished creating RTL model for 'dataflow_in_loop_o_iter_loop'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1.29 seconds. CPU system time: 0.04 seconds. Elapsed time: 4.85 seconds; current allocated memory: 600.746 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'dataflow_parent_loop_proc' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem2_AWVALID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem2_AWADDR' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem2_AWID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem2_AWLEN' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem2_AWSIZE' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem2_AWBURST' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem2_AWLOCK' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem2_AWCACHE' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem2_AWPROT' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem2_AWQOS' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem2_AWREGION' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem2_AWUSER' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem2_WVALID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem2_WDATA' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem2_WSTRB' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem2_WLAST' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem2_WID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem2_WUSER' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem2_BREADY' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem1_AWVALID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem1_AWADDR' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem1_AWID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem1_AWLEN' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem1_AWSIZE' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem1_AWBURST' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem1_AWLOCK' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem1_AWCACHE' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem1_AWPROT' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem1_AWQOS' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem1_AWREGION' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem1_AWUSER' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem1_WVALID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem1_WDATA' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem1_WSTRB' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem1_WLAST' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem1_WID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem1_WUSER' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem1_BREADY' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem_AWVALID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem_AWADDR' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem_AWID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem_AWLEN' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem_AWSIZE' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem_AWBURST' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem_AWLOCK' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem_AWCACHE' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem_AWPROT' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem_AWQOS' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem_AWREGION' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem_AWUSER' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem_WVALID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem_WDATA' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem_WSTRB' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem_WLAST' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem_WID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem_WUSER' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem_BREADY' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem3_ARVALID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem3_ARADDR' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem3_ARID' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem3_ARLEN' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem3_ARSIZE' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem3_ARBURST' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem3_ARLOCK' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem3_ARCACHE' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem3_ARPROT' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem3_ARQOS' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem3_ARREGION' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem3_ARUSER' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'dataflow_parent_loop_proc/m_axi_gmem3_RREADY' to 0.
+INFO: [RTGEN 206-100] Finished creating RTL model for 'dataflow_parent_loop_proc'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 3.07 seconds. CPU system time: 0.06 seconds. Elapsed time: 6.77 seconds; current allocated memory: 603.838 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'k_conv2D' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+WARNING: [RTGEN 206-101] Design contains AXI ports. Reset is fixed to synchronous and active low.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/gmem' to 'm_axi'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/gmem1' to 'm_axi'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/gmem2' to 'm_axi'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/gmem3' to 'm_axi'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/ptr_data' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/H' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/W' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/rows' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/I' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/O' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/I_ITER' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/o_iter_first' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/o_iter_last' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/enable_relu' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/ptr_kernel' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/ptr_bias' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/ptr_out' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/global_offset' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/enable_upper_padding' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/enable_lower_padding' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/enable_maxpooling' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/enable_avgpooling' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/enable_clipping' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/enable_shift' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/min_clip' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/max_clip' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/dir_shift' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'k_conv2D/pos_shift' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on function 'k_conv2D' to 's_axilite & ap_ctrl_chain'.
+INFO: [RTGEN 206-100] Bundling port 'ptr_data', 'H', 'W', 'rows', 'I', 'O', 'I_ITER', 'o_iter_first', 'o_iter_last', 'enable_relu', 'ptr_kernel', 'ptr_bias', 'ptr_out', 'global_offset', 'enable_upper_padding', 'enable_lower_padding', 'enable_maxpooling', 'enable_avgpooling', 'enable_clipping', 'enable_shift', 'min_clip', 'max_clip', 'dir_shift', 'pos_shift' to AXI-Lite port control.
+INFO: [RTGEN 206-100] Finished creating RTL model for 'k_conv2D'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 2.46 seconds. CPU system time: 0.04 seconds. Elapsed time: 4.62 seconds; current allocated memory: 607.221 MB.
+INFO: [RTMG 210-282] Generating pipelined core: 'k_conv2D_mul_32s_32s_32_2_1_Multiplier_0'
+INFO: [RTMG 210-282] Generating pipelined core: 'k_conv2D_mul_32s_31s_32_2_1_Multiplier_1'
+INFO: [RTMG 210-278] Implementing memory 'k_conv2D_input_buffer_buffer_i_i_i_ram (RAM_T2P_URAM)' using ultra RAMs.
+INFO: [RTMG 210-282] Generating pipelined core: 'k_conv2D_srem_32ns_3ns_3_36_1_div'
+INFO: [RTMG 210-278] Implementing memory 'k_conv2D_cvt_buffer0_i_ram (RAM)' using auto RAMs.
+INFO: [RTMG 210-285] Implementing FIFO 'enable_upper_padding_c_U(k_conv2D_fifo_w32_d2_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'enable_lower_padding_c_U(k_conv2D_fifo_w32_d2_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'str_pad_cvt_U(k_conv2D_fifo_w128_d4_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'str_cvt_mul_U(k_conv2D_fifo_w1152_d4_A)' using Vivado Default RAMs.
+INFO: [RTMG 210-285] Implementing FIFO 'str_mul_add_U(k_conv2D_fifo_w128_d4_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'start_for_padding_U0_U(k_conv2D_start_for_padding_U0)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'start_for_cvt_U0_U(k_conv2D_start_for_cvt_U0)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'start_for_mul_U0_U(k_conv2D_start_for_mul_U0)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'start_for_add_U0_U(k_conv2D_start_for_add_U0)' using Shift Registers.
+INFO: [RTMG 210-278] Implementing memory 'k_conv2D_pool_cvt_buffer0_i_i_ram (RAM_2P_URAM)' using ultra RAMs.
+INFO: [RTMG 210-285] Implementing FIFO 'cond1_loc_i_c_U(k_conv2D_fifo_w32_d3_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'HO_loc_i_c_U(k_conv2D_fifo_w32_d3_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'enable_pooling_loc_i_channel_U(k_conv2D_fifo_w32_d2_S_x)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'stream_pool_U(k_conv2D_fifo_w512_d2_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'start_for_pool_pooling_U0_U(k_conv2D_start_for_pool_pooling_U0)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'o_iter_c4_U(k_conv2D_fifo_w31_d2_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'global_offset_c5_U(k_conv2D_fifo_w32_d2_S_x0)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'ptr_bias_c6_U(k_conv2D_fifo_w64_d2_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'ptr_kernel_c7_U(k_conv2D_fifo_w64_d2_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'ptr_data_c8_U(k_conv2D_fifo_w64_d2_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'enable_relu_c9_U(k_conv2D_fifo_w32_d2_S_x0)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'ptr_out_c10_U(k_conv2D_fifo_w64_d2_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'o_iter_c1_U(k_conv2D_fifo_w31_d2_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'o_iter_c2_U(k_conv2D_fifo_w31_d2_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'o_iter_c3_U(k_conv2D_fifo_w31_d2_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'global_offset_c4_U(k_conv2D_fifo_w32_d2_S_x0)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'ptr_bias_c_U(k_conv2D_fifo_w64_d2_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'ptr_kernel_c_U(k_conv2D_fifo_w64_d2_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'ptr_data_c_U(k_conv2D_fifo_w64_d2_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'enable_relu_c_U(k_conv2D_fifo_w32_d5_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'ptr_out_c_U(k_conv2D_fifo_w64_d8_S)' using Shift Registers.
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.1 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.1 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.1 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.1 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.1 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.1 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.1 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.1 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.1 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.1 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.1 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.1 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.1 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.1 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.1 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.1 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.1 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.1 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.1 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.1 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.1 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.1 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.1 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+INFO: [SYN 201-201] Setting up clock 'default' with a period of 3.33ns.
+INFO: [HLS 200-10] Setting target device to 'xcu200-fsgd2104-2-e'
+INFO: [HLS 200-1505] Using flow_target 'vitis'
+INFO: [HLS 200-1464] Running solution command: config_interface -default_interface=kernel
+INFO: [HLS 200-1464] Running solution command: config_interface -default_slave_interface=s_axilite
+INFO: [HLS 200-1464] Running solution command: config_interface -m_axi_alignment_byte_size=64
+INFO: [HLS 200-1464] Running solution command: config_interface -m_axi_latency=64
+INFO: [HLS 200-1464] Running solution command: config_interface -m_axi_max_widen_bitwidth=512
+INFO: [HLS 200-1464] Running solution command: config_interface -m_axi_offset=slave
+INFO: [HLS 200-1464] Running solution command: config_rtl -register_reset_num=3
+INFO: [HLS 200-1510] Running: set_part xcu200-fsgd2104-2-e 
+INFO: [HLS 200-1510] Running: create_clock -period 3.33 -name default 
+INFO: [HLS 200-1510] Running: config_interface -default_slave_interface s_axilite -m_axi_alignment_byte_size 64 -m_axi_latency 64 -m_axi_max_widen_bitwidth 512 -m_axi_offset slave 
+INFO: [HLS 200-1510] Running: config_rtl -register_reset_num 3 
+INFO: [HLS 200-1510] Running: set_directive_top -name k_conv2D k_conv2D 
+INFO: [HLS 200-1510] Running: csynth_design 
+INFO: [HLS 200-111] Finished File checks and directory preparation: CPU user time: 0.01 seconds. CPU system time: 0 seconds. Elapsed time: 0.01 seconds; current allocated memory: 225.708 MB.
+INFO: [HLS 200-10] Analyzing design file '../src/write.cpp' ... 
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:117:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:118:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:119:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:120:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:121:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:151:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:152:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:153:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:154:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:155:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:156:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:157:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:158:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:159:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:160:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:210:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:211:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:212:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:239:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:240:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:241:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:242:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:243:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:244:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:280:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:281:9
+INFO: [HLS 200-10] Analyzing design file '../src/winograd_convolution.cpp' ... 
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:117:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:118:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:119:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:120:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:121:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:151:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:152:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:153:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:154:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:155:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:156:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:157:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:158:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:159:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:160:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:210:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:211:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:212:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:239:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:240:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:241:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:242:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:243:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:244:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:280:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:281:9
+INFO: [HLS 200-10] Analyzing design file '../src/serialization.cpp' ... 
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:117:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:118:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:119:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:120:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:121:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:151:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:152:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:153:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:154:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:155:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:156:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:157:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:158:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:159:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:160:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:210:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:211:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:212:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:239:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:240:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:241:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:242:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:243:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:244:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:280:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:281:9
+INFO: [HLS 200-10] Analyzing design file '../src/relu.cpp' ... 
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:117:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:118:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:119:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:120:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:121:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:151:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:152:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:153:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:154:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:155:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:156:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:157:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:158:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:159:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:160:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:210:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:211:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:212:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:239:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:240:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:241:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:242:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:243:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:244:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:280:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:281:9
+WARNING: [HLS 207-5301] unused parameter 'enable_clipping': ../src/relu.cpp:23:32
+WARNING: [HLS 207-5301] unused parameter 'enable_shift': ../src/relu.cpp:23:53
+WARNING: [HLS 207-5301] unused parameter 'min_clip': ../src/relu.cpp:23:71
+WARNING: [HLS 207-5301] unused parameter 'max_clip': ../src/relu.cpp:23:85
+WARNING: [HLS 207-5301] unused parameter 'direction_shift': ../src/relu.cpp:23:99
+WARNING: [HLS 207-5301] unused parameter 'pos_shift': ../src/relu.cpp:23:120
+INFO: [HLS 200-10] Analyzing design file '../src/read.cpp' ... 
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:117:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:118:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:119:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:120:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:121:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:151:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:152:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:153:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:154:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:155:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:156:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:157:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:158:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:159:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:160:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:210:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:211:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:212:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:239:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:240:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:241:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:242:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:243:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:244:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:280:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:281:9
+INFO: [HLS 200-10] Analyzing design file '../src/pooling.cpp' ... 
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:117:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:118:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:119:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:120:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:121:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:151:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:152:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:153:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:154:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:155:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:156:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:157:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:158:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:159:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:160:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:210:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:211:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:212:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:239:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:240:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:241:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:242:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:243:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:244:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:280:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:281:9
+INFO: [HLS 200-10] Analyzing design file '../src/padding.cpp' ... 
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:117:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:118:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:119:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:120:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:121:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:151:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:152:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:153:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:154:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:155:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:156:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:157:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:158:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:159:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:160:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:210:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:211:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:212:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:239:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:240:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:241:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:242:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:243:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:244:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:280:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:281:9
+INFO: [HLS 200-10] Analyzing design file '../src/mul.cpp' ... 
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:117:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:118:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:119:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:120:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:121:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:151:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:152:9
+WARNING: [HLS 207-5510] 'Resource pragma' is deprecated, and it will be removed in future release. It is suggested to replace it with 'bind_op/bind_storage pragma'.: /opt/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_hotbm_apfixed.h:153:9
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+==============================================================

@@ -29,6 +29,12 @@ void allocate_buffers() {
   size_t size_bias_in_bytes = O_output * sizeof(data_type);
   posix_memalign((void **)&bias, 4096, size_bias_in_bytes);
 
+  // batch norm values buffer
+  if (enable_batch_norm) {
+	  size_t size_bnvalues_in_bytes = (O_kernel * 4) * sizeof(data_type);
+	  posix_memalign((void **)&batch_norm_values, 4096, size_bnvalues_in_bytes);
+  }
+
   // output buffer for fpga
   size_t size_output_in_bytes;
   if ((enable_maxpooling) || (enable_avgpooling)) {
@@ -45,6 +51,11 @@ void allocate_buffers() {
   // output for relu function
   if (enable_relu) {
     posix_memalign((void **)&out_relu_cpu, 4096, O_output * W * H * sizeof(data_type));
+  }
+
+  // output for batch normalization function
+  if (enable_batch_norm) {
+	  posix_memalign((void **)&out_batch_norm_cpu, 4096, O_output * W * H * sizeof(data_type));
   }
 
   // output for pool function
@@ -106,6 +117,10 @@ void deallocate_buffers() {
   free(out);
   free(out_conv_cpu);
   if (enable_relu) free(out_relu_cpu);
+  if (enable_batch_norm) {
+	  free(batch_norm_values);
+	  free(out_batch_norm_cpu);
+  }
   if ((enable_maxpooling) || (enable_avgpooling)) {
 	free(out_pool_cpu);
   }

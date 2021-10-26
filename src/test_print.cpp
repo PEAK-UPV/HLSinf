@@ -11,6 +11,14 @@ void print_bias() {
   printf("\n");
 }
 
+#ifdef USE_BATCH_NORM
+void print_batch_norm() {
+	printf("Batch Normalization Values: ");
+	for (int o=0; o<O_kernel-1*4; o++) printf("%6.4f ", float(batch_norm_values[o]));
+	printf("\n");
+}
+#endif
+
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
 void print_kernel() {
   printf("Kernels: ");
@@ -116,8 +124,13 @@ void print_output() {
 		for (int h=0; h<H; h++) {
 			for (int w=0; w<W; w++) {
 				int addr_o = output_data_address(o, h, w);
-				if (enable_relu) printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_relu_cpu[addr_o]));
-				else printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_conv_cpu[addr_o]));
+				if (enable_relu) {
+					if (enable_batch_norm) {
+						printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_batch_norm_cpu[addr_o]));
+					} else {
+						printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_relu_cpu[addr_o]));
+					}
+				} else printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_conv_cpu[addr_o]));
 			}
 			printf("\n");
 		}

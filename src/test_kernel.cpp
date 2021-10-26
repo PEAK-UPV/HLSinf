@@ -68,14 +68,14 @@ void run_kernel() {
     OCL_CHECK(err, err = q.enqueueNDRangeKernel(kernel_conv2d[k], 0, 1, 1, NULL, &kernel_events[k]));
     set_callback(kernel_events[k], "ooo_queue");
     #else
-    k_conv2D((read_block_t *)data_in, H, W, rows, I, O, i_iter, o_iter_first, o_iter_last, enable_relu,
+    k_conv2D((read_block_t *)data_in, H, W, rows, I, O, i_iter, o_iter_first, o_iter_last, enable_relu, enable_batch_norm,
           #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
 		  kernel,
           #endif
           #ifdef DWS_CONV
 		  (data_type *)dw_kernel, (read_kernel_pw_t *)pw_kernel,
           #endif
-		  (pixel_out_t *)bias, (write_block_t *)out, global_offset,
+		  (pixel_out_t *)bias, (batch_norm_in_t *)batch_norm_values, (write_block_t *)out, global_offset,
 		   enable_upper_padding, enable_lower_padding, enable_maxpooling, enable_avgpooling,
 		   enable_clipping, enable_shift, min_clip, max_clip, dir_shift, pos_shift);
     #endif

@@ -1,0 +1,288 @@
+INFO: [HLS 200-10] Running '/opt/Xilinx/Vitis_HLS/2020.2/bin/unwrapped/lnx64.o/vitis_hls'
+INFO: [HLS 200-10] For user 'drodagu' on host 'peak7.gap.upv.es' (Linux_x86_64 version 4.15.0-143-generic) on Thu Jun 03 16:22:27 CEST 2021
+INFO: [HLS 200-10] On os Ubuntu 18.04.5 LTS
+INFO: [HLS 200-10] In directory '/nfs/drodagu/HLSinf/project'
+Sourcing Tcl script '/nfs/drodagu/HLSinf/project/HLSinf/AlveoU200/csim.tcl'
+INFO: [HLS 200-1510] Running: open_project HLSinf 
+INFO: [HLS 200-10] Opening project '/nfs/drodagu/HLSinf/project/HLSinf'.
+INFO: [HLS 200-1510] Running: set_top k_conv2D 
+INFO: [HLS 200-1510] Running: add_files ../src/add.cpp 
+INFO: [HLS 200-10] Adding design file '../src/add.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files ../src/batch_normalization.cpp 
+INFO: [HLS 200-10] Adding design file '../src/batch_normalization.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files ../src/conv2D.h 
+INFO: [HLS 200-10] Adding design file '../src/conv2D.h' to the project
+INFO: [HLS 200-1510] Running: add_files ../src/cvt.cpp 
+INFO: [HLS 200-10] Adding design file '../src/cvt.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files ../src/direct_convolution.cpp 
+INFO: [HLS 200-10] Adding design file '../src/direct_convolution.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files ../src/dws_convolution.cpp 
+INFO: [HLS 200-10] Adding design file '../src/dws_convolution.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files ../src/join_split.cpp 
+INFO: [HLS 200-10] Adding design file '../src/join_split.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files ../src/k_conv2D.cpp 
+INFO: [HLS 200-10] Adding design file '../src/k_conv2D.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files ../src/lib_hlsm.cpp 
+INFO: [HLS 200-10] Adding design file '../src/lib_hlsm.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files ../src/mul.cpp 
+INFO: [HLS 200-10] Adding design file '../src/mul.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files ../src/padding.cpp 
+INFO: [HLS 200-10] Adding design file '../src/padding.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files ../src/pooling.cpp 
+INFO: [HLS 200-10] Adding design file '../src/pooling.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files ../src/read.cpp 
+INFO: [HLS 200-10] Adding design file '../src/read.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files ../src/relu.cpp 
+INFO: [HLS 200-10] Adding design file '../src/relu.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files ../src/serialization.cpp 
+INFO: [HLS 200-10] Adding design file '../src/serialization.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files ../src/winograd_convolution.cpp 
+INFO: [HLS 200-10] Adding design file '../src/winograd_convolution.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files ../src/write.cpp 
+INFO: [HLS 200-10] Adding design file '../src/write.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files -tb ../src/data_test.cpp -cflags -Wno-unknown-pragmas -csimflags -Wno-unknown-pragmas 
+INFO: [HLS 200-10] Adding test bench file '../src/data_test.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files -tb ../src/test_arguments.cpp -cflags -Wno-unknown-pragmas -csimflags -Wno-unknown-pragmas 
+INFO: [HLS 200-10] Adding test bench file '../src/test_arguments.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files -tb ../src/test_buffers.cpp -cflags -Wno-unknown-pragmas -csimflags -Wno-unknown-pragmas 
+INFO: [HLS 200-10] Adding test bench file '../src/test_buffers.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files -tb ../src/test_check.cpp -cflags -Wno-unknown-pragmas -csimflags -Wno-unknown-pragmas 
+INFO: [HLS 200-10] Adding test bench file '../src/test_check.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files -tb ../src/test_conv2D.cpp -cflags -Wno-unknown-pragmas -csimflags -Wno-unknown-pragmas 
+INFO: [HLS 200-10] Adding test bench file '../src/test_conv2D.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files -tb ../src/test_conv2D.h -cflags -Wno-unknown-pragmas -csimflags -Wno-unknown-pragmas 
+INFO: [HLS 200-10] Adding test bench file '../src/test_conv2D.h' to the project
+INFO: [HLS 200-1510] Running: add_files -tb ../src/test_cpu.cpp -cflags -Wno-unknown-pragmas -csimflags -Wno-unknown-pragmas 
+INFO: [HLS 200-10] Adding test bench file '../src/test_cpu.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files -tb ../src/test_file.cpp -cflags -Wno-unknown-pragmas -csimflags -Wno-unknown-pragmas 
+INFO: [HLS 200-10] Adding test bench file '../src/test_file.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files -tb ../src/test_kernel.cpp -cflags -Wno-unknown-pragmas -csimflags -Wno-unknown-pragmas 
+INFO: [HLS 200-10] Adding test bench file '../src/test_kernel.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files -tb ../src/test_print.cpp -cflags -Wno-unknown-pragmas -csimflags -Wno-unknown-pragmas 
+INFO: [HLS 200-10] Adding test bench file '../src/test_print.cpp' to the project
+INFO: [HLS 200-1510] Running: open_solution AlveoU200 -flow_target vitis 
+INFO: [HLS 200-10] Opening solution '/nfs/drodagu/HLSinf/project/HLSinf/AlveoU200'.
+INFO: [SYN 201-201] Setting up clock 'default' with a period of 3.33ns.
+INFO: [HLS 200-10] Setting target device to 'xcu200-fsgd2104-2-e'
+INFO: [HLS 200-1505] Using flow_target 'vitis'
+Resolution: For help on HLS 200-1505 see www.xilinx.com/cgi-bin/docs/rdoc?v=2020.2;t=hls+guidance;d=200-1505.html
+INFO: [HLS 200-1464] Running solution command: config_interface -default_interface=kernel
+INFO: [HLS 200-1464] Running solution command: config_interface -default_slave_interface=s_axilite
+INFO: [HLS 200-1464] Running solution command: config_interface -m_axi_alignment_byte_size=64
+INFO: [HLS 200-1464] Running solution command: config_interface -m_axi_latency=64
+INFO: [HLS 200-1464] Running solution command: config_interface -m_axi_max_widen_bitwidth=512
+INFO: [HLS 200-1464] Running solution command: config_interface -m_axi_offset=slave
+INFO: [HLS 200-1464] Running solution command: config_rtl -register_reset_num=3
+INFO: [HLS 200-1510] Running: set_part xcu200-fsgd2104-2-e 
+INFO: [HLS 200-1510] Running: create_clock -period 3.33 -name default 
+INFO: [HLS 200-1510] Running: config_interface -default_slave_interface s_axilite -m_axi_alignment_byte_size 64 -m_axi_latency 64 -m_axi_max_widen_bitwidth 512 -m_axi_offset slave 
+INFO: [HLS 200-1510] Running: config_rtl -register_reset_num 3 
+INFO: [HLS 200-1510] Running: set_directive_top -name k_conv2D k_conv2D 
+INFO: [HLS 200-1510] Running: csim_design -setup -quiet 
+INFO: [SIM 211-2] *************** CSIM start ***************
+INFO: [SIM 211-4] CSIM will launch GCC as the compiler.
+   Compiling ../../../../../src/test_print.cpp in debug mode
+   Compiling ../../../../../src/test_kernel.cpp in debug mode
+   Compiling ../../../../../src/test_file.cpp in debug mode
+   Compiling ../../../../../src/test_cpu.cpp in debug mode
+   Compiling ../../../../../src/test_conv2D.cpp in debug mode
+   Compiling ../../../../../src/test_check.cpp in debug mode
+   Compiling ../../../../../src/test_buffers.cpp in debug mode
+   Compiling ../../../../../src/test_arguments.cpp in debug mode
+   Compiling ../../../../../src/data_test.cpp in debug mode
+   Compiling ../../../../../src/write.cpp in debug mode
+   Compiling ../../../../../src/winograd_convolution.cpp in debug mode
+   Compiling ../../../../../src/serialization.cpp in debug mode
+   Compiling ../../../../../src/relu.cpp in debug mode
+   Compiling ../../../../../src/read.cpp in debug mode
+   Compiling ../../../../../src/pooling.cpp in debug mode
+   Compiling ../../../../../src/padding.cpp in debug mode
+   Compiling ../../../../../src/mul.cpp in debug mode
+   Compiling ../../../../../src/k_conv2D.cpp in debug mode
+   Compiling ../../../../../src/join_split.cpp in debug mode
+   Compiling ../../../../../src/dws_convolution.cpp in debug mode
+   Compiling ../../../../../src/direct_convolution.cpp in debug mode
+   Compiling ../../../../../src/cvt.cpp in debug mode
+   Compiling ../../../../../src/batch_normalization.cpp in debug mode
+   Compiling ../../../../../src/add.cpp in debug mode
+   Generating csim.exe
+In file included from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_hotbm_apfixed.h:45:0,
+                 from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_math.h:1065,
+                 from ../../../../../src/conv2D.h:12,
+                 from ../../../../../src/test_conv2D.h:1,
+                 from ../../../../../src/test_print.cpp:6:
+/opt/Xilinx/Vitis_HLS/2020.2/include/utils/x_hls_utils.h:243:40: warning: ‘hls_preserve’ attribute directive ignored [-Wattributes]
+ __attribute__((hls_preserve)) T reg(T d)
+                                        ^
+In file included from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_hotbm_apfixed.h:45:0,
+                 from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_math.h:1065,
+                 from ../../../../../src/conv2D.h:12,
+                 from ../../../../../src/test_conv2D.h:1,
+                 from ../../../../../src/test_kernel.cpp:5:
+/opt/Xilinx/Vitis_HLS/2020.2/include/utils/x_hls_utils.h:243:40: warning: ‘hls_preserve’ attribute directive ignored [-Wattributes]
+ __attribute__((hls_preserve)) T reg(T d)
+                                        ^
+In file included from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_hotbm_apfixed.h:45:0,
+                 from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_math.h:1065,
+                 from ../../../../../src/conv2D.h:12,
+                 from ../../../../../src/test_conv2D.h:1,
+                 from ../../../../../src/test_file.cpp:7:
+/opt/Xilinx/Vitis_HLS/2020.2/include/utils/x_hls_utils.h:243:40: warning: ‘hls_preserve’ attribute directive ignored [-Wattributes]
+ __attribute__((hls_preserve)) T reg(T d)
+                                        ^
+In file included from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_hotbm_apfixed.h:45:0,
+                 from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_math.h:1065,
+                 from ../../../../../src/conv2D.h:12,
+                 from ../../../../../src/test_conv2D.h:1,
+                 from ../../../../../src/test_cpu.cpp:5:
+/opt/Xilinx/Vitis_HLS/2020.2/include/utils/x_hls_utils.h:243:40: warning: ‘hls_preserve’ attribute directive ignored [-Wattributes]
+ __attribute__((hls_preserve)) T reg(T d)
+                                        ^
+In file included from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_hotbm_apfixed.h:45:0,
+                 from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_math.h:1065,
+                 from ../../../../../src/conv2D.h:12,
+                 from ../../../../../src/test_conv2D.h:1,
+                 from ../../../../../src/test_conv2D.cpp:33:
+/opt/Xilinx/Vitis_HLS/2020.2/include/utils/x_hls_utils.h:243:40: warning: ‘hls_preserve’ attribute directive ignored [-Wattributes]
+ __attribute__((hls_preserve)) T reg(T d)
+                                        ^
+In file included from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_hotbm_apfixed.h:45:0,
+                 from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_math.h:1065,
+                 from ../../../../../src/conv2D.h:12,
+                 from ../../../../../src/test_conv2D.h:1,
+                 from ../../../../../src/test_check.cpp:5:
+/opt/Xilinx/Vitis_HLS/2020.2/include/utils/x_hls_utils.h:243:40: warning: ‘hls_preserve’ attribute directive ignored [-Wattributes]
+ __attribute__((hls_preserve)) T reg(T d)
+                                        ^
+In file included from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_hotbm_apfixed.h:45:0,
+                 from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_math.h:1065,
+                 from ../../../../../src/conv2D.h:12,
+                 from ../../../../../src/test_conv2D.h:1,
+                 from ../../../../../src/test_buffers.cpp:5:
+/opt/Xilinx/Vitis_HLS/2020.2/include/utils/x_hls_utils.h:243:40: warning: ‘hls_preserve’ attribute directive ignored [-Wattributes]
+ __attribute__((hls_preserve)) T reg(T d)
+                                        ^
+In file included from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_hotbm_apfixed.h:45:0,
+                 from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_math.h:1065,
+                 from ../../../../../src/conv2D.h:12,
+                 from ../../../../../src/test_conv2D.h:1,
+                 from ../../../../../src/test_arguments.cpp:1:
+/opt/Xilinx/Vitis_HLS/2020.2/include/utils/x_hls_utils.h:243:40: warning: ‘hls_preserve’ attribute directive ignored [-Wattributes]
+ __attribute__((hls_preserve)) T reg(T d)
+                                        ^
+In file included from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_hotbm_apfixed.h:45:0,
+                 from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_math.h:1065,
+                 from ../../../../../src/conv2D.h:12,
+                 from ../../../../../src/test_conv2D.h:1,
+                 from ../../../../../src/data_test.cpp:5:
+/opt/Xilinx/Vitis_HLS/2020.2/include/utils/x_hls_utils.h:243:40: warning: ‘hls_preserve’ attribute directive ignored [-Wattributes]
+ __attribute__((hls_preserve)) T reg(T d)
+                                        ^
+In file included from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_hotbm_apfixed.h:45:0,
+                 from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_math.h:1065,
+                 from ../../../../../src/conv2D.h:12,
+                 from ../../../../../src/write.cpp:1:
+/opt/Xilinx/Vitis_HLS/2020.2/include/utils/x_hls_utils.h:243:40: warning: ‘hls_preserve’ attribute directive ignored [-Wattributes]
+ __attribute__((hls_preserve)) T reg(T d)
+                                        ^
+In file included from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_hotbm_apfixed.h:45:0,
+                 from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_math.h:1065,
+                 from ../../../../../src/conv2D.h:12,
+                 from ../../../../../src/winograd_convolution.cpp:1:
+/opt/Xilinx/Vitis_HLS/2020.2/include/utils/x_hls_utils.h:243:40: warning: ‘hls_preserve’ attribute directive ignored [-Wattributes]
+ __attribute__((hls_preserve)) T reg(T d)
+                                        ^
+In file included from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_hotbm_apfixed.h:45:0,
+                 from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_math.h:1065,
+                 from ../../../../../src/conv2D.h:12,
+                 from ../../../../../src/serialization.cpp:1:
+/opt/Xilinx/Vitis_HLS/2020.2/include/utils/x_hls_utils.h:243:40: warning: ‘hls_preserve’ attribute directive ignored [-Wattributes]
+ __attribute__((hls_preserve)) T reg(T d)
+                                        ^
+In file included from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_hotbm_apfixed.h:45:0,
+                 from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_math.h:1065,
+                 from ../../../../../src/conv2D.h:12,
+                 from ../../../../../src/relu.cpp:1:
+/opt/Xilinx/Vitis_HLS/2020.2/include/utils/x_hls_utils.h:243:40: warning: ‘hls_preserve’ attribute directive ignored [-Wattributes]
+ __attribute__((hls_preserve)) T reg(T d)
+                                        ^
+In file included from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_hotbm_apfixed.h:45:0,
+                 from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_math.h:1065,
+                 from ../../../../../src/conv2D.h:12,
+                 from ../../../../../src/read.cpp:1:
+/opt/Xilinx/Vitis_HLS/2020.2/include/utils/x_hls_utils.h:243:40: warning: ‘hls_preserve’ attribute directive ignored [-Wattributes]
+ __attribute__((hls_preserve)) T reg(T d)
+                                        ^
+In file included from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_hotbm_apfixed.h:45:0,
+                 from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_math.h:1065,
+                 from ../../../../../src/conv2D.h:12,
+                 from ../../../../../src/pooling.cpp:11:
+/opt/Xilinx/Vitis_HLS/2020.2/include/utils/x_hls_utils.h:243:40: warning: ‘hls_preserve’ attribute directive ignored [-Wattributes]
+ __attribute__((hls_preserve)) T reg(T d)
+                                        ^
+In file included from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_hotbm_apfixed.h:45:0,
+                 from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_math.h:1065,
+                 from ../../../../../src/conv2D.h:12,
+                 from ../../../../../src/padding.cpp:1:
+/opt/Xilinx/Vitis_HLS/2020.2/include/utils/x_hls_utils.h:243:40: warning: ‘hls_preserve’ attribute directive ignored [-Wattributes]
+ __attribute__((hls_preserve)) T reg(T d)
+                                        ^
+In file included from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_hotbm_apfixed.h:45:0,
+                 from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_math.h:1065,
+                 from ../../../../../src/conv2D.h:12,
+                 from ../../../../../src/mul.cpp:1:
+/opt/Xilinx/Vitis_HLS/2020.2/include/utils/x_hls_utils.h:243:40: warning: ‘hls_preserve’ attribute directive ignored [-Wattributes]
+ __attribute__((hls_preserve)) T reg(T d)
+                                        ^
+In file included from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_hotbm_apfixed.h:45:0,
+                 from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_math.h:1065,
+                 from ../../../../../src/conv2D.h:12,
+                 from ../../../../../src/k_conv2D.cpp:1:
+/opt/Xilinx/Vitis_HLS/2020.2/include/utils/x_hls_utils.h:243:40: warning: ‘hls_preserve’ attribute directive ignored [-Wattributes]
+ __attribute__((hls_preserve)) T reg(T d)
+                                        ^
+In file included from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_hotbm_apfixed.h:45:0,
+                 from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_math.h:1065,
+                 from ../../../../../src/conv2D.h:12,
+                 from ../../../../../src/join_split.cpp:1:
+/opt/Xilinx/Vitis_HLS/2020.2/include/utils/x_hls_utils.h:243:40: warning: ‘hls_preserve’ attribute directive ignored [-Wattributes]
+ __attribute__((hls_preserve)) T reg(T d)
+                                        ^
+In file included from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_hotbm_apfixed.h:45:0,
+                 from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_math.h:1065,
+                 from ../../../../../src/conv2D.h:12,
+                 from ../../../../../src/dws_convolution.cpp:1:
+/opt/Xilinx/Vitis_HLS/2020.2/include/utils/x_hls_utils.h:243:40: warning: ‘hls_preserve’ attribute directive ignored [-Wattributes]
+ __attribute__((hls_preserve)) T reg(T d)
+                                        ^
+In file included from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_hotbm_apfixed.h:45:0,
+                 from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_math.h:1065,
+                 from ../../../../../src/conv2D.h:12,
+                 from ../../../../../src/direct_convolution.cpp:1:
+/opt/Xilinx/Vitis_HLS/2020.2/include/utils/x_hls_utils.h:243:40: warning: ‘hls_preserve’ attribute directive ignored [-Wattributes]
+ __attribute__((hls_preserve)) T reg(T d)
+                                        ^
+In file included from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_hotbm_apfixed.h:45:0,
+                 from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_math.h:1065,
+                 from ../../../../../src/conv2D.h:12,
+                 from ../../../../../src/cvt.cpp:1:
+/opt/Xilinx/Vitis_HLS/2020.2/include/utils/x_hls_utils.h:243:40: warning: ‘hls_preserve’ attribute directive ignored [-Wattributes]
+ __attribute__((hls_preserve)) T reg(T d)
+                                        ^
+In file included from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_hotbm_apfixed.h:45:0,
+                 from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_math.h:1065,
+                 from ../../../../../src/conv2D.h:12,
+                 from ../../../../../src/batch_normalization.cpp:1:
+/opt/Xilinx/Vitis_HLS/2020.2/include/utils/x_hls_utils.h:243:40: warning: ‘hls_preserve’ attribute directive ignored [-Wattributes]
+ __attribute__((hls_preserve)) T reg(T d)
+                                        ^
+In file included from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_hotbm_apfixed.h:45:0,
+                 from /opt/Xilinx/Vitis_HLS/2020.2/include/hls_math.h:1065,
+                 from ../../../../../src/conv2D.h:12,
+                 from ../../../../../src/add.cpp:1:
+/opt/Xilinx/Vitis_HLS/2020.2/include/utils/x_hls_utils.h:243:40: warning: ‘hls_preserve’ attribute directive ignored [-Wattributes]
+ __attribute__((hls_preserve)) T reg(T d)
+                                        ^
+INFO: [SIM 211-1] CSim file generation done with 0 errors.
+INFO: [SIM 211-3] *************** CSIM finish ***************
+INFO: [HLS 200-111] Finished Command csim_design CPU user time: 84.38 seconds. CPU system time: 4.34 seconds. Elapsed time: 95.66 seconds; current allocated memory: 225.987 MB.

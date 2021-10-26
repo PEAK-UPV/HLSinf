@@ -26,7 +26,7 @@
 //
 // The kernel must have at least CPI channels and CPO channels, filled with zeroes if needed
 
-// This test works both for C simulation and for Opencel
+// This test works both for C simulation and for Opencl
 // In OpenCL the OPENCL_TEST define should be defined, if not
 // C simulation is assumed instead
 
@@ -53,6 +53,7 @@ int rows = H_SIM;				 // number of rows to compute by the kernel
 int enable_upper_padding = 1;	 // enables the upper row of padding
 int enable_lower_padding = 1;	 // enables the lower row of padding
 int enable_relu = 1;			 // enables applying the relu activation functions
+int enable_batch_norm = 1;		 // enables applying batch normalization
 int enable_shift = 0;			 // enables applying shift to the output
 int dir_shift = 0;     			 // shift direction (left or right)
 int pos_shift = 0;				 // positions to shift
@@ -76,9 +77,11 @@ data_type *kernel;                // Conv kernel buffers (format GO x GI x CPO x
 data_type *dw_kernel;             // DW kernel (format I x KH x KW) - for DWS
 data_type *pw_kernel;             // PW kernel (format GO x GI x CPO x CPI) - for DWS
 data_type *bias;                  // Conv bias buffers (format O)
+data_type *batch_norm_values;	  // Batch normalization values
 data_type *out_conv_cpu;          // Output data buffer for cpu (format O x W x H)
 data_type *out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
-data_type *out_pool_cpu;		  // Output data fuffer for pool for cpu (format O x W/2 x H/2)
+data_type *out_batch_norm_cpu;	  // Output data buffer for cpu (format O x W x H)
+data_type *out_pool_cpu;		  // Output data buffer for pool for cpu (format O x W/2 x H/2)
 
 FILE *fp;
 

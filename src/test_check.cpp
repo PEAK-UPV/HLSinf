@@ -35,8 +35,13 @@ int check_result(data_type *max_difference, int *num_elements_differ) {
           // data_out pixel position
           int addr_o = output_data_address(cout, h, w);
           data_type diff;
-          if (enable_relu) diff = data_type(fabs(float(out_relu_cpu[addr_o]) - float(out[addr_o])));
-          else diff = fabs(float(out_conv_cpu[addr_o]) - float(out[addr_o]));
+          if (enable_relu) {
+        	  if (enable_batch_norm) {
+        		  diff = data_type(fabs(float(out_batch_norm_cpu[addr_o]) - float(out[addr_o])));
+        	  } else {
+        		  diff = data_type(fabs(float(out_relu_cpu[addr_o]) - float(out[addr_o])));
+        	  }
+          } else diff = fabs(float(out_conv_cpu[addr_o]) - float(out[addr_o]));
           if (float(diff) > float(epsilon)) {
             (*num_elements_differ)++;
             if (*max_difference < diff) *max_difference = diff;
