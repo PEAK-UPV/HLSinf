@@ -200,18 +200,22 @@ void cpu_conv2D() {
         for (int w=0; w<WO; w++) {
           int addr_o = output_data_address(cout, h, w, HO, WO);
           if (float(out_conv_cpu[addr_o]) < float(0)) out_relu_cpu[addr_o] = out_conv_cpu[addr_o] * relu_factor; else out_relu_cpu[addr_o] = out_conv_cpu[addr_o];
-          //printf("cpu_relu: c %d h %d w %d out_conv %f\n", cout, h, w, out_relu_cpu[addr_o]);
+          //printf("cpu_relu: c %d h %d w %d cout_conv %f out_relu %f\n", cout, h, w, out_conv_cpu[addr_o], out_relu_cpu[addr_o]);
         }
       }
     }
   }
   // apply stm
   if (enable_stm){
-	  for (int cout=0; cout<O; cout++) {
+	  for (int cout=0; cout<O_output; cout++) {
 		  for (int h=0; h<HO; h++) {
 			  for (int w=0; w<WO; w++) {
 				  int addr_o = output_data_address(cout, h, w, HO, WO);
-				  out_stm_cpu[addr_o] = tanh(log(exp(out_conv_cpu[addr_o]) + 1)) * out_conv_cpu[addr_o];
+          if(enable_relu)
+          	out_stm_cpu[addr_o] = (tanh(log(exp(out_conv_cpu[addr_o]) + 1))) * out_relu_cpu[addr_o];
+          else
+				    out_stm_cpu[addr_o] = (tanh(log(exp(out_conv_cpu[addr_o]) + 1))) * out_conv_cpu[addr_o];
+          //printf("cpu_stm: (addr_o %d) c %d h %d w %d out_relu %f out_stm %f \n", addr_o, cout, h, w, out_relu_cpu[addr_o], out_stm_cpu[addr_o]);
 			  }
 		  }
 	  }

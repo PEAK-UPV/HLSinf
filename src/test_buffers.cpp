@@ -50,7 +50,7 @@ void allocate_buffers() {
 
   // output for STM functions
     if (enable_stm) {
-      posix_memalign((void **)&out_stm_cpu, 4096, O_output * W * H * sizeof(data_type));
+      posix_memalign((void **)&out_stm_cpu, 4096, O_output * WO * HO * sizeof(data_type));
    }
 
   // output for pool function
