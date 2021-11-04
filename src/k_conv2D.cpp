@@ -50,7 +50,8 @@ void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W,
 #endif
 	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_data      depth=DATA_IN_PORT_DEPTH   num_read_outstanding=CPI  offset=slave bundle=gmem)
 	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_data_add  depth=DATA_IN_PORT_DEPTH   num_read_outstanding=CPI  offset=slave bundle=gmem5)
-	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_bias      depth=BIAS_PORT_DEPTH                                offset=slave bundle=gmem2)
+	DO_PRAGMA(HLS INTERFACE m_axi port=b_ptr         depth=BATCH_MORM_VAL_DEPTH                           offset=slave bundle=gmem6)
+  DO_PRAGMA(HLS INTERFACE m_axi port=ptr_bias      depth=BIAS_PORT_DEPTH                                offset=slave bundle=gmem2)
 	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_out       depth=DATA_OUT_PORT_DEPTH  num_write_outstanding=CPO offset=slave bundle=gmem3)
 
 	DO_PRAGMA(HLS shared variable=I)

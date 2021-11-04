@@ -509,6 +509,7 @@
 #define DW_KERNEL_PORT_DEPTH I_SIM * 9
 #define PW_KERNEL_PORT_DEPTH O_SIM * (I_SIM / CPI)
 #define BIAS_PORT_DEPTH      O_SIM / CPO
+#define BATCH_MORM_VAL_DEPTH O_SIM * 4
 
 // -----------------------------------------------------------------------------------------------------------
 // Defines for the CONV layer
