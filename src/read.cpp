@@ -34,6 +34,42 @@ void read_bias(int offset_bias, pixel_out_t *b_ptr, hls::stream<pixel_out_t> &ou
   #endif
 }
 
+
+// ---------------------------------------------------------------------------------------
+// read_batch_norm. Reading batch normalization values from memory and sending to batch
+// 					normalization module
+//
+// Arguments:
+//   b_ptr               : pointer to batch normalization values
+//   offset_batchnorm    : offset to batch normalization values
+//   b_out               : output stream
+//
+// All the bias are read and sent through the out stream
+//
+void read_batch_norm(int offset_batchnorm, batch_norm_in_t *b_ptr, hls::stream<batch_norm_in_t> &out) {
+  #ifdef DEBUG_READ_BATCH_NORM
+  printf("DEBUG_READ_BATCH_NORM: start\n");
+  #endif
+
+  batch_norm_in_t batch_norm;
+  #pragma HLS ARRAY_PARTITION variable=batch_norm complete dim=0
+
+  batch_norm = b_ptr[offset_batchnorm];
+  out << batch_norm;
+
+  #ifdef DEBUG_READ_BATCH_NORM
+  printf("DEBUG_READ_BATCH_NORM: value = ");
+  for (int c=0; c<CPO*4; c++) {
+	  printf(" %f ", float(batch_norm.values[c]));
+  }
+  printf("\n");
+  #endif
+
+  #ifdef DEBUG_READ_BATCH_NORM
+  printf("DEBUG_READ_BATCH_NORM: end\n");
+  #endif
+}
+
 // ---------------------------------------------------------------------------------------
 // read_kernel. Reads kernels and sends them through the stream
 //

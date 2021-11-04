@@ -62,6 +62,7 @@ int enable_relu = 1;			 // enables applying the relu activation functions
 data_type relu_factor = 0;
 int enable_shift = 0;			 // enables applying shift to the output
 int enable_stm = 1;			 	 // enables applying the STM functions
+int enable_batch_norm = 0;		 // enables applying batch normalization
 int enable_add = 0; 			 // enables add module
 int dir_shift = 0;     			 // shift direction (left or right)
 int pos_shift = 0;				 // positions to shift
@@ -86,11 +87,13 @@ data_type *kernel;                // Conv kernel buffers (format GO x GI x CPO x
 data_type *dw_kernel;             // DW kernel (format I x KH x KW) - for DWS
 data_type *pw_kernel;             // PW kernel (format GO x GI x CPO x CPI) - for DWS
 data_type *bias;                  // Conv bias buffers (format O)
+data_type *batch_norm_values;	  // Batch normalization values
 data_type *out_conv_cpu;          // Output data buffer for cpu (format O x W x H)
 data_type *out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
 data_type *out_stm_cpu; 		  // Output data buffer for STM for cpu (format O x W x H)
-data_type *out_add_cpu;          // Output data buffer for ADD for cpu (format O x W x H)
 data_type *out_pool_cpu;		  // Output data fuffer for pool for cpu (format O x W/2 x H/2)
+data_type *out_batch_norm_cpu;	  // Output data buffer for cpu (format O x W x H)
+data_type *out_add_cpu;          // Output data buffer for ADD for cpu (format O x W x H)
 data_type *cpu_out;               // final output
 FILE *fp;
 
@@ -107,6 +110,7 @@ vector<cl::Event> write_events(3);            // Write events
 cl::Buffer *buffer_i;                         // input buffer
 cl::Buffer *buffer_i_add;                     // input buffer add module
 cl::Buffer *buffer_o[MAX_CONVS];              // output buffers
+cl::Buffer *buffer_batch_norm_val[MAX_CONVS]; // Batch norm values buffers
 cl::Buffer *buffer_k[MAX_CONVS];              // Conv kernel buffers
 cl::Buffer *buffer_bias[MAX_CONVS];           // Conv bias buffers
 cl::Buffer *buffer_k_dw[MAX_CONVS];           // Conv kernel buffers (deepwise)
@@ -114,6 +118,7 @@ cl::Buffer *buffer_k_pw[MAX_CONVS];           // Conv kernel buffers (pointwise)
 // DDR assignment
 cl_mem_ext_ptr_t data_in_ddr;                 // input data buffer
 cl_mem_ext_ptr_t data_in_add_ddr;             // input data add buffer
+cl_mem_ext_ptr_t batch_norm_val_ddr[MAX_CONVS];          // Batch norm values buffers
 cl_mem_ext_ptr_t out_ddr[MAX_CONVS];          // output data buffers
 cl_mem_ext_ptr_t kernel_ddr[MAX_CONVS];       // Conv kernel buffers
 cl_mem_ext_ptr_t kernel_pw_ddr[MAX_CONVS];    // DeepWise conv kernel buffers
@@ -137,6 +142,13 @@ void compute(int *enable, int *cpu, int *retval) {
 	   if (enable_stm) {
 	     print_message("STM not supported (disabled)");
 	     enable_stm = 0;
+	   }
+	   #endif
+
+	   #ifndef USE_BATCH_NORM
+	   if (enable_batch_norm) {
+	     print_message("Batch Norm. not supported (disabled)");
+	     enable_batch_norm = 0;
 	   }
 	   #endif
 
@@ -194,6 +206,7 @@ void compute(int *enable, int *cpu, int *retval) {
 		 if (enable_add) print_input_add();
 	     print_bias();
 	     print_kernel();
+		 print_batch_norm();
 	     #endif
 
 	     // timing stats

@@ -57,6 +57,7 @@ extern int pos_shift;					 // positions to shift
 extern int enable_clipping;			     // enables applying clipping to the output
 extern int enable_maxpooling;			 // enables the maxpooling layer
 extern int enable_avgpooling;			 // enables the avgpooling layer
+extern int enable_batch_norm;		 // enables applying batch normalization
 extern int min_clip;				 	 // minimum clip value
 extern int max_clip;				 	 // maximum clip value
 extern int i_iter;						 // number of input iterations
@@ -74,8 +75,10 @@ extern data_type *bias;                  // Conv bias buffers (format O)
 extern data_type *out_conv_cpu;          // Output data buffer for cpu (format O x W x H)
 extern data_type *out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
 extern data_type *out_stm_cpu;		     // Output data buffer for STM for cpu (format O x O x W x H)
-extern data_type *out_add_cpu;		     // Output data buffer for ADD for cpu (format O x O x W x H)
 extern data_type *out_pool_cpu;		     // Output data fuffer for pool for cpu (format O x W/2 x H/2)
+extern data_type *out_batch_norm_cpu;	  // Output data buffer for cpu (format O x W x H)
+extern data_type *batch_norm_values;	  // Batch normalization values
+extern data_type *out_add_cpu;		     // Output data buffer for ADD for cpu 
 extern data_type *cpu_out;
 extern char *input_data_file;            // file with input parameters
 extern int deterministic_input_values;   // whether input data is randomly generated or not (deterministic needed in co-simulation)
@@ -95,18 +98,20 @@ extern vector<cl::Event> write_events;               // Write events
 extern cl::Buffer *buffer_i;                         // input buffer
 extern cl::Buffer *buffer_i_add;                     // input buffer for add module
 extern cl::Buffer *buffer_o[MAX_CONVS];              // output buffers
+extern cl::Buffer *buffer_batch_norm_val[MAX_CONVS]; // Batch norm values buffers
 extern cl::Buffer *buffer_k[MAX_CONVS];              // Conv kernel buffers
 extern cl::Buffer *buffer_k_dw[MAX_CONVS];           // Conv kernel buffers (deepwise)
 extern cl::Buffer *buffer_k_pw[MAX_CONVS];           // Conv kernel buffers (pointwise)
 extern cl::Buffer *buffer_bias[MAX_CONVS];           // Conv bias buffers
 // DDR assignment
-extern cl_mem_ext_ptr_t data_in_ddr;                 // input data buffer
-extern cl_mem_ext_ptr_t data_in_add_ddr;             // input data add buffer
-extern cl_mem_ext_ptr_t out_ddr[MAX_CONVS];          // output data buffers
-extern cl_mem_ext_ptr_t kernel_ddr[MAX_CONVS];       // Conv kernel buffers
-extern cl_mem_ext_ptr_t kernel_pw_ddr[MAX_CONVS];    // DeepWise conv kernel buffers
-extern cl_mem_ext_ptr_t kernel_dw_ddr[MAX_CONVS];    // PointWise conv kernel buffers
-extern cl_mem_ext_ptr_t bias_ddr[MAX_CONVS];         // Conv bias buffers
+extern cl_mem_ext_ptr_t data_in_ddr;                  // input data buffer
+extern cl_mem_ext_ptr_t data_in_add_ddr;              // input data add buffer
+extern cl_mem_ext_ptr_t batch_norm_val_ddr[MAX_CONVS];// Batch norm values buffers
+extern cl_mem_ext_ptr_t out_ddr[MAX_CONVS];           // output data buffers
+extern cl_mem_ext_ptr_t kernel_ddr[MAX_CONVS];        // Conv kernel buffers
+extern cl_mem_ext_ptr_t kernel_pw_ddr[MAX_CONVS];     // DeepWise conv kernel buffers
+extern cl_mem_ext_ptr_t kernel_dw_ddr[MAX_CONVS];     // PointWise conv kernel buffers
+extern cl_mem_ext_ptr_t bias_ddr[MAX_CONVS];          // Conv bias buffers
 #endif
 
 // function prototypes
@@ -115,6 +120,9 @@ void deallocate_buffers();
 int filter_address_direct_conv(int i, int o, int kh, int kw);
 void cpu_conv2D();
 void print_bias();
+#ifdef USE_BATCH_NORM
+void print_batch_norm();
+#endif
 void print_input();
 void print_input_add();
 void print_output();

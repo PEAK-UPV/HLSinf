@@ -54,6 +54,7 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_relu));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_stm));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, relu_factor));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_batch_norm));
     #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_k[0]));
     #endif
@@ -62,6 +63,7 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_k_pw[0]));
     #endif
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_bias[0]));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_batch_norm_val[0]));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_o[0]));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, read_offset_p));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, write_offset_p));
@@ -80,14 +82,14 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
     k_conv2D((read_block_t *)data_in, (write_block_t *)data_in_add, 
 		    H, W, HO_final, WO_final, rows_p, PT_p, PB_p, PL_p, PR_p, SH, SW, I_input, O_output, i_iter, 
 		    o_iter_first, o_iter_last, 
-		    enable_relu, enable_stm, relu_factor,
+		    enable_relu, enable_stm, relu_factor, enable_batch_norm,
           #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
 		  kernel,
           #endif
           #ifdef DWS_CONV
 		  (data_type *)dw_kernel, (read_kernel_pw_t *)pw_kernel,
           #endif
-		  (pixel_out_t *)bias, (write_block_t *)out, 
+		  (pixel_out_t *)bias, (batch_norm_in_t *)batch_norm_values, (write_block_t *)out, 
 		   read_offset_p, write_offset_p,
 		   enable_maxpooling, enable_avgpooling,
 		   enable_clipping, enable_shift, enable_add, min_clip, max_clip, dir_shift, pos_shift);

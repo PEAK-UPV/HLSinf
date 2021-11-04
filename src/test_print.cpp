@@ -11,6 +11,14 @@ void print_bias() {
   printf("\n");
 }
 
+#ifdef USE_BATCH_NORM
+void print_batch_norm() {
+	printf("Batch Normalization Values: ");
+	for (int o=0; o<O_output*4; o++) printf("%6.4f ", float(batch_norm_values[o]));
+	printf(" end\n");
+}
+#endif
+
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
 void print_kernel() {
   printf("Kernels: ");
@@ -135,8 +143,8 @@ void print_configuration() {
   printf("====================================================================================================================\n");
   printf("| In: %3d x %3d x %3d | Out: %3d x %3d x %3d | Kernel: %3d x %3d  | Pad (TBLR): %1d x %1d x %1d x %1d | Stride: %3d x %3d  |\n", H, W, I, HO, WO, O, KH, KW, PT, PB, PL, PR, SH, SW);
   printf("|------------------------------------------------------------------------------------------------------------------|\n");
-  printf("| ReLU: %s | STM: %s | MaxPooling: %s | AvgPooling: %s | Add: %s | Clipping: %s (%2d:%2d) | Shift: %s (%s,%2d) |\n", enable_relu?"Yes":"No ", enable_stm?"Yes":"No ",
-  		    enable_maxpooling?"Yes":"No ", enable_avgpooling?"Yes":"No ", enable_add?"Yes":"No ", enable_clipping?"Yes":"No ", min_clip, max_clip, enable_shift?"Yes":"No ", dir_shift==LEFT_DIRECTION?"LEFT ":"RIGHT", pos_shift);
+  printf("| ReLU: %s | STM: %s | MaxPool: %s | AvgPool: %s | BatchN: %s |Add: %s | Clipping: %s (%2d:%2d) | Shift: %s (%s,%2d) |\n", enable_relu?"Yes":"No ", enable_stm?"Yes":"No ",
+  		    enable_maxpooling?"Yes":"No ", enable_avgpooling?"Yes":"No ", enable_batch_norm?"Yes":"No ", enable_add?"Yes":"No ", enable_clipping?"Yes":"No ", min_clip, max_clip, enable_shift?"Yes":"No ", dir_shift==LEFT_DIRECTION?"LEFT ":"RIGHT", pos_shift);
   printf("====================================================================================================================\n");
 }
 

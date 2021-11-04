@@ -45,7 +45,6 @@ void stm(int enable_stm, int num_pixels, hls::stream<pixel_out_t> &in, hls::stre
       if(enable_stm) {
     	  // softplus
     	  v_soft = hls::logf(hls::expf(v_in) + 1); //logf for single-precision natural logarithm
-                                                //log for double-precision natural logarithm
 
     	  //tanh
     	  v_tanh = hls::tanhf(v_soft);

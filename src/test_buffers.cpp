@@ -35,6 +35,13 @@ void allocate_buffers() {
   size_t size_bias_in_bytes = O_output * sizeof(data_type);
   posix_memalign((void **)&bias, 4096, size_bias_in_bytes);
 
+  // batch norm values buffer
+  size_t size_bnvalues_in_bytes = (O_output * 4) * sizeof(data_type);
+  posix_memalign((void **)&batch_norm_values, 4096, size_bnvalues_in_bytes);
+  if (enable_batch_norm) {
+    posix_memalign((void **)&out_batch_norm_cpu, 4096, HO_final * WO_final * O_output * sizeof(data_type));
+  }
+
   // output buffer for fpga
   size_t size_output_in_bytes;
   size_output_in_bytes = O_output * WO_final * HO_final * sizeof(data_type);
@@ -72,6 +79,10 @@ void allocate_buffers() {
   data_in_add_ddr.obj = data_in_add;
   data_in_add_ddr.param = 0;
 
+  batch_norm_val_ddr[0].flags  = 0 | XCL_MEM_TOPOLOGY;
+  batch_norm_val_ddr[0].obj = batch_norm_values;
+  batch_norm_val_ddr[0].param = 0;
+
   out_ddr[0].flags  = 0 | XCL_MEM_TOPOLOGY;
   out_ddr[0].obj = out;
   out_ddr[0].param = 0;
@@ -95,8 +106,11 @@ void allocate_buffers() {
   bias_ddr[0].param = 0;
   OCL_CHECK(err, buffer_i    = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_data_in_bytes, &data_in_ddr, &err));
 
+#if defined(USE_BATCH_NORM)
+  OCL_CHECK(err, buffer_batch_norm_val[0]    = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_WRITE_ONLY  | CL_MEM_USE_HOST_PTR , size_output_in_bytes, &batch_norm_val_ddr[0], &err));
+#endif
   if (enable_add){
-	  OCL_CHECK(err, buffer_i_add = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , O_output * W * H * sizeof(data_type), &data_in_add_ddr, &err));
+	  OCL_CHECK(err, buffer_i_add = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_output_in_bytes, &data_in_add_ddr, &err));
   }
   else { //create a dummy buffer
 	  buffer_i_add = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , sizeof(data_type), &data_in_ddr, &err);
@@ -130,9 +144,9 @@ void deallocate_buffers() {
   free(out_conv_cpu);
   if (enable_relu) free(out_relu_cpu);
   if (enable_stm) free(out_stm_cpu);
-  if ((enable_maxpooling) || (enable_avgpooling)) {
-	free(out_pool_cpu);
-  }
+  if ((enable_maxpooling) || (enable_avgpooling))	free(out_pool_cpu);
+  free(batch_norm_values);
+  if (enable_batch_norm) { free(out_batch_norm_cpu); }
   if (enable_add) free(out_add_cpu);
   free(cpu_out);
 }
@@ -167,6 +181,12 @@ void copy_to_fpga() {
   OCL_CHECK(err, err = q.enqueueMigrateMemObjects( {*buffer_bias[0]}, 0 /*0 means from host*/, NULL, &write_events[0]));
   set_callback(write_events[0], "ooo_queue");
   OCL_CHECK(err, err = write_events[0].wait());
+
+#if defined(USE_BATCH_NORM)
+  OCL_CHECK(err, err = q.enqueueMigrateMemObjects( {*buffer_batch_norm_val[0]}, 0 /*0 means from host*/, NULL, &write_events[0]));
+  set_callback(write_events[0], "ooo_queue");
+  OCL_CHECK(err, err = write_events[0].wait());
+#endif
 }
 #endif
 

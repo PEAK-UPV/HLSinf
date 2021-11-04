@@ -14,4 +14,4 @@
 #include "../../src/serialization.cpp"
 #include "../../src/winograd_convolution.cpp"
 #include "../../src/write.cpp"
-
+#include "../../src/batch_normalization.cpp"

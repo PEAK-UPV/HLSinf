@@ -276,21 +276,47 @@ void cpu_conv2D() {
     }
   }
 
+  // apply batch normalization
+  if (enable_batch_norm) {
+	  for (int cout=0; cout<O_output; cout++) {
+      for (int h=0; h<HO_final; h++) {
+        for (int w=0; w<WO_final; w++) {
+  	      int addr_o = output_data_address(cout, h, w, HO_final, WO_final);
+				  int index = cout/CPO * CPO + (addr_o % CPO); // mal ([0,3])
+				  data_type std, xn;
+				  std = sqrtf(batch_norm_values[(index*4)+3] + pow(1, -5));
+          if(enable_maxpooling || enable_avgpooling) {
+            xn = (out_pool_cpu[addr_o] - batch_norm_values[(index*4)+2]) / std;
+          } else if(enable_stm) {
+            xn = (out_stm_cpu[addr_o] - batch_norm_values[(index*4)+2]) / std;
+          } else if (enable_relu) {
+				    xn = (out_relu_cpu[addr_o] - batch_norm_values[(index*4)+2]) / std;
+          } else {
+				    xn = (out_conv_cpu[addr_o] - batch_norm_values[(index*4)+2]) / std;
+          }
+				  out_batch_norm_cpu[addr_o] = batch_norm_values[(index*4)+1] * xn + batch_norm_values[index*4];
+          //printf("cpu: o %d h_in %d w_in %d out %f (%f,%f,%f) index %d\n", cout, h, w, out_batch_norm_cpu[addr_o],batch_norm_values[(index*4)+3],batch_norm_values[(index*4)+2],batch_norm_values[(index*4)+1], index);
+			  }
+		  }
+	  }
+  }
+
   if (enable_add) {
     for (int cout=0; cout<O_output; cout++) {
       for (int h=0; h<HO_final; h++) {
         for (int w=0; w<WO_final; w++) {
-  	  int addr_o = output_data_address(cout, h, w, HO_final, WO_final);
-  	  if (enable_avgpooling || enable_maxpooling) {
-  	    out_add_cpu[addr_o] = data_in_add[addr_o] + out_pool_cpu[addr_o];
-  	  } else if (enable_stm) {
-	    out_add_cpu[addr_o] = data_in_add[addr_o] + out_stm_cpu[addr_o];
-	  } else if (enable_relu) {
-  	    out_add_cpu[addr_o] = data_in_add[addr_o] + out_relu_cpu[addr_o];
-  	  } else {
-  	    out_add_cpu[addr_o] = data_in_add[addr_o] +  out_conv_cpu[addr_o];
-  	  }
-	}
+      	  int addr_o = output_data_address(cout, h, w, HO_final, WO_final);
+          if(enable_batch_norm) 
+            out_add_cpu[addr_o] = data_in_add[addr_o] + out_batch_norm_cpu[addr_o];
+  	      else if (enable_avgpooling || enable_maxpooling) 
+            out_add_cpu[addr_o] = data_in_add[addr_o] + out_pool_cpu[addr_o];
+  	      else if (enable_stm)
+	          out_add_cpu[addr_o] = data_in_add[addr_o] + out_stm_cpu[addr_o];
+	        else if (enable_relu)
+  	        out_add_cpu[addr_o] = data_in_add[addr_o] + out_relu_cpu[addr_o];
+  	      else
+  	        out_add_cpu[addr_o] = data_in_add[addr_o] +  out_conv_cpu[addr_o];
+	      }
       }
     }
   }
@@ -300,11 +326,12 @@ void cpu_conv2D() {
     for (int h = 0; h < HO_final; h++) {
       for (int w = 0; w < WO_final; w++) {
         int addr_out = output_data_address(cout, h, w, HO_final, WO_final);
-	if (enable_add) cpu_out[addr_out] = out_add_cpu[addr_out];
-	else if (enable_avgpooling | enable_maxpooling) cpu_out[addr_out] = out_pool_cpu[addr_out];
-	else if (enable_stm) cpu_out[addr_out] = out_stm_cpu[addr_out];
-	else if (enable_relu) cpu_out[addr_out] = out_relu_cpu[addr_out];
-	else cpu_out[addr_out] = out_conv_cpu[addr_out];
+	      if (enable_add) cpu_out[addr_out] = out_add_cpu[addr_out];
+        else if (enable_batch_norm) cpu_out[addr_out] = out_batch_norm_cpu[addr_out];
+	      else if (enable_avgpooling | enable_maxpooling) cpu_out[addr_out] = out_pool_cpu[addr_out];
+	      else if (enable_stm) cpu_out[addr_out] = out_stm_cpu[addr_out];
+	      else if (enable_relu) cpu_out[addr_out] = out_relu_cpu[addr_out];
+	      else cpu_out[addr_out] = out_conv_cpu[addr_out];
       }
     }
   }
