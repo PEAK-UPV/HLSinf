@@ -3,7 +3,7 @@
 // -----------------------------------------------------------------------------------------------------------
 // Batch normalization layer
 
-#define EPS		hls::pow(1, -5)
+#define EPS		1e-5
 
 void batch_norm(int enable_batch_norm, int num_pixels, hls::stream<pixel_out_t> &in, hls::stream<batch_norm_in_t> &bn_values, hls::stream<pixel_out_t> &out) {
 

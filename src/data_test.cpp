@@ -105,9 +105,13 @@ void init_data() {
 
   #ifdef USE_BATCH_NORM
   // Generating values for batch normalization layer
-  for (int cout=0; cout<O_output*4; cout++) {
-	  if (cout < O*4) {
-		  batch_norm_values[cout] = deterministic_input_values?(cout%20)-10:dist(gen);
+  for (int cout=0; cout<O_output; cout++) {
+	  if (cout < O) {
+      batch_norm_values[cout*4+0] = 0;
+      batch_norm_values[cout*4+1] = 1;
+      batch_norm_values[cout*4+2] = 0;
+      batch_norm_values[cout*4+3] = 1;
+		  //batch_norm_values[cout] = deterministic_input_values?(cout%20)-10:dist(gen);
 	  } else {
 		  batch_norm_values[cout] = 0;
 	  }
