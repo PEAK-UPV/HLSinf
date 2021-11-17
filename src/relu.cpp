@@ -21,7 +21,8 @@
 //
 
 void relu(int enable_relu, int enable_clipping, int enable_shift, data_type relu_factor, int min_clip, int max_clip, int direction_shift, int pos_shift,
-		  int num_pixels, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &out) {
+		  int num_pixels, data_type scalar_mult_value,
+              hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &out) {
 
   #ifdef DEBUG_RELU
   printf("relu: start\n");
@@ -46,7 +47,7 @@ void relu(int enable_relu, int enable_clipping, int enable_shift, data_type relu
       DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO)
       #pragma HLS UNROLL
 
-	  data_type v_in, v_shift, v_clipping, v_relu;
+	  data_type v_in, v_shift, v_clipping, v_relu, v_scalar_mult;
 
       v_in = data_in.pixel[cpo];
 
@@ -75,16 +76,21 @@ void relu(int enable_relu, int enable_clipping, int enable_shift, data_type relu
       v_clipping = v_shift;
 #endif
 
+      // scalar mult
+      v_scalar_mult = v_clipping * scalar_mult_value;
+
       // relu
-#ifdef USE_RELU
-      v_relu = v_clipping;
+      #ifdef USE_RELU
+      v_relu = v_scalar_mult;
       if(enable_relu && (v_relu < 0)) v_relu = relu_factor * v_clipping;
-#else
+      #else
       v_relu = v_clipping;
-#endif
+      #endif
       data_out.pixel[cpo] = v_relu;
 
+
     }
+
 
     #ifdef DEBUG_RELU
     #ifdef DEBUG_VERBOSE

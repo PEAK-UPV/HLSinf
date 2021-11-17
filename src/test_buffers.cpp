@@ -52,6 +52,7 @@ void allocate_buffers() {
 
   // output for relu function
   if (enable_relu) {
+    posix_memalign((void **)&out_scalar_mult_cpu, 4096, O_output * WO * HO * sizeof(data_type));
     posix_memalign((void **)&out_relu_cpu, 4096, O_output * WO * HO * sizeof(data_type));
   }
 
@@ -142,7 +143,10 @@ void deallocate_buffers() {
   free(bias);
   free(out);
   free(out_conv_cpu);
-  if (enable_relu) free(out_relu_cpu);
+  if (enable_relu) {
+    free(out_scalar_mult_cpu);
+    free(out_relu_cpu);
+  }
   if (enable_stm) free(out_stm_cpu);
   if ((enable_maxpooling) || (enable_avgpooling))	free(out_pool_cpu);
   free(batch_norm_values);

@@ -30,16 +30,19 @@ void set_channel_write_blocks(int num_channel_write_blocks[CPO], int H, int W) {
 }
 
 extern "C" {
-void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W, int HO, int WO, int rows, int PT, int PB, int PL, int PR, int SH, int SW, int I, int O, int I_ITER, int o_iter_first, int o_iter_last, 
-            int enable_relu, int enable_stm, data_type relu_factor,int enable_batch_norm,
-#if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
-                         data_type *ptr_kernel,
-#endif
-#ifdef DWS_CONV
-						 data_type *ptr_dw_kernel, read_kernel_pw_t *ptr_pw_kernel,
-#endif
+void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, 
+              int H, int W, int HO, int WO, int rows, int PT, int PB, int PL, int PR, int SH, int SW, int I, int O, 
+              int I_ITER, int o_iter_first, int o_iter_last, 
+              int enable_relu, int enable_stm, data_type relu_factor,int enable_batch_norm,
+              #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
+              data_type *ptr_kernel,
+              #endif
+              #ifdef DWS_CONV
+						  data_type *ptr_dw_kernel, read_kernel_pw_t *ptr_pw_kernel,
+              #endif
               pixel_out_t *ptr_bias, batch_norm_in_t *b_ptr, write_block_t *ptr_out, int read_offset, int write_offset, int enable_maxpooling, int enable_avgpooling,
-						  int enable_clipping, int enable_shift, int enable_add, int min_clip, int max_clip, int dir_shift, int pos_shift){
+						  int enable_clipping, int enable_shift, int enable_add, int min_clip, int max_clip, int dir_shift, int pos_shift,
+              data_type scalar_mult_value){
 
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
 	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_kernel    depth=KERNEL_PORT_DEPTH    offset=slave bundle=gmem1)
@@ -78,6 +81,7 @@ void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W,
 	DO_PRAGMA(HLS stable variable=SH)
 	DO_PRAGMA(HLS stable variable=SW)
 	DO_PRAGMA(HLS stable variable=relu_factor)
+  DO_PRAGMA(HLS stable variable=scalar_mult_value)
 
 
   #ifdef DEBUG_VERBOSE
@@ -293,11 +297,13 @@ void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W,
     dws_conv(rows, W, I_ITER, out_read_data_1, str_dw_kernel, str_pw_kernel, out_read_bias, out_conv);
     #endif
 
+
+
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // Relu, Clipping, shift, and pooling
     #if (defined(USE_RELU) || defined(USE_CLIPPING) || defined(USE_SHIFT) || defined(USE_STM))
 		  #if defined(USE_RELU) || defined(USE_CLIPPING) || defined(USE_SHIFT)
-        relu(enable_relu, enable_clipping, enable_shift, relu_factor, min_clip, max_clip, dir_shift, pos_shift, num_output_conv_pixels, out_conv, out_relu);
+        relu(enable_relu, enable_clipping, enable_shift, relu_factor, min_clip, max_clip, dir_shift, pos_shift, num_output_conv_pixels, scalar_mult_value, out_conv, out_relu);
 		  #endif
 
 		  #ifdef USE_STM

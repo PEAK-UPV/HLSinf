@@ -30,6 +30,7 @@
 //#define CONF_ALVEO_U200_64x64_DWS_API8                  // DeepWise Separable 64x64 kernel with API8
 //#define CONF_ALVEO_U200_4x4_DWS_API8             		    // DeepWise Separable 4x4 kernel with API8
 //#define CONF_ALVEO_U200_4x4_DWS_FP32                    // DeepWise Separable 4x4 kernel with FP32
+//#define CONV_ALVEO_U200_8x8_DIRECT_API16                // Direct convolution 8x8 kernel with API16
 
 // Configurations for Alveo U280 boards
 //#define CONF_ALVEO_U280_4x4_DIRECT_FP32                 // Direct convolution 4x4 kernel with FP32
@@ -277,6 +278,25 @@
 #define PW_KERNEL_STREAM_DEPTH       4      // 512 * 512 PW kernels
 #define DWS_STREAM_DEPTH            64
 #endif
+
+#ifdef CONF_ALVEO_U200_8x8_DIRECT_API16
+#define ALVEO_U200
+#define DIRECT_CONV
+#define API16_DATA_TYPE
+#define USE_RELU
+#define USE_CLIPPING
+#define USE_SHIFT
+#define USE_POOLING
+#define CPI                8
+#define CPO                8
+#define LOG2_CPO           3
+#define WMAX             256
+#define HMAX             256
+#define READ_BURST_SIZE    2
+#define STREAMS_DEPTH      2
+#define INPUT_BUFFER_SIZE  65536 // 32 rows x 32 cols x (512/CPI) pixels_in
+#endif
+
 
 
 #ifdef CONF_ALVEO_U280_4x4_DIRECT_FP32
@@ -647,16 +667,20 @@ struct kernel_pw_t {
 
 // -----------------------------------------------------------------------------------------------------------
 // function prototypes
-extern "C" void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W, int HO, int WO, int rows, int PT, int PB, int PL, int PR, int SH, int SW, int I, int O, int I_ITER, int o_iter_first, int o_iter_last, 
-            int enable_relu, int enable_stm, data_type relu_factor, int enable_batch_norm,
-#if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
+extern "C" void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, 
+                         int H, int W, int HO, int WO, int rows, int PT, int PB, int PL, int PR, int SH, int SW, int I, int O, 
+                         int I_ITER, int o_iter_first, int o_iter_last, 
+                         int enable_relu, int enable_stm, data_type relu_factor, int enable_batch_norm,
+                         #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
                          data_type *ptr_kernel,
-#endif
-#ifdef DWS_CONV
-						 data_type *ptr_dw_kernel, read_kernel_pw_t *ptr_pw_kernel,
-#endif
-						 pixel_out_t *ptr_bias, batch_norm_in_t *b_ptr, write_block_t *ptr_out, int read_offset, int write_offset, int enable_maxpooling, int enable_avgpooling,
-						 int enable_clipping, int enable_shift, int enable_add, int min_clip, int max_clip, int dir_shift, int pos_shift);
+                         #endif
+                         #ifdef DWS_CONV
+						             data_type *ptr_dw_kernel, read_kernel_pw_t *ptr_pw_kernel,
+                         #endif
+						             pixel_out_t *ptr_bias, batch_norm_in_t *b_ptr, write_block_t *ptr_out, 
+                         int read_offset, int write_offset, int enable_maxpooling, int enable_avgpooling,
+						             int enable_clipping, int enable_shift, int enable_add, int min_clip, int max_clip, int dir_shift, int pos_shift,
+                         data_type scalar_mult_value);
 
 // read and write functions
 void read_bias(int offset_bias, pixel_out_t *b_ptr, hls::stream<pixel_out_t> &out);
@@ -720,7 +744,7 @@ void input_buffer(int num_pixels, int write_to_buff, int read_from_buff, hls::st
 
 // activation functions
 void relu(int enable_relu, int enable_clipping, int enable_shift, data_type relu_factor, int min_clip, int max_clip, int direction_shift, int pos_shift,
-		  int num_pixels, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &out);
+		  int num_pixels, data_type scalar_mult_value, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &out);
 void stm(int enable_stm, int num_pixels, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &out);
 
 // pooling function

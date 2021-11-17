@@ -164,7 +164,7 @@ void cpu_conv2D() {
   }
 
   // apply shift
-  #ifdef API8_DATA_TYPE
+  #if defined(API8_DATA_TYPE) || defined (API16_DATA_TYPE)
   if (enable_shift) {
     for (int cout=0; cout<O_output; cout++) {
       for (int h=0; h<HO; h++) {
@@ -179,7 +179,7 @@ void cpu_conv2D() {
   #endif
 
   // apply clipping
-  #ifdef API8_DATA_TYPE
+  #if defined(API8_DATA_TYPE) || defined (API16_DATA_TYPE)
   if (enable_clipping){
     for (int cout=0; cout<O_output; cout++) {
       for (int h=0; h<HO; h++) {
@@ -195,16 +195,27 @@ void cpu_conv2D() {
 
   // apply relu
   if (enable_relu){
+    // multiply by scalar
     for (int cout=0; cout<O_output; cout++) {
       for (int h=0; h<HO; h++) {
         for (int w=0; w<WO; w++) {
           int addr_o = output_data_address(cout, h, w, HO, WO);
-          if (float(out_conv_cpu[addr_o]) < float(0)) out_relu_cpu[addr_o] = out_conv_cpu[addr_o] * relu_factor; else out_relu_cpu[addr_o] = out_conv_cpu[addr_o];
+          if (out_conv_cpu[addr_o]) out_scalar_mult_cpu[addr_o] = out_conv_cpu[addr_o] * scalar_mult_value;
+        }
+      }
+    }
+    // relu
+    for (int cout=0; cout<O_output; cout++) {
+      for (int h=0; h<HO; h++) {
+        for (int w=0; w<WO; w++) {
+          int addr_o = output_data_address(cout, h, w, HO, WO);
+          if (float(out_scalar_mult_cpu[addr_o]) < float(0)) out_relu_cpu[addr_o] = out_scalar_mult_cpu[addr_o] * relu_factor; else out_relu_cpu[addr_o] = out_scalar_mult_cpu[addr_o];
           //printf("cpu_relu: c %d h %d w %d cout_conv %f out_relu %f\n", cout, h, w, out_conv_cpu[addr_o], out_relu_cpu[addr_o]);
         }
       }
     }
   }
+  #ifdef USE_STM
   // apply stm
   if (enable_stm){
 	  for (int cout=0; cout<O_output; cout++) {
@@ -220,6 +231,7 @@ void cpu_conv2D() {
 		  }
 	  }
   }
+  #endif
 
   // apply maxpooling or avgpooling
   if (enable_maxpooling) {

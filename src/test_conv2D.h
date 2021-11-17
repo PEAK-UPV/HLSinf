@@ -49,7 +49,7 @@ extern int O_output;                     // Number of output channels for the ou
 extern int rows;						 // number of rows to compute by the kernel
 extern int enable_relu;				     // enables applying the relu activation functions
 extern int enable_stm;  			 	 // enables applying the STM functions
-extern data_type relu_factor;
+extern float relu_factor;
 extern int enable_shift;				 // enables applying shift to the output
 extern int enable_add; 				     // enables add module
 extern int dir_shift;			         // shift direction (left or right)
@@ -73,6 +73,7 @@ extern data_type *dw_kernel;             // DW kernel (format I x KH x KW) - for
 extern data_type *pw_kernel;             // PW kernel (format GO x GI x CPO x CPI) - for DWS
 extern data_type *bias;                  // Conv bias buffers (format O)
 extern data_type *out_conv_cpu;          // Output data buffer for cpu (format O x W x H)
+extern data_type *out_scalar_mult_cpu;   // Output data buffer for cpu (format O x W x H)
 extern data_type *out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
 extern data_type *out_stm_cpu;		     // Output data buffer for STM for cpu (format O x O x W x H)
 extern data_type *out_pool_cpu;		     // Output data fuffer for pool for cpu (format O x W/2 x H/2)
@@ -82,7 +83,7 @@ extern data_type *out_add_cpu;		     // Output data buffer for ADD for cpu
 extern data_type *cpu_out;
 extern char *input_data_file;            // file with input parameters
 extern int deterministic_input_values;   // whether input data is randomly generated or not (deterministic needed in co-simulation)
-
+extern float scalar_mult_value;      // scalar value for multiplication (prior to relu)
 extern FILE *fp;
 
 #ifdef OPENCL_TEST

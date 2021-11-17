@@ -59,7 +59,7 @@ int I_input = I_SIM;             // Number of input channels for the input data 
 int O_output = O_SIM;            // Number of output channels for the output data - padding (needed in GIHWCPI data format)
 int rows = H_SIM;				 // number of rows to compute by the kernel
 int enable_relu = 1;			 // enables applying the relu activation functions
-data_type relu_factor = 0;
+float relu_factor = 0;
 int enable_shift = 0;			 // enables applying shift to the output
 int enable_stm = 1;			 	 // enables applying the STM functions
 int enable_batch_norm = 0;		 // enables applying batch normalization
@@ -78,6 +78,7 @@ int GI = I_SIM/CPI;				 // number of groups for input channels
 int GO = O_SIM/CPO;				 // number of groups for output channels
 char *input_data_file;           // input data file with configurations to test
 int deterministic_input_values;  // whether input data is randomly generated or not (deterministic needed in co-simulation)
+float scalar_mult_value = 1;       // scalar value for multiplication (prior to ReLU)
 
 // buffers
 data_type *data_in;               // Input data buffer (format I x W x H)
@@ -89,6 +90,7 @@ data_type *pw_kernel;             // PW kernel (format GO x GI x CPO x CPI) - fo
 data_type *bias;                  // Conv bias buffers (format O)
 data_type *batch_norm_values;	  // Batch normalization values
 data_type *out_conv_cpu;          // Output data buffer for cpu (format O x W x H)
+data_type *out_scalar_mult_cpu;   // Output data buffer for cpu
 data_type *out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
 data_type *out_stm_cpu; 		  // Output data buffer for STM for cpu (format O x W x H)
 data_type *out_pool_cpu;		  // Output data fuffer for pool for cpu (format O x W/2 x H/2)
@@ -162,12 +164,26 @@ void compute(int *enable, int *cpu, int *retval) {
 		 *enable = 0;
 	   }
 
-       #ifndef API8_DATA_TYPE
+       #if !defined(API8_DATA_TYPE) && !defined(API16_DATA_TYPE)
 	   if (enable_clipping || enable_shift) {
 		 print_message("Clipping/shift only for API8 (disabled)");
 		 enable_clipping = 0; enable_shift = 0;
 	   }
        #endif
+
+	   #if !defined(USE_CLIPPING)
+	   if (enable_clipping) {
+		 print_message("Clipping not supported (disabled)");
+		 enable_clipping = 0;
+	   }
+	   #endif
+
+	   #if !defined(USE_SHIFT)
+	   if (enabled_shift) {
+		 print_message("Shift not supported (disabled)");
+		 enable_shift = 0;
+	   }
+	   #endif
 
 	   // Check, output must be at least as large as one write block
 

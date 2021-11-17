@@ -140,27 +140,29 @@ void print_output() {
 
 void print_configuration() {
   printf("\n");
-  printf("====================================================================================================================\n");
-  printf("| In: %3d x %3d x %3d | Out: %3d x %3d x %3d | Kernel: %3d x %3d  | Pad (TBLR): %1d x %1d x %1d x %1d | Stride: %3d x %3d  |\n", H, W, I, HO, WO, O, KH, KW, PT, PB, PL, PR, SH, SW);
-  printf("|------------------------------------------------------------------------------------------------------------------|\n");
-  printf("| ReLU: %s | STM: %s | MaxPool: %s | AvgPool: %s | BatchN: %s |Add: %s | Clipping: %s (%2d:%2d) | Shift: %s (%s,%2d) |\n", enable_relu?"Yes":"No ", enable_stm?"Yes":"No ",
-  		    enable_maxpooling?"Yes":"No ", enable_avgpooling?"Yes":"No ", enable_batch_norm?"Yes":"No ", enable_add?"Yes":"No ", enable_clipping?"Yes":"No ", min_clip, max_clip, enable_shift?"Yes":"No ", dir_shift==LEFT_DIRECTION?"LEFT ":"RIGHT", pos_shift);
-  printf("====================================================================================================================\n");
+  printf("===========================================================================================================================\n");
+  printf("| In: %3d x %3d x %3d | Out: %3d x %3d x %3d | Kernel: %3d x %3d  | Pad (TBLR): %1d x %1d x %1d x %1d | Stride: %3d x %3d         |\n", H, W, I, HO, WO, O, KH, KW, PT, PB, PL, PR, SH, SW);
+  printf("|-------------------------------------------------------------------------------------------------------------------------|\n");
+  printf("| ReLU: %s (%5.4f) | STM: %s | Maxp: %s | Avgp: %s | BN: %s | Add: %s | Clip: %s (%2d:%2d) | Shift: %s (%s,%2d) | Mult %5.4f  |\n", 
+          enable_relu?"Y":"N", relu_factor, enable_stm?"Yes":"No ", enable_maxpooling?"Y":"N", 
+          enable_avgpooling?"Y":"N", enable_batch_norm?"Y":"N", enable_add?"Y":"N", 
+          enable_clipping?"Y":"N", min_clip, max_clip, enable_shift?"Y":"N", dir_shift==LEFT_DIRECTION?"LEFT ":"RIGHT", pos_shift, scalar_mult_value);
+  printf("===========================================================================================================================\n");
 }
 
 void print_timings(unsigned long long time, unsigned long long time_per_iteration, unsigned long long expected_time, float efficiency) {
 
-  printf("| Time %8lld usec  |  Time per iteration %8lld usec  |  Expected time %8lld usec  |   Efficiency %6.4f   |\n", time, time_per_iteration, expected_time, efficiency);
-  printf("====================================================================================================================\n");
+  printf("| Time %8lld usec  |  Time per iteration %8lld usec  |  Expected time %8lld usec  |   Efficiency %6.4f          |\n", time, time_per_iteration, expected_time, efficiency);
+  printf("===========================================================================================================================\n");
 }
 
 void print_check(int result, float max_difference, int num_differences) {
-    if (result) printf("| FAIL                    |            max diff %20.18f           |        num differences %d          |\n", max_difference, num_differences);
-    else        printf("| SUCCESS                                                                                                          |\n");
-    printf("====================================================================================================================\n");
+    if (result) printf("| FAIL                    |            max diff %20.18f           |        num differences %d                 |\n", max_difference, num_differences);
+    else        printf("| SUCCESS                                                                                                                 |\n");
+    printf("===========================================================================================================================\n");
 }
 
 void print_message(const char *str) {
-    printf("| %-112s |\n", str);
-    printf("====================================================================================================================\n");
+    printf("| %-112s        |\n", str);
+    printf("===========================================================================================================================\n");
 }

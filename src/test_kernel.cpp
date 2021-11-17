@@ -76,6 +76,7 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, max_clip));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, dir_shift));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, pos_shift));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, scalar_mult_value));
     OCL_CHECK(err, err = q.enqueueNDRangeKernel(kernel_conv2d[k], 0, 1, 1, NULL, &kernel_events[k]));
     set_callback(kernel_events[k], "ooo_queue");
     #else
@@ -92,7 +93,7 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
 		  (pixel_out_t *)bias, (batch_norm_in_t *)batch_norm_values, (write_block_t *)out, 
 		   read_offset_p, write_offset_p,
 		   enable_maxpooling, enable_avgpooling,
-		   enable_clipping, enable_shift, enable_add, min_clip, max_clip, dir_shift, pos_shift);
+		   enable_clipping, enable_shift, enable_add, min_clip, max_clip, dir_shift, pos_shift, scalar_mult_value);
     #endif
   }
 
