@@ -164,7 +164,7 @@ void cpu_conv2D() {
   }
 
   // apply shift
-  #ifdef API8_DATA_TYPE
+  #if defined(API8_DATA_TYPE) || defined(API16_DATA_TYPE) || defined(API32_DATA_TYPE)
   if (enable_shift) {
     for (int cout=0; cout<O_output; cout++) {
       for (int h=0; h<HO; h++) {
@@ -179,7 +179,7 @@ void cpu_conv2D() {
   #endif
 
   // apply clipping
-  #ifdef API8_DATA_TYPE
+  #if defined(API8_DATA_TYPE) || defined(API16_DATA_TYPE) || defined(API32_DATA_TYPE)
   if (enable_clipping){
     for (int cout=0; cout<O_output; cout++) {
       for (int h=0; h<HO; h++) {
@@ -206,6 +206,7 @@ void cpu_conv2D() {
     }
   }
   // apply stm
+#ifdef USE_STM
   if (enable_stm){
 	  for (int cout=0; cout<O_output; cout++) {
 		  for (int h=0; h<HO; h++) {
@@ -220,6 +221,7 @@ void cpu_conv2D() {
 		  }
 	  }
   }
+#endif
 
   // apply maxpooling or avgpooling
   if (enable_maxpooling) {

@@ -24,6 +24,7 @@
 //#define CONF_ALVEO_U200_4x4_DIRECT_STM_FP32             // Direct convolution 4x4 kernel with FP32
 //#define CONF_ALVEO_U200_4x4_DIRECT_FP32                 // Direct convolution 4x4 kernel with FP32
 //#define CONF_ALVEO_U200_8x8_DIRECT_API8            	    // Direct convolution 8x8 kernel with API8
+//#define CONF_ALVEO_U200_8x8_DIRECT_API32                  // Direct convolution 8x8 kernel with API32
 //#define CONF_ALVEO_U200_16x16_WINOGRAD_API8        	    // Winograd convolution 16x16 kernel with API8
 //#define CONF_ALVEO_U200_32x32_DWS_API8               	  // DeepWise Separable 32x32 kernel with API8
 //#define CONF_ALVEO_U200_32x64_DWS_API8             	    // DeepWise Separable 32x64 kernel with API8
@@ -142,6 +143,24 @@
 #define ALVEO_U200
 #define DIRECT_CONV
 #define API8_DATA_TYPE
+#define USE_RELU
+#define USE_CLIPPING
+#define USE_SHIFT
+#define USE_POOLING
+#define CPI                8
+#define CPO                8
+#define LOG2_CPO           3
+#define WMAX             256
+#define HMAX             256
+#define READ_BURST_SIZE    2
+#define STREAMS_DEPTH      2
+#define INPUT_BUFFER_SIZE  65536 // 32 rows x 32 cols x (512/CPI) pixels_in
+#endif
+
+#ifdef CONF_ALVEO_U200_8x8_DIRECT_API32
+#define ALVEO_U200
+#define DIRECT_CONV
+#define API32_DATA_TYPE
 #define USE_RELU
 #define USE_CLIPPING
 #define USE_SHIFT
@@ -500,6 +519,15 @@
 #define EPSILON_VALUE 0
 #endif
 
+#ifdef API32_DATA_TYPE
+#define data_type ap_int<32>
+#define DATA_TYPE_WIDTH  32       // data type width in bits
+#define READ_BLOCK_SIZE  16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define WRITE_BLOCK_SIZE 16   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define MIN_DATA_TYPE_VALUE  -127
+#define EPSILON_VALUE 0
+#endif
+
 // -----------------------------------------------------------------------------------------------------------
 // depth of pointers for co-simulation support
 // -----------------------------------------------------------------------------------------------------------
@@ -525,8 +553,8 @@
 #define SW_POOLING     2   // MAxpooling horizontal stride
 #define SH_POOLING     2   // MAxpooling vertical stride
 
-#if (!defined(API8_DATA_TYPE) && !defined(API16_DATA_TYPE)) && (defined(USE_SHIFT) || defined(USE_CLIPPING))
-#error "USE_SHIFT and USE_CLIPPING can be used only with API8 or API16 data types"
+#if (!defined(API8_DATA_TYPE) && !defined(API16_DATA_TYPE) && !defined(API32_DATA_TYPE) && (defined(USE_SHIFT) || defined(USE_CLIPPING)))
+#error "USE_SHIFT and USE_CLIPPING can be used only with API data types"
 #endif
 
 // -----------------------------------------------------------------------------------------------------------

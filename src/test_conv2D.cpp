@@ -162,9 +162,9 @@ void compute(int *enable, int *cpu, int *retval) {
 		 *enable = 0;
 	   }
 
-       #ifndef API8_DATA_TYPE
+       #if !defined(API8_DATA_TYPE) && !defined(API16_DATA_TYPE) && !defined(API32_DATA_TYPE)
 	   if (enable_clipping || enable_shift) {
-		 print_message("Clipping/shift only for API8 (disabled)");
+		 print_message("Clipping/shift only for API (disabled)");
 		 enable_clipping = 0; enable_shift = 0;
 	   }
        #endif
@@ -203,10 +203,12 @@ void compute(int *enable, int *cpu, int *retval) {
 
 	     #ifdef DEBUG_CPU
 	     print_input();
-		 if (enable_add) print_input_add();
+    	     if (enable_add) print_input_add();
 	     print_bias();
 	     print_kernel();
-		 print_batch_norm();
+             #ifdef USE_BATCH_NORM
+	     print_batch_norm();
+             #endif
 	     #endif
 
 	     // timing stats

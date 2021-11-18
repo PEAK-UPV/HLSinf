@@ -18,7 +18,10 @@ void init_data() {
   #ifdef API16_DATA_TYPE
   std::uniform_int_distribution<int> dist(-10, 10);
   #endif
-
+  #ifdef API32_DATA_TYPE
+  std::uniform_int_distribution<int> dist(-10, 10);
+  #endif
+  
   // input data
   int addr;
   for (int i=0; i<I_input; i++) {
