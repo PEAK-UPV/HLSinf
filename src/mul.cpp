@@ -33,6 +33,7 @@ void mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<kernel_
 
   int load_kernel = 0;
   int num_iter = I_ITER * H * W;
+  const int WH1 = W * H - 1;
   int iter_load_kernel = 0;
 
   mul_loop_1:
@@ -99,8 +100,13 @@ void mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<kernel_
     #endif
     #endif
     out << p_out;
-    iter_load_kernel++;
-    if (iter_load_kernel == W*H) iter_load_kernel = 0;
+    //iter_load_kernel++;
+    //if (iter_load_kernel == W*H) iter_load_kernel = 0;
+    if (iter_load_kernel == WH1) {
+    	iter_load_kernel = 0;
+    } else {
+    	iter_load_kernel++;
+    }
   }
 
   #ifdef DEBUG_MUL
@@ -146,10 +152,11 @@ void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<ker
   int load_kernel = 0;
   int num_iter = I_ITER * H * W;
   int iter_load_kernel = 0;
+  const int WH1 = W * H - 1;
 
   dws_mul_loop_iter:
   for(int i = 0; i < num_iter; i++) {
-	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=(I_REFERENCE / CPI) * W_REFERENCE * H_REFERENCE)
+	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE/CPI*W_REFERENCE*H_REFERENCE)
     #pragma HLS PIPELINE II=1
 
     load_kernel = (iter_load_kernel == 0);
@@ -277,8 +284,13 @@ void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<ker
     #endif
     #endif
 
-    iter_load_kernel++;
-    if (iter_load_kernel == W*H) iter_load_kernel = 0;
+    //iter_load_kernel++;
+    //if (iter_load_kernel == W*H) iter_load_kernel = 0;
+    if (iter_load_kernel == WH1) {
+    	iter_load_kernel = 0;
+    } else {
+    	iter_load_kernel++;
+    }
   }
 
   #ifdef DEBUG_MUL

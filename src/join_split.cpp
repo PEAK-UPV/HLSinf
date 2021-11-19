@@ -74,11 +74,20 @@ void input_buffer(int read_pixels_total, int write_to_buff, int read_from_buff, 
 
   pixel_in_t px_input;
   pixel_in_t px_buff;
+#ifndef __VIVADO_HLS__
   DO_PRAGMA(HLS AGGREGATE variable=px_input)
   DO_PRAGMA(HLS AGGREGATE variable=px_buff)
+#else
+  DO_PRAGMA(HLS data_pack variable=px_input)
+  DO_PRAGMA(HLS data_pack variable=px_buff)
+#endif
 
   pixel_in_t buffer[INPUT_BUFFER_SIZE];
-  DO_PRAGMA(HLS aggregate variable=buffer)
+#ifndef __VIVADO_HLS__
+  DO_PRAGMA(HLS AGGREGATE variable=buffer)
+#else
+  DO_PRAGMA(HLS data_pack variable=buffer)
+#endif
 
   #ifdef ALVEO_U200
   DO_PRAGMA(HLS bind_storage variable=buffer type=ram_t2p impl=uram)
@@ -86,7 +95,7 @@ void input_buffer(int read_pixels_total, int write_to_buff, int read_from_buff, 
 
   input_buffer_loop_pixels:
   for (int p=0; p<read_pixels_total; p++) {
-	DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE * W_REFERENCE * H_REFERENCE / CPI)
+	DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE*W_REFERENCE*H_REFERENCE/CPI)
     DO_PRAGMA(HLS pipeline)
 
 	if (!read_from_buff) px_input = in.read();
@@ -130,7 +139,7 @@ void split(int H, int W, hls::stream<pixel_out_t> &in, hls::stream<data_type> ou
   // We read input pixels and forward blocks
   split_loop_pixels:
   for (int r=0; r<num_pixels; r++) {
-    DO_PRAGMA(HLS loop_tripcount  min=1 max=W_REFERENCE * H_REFERENCE)
+    DO_PRAGMA(HLS loop_tripcount  min=1 max=W_REFERENCE*H_REFERENCE)
     #pragma HLS PIPELINE
 
 	// We read the pixels
@@ -167,7 +176,7 @@ printf("DEBUG_BLOCK: starts\n");
   int num_blocks = (num_pixels + WRITE_BLOCK_SIZE - 1) / WRITE_BLOCK_SIZE;
   block_generate_blocks:
   for (int b=0; b < num_blocks; b++) {
-	DO_PRAGMA(HLS loop_tripcount min=1 max=(W_REFERENCE * H_REFERENCE) / WRITE_BLOCK_SIZE)
+	DO_PRAGMA(HLS loop_tripcount min=1 max=W_REFERENCE*H_REFERENCE/WRITE_BLOCK_SIZE)
 
     block_generate_pixels:
     for (int p=0; p < WRITE_BLOCK_SIZE; p++) {

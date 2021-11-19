@@ -44,6 +44,8 @@ static void pool_cvt(int H, int W, int enable_pooling, hls::stream<pixel_out_t> 
 	int          pin_col = 0;
 	int          row_write;			// either 0 or 1 (we assume 2x2 kernel)
 	int          size_channel = H * W;
+	const int    W1 = W - 1;
+	const int    H1 = H - 1;
 	int          iterations = size_channel;
 	pixel_out_t  pixel;
 	pixel_out_t  p0, p1, p2, p3;
@@ -52,8 +54,14 @@ static void pool_cvt(int H, int W, int enable_pooling, hls::stream<pixel_out_t> 
 	DO_PRAGMA(HLS bind_storage variable=buffer0 type=ram_2p impl=uram)
 	DO_PRAGMA(HLS bind_storage variable=buffer1 type=ram_2p impl=uram)
     #endif
+
+	#ifndef __VIVADO_HLS__
     DO_PRAGMA(HLS AGGREGATE variable=buffer0)
     DO_PRAGMA(HLS AGGREGATE variable=buffer1)
+	#else
+    DO_PRAGMA(HLS data_pack variable=buffer0)
+    DO_PRAGMA(HLS data_pack variable=buffer1)
+	#endif
 
     #ifdef DEBUG_POOL
 	printf("DEBUG_POOL: starts (cvt)\n");
@@ -62,7 +70,7 @@ static void pool_cvt(int H, int W, int enable_pooling, hls::stream<pixel_out_t> 
 
 	cvt_pooling_iterations:
 	for (int i=0; i < iterations; i++) {
-		DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=(I_REFERENCE/CPI) * W_REFERENCE * H_REFERENCE)
+		DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE/CPI*W_REFERENCE*H_REFERENCE)
 		#pragma HLS PIPELINE
 
 		// Let's read CPI pixels
@@ -106,13 +114,20 @@ static void pool_cvt(int H, int W, int enable_pooling, hls::stream<pixel_out_t> 
 		  p3 = pix_b1;
 
   		  /* Control the iteration count */
-		  pin_col++;
+		  //pin_col++;
 		  odd_col = (odd_col + 1) % 2;
-		  if (pin_col == W) {
+		  if (pin_col /*pin_col+1*/ == W1) {
 			pin_col = 0;
-			pin_row++;
-			if (pin_row == H) pin_row = 0;
+			//pin_row++;
+			if (pin_row == H1) {
+				pin_row = 0;
+			} else {
+				pin_row++;
+			}
+		  } else {
+			  pin_col++;
 		  }
+
 
 		  if (send_frame) {
      	    kernel.pixel[0] = p0; kernel.pixel[1] = p1;
@@ -166,7 +181,7 @@ static void pool_pooling(int HO, int WO, int enable_maxpooling, int enable_avgpo
 
 	pooling_loop_iter:
 	for (int i=0; i < iterations; i++) {
-		DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=(W_REFERENCE * H_REFERENCE) / 4)
+		DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=W_REFERENCE*H_REFERENCE/4)
 		#pragma HLS PIPELINE II=1
 
 		// Let's read the input frame
@@ -192,7 +207,7 @@ static void pool_pooling(int HO, int WO, int enable_maxpooling, int enable_avgpo
 
 		  pooling_loop_kernel:
 		  for (int k=0; k < size_kernel; k++) {
-			DO_PRAGMA(HLS LOOP_TRIPCOUNT min=(KW_POOLING * KH_POOLING) max=(KW_POOLING * KH_POOLING))
+			DO_PRAGMA(HLS LOOP_TRIPCOUNT min=KW_POOLING*KH_POOLING max=KW_POOLING*KH_POOLING)
 
 			data_type value = kernel.pixel[k].pixel[cpo];
 

@@ -20,30 +20,41 @@ void cvt(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<fram
 
   int HH=H+2;
   int WW=W+2;
+
+  const int HH1 = H+1;
+  const int WW1 = W+1;
+
   // buffers (keep three rows)
   pixel_in_t buffer0[WMAX+2];
   pixel_in_t buffer1[WMAX+2];
   pixel_in_t buffer2[WMAX+2];
   frame_t frame;
-  int pin_row;
-  int pin_col;
-  int row0_buffer_write;
-  int row1_buffer_write;
-  int row2_buffer_write;
+  int pin_row = 0;
+  int pin_col = 0;
+  int row0_buffer_write = 1;
+  int row1_buffer_write = 0;
+  int row2_buffer_write = 0;
   int num_pixels = HH * WW;
+  const int num_pixels1 = HH * WW - 1;
   DO_PRAGMA(HLS ARRAY_PARTITION variable=frame complete dim=0)
+#ifndef __VIVADO_HLS__
   DO_PRAGMA(HLS AGGREGATE variable=buffer0)
   DO_PRAGMA(HLS AGGREGATE variable=buffer1)
   DO_PRAGMA(HLS AGGREGATE variable=buffer2)
-
+#else
+  DO_PRAGMA(HLS data_pack variable=buffer0)
+  DO_PRAGMA(HLS data_pack variable=buffer1)
+  DO_PRAGMA(HLS data_pack variable=buffer2)
+#endif
   // manually flattened loop (for the purposes of getting the expected pipelined design)
   int p = 0;
   int num_iters = I_ITER * num_pixels;
   cvt_loop:
   for(int i_iter = 0; i_iter < num_iters; i_iter++){
-    DO_PRAGMA(HLS loop_tripcount  min=1 max=(I_REFERENCE/CPI) * (H_REFERENCE+2)*(W_REFERENCE+2))
+    DO_PRAGMA(HLS loop_tripcount  min=1 max=I_REFERENCE/CPI*H_REFERENCEP2*W_REFERENCEP2)
     DO_PRAGMA(HLS PIPELINE II=1)
 
+	/*
     if (p==0) {
 	  pin_row = 0;
 	  pin_col = 0;
@@ -51,6 +62,7 @@ void cvt(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<fram
 	  row1_buffer_write = 0;
 	  row2_buffer_write = 0;
     }
+    */
 
     int pin_col0 = (pin_col==0);
     int pin_col1 = (pin_col==1);
@@ -66,9 +78,9 @@ void cvt(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<fram
     int row1 = !row0 & ((pin_row % 3) == 0);
 
     // we write the pixel into the buffer
-    if (row0_buffer_write) buffer0[pin_col] = pixel;
-    if (row1_buffer_write) buffer1[pin_col] = pixel;
-    if (row2_buffer_write) buffer2[pin_col] = pixel;
+    //if (row0_buffer_write) buffer0[pin_col] = pixel;
+    //if (row1_buffer_write) buffer1[pin_col] = pixel;
+    //if (row2_buffer_write) buffer2[pin_col] = pixel;
 
     // build the frame
     pixel_in_t p0, p1, p2, p3, p4, p5, p6, p7, p8;
@@ -76,11 +88,32 @@ void cvt(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<fram
     int shift_frame = (pin_row>1) & (pin_col > 2);
     int send_frame = (pin_row>1) & (pin_col > 1);
     pixel_in_t pixel_b0, pixel_b1, pixel_b2;
-    pixel_b0 = buffer0[pin_col];
-    pixel_b1 = buffer1[pin_col];
-    pixel_b2 = buffer2[pin_col];
-    pin_col++;
-    int pin_col_curr = pin_col;
+    //pixel_b0 = buffer0[pin_col];
+    //pixel_b1 = buffer1[pin_col];
+    //pixel_b2 = buffer2[pin_col];
+
+    if (row0_buffer_write) {
+    	buffer0[pin_col] = pixel;
+    	pixel_b0 = pixel;
+    } else {
+    	pixel_b0 = buffer0[pin_col];
+    }
+    if (row1_buffer_write) {
+    	buffer1[pin_col] = pixel;
+    	pixel_b1 = pixel;
+    } else {
+    	pixel_b1 = buffer1[pin_col];
+    }
+    if (row2_buffer_write) {
+    	buffer2[pin_col] = pixel;
+    	pixel_b2 = pixel;
+    } else {
+    	pixel_b2 = buffer2[pin_col];
+    }
+
+
+    //pin_col++;
+    //int pin_col_curr = pin_col;
     // p0, p1, p2
     if (shift_frame) {p0 = p1;} else if (pin_col0) {if (row0) p0 = pixel_b0; else if (row1) p0 = pixel_b1; else p0 = pixel_b2;}
     if (shift_frame) {p1 = p2;} else if (pin_col1) {if (row0) p1 = pixel_b0; else if (row1) p1 = pixel_b1; else p1 = pixel_b2;}
@@ -110,6 +143,34 @@ void cvt(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<fram
       #endif
       #endif
     }
+    if (p == num_pixels1) {
+    	pin_col = 0;
+    	pin_row = 0;
+    	p = 0;
+    	row0_buffer_write = 1;
+    	row1_buffer_write = 0;
+    	row2_buffer_write = 0;
+    } else {
+    	p++;
+        if (pin_col == WW1) {
+        	pin_col = 0;
+        	pin_row++;
+            if (row0_buffer_write) {
+            	row0_buffer_write = 0;
+            	row1_buffer_write = 1;
+            } else if (row1_buffer_write) {
+            	row1_buffer_write = 0;
+            	row2_buffer_write = 1;
+            } else {
+            	row2_buffer_write = 0;
+            	row0_buffer_write = 1;
+            }
+        } else {
+        	pin_col++;
+        }
+    }
+
+    /*
     if (pin_col_curr == WW) {
    	  pin_col = 0;
       pin_row++;
@@ -127,6 +188,7 @@ void cvt(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<fram
     }
     p = p + 1;
     if (p == num_pixels) p = 0;
+    */
   } //i_iter
 
   #ifdef DEBUG_CVT

@@ -33,7 +33,7 @@ void write_data_channels(int num_pixels, int channel_offset, write_block_t *ptr,
 
   write_data_channels_loop_its:
   for (int it = 0; it < num_its; it++) {
-	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=(W_REFERENCE*H_REFERENCE/WRITE_BLOCK_SIZE) * CPO)
+	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=W_REFERENCE*H_REFERENCE/WRITE_BLOCK_SIZE*CPO)
     #pragma HLS pipeline
 
 	write = enable_write[cpo];

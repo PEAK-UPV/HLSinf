@@ -89,6 +89,96 @@ void read_kernel(int I_ITER, int offset_kernel, data_type *k_ptr, hls::stream<ke
 }
 
 #ifdef DWS_CONV
+void dws_read_dw_kernel_ddr(int I_ITER, bool enable, data_type *k_dw_ptr,  hls::stream<int>& k_dw_cache_addr, hls::stream<kernel_dw_t> &k_dw_out) {
+    kernel_dw_t kernel_dw;
+	#ifndef __VIVADO_HLS__
+	  DO_PRAGMA(HLS AGGREGATE variable=kernel_dw)
+	#else
+	  DO_PRAGMA(HLS data_pack variable=kernel_dw)
+	#endif
+
+	int addr = 0;
+
+	if (enable) {
+		dw_read_kernel_loop_i:
+		for (int i=0; i<I_ITER; i++) {
+		  DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE/CPI)
+
+		  dw_read_kernel_loop_cpi:
+		  for (int cpi=0; cpi<CPI; cpi++) {
+
+			dw_read_kernel_loop_k:
+			for (int k=0; k<9; k++) {
+			  DO_PRAGMA(HLS pipeline)
+			  kernel_dw.pixel[cpi][k] = k_dw_ptr[addr];
+			  addr += 1;
+			}
+		  }
+		  k_dw_out << kernel_dw;
+		  k_dw_cache_addr << i;
+		}
+	}
+}
+
+void dws_read_dw_kernel_cache(int I_ITER, bool enable_ddr, hls::stream<int>& k_dw_cache_addr, hls::stream<kernel_dw_t> &k_dw_in, hls::stream<kernel_dw_t> &k_dw_out) {
+	// Kernels buffer
+	static kernel_dw_t dw[MAX_KERNELS_DW];
+	#ifndef __VIVADO_HLS__
+	  DO_PRAGMA(HLS AGGREGATE variable=dw)
+	#else
+	  DO_PRAGMA(HLS data_pack variable=dw)
+	#endif
+	//DO_PRAGMA(HLS ARRAY_PARTITION variable=dw dim=1 complete)
+
+	kernel_dw_t kernel_dw;
+	#ifndef __VIVADO_HLS__
+	  DO_PRAGMA(HLS AGGREGATE variable=kernel_dw)
+	#else
+	  DO_PRAGMA(HLS data_pack variable=kernel_dw)
+	#endif
+	  //DO_PRAGMA(HLS ARRAY_PARTITION variable=kernel_dw dim=0 complete)
+
+	if (enable_ddr) {
+		for (int i=0; i<I_ITER; i++) {
+		  DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE/CPI)
+		  DO_PRAGMA(HLS PIPELINE)
+		  kernel_dw = k_dw_in.read();
+		  int addr = k_dw_cache_addr.read();
+		  dw[addr] = kernel_dw;
+		  k_dw_out << kernel_dw;
+		}
+	} else {
+		dws_loop_dw:
+		for (int i=0; i<I_ITER; i++) {
+		  DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE/CPI)
+		  DO_PRAGMA(HLS PIPELINE)
+		  kernel_dw = dw[i];
+		  k_dw_out << kernel_dw;
+		  #ifdef DEBUG_READ_KERNEL
+		  #ifdef DEBUG_VERBOSE
+		  printf("READ_DW_KERNEL: dw sent:\n");
+		  for (int cpi=0; cpi<CPI; cpi++) {
+			  for (int k=0; k<9; k++) {
+				  printf("%4.2f ", float(dw[i].pixel[cpi][k]));
+			  }
+			  printf("\n");
+		  }
+		  #endif
+		  #endif
+		}
+	}
+}
+
+void dws_read_dw_kernel(int I_ITER, bool enable_ddr, data_type *k_dw_ptr, hls::stream<kernel_dw_t> &k_dw_out){
+#pragma HLS dataflow
+    static hls::stream<kernel_dw_t>     k_dw_out_ddr;
+    static hls::stream<int>             k_dw_cache_addr;
+    //DO_PRAGMA(HLS STREAM variable=k_dw_out_ddr depth=DW_KERNEL_STREAM_DEPTH)
+	dws_read_dw_kernel_ddr(I_ITER, enable_ddr, k_dw_ptr, k_dw_cache_addr, k_dw_out_ddr);
+	dws_read_dw_kernel_cache(I_ITER, enable_ddr, k_dw_cache_addr, k_dw_out_ddr, k_dw_out);
+}
+
+
 // ---------------------------------------------------------------------------------------
 // dws_read_kernel. Reads kernels and sends them through the stream. This kernel is for
 // DWS convolution
@@ -105,7 +195,7 @@ void read_kernel(int I_ITER, int offset_kernel, data_type *k_ptr, hls::stream<ke
 // kernels in the same order they are read through the output stream.
 // kernels are sent in frame structures (3x3 grid)
 //
-void dws_read_dw_kernel(int I_ITER, int o_iter, data_type *k_dw_ptr, hls::stream<kernel_dw_t> &k_dw_out){
+void dws_read_dw_kernel1(int I_ITER, bool enable_ddr, data_type *k_dw_ptr, hls::stream<kernel_dw_t> &k_dw_out){
 
   #ifdef DEBUG_READ_KERNEL
   printf("READ_DW_KERNEL: starts\n");
@@ -113,31 +203,42 @@ void dws_read_dw_kernel(int I_ITER, int o_iter, data_type *k_dw_ptr, hls::stream
 
   // Kernels buffer
   static kernel_dw_t dw[MAX_KERNELS_DW];
+#ifndef __VIVADO_HLS__
   DO_PRAGMA(HLS AGGREGATE variable=dw)
+#else
+  DO_PRAGMA(HLS data_pack variable=dw)
+#endif
   //DO_PRAGMA(HLS ARRAY_PARTITION variable=dw dim=1 complete)
 
   kernel_dw_t kernel_dw;
+#ifndef __VIVADO_HLS__
   DO_PRAGMA(HLS AGGREGATE variable=kernel_dw)
+#else
+  DO_PRAGMA(HLS data_pack variable=kernel_dw)
+#endif
   //DO_PRAGMA(HLS ARRAY_PARTITION variable=kernel_dw dim=0 complete)
 
-  if (o_iter == 0) {
+  int addr = 0;
 
-	int addr = 0;
+  if (enable_ddr) {
 
     dw_read_kernel_loop_i:
     for (int i=0; i<I_ITER; i++) {
-      DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE)
+      DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE/CPI)
 
 	  dw_read_kernel_loop_cpi:
 	  for (int cpi=0; cpi<CPI; cpi++) {
 
 		dw_read_kernel_loop_k:
 		for (int k=0; k<9; k++) {
+//#ifndef __VIVADO_HLS__
 	      DO_PRAGMA(HLS pipeline)
-
-  		  kernel_dw.pixel[cpi][k] = k_dw_ptr[addr+k];
+//#endif
+  		  kernel_dw.pixel[cpi][k] = k_dw_ptr[addr]; //k_dw_ptr[addr+k];
+	      //printf("kernel_dw[%d]=%4.2f\n", addr, kernel_dw.pixel[cpi][k]);
+	      addr += 1;
 		}
-		addr = addr+9;
+		//addr = addr+9;
 	  }
 	  dw[i] = kernel_dw;
 	  k_dw_out << kernel_dw;
@@ -176,7 +277,8 @@ void dws_read_pw_kernel(int I_ITER, int O, int o_iter, read_kernel_pw_t *k_pw_pt
   printf("READ_PW_KERNEL: starts\n");
   #endif
 
-  read_kernel_pw_t read_kernel_pw;
+  //read_kernel_pw_t read_kernel_pw;
+  pixel_in_t read_kernel_pw;
   kernel_pw_t kernel_pw;
   DO_PRAGMA(HLS ARRAY_PARTITION variable=kernel_pw complete dim=0)
 
@@ -198,10 +300,10 @@ void dws_read_pw_kernel(int I_ITER, int O, int o_iter, read_kernel_pw_t *k_pw_pt
       for (int cpi=0; cpi<CPI; cpi++) {
         DO_PRAGMA(HLS UNROLL)
 
-        int first = cpi * DATA_TYPE_WIDTH;
-        int last = first + DATA_TYPE_WIDTH - 1;
-        data_type data = (data_type)read_kernel_pw.range(last, first);
-        kernel_pw.pixel[cpo][cpi] = data;
+        //int first = cpi * DATA_TYPE_WIDTH;
+        //int last = first + DATA_TYPE_WIDTH - 1;
+        //data_type data = data_type(read_kernel_pw.range(last, first));
+        kernel_pw.pixel[cpo][cpi] = read_kernel_pw.pixel[cpi];
       }
     }
     addr += CPO;
@@ -276,7 +378,7 @@ void read_data_channels(int H, int W, int rows, int I_ITER, read_block_t *ptr, i
 
       read_data_channels_loop_blocks:
       for (int block = 0; block < channel_blocks; block=block+READ_BURST_SIZE) {
-    	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=(W_REFERENCE*H_REFERENCE/READ_BLOCK_SIZE) / READ_BURST_SIZE)
+    	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=W_REFERENCE*H_REFERENCE/READ_BLOCK_SIZE/READ_BURST_SIZE)
 
     	read_data_channels_loop_CPI:
         for(int i = 0; i < CPI; i++){
@@ -330,11 +432,11 @@ void read_data_channels_gihwcpi(int num_pixels, int offset, read_block_t *ptr, h
 
   read_data_channels_loop_pixels:
   for (int i = 0; i < num_pixels; i++) {
-    DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max = I_REFERENCE * H_REFERENCE * W_REFERENCE / CPI)
+    DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max =I_REFERENCE*H_REFERENCE*W_REFERENCE/CPI)
     DO_PRAGMA(HLS pipeline)
 
     pixel_in_t px;
-	px = ptr[offset+i];
+       px = ptr[offset+i];
     out << px;
     #ifdef DEBUG_READ_DATA
     #ifdef DEBUG_VERBOSE

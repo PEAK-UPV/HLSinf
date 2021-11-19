@@ -39,7 +39,7 @@ void serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, hls::s
 
   serialize_and_filter_loop_i_iter:
   for (int i_iter=0; i_iter < iters; i_iter++) {
-	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=(I_REFERENCE/CPI) * W_REFERENCE * H_REFERENCE)
+	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE/CPI*W_REFERENCE*H_REFERENCE)
     #pragma HLS pipeline II=1
 
     if ((b==0) && (p==0)) {

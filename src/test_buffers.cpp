@@ -36,8 +36,8 @@ void allocate_buffers() {
 	posix_memalign((void **)&out, 4096, size_output_in_bytes);
   } else {
 	size_output_in_bytes = O_output * W * H * sizeof(data_type);
+	posix_memalign((void **)&out, 4096, size_output_in_bytes);
   }
-  posix_memalign((void **)&out, 4096, size_output_in_bytes);
 
   // output buffer for cpu
   posix_memalign((void **)&out_conv_cpu, 4096, O_output * W * H * sizeof(data_type));

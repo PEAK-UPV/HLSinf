@@ -48,7 +48,7 @@ static void cvt_winograd(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, 
 	int num_iters = I_ITER * num_pixels;
 	cvt_loop:
 	for(int i_iter = 0; i_iter <= num_iters; i_iter++){
-		DO_PRAGMA(HLS loop_tripcount  min=1 max=(I_REFERENCE/CPI) * (H_REFERENCE+2)*(W_REFERENCE+2))
+		DO_PRAGMA(HLS loop_tripcount  min=1 max=I_REFERENCE/CPI*H_REFERENCEP2*W_REFERENCEP2)
 		DO_PRAGMA(HLS PIPELINE II=1)
 
 		if (p==0) {
@@ -205,7 +205,7 @@ static void frameConvert(int H, int W, int I_ITER, hls::stream<frame_d> &d_in, h
 
 		loop_frames_frameConvert:
 		for (int p = 0; p < (H/2 * W/2 * 2); p++) {
-			DO_PRAGMA(HLS loop_tripcount min=1 max=(H_REFERENCE/2) * (W_REFERENCE/2))
+			DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE/2*W_REFERENCE/2)
 			DO_PRAGMA(HLS PIPELINE)
 
 			if (p%2==0) {
@@ -312,7 +312,7 @@ static void mulData(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls:
 	for( int i_iter = 0; i_iter < I_ITER; i_iter++){
 		DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE/CPI)
 		for (int i = 0; i < (H/2 * W); i++){
-			DO_PRAGMA(HLS loop_tripcount min=1 max=(H_REFERENCE/2) * W_REFERENCE)
+			DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE/2*W_REFERENCE)
 			#pragma HLS PIPELINE II=1
 			data = d_in.read();
 
@@ -532,7 +532,7 @@ static void mulWise(int H, int W, int I_ITER, hls::stream<frame_d_2> &d_in, hls:
 		// Reading data
 		loop_mul_kernels_load_cpo_data_wise:
 		for (int i = 0; i < (H * W) / 2; i++) {
-			DO_PRAGMA(HLS loop_tripcount min=1 max=(H_REFERENCE/2)*W_REFERENCE)
+			DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE/2*W_REFERENCE)
 			#pragma HLS PIPELINE
 			DO_PRAGMA(HLS dependence variable=res inter false)
 
@@ -602,7 +602,7 @@ static void mult_A_AT(int H, int W, int I_ITER, hls::stream<frame_d> &d_in, hls:
 	for (int i_iter = 0; i_iter < I_ITER; i_iter++) {
 		DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE/CPI)
 		for (int p = 0; p < (H/2 * W/2); p++) {
-			DO_PRAGMA(HLS loop_tripcount min=1 max=(H_REFERENCE/2) * (W_REFERENCE/2))
+			DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE/2*W_REFERENCE/2)
 
 			#pragma HLS PIPELINE II=1
 			data = d_in.read();
@@ -701,7 +701,7 @@ static void add_winograd(int H, int W, int I_ITER, hls::stream<pixel_out_t> &b_i
 
 		add_winograd_loop_hw:
 		for (int p = 0; p<pixels; p=p+1) {
-			DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE * W_REFERENCE)
+			DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE*W_REFERENCE)
 			DO_PRAGMA(HLS pipeline)
 			DO_PRAGMA(HLS dependence variable=buff_o_channels_0 inter false)
 			DO_PRAGMA(HLS dependence variable=buff_o_channels_1 inter false)

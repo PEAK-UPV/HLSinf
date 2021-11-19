@@ -30,7 +30,7 @@ void set_channel_write_blocks(int num_channel_write_blocks[CPO], int H, int W) {
 }
 
 extern "C" {
-void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int I, int O, int I_ITER, int o_iter_first, int o_iter_last, int enable_relu,
+void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int I, int O, int I_ITER, int O_ITER, int o_iter_first, int o_iter_last, int enable_relu,
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
                          data_type *ptr_kernel,
 #endif
@@ -52,9 +52,11 @@ void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int I, int O, int 
 	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_bias      depth=BIAS_PORT_DEPTH                                offset=slave bundle=gmem2)
 	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_out       depth=DATA_OUT_PORT_DEPTH  num_write_outstanding=CPO offset=slave bundle=gmem3)
 
+#ifndef __VIVADO_HLS__
 	DO_PRAGMA(HLS shared variable=I)
 	DO_PRAGMA(HLS shared variable=O)
 	DO_PRAGMA(HLS shared variable=I_ITER)
+	DO_PRAGMA(HLS shared variable=O_ITER)
 	DO_PRAGMA(HLS shared variable=o_iter_first)
 	DO_PRAGMA(HLS shared variable=o_iter_last)
 	DO_PRAGMA(HLS shared variable=enable_upper_padding)
@@ -65,10 +67,12 @@ void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int I, int O, int 
 
 	DO_PRAGMA(HLS shared variable=H)
 	DO_PRAGMA(HLS shared variable=W)
+#endif
 
 	DO_PRAGMA(HLS stable variable=I)
 	DO_PRAGMA(HLS stable variable=O)
 	DO_PRAGMA(HLS stable variable=I_ITER)
+	DO_PRAGMA(HLS stable variable=O_ITER)
 	DO_PRAGMA(HLS stable variable=o_iter_first)
 	DO_PRAGMA(HLS stable variable=o_iter_last)
 	DO_PRAGMA(HLS stable variable=enable_upper_padding)
@@ -84,7 +88,7 @@ void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int I, int O, int 
   printf("kernel starts...\n");
   #endif
 
-  int O_ITER = o_iter_last - o_iter_first + 1;
+  //int O_ITER = o_iter_last - o_iter_first + 1;
 
   o_iter_loop:
   for (int o_iter = 0; o_iter<O_ITER; o_iter++) {
@@ -230,8 +234,10 @@ void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int I, int O, int 
     read_kernel(I_ITER, offset_kernel, ptr_kernel, out_read_kernel);
     #endif
     #ifdef DWS_CONV
-    dws_read_dw_kernel(I_ITER, o_iter, ptr_dw_kernel, str_dw_kernel);  // o_iter as argument to load all kernels in the first iteration (o_iter==0)
-    dws_read_pw_kernel(I_ITER, O, o_iter + o_iter_first, ptr_pw_kernel, str_pw_kernel); // o_iter+o_iter_ifrst sent to let the module compute the offset to read the kernels
+    int offset_o_iter = o_iter + o_iter_first;
+    bool enable_ddr = (o_iter == 0);
+    dws_read_dw_kernel(I_ITER, enable_ddr, ptr_dw_kernel, str_dw_kernel);  // o_iter as argument to load all kernels in the first iteration (o_iter==0)
+    dws_read_pw_kernel(I_ITER, O, offset_o_iter, ptr_pw_kernel, str_pw_kernel); // o_iter+o_iter_ifrst sent to let the module compute the offset to read the kernels
     #endif
 
     // -------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -323,5 +329,4 @@ void k_conv2D(read_block_t *ptr_data, int H, int W, int rows, int I, int O, int 
  #endif
 
 }
-
 } // extern "C"

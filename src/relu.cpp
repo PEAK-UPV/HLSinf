@@ -43,8 +43,8 @@ void relu(int enable_relu, int enable_clipping, int enable_shift, int min_clip, 
 
     loop_relu_cpo:
     for(int cpo = 0; cpo<CPO; cpo++){
-      DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO)
       #pragma HLS UNROLL
+      DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO)
 
 	  data_type v_in, v_shift, v_clipping, v_relu;
 

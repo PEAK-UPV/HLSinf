@@ -25,6 +25,7 @@ void run_kernel() {
 
     int o_iter_first = o_iter_per_kernel * k;
     int o_iter_last  = o_iter_first + o_iter_per_kernel - 1;
+    int o_iter = o_iter_last - o_iter_first + 1;
 
     char str[50];
     sprintf(str, "launching kernel %d (output iterations %d to %d)", k, o_iter_first, o_iter_last);
@@ -41,6 +42,7 @@ void run_kernel() {
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, I_input));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, O_output));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, i_iter));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, o_iter));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, o_iter_first));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, o_iter_last));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_relu));
@@ -68,7 +70,7 @@ void run_kernel() {
     OCL_CHECK(err, err = q.enqueueNDRangeKernel(kernel_conv2d[k], 0, 1, 1, NULL, &kernel_events[k]));
     set_callback(kernel_events[k], "ooo_queue");
     #else
-    k_conv2D((read_block_t *)data_in, H, W, rows, I, O, i_iter, o_iter_first, o_iter_last, enable_relu,
+    k_conv2D((read_block_t *)data_in, H, W, rows, I, O, i_iter, o_iter, o_iter_first, o_iter_last, enable_relu,
           #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
 		  kernel,
           #endif
