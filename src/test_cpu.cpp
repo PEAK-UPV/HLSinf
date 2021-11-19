@@ -286,7 +286,7 @@ void cpu_conv2D() {
   	      int addr_o = output_data_address(cout, h, w, HO_final, WO_final);
 				  int index = cout/CPO * CPO + (addr_o % CPO); // mal ([0,3])
 				  data_type std, xn;
-				  std = sqrtf(batch_norm_values[(index*4)+3] + 1e-5);
+				  std = sqrtf((float)batch_norm_values[(index*4)+3] + 1e-5);
           if(enable_maxpooling || enable_avgpooling) {
             xn = (out_pool_cpu[addr_o] - batch_norm_values[(index*4)+2]) / std;
           } else if(enable_stm) {

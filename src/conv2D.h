@@ -25,6 +25,7 @@
 //#define CONF_ALVEO_U200_4x4_DIRECT_FP32                 // Direct convolution 4x4 kernel with FP32
 //#define CONF_ALVEO_U200_8x8_DIRECT_API8            	    // Direct convolution 8x8 kernel with API8
 //#define CONF_ALVEO_U200_8x8_DIRECT_API32                  // Direct convolution 8x8 kernel with API32
+//#define CONF_ALVEO_U200_8x8_DIRECT_APF8                   // Direct convolution 8x8 kernel with APF8
 //#define CONF_ALVEO_U200_16x16_WINOGRAD_API8        	    // Winograd convolution 16x16 kernel with API8
 //#define CONF_ALVEO_U200_32x32_DWS_API8               	  // DeepWise Separable 32x32 kernel with API8
 //#define CONF_ALVEO_U200_32x64_DWS_API8             	    // DeepWise Separable 32x64 kernel with API8
@@ -165,6 +166,23 @@
 #define USE_CLIPPING
 #define USE_SHIFT
 #define USE_POOLING
+#define CPI                8
+#define CPO                8
+#define LOG2_CPO           3
+#define WMAX             256
+#define HMAX             256
+#define READ_BURST_SIZE    2
+#define STREAMS_DEPTH      2
+#define INPUT_BUFFER_SIZE  65536 // 32 rows x 32 cols x (512/CPI) pixels_in
+#endif
+
+#ifdef CONF_ALVEO_U200_8x8_DIRECT_APF8
+#define ALVEO_U200
+#define DIRECT_CONV
+#define APF8_DATA_TYPE
+#define USE_RELU
+#define USE_POOLING
+#define USE_BATCH_NORM
 #define CPI                8
 #define CPO                8
 #define LOG2_CPO           3

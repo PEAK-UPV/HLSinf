@@ -42,7 +42,7 @@ void batch_norm(int enable_batch_norm, int num_pixels, hls::stream<pixel_out_t> 
 			if(enable_batch_norm) {
 				// Apply normalization
 				// std = sqrt(run_var + eps)
-				std = hls::sqrtf(bn_values_in.values[(cpo*4)+3] + EPS);
+				std = hls::sqrtf(bn_values_in.values[(cpo*4)+3] + (data_type)EPS);
 				// xn = (prev_a - run_mean) / std
 				xn = (v_in - bn_values_in.values[(cpo*4)+2]) / std;
 				// y = gamma * xn - beta
