@@ -79,3 +79,26 @@ Current Versions supported
 ------------------------------------------------------------------------------------------
 
 For a list of achieved configurations and performance see solutions/achieved_solutions.txt
+
+# Status for MANGO Platform
+
+The developments for the MANGO platform require Vivado HLS 2019.1.
+
+There are two projects under project/2019.1 folder
+
+1) HLSInf
+2) DataAugmentation
+
+The HLSInf project is prepared to compile, simulate and synthesize the HLS code of 2D convolution
+for the MANGO platform. When working with Vivado 2019.1: 
+In order to cosimulate the project, the directive DATAPACK on data_in and data_out
+kernel ports must be removed. In order to synthesize that directive must be enforced to achieve the
+right performance.
+
+The DataAugmentation project contains kernels for building different batches to use in neural
+network training processes.
+
+When working for the MANGO platform and after checking the correct behaviour of the kernels, 
+the synthesized code must be exported into an
+IP Core to be inserted in the FPGA design deployed in ACOPLA project to generate a valid bitstream
+file for the MANGO platform.
