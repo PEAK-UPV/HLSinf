@@ -1,0 +1,345 @@
+<AutoPilot:ProjectResources xmlns:AutoPilot="com.autoesl.autopilot.ui.directiveView">
+    <sourceFile name="">
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="ptr_data" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="H" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="W" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="rows" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="I" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="O" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="I_ITER" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="enable_relu" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="ptr_dw_kernel" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="ptr_pw_kernel" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="ptr_bias" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="ptr_out" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="global_offset" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="enable_upper_padding" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="enable_lower_padding" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="enable_maxpooling" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="enable_avgpooling" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="enable_clipping" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="enable_shift" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="min_clip" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="max_clip" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="dir_shift" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="pos_shift" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="return" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="block_generate" label="" functionLabel="">
+            <pragma name="ARRAY_PARTITION">
+                <option name="variable" value="bx.Base" positionalBoolean="4"/>
+                <option name="complete" value="" positionalBoolean="type"/>
+                <option name="dim" value="1"/>
+            </pragma>
+        </directive>
+        <directive functionName="serialize_and_filter" label="serialize_and_filter_label1" functionLabel="">
+            <pragma name="ARRAY_PARTITION">
+                <option name="variable" value="bx.Base" positionalBoolean="4"/>
+                <option name="complete" value="" positionalBoolean="type"/>
+                <option name="dim" value="1"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="o_iter_first" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="o_iter_last" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="add" label="add_load_data_it_loop" functionLabel="">
+            <pragma name="PIPELINE"/>
+        </directive>
+        <directive functionName="pool_cvt" label="" functionLabel="">
+            <pragma name="RESOURCE">
+                <option name="variable" value="buffer0" positionalBoolean="4"/>
+                <option name="core" value="RAM_S2P_BRAM"/>
+            </pragma>
+        </directive>
+        <directive functionName="pool_cvt" label="" functionLabel="">
+            <pragma name="RESOURCE">
+                <option name="variable" value="buffer1" positionalBoolean="4"/>
+                <option name="core" value="RAM_S2P_BRAM"/>
+            </pragma>
+        </directive>
+        <directive functionName="add" label="" functionLabel="">
+            <pragma name="RESOURCE">
+                <option name="variable" value="buff_o_channels" positionalBoolean="4"/>
+                <option name="core" value="RAM_T2P_BRAM"/>
+            </pragma>
+        </directive>
+        <directive functionName="input_buffer" label="" functionLabel="">
+            <pragma name="RESOURCE">
+                <option name="variable" value="buffer" positionalBoolean="4"/>
+                <option name="core" value="RAM_T2P_BRAM"/>
+            </pragma>
+        </directive>
+        <directive functionName="pool_cvt" label="cvt_pooling_iterations" functionLabel="">
+            <pragma name="DEPENDENCE">
+                <option name="variable" value="pin_col"/>
+                <option name="inter" value="" positionalBoolean="type"/>
+                <option name="RAW" value="" positionalBoolean="direction"/>
+                <option name="true" value="" positionalBoolean="dependent"/>
+            </pragma>
+        </directive>
+        <directive functionName="pool_cvt" label="cvt_pooling_iterations" functionLabel="">
+            <pragma name="DEPENDENCE">
+                <option name="variable" value="pin_row"/>
+                <option name="inter" value="" positionalBoolean="type"/>
+                <option name="RAW" value="" positionalBoolean="direction"/>
+                <option name="true" value="" positionalBoolean="dependent"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="STABLE">
+                <option name="variable" value="O_ITER" positionalBoolean="4"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="INTERFACE">
+                <option name="s_axilite" value="" positionalBoolean="mode"/>
+                <option name="port" value="O_ITER" positionalBoolean="4"/>
+                <option name="bundle" value="control"/>
+            </pragma>
+        </directive>
+        <directive functionName="cvt" label="cvt_loop" functionLabel="">
+            <pragma name="DEPENDENCE">
+                <option name="variable" value="pin_col"/>
+                <option name="inter" value="" positionalBoolean="type"/>
+                <option name="RAW" value="" positionalBoolean="direction"/>
+                <option name="true" value="" positionalBoolean="dependent"/>
+            </pragma>
+        </directive>
+        <directive functionName="cvt" label="cvt_loop" functionLabel="">
+            <pragma name="DEPENDENCE">
+                <option name="variable" value="pin_row"/>
+                <option name="inter" value="" positionalBoolean="type"/>
+                <option name="RAW" value="" positionalBoolean="direction"/>
+                <option name="true" value="" positionalBoolean="dependent"/>
+            </pragma>
+        </directive>
+        <directive functionName="cvt" label="cvt_loop" functionLabel="">
+            <pragma name="DEPENDENCE">
+                <option name="variable" value="row0_buffer_write"/>
+                <option name="inter" value="" positionalBoolean="type"/>
+                <option name="RAW" value="" positionalBoolean="direction"/>
+                <option name="true" value="" positionalBoolean="dependent"/>
+            </pragma>
+        </directive>
+        <directive functionName="cvt" label="cvt_loop" functionLabel="">
+            <pragma name="DEPENDENCE">
+                <option name="variable" value="row1_buffer_write"/>
+                <option name="inter" value="" positionalBoolean="type"/>
+                <option name="RAW" value="" positionalBoolean="direction"/>
+                <option name="true" value="" positionalBoolean="dependent"/>
+            </pragma>
+        </directive>
+        <directive functionName="cvt" label="cvt_loop" functionLabel="">
+            <pragma name="DEPENDENCE">
+                <option name="variable" value="row2_buffer_write"/>
+                <option name="inter" value="" positionalBoolean="type"/>
+                <option name="RAW" value="" positionalBoolean="direction"/>
+                <option name="true" value="" positionalBoolean="dependent"/>
+            </pragma>
+        </directive>
+        <directive functionName="padding" label="padding_loop" functionLabel="">
+            <pragma name="DEPENDENCE">
+                <option name="variable" value="w"/>
+                <option name="inter" value="" positionalBoolean="type"/>
+                <option name="RAW" value="" positionalBoolean="direction"/>
+                <option name="true" value="" positionalBoolean="dependent"/>
+            </pragma>
+        </directive>
+        <directive functionName="padding" label="padding_loop" functionLabel="">
+            <pragma name="DEPENDENCE">
+                <option name="variable" value="h"/>
+                <option name="inter" value="" positionalBoolean="type"/>
+                <option name="RAW" value="" positionalBoolean="direction"/>
+                <option name="true" value="" positionalBoolean="dependent"/>
+            </pragma>
+        </directive>
+        <directive functionName="mul" label="mul_loop_1" functionLabel="">
+            <pragma name="DEPENDENCE">
+                <option name="variable" value="iter_load_kernel"/>
+                <option name="inter" value="" positionalBoolean="type"/>
+                <option name="RAW" value="" positionalBoolean="direction"/>
+                <option name="true" value="" positionalBoolean="dependent"/>
+            </pragma>
+        </directive>
+        <directive functionName="dws_read_dw_kernel" label="" functionLabel="">
+            <pragma name="DEPENDENCE">
+                <option name="variable" value="kernel_dw.pixel"/>
+                <option name="inter" value="" positionalBoolean="type"/>
+                <option name="false" value="" positionalBoolean="dependent"/>
+            </pragma>
+        </directive>
+        <directive functionName="dws_read_dw_kernel" label="dw_read_kernel_loop_k" functionLabel="">
+            <pragma name="DEPENDENCE">
+                <option name="variable" value="addr"/>
+                <option name="inter" value="" positionalBoolean="type"/>
+                <option name="RAW" value="" positionalBoolean="direction"/>
+                <option name="true" value="" positionalBoolean="dependent"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="DATA_PACK">
+                <option name="variable" value="ptr_data" positionalBoolean="4"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="DATA_PACK">
+                <option name="variable" value="ptr_out" positionalBoolean="4"/>
+            </pragma>
+        </directive>
+    </sourceFile>
+</AutoPilot:ProjectResources>
+
