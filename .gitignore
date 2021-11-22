@@ -1,1 +1,9 @@
 .vscode
+*.log
+.settings/
+.autopilot/
+.debug/
+csim/
+impl/
+sim/
+syn/
