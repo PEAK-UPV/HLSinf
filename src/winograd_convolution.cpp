@@ -1,5 +1,7 @@
 #include "conv2D.h"
 
+#ifdef WINOGRAD_CONV
+
 // -----------------------------------------------------------------------------------------------------------
 // frames struct winograd
 struct frame_winograd {
@@ -823,3 +825,4 @@ void winograd_conv(int H, int W, int PT, int PB, int PL, int PR, int I_ITER, hls
 	add_winograd(H, W, I_ITER, b_in, str_mul_add, out);         
 }
 
+#endif

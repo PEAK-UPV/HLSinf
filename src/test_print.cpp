@@ -128,9 +128,11 @@ void print_output() {
   printf("Output:\n");
   for (int o=0; o<O_output; o++) {
     printf("channel %d:\n", o);
-    for (int h=0; h<HO_final; h++) {
-      for (int w=0; w<WO_final; w++) {
-        int addr_o = output_data_address(o, h, w, HO_final, WO_final);
+    int rows = enable_upsize ? HO_final * 2 : HO_final;
+    int cols = enable_upsize ? WO_final * 2 : WO_final;
+    for (int h=0; h<rows; h++) {
+      for (int w=0; w<cols; w++) {
+        int addr_o = output_data_address(o, h, w, rows, cols);
         printf("%6.4f (%6.4f) ", float(out[addr_o]), float(cpu_out[addr_o]));
       }
       printf("\n");
@@ -143,8 +145,8 @@ void print_configuration() {
   printf("====================================================================================================================\n");
   printf("| In: %3d x %3d x %3d | Out: %3d x %3d x %3d | Kernel: %3d x %3d  | Pad (TBLR): %1d x %1d x %1d x %1d | Stride: %3d x %3d  |\n", H, W, I, HO, WO, O, KH, KW, PT, PB, PL, PR, SH, SW);
   printf("|------------------------------------------------------------------------------------------------------------------|\n");
-  printf("| ReLU: %s | STM: %s | MaxPool: %s | AvgPool: %s | BatchN: %s |Add: %s | Clipping: %s (%2d:%2d) | Shift: %s (%s,%2d) |\n", enable_relu?"Yes":"No ", enable_stm?"Yes":"No ",
-  		    enable_maxpooling?"Yes":"No ", enable_avgpooling?"Yes":"No ", enable_batch_norm?"Yes":"No ", enable_add?"Yes":"No ", enable_clipping?"Yes":"No ", min_clip, max_clip, enable_shift?"Yes":"No ", dir_shift==LEFT_DIRECTION?"LEFT ":"RIGHT", pos_shift);
+  printf("| ReLU: %s | STM: %s | MaxP: %s | AvgP: %s | BN: %s |Add: %s | Clip: %s (%2d:%2d) | Shift: %s (%s,%2d) | Upsize %s|\n", enable_relu?"Yes":"No ", enable_stm?"Yes":"No ",
+  		    enable_maxpooling?"Y":"N", enable_avgpooling?"Y":"N", enable_batch_norm?"Y":"N", enable_add?"Y":"N", enable_clipping?"Y":"N", min_clip, max_clip, enable_shift?"Y":"N", dir_shift==LEFT_DIRECTION?"LEFT ":"RIGHT", pos_shift, enable_upsize?"Y":"N");
   printf("====================================================================================================================\n");
 }
 

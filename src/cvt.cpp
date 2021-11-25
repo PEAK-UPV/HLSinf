@@ -14,7 +14,7 @@
 //   in     : input stream (format pixel_in_t)
 //   out    : output stream (format frame_t)
 //
-void cvt(int H, int W, int I_ITER, int SH, int SW, hls::stream<pixel_in_t> &in, hls::stream<frame_t> &out) {
+void cvt(int H, int W, int I_ITER, int SH, int SW, hls::stream<din_st> &in, hls::stream<conv_cvt_st> &out) {
 
   #ifdef DEBUG_CVT
   printf("cvt: start\n");
@@ -24,10 +24,10 @@ void cvt(int H, int W, int I_ITER, int SH, int SW, hls::stream<pixel_in_t> &in, 
   int HH=H;
   int WW=W;
   // buffers (keep three rows)
-  pixel_in_t buffer0[WMAX+2];
-  pixel_in_t buffer1[WMAX+2];
-  pixel_in_t buffer2[WMAX+2];
-  frame_t frame;
+  din_st buffer0[WMAX+2];
+  din_st buffer1[WMAX+2];
+  din_st buffer2[WMAX+2];
+  conv_cvt_st frame;
   int pin_row;
   int pin_col;
   int stride_row;
@@ -63,7 +63,7 @@ void cvt(int H, int W, int I_ITER, int SH, int SW, hls::stream<pixel_in_t> &in, 
     int pin_col1 = (pin_col==1);
 
     // get the pixel
-    pixel_in_t pixel;
+    din_st pixel;
     DO_PRAGMA(HLS ARRAY_PARTITION variable=pixel complete dim=0)
     pixel = in.read();
 #ifdef DEBUG_CVT
@@ -81,12 +81,12 @@ void cvt(int H, int W, int I_ITER, int SH, int SW, hls::stream<pixel_in_t> &in, 
     if (row2_buffer_write) buffer2[pin_col] = pixel;
 
     // build the frame
-    pixel_in_t p0, p1, p2, p3, p4, p5, p6, p7, p8;
+    din_st p0, p1, p2, p3, p4, p5, p6, p7, p8;
 
     int shift_frame = (pin_row>1) & (pin_col > 2);
     int send_frame = (pin_row>1) & (pin_col > 1) & (stride_row == SH) & (stride_col == SW);
     //printf("pin_row %d pin_col %d stride_row %d stride_col %d send_frame %d\n", pin_row, pin_col, stride_row, stride_col, send_frame);
-    pixel_in_t pixel_b0, pixel_b1, pixel_b2;
+    din_st pixel_b0, pixel_b1, pixel_b2;
     pixel_b0 = buffer0[pin_col];
     pixel_b1 = buffer1[pin_col];
     pixel_b2 = buffer2[pin_col];

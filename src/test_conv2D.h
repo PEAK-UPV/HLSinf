@@ -49,7 +49,7 @@ extern int O_output;                     // Number of output channels for the ou
 extern int rows;						 // number of rows to compute by the kernel
 extern int enable_relu;				     // enables applying the relu activation functions
 extern int enable_stm;  			 	 // enables applying the STM functions
-extern data_type relu_factor;
+extern relu_t relu_factor;
 extern int enable_shift;				 // enables applying shift to the output
 extern int enable_add; 				     // enables add module
 extern int dir_shift;			         // shift direction (left or right)
@@ -58,6 +58,7 @@ extern int enable_clipping;			     // enables applying clipping to the output
 extern int enable_maxpooling;			 // enables the maxpooling layer
 extern int enable_avgpooling;			 // enables the avgpooling layer
 extern int enable_batch_norm;		 // enables applying batch normalization
+extern int enable_upsize;                // enables upsize (resize)
 extern int min_clip;				 	 // minimum clip value
 extern int max_clip;				 	 // maximum clip value
 extern int i_iter;						 // number of input iterations
@@ -65,21 +66,19 @@ extern int o_iter;						 // number of output iterations
 extern int global_offset;				 // global offset for the output data for the kernel
 extern int GI;							 // number of groups for input channels
 extern int GO;							 // number of groups for output channels
-extern data_type *data_in;               // Input data buffer (format I x W x H)
-extern data_type *data_in_add;           // Input data buffer for add module(format I x W x H)
-extern data_type *out;                   // Output data buffer (format O x W x H)
-extern data_type *kernel;                // Conv kernel buffers (format GO x GI x CPO x CPI x KW x KH) - for DirectConv and WinogradConv
-extern data_type *dw_kernel;             // DW kernel (format I x KH x KW) - for DWS
-extern data_type *pw_kernel;             // PW kernel (format GO x GI x CPO x CPI) - for DWS
-extern data_type *bias;                  // Conv bias buffers (format O)
-extern data_type *out_conv_cpu;          // Output data buffer for cpu (format O x W x H)
-extern data_type *out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
-extern data_type *out_stm_cpu;		     // Output data buffer for STM for cpu (format O x O x W x H)
-extern data_type *out_pool_cpu;		     // Output data fuffer for pool for cpu (format O x W/2 x H/2)
-extern data_type *out_batch_norm_cpu;	  // Output data buffer for cpu (format O x W x H)
-extern data_type *batch_norm_values;	  // Batch normalization values
-extern data_type *out_add_cpu;		     // Output data buffer for ADD for cpu 
-extern data_type *cpu_out;
+extern din_t *data_in;               // Input data buffer (format I x W x H)
+extern din_t *data_in_add;           // Input data buffer for add module(format I x W x H)
+extern dout_t *out;                   // Output data buffer (format O x W x H)
+extern w_t *kernel;                // Conv kernel buffers (format GO x GI x CPO x CPI x KW x KH) - for DirectConv and WinogradConv
+extern b_t *bias;                  // Conv bias buffers (format O)
+extern conv_t *out_conv_cpu;          // Output data buffer for cpu (format O x W x H)
+extern relu_t *out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
+extern stm_t *out_stm_cpu;		     // Output data buffer for STM for cpu (format O x O x W x H)
+extern pool_t *out_pool_cpu;		     // Output data fuffer for pool for cpu (format O x W/2 x H/2)
+extern bn_t *out_batch_norm_cpu;	  // Output data buffer for cpu (format O x W x H)
+extern bn_t *batch_norm_values;	  // Batch normalization values
+extern add_t *out_add_cpu;		     // Output data buffer for ADD for cpu 
+extern dout_t *cpu_out;
 extern char *input_data_file;            // file with input parameters
 extern int deterministic_input_values;   // whether input data is randomly generated or not (deterministic needed in co-simulation)
 
@@ -127,7 +126,7 @@ void print_input();
 void print_input_add();
 void print_output();
 void print_kernel();
-int check_result(data_type *max_difference, int *num_elements_differ);
+int check_result(dout_t *max_difference, int *num_elements_differ);
 void init_data();
 int open_test_file();
 int read_test_file(int *enable, int *cpu);

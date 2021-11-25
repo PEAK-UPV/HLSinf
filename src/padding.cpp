@@ -10,7 +10,7 @@
 //   in                : input stream
 //   out               : output stream
 //
-void padding(int H, int W, int PT, int PB, int PL, int PR, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<pixel_in_t> &out) {
+void padding(int H, int W, int PT, int PB, int PL, int PR, int I_ITER, hls::stream<din_st> &in, hls::stream<din_st> &out) {
 
   #ifdef DEBUG_PADDING
   printf("PADDING: start\n");
@@ -19,8 +19,8 @@ void padding(int H, int W, int PT, int PB, int PL, int PR, int I_ITER, hls::stre
   int num_iters;
   int h;
   int w;
-  pixel_in_t data;
-  pixel_in_t zero;
+  din_st data;
+  din_st zero;
   DO_PRAGMA(HLS ARRAY_PARTITION variable=data complete)
   DO_PRAGMA(HLS ARRAY_PARTITION variable=zero complete)
 

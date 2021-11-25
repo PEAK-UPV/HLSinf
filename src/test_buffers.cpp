@@ -10,63 +10,58 @@ void allocate_buffers() {
   // First we allocate buffers in CPU
 
   // input data buffer
-  size_t size_data_in_bytes = I_input * W * H * sizeof(data_type);
+  size_t size_data_in_bytes = I_input * W * H * sizeof(din_t);
   posix_memalign((void **)&data_in, 4096, size_data_in_bytes);
 
   // input data add buffer
   if (enable_add) {
-	  posix_memalign((void **)&data_in_add, 4096, HO_final * WO_final * O_output * sizeof(data_type));
-	  posix_memalign((void **)&out_add_cpu, 4096, HO_final * WO_final * O_output * sizeof(data_type));
+    int num_bytes = HO_final * WO_final * O_output * sizeof(din_t);
+    if (enable_upsize) num_bytes = num_bytes * 4;
+	  posix_memalign((void **)&data_in_add, 4096, num_bytes);
+	  posix_memalign((void **)&out_add_cpu, 4096, num_bytes);
   }
 
   // weights buffer (kernel), depending on the type of convolution
-  #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
-  size_t size_kernel_in_bytes = I_kernel * O_kernel * KW * KH * sizeof(data_type);
+  size_t size_kernel_in_bytes = I_kernel * O_kernel * KW * KH * sizeof(w_t);
   posix_memalign((void **)&kernel, 4096, size_kernel_in_bytes);
-  #endif
-  #ifdef DWS_CONV
-  size_t size_kernel_dw_in_bytes = (I_kernel * KW * KH) * sizeof(data_type);
-  size_t size_kernel_pw_in_bytes = (I_kernel * O_kernel) * sizeof(data_type);
-  posix_memalign((void **)&dw_kernel, 4096, size_kernel_dw_in_bytes);
-  posix_memalign((void **)&pw_kernel, 4096, size_kernel_pw_in_bytes);
-  #endif
 
   // bias buffer
-  size_t size_bias_in_bytes = O_output * sizeof(data_type);
+  size_t size_bias_in_bytes = O_output * sizeof(b_t);
   posix_memalign((void **)&bias, 4096, size_bias_in_bytes);
 
   // batch norm values buffer
-  size_t size_bnvalues_in_bytes = (O_output * 4) * sizeof(data_type);
+  size_t size_bnvalues_in_bytes = (O_output * 4) * sizeof(bn_t);
   posix_memalign((void **)&batch_norm_values, 4096, size_bnvalues_in_bytes);
   if (enable_batch_norm) {
-    posix_memalign((void **)&out_batch_norm_cpu, 4096, HO_final * WO_final * O_output * sizeof(data_type));
+    posix_memalign((void **)&out_batch_norm_cpu, 4096, HO_final * WO_final * O_output * sizeof(bn_t));
   }
 
   // output buffer for fpga
   size_t size_output_in_bytes;
-  size_output_in_bytes = O_output * WO_final * HO_final * sizeof(data_type);
+  size_output_in_bytes = O_output * WO_final * HO_final * sizeof(dout_t);
+  if (enable_upsize) size_output_in_bytes *= 4;
   posix_memalign((void **)&out, 4096, size_output_in_bytes);
 
   // output buffer for cpu
-  posix_memalign((void **)&out_conv_cpu, 4096, O_output * WO * HO * sizeof(data_type));
+  posix_memalign((void **)&out_conv_cpu, 4096, O_output * WO * HO * sizeof(conv_t));
 
   // output for relu function
   if (enable_relu) {
-    posix_memalign((void **)&out_relu_cpu, 4096, O_output * WO * HO * sizeof(data_type));
+    posix_memalign((void **)&out_relu_cpu, 4096, O_output * WO * HO * sizeof(relu_t));
   }
 
   // output for STM functions
     if (enable_stm) {
-      posix_memalign((void **)&out_stm_cpu, 4096, O_output * WO * HO * sizeof(data_type));
+      posix_memalign((void **)&out_stm_cpu, 4096, O_output * WO * HO * sizeof(stm_t));
    }
 
   // output for pool function
   if ((enable_maxpooling) || (enable_avgpooling)) {
-	  posix_memalign((void **)&out_pool_cpu, 4096, O_output * (WO/2) * (HO/2) * sizeof(data_type));
+	  posix_memalign((void **)&out_pool_cpu, 4096, O_output * (WO/2) * (HO/2) * sizeof(pool_t));
   }
 
   // final output for cpu
-  posix_memalign((void **)&cpu_out, 4096, O_output * WO_final * HO_final * sizeof(data_type));
+  posix_memalign((void **)&cpu_out, 4096, size_output_in_bytes);
 
 #ifdef OPENCL_TEST
   // Now we allocate those buffers in the FPGA (for OpenCL)
@@ -113,7 +108,7 @@ void allocate_buffers() {
 	  OCL_CHECK(err, buffer_i_add = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_output_in_bytes, &data_in_add_ddr, &err));
   }
   else { //create a dummy buffer
-	  buffer_i_add = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , sizeof(data_type), &data_in_ddr, &err);
+	  buffer_i_add = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , sizeof(data_dt), &data_in_ddr, &err);
   }
   OCL_CHECK(err, buffer_o[0]    = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_WRITE_ONLY  | CL_MEM_USE_HOST_PTR , size_output_in_bytes, &out_ddr[0], &err));
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)

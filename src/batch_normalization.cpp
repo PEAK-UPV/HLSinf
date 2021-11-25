@@ -5,15 +5,15 @@
 
 #define EPS		1e-5
 
-void batch_norm(int enable_batch_norm, int num_pixels, hls::stream<pixel_out_t> &in, hls::stream<batch_norm_in_t> &bn_values, hls::stream<pixel_out_t> &out) {
+void batch_norm(int enable_batch_norm, int num_pixels, hls::stream<pool_st> &in, hls::stream<bnp_st> &bn_values, hls::stream<dout_st> &out) {
 
 	#ifdef DEBUG_BATCH_NORM
 	printf("Batch Norm: start\n");
 	#endif
 
-	pixel_out_t data_in;
-	batch_norm_in_t bn_values_in;
-	pixel_out_t data_out;
+	pool_st data_in;
+	bnp_st bn_values_in;
+	dout_st data_out;
 	int data_size = num_pixels;
 
 	DO_PRAGMA(HLS ARRAY_PARTITION variable=data_in complete dim=0)
@@ -36,13 +36,13 @@ void batch_norm(int enable_batch_norm, int num_pixels, hls::stream<pixel_out_t> 
 			DO_PRAGMA(HLS loop_tripcount min=1 max=CPO)
 			#pragma HLS UNROLL
 
-			data_type v_in, std, xn, v_batchnorm;
+			bn_t v_in, std, xn, v_batchnorm;
 			v_in = data_in.pixel[cpo];
 
 			if(enable_batch_norm) {
 				// Apply normalization
 				// std = sqrt(run_var + eps)
-				std = hls::sqrtf(bn_values_in.values[(cpo*4)+3] + (data_type)EPS);
+				std = hls::sqrtf(bn_values_in.values[(cpo*4)+3] + EPS);
 				// xn = (prev_a - run_mean) / std
 				xn = (v_in - bn_values_in.values[(cpo*4)+2]) / std;
 				// y = gamma * xn - beta

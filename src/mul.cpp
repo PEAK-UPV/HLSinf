@@ -13,23 +13,23 @@
 //
 // This module is used in the Direct Convolution method
 //
-void mul(int num_data_frames, int I_ITER, hls::stream<frame_t> &in, hls::stream<kernel_t> &k_in, hls::stream<pixel_out_t> &out) {
+void mul(int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::stream<w_st> &k_in, hls::stream<conv_mul_st> &out) {
 
   #ifdef DEBUG_MUL
   printf("mul: start\n");
   #endif
 
-  kernel_t kernel;
-  kernel_in_t k;
+  w_st kernel;
+  w_in_st k;
   DO_PRAGMA(HLS ARRAY_PARTITION variable=kernel dim=0 complete)
   #pragma HLS array_partition variable=k dim=0 complete
 
-  frame_t data_in;
+  conv_cvt_st data_in;
 
-  data_type sum[CPO];
+  conv_mul_t sum[CPO];
   DO_PRAGMA(HLS ARRAY_PARTITION variable=sum dim=0 block factor=CPO)
 
-  pixel_out_t p_out;
+  conv_mul_st p_out;
 
   int load_kernel = 0;
   int num_iter = I_ITER * num_data_frames;
@@ -108,6 +108,7 @@ void mul(int num_data_frames, int I_ITER, hls::stream<frame_t> &in, hls::stream<
   #endif
 }
 
+#ifdef DWS_CONV
 // ----------------------------------------------------------------------------------------
 // dws_mul: This function performs the deewise separable multiplication of an input frame
 // with the stored kernels and sends the produced pixels. 
@@ -286,3 +287,4 @@ void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<ker
   #endif
 }
 
+#endif

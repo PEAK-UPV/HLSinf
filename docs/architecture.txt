@@ -343,6 +343,48 @@ DWS Convolution
 Pooling
 =======
  
+
+multiple data formats
+=====================
+
+HLSinf supports multiple data types along the dataflow it instantiates. The following figure shows the different data types defined. Data types are indicated as *_t whereas structs are indicated as *_st.vi 
  
- 
-  
+--------------        --------        -------------------------------------------------------         ---------         -------        ----------------------         ------        -------         -----------          ------------
+|            |        |      |        |                                                     |         |       |         |     |        |                    |         |    |        |     |         |         |          |          |
+|            | din_t  |      | din_t  |     din_t        conv_cvt_t        conv_mul_t       | conv_t  |       | relu_t  |     | stm_t  |     pool_cvt_t     | pool_t  |    | dout_t |     | dout_t  |         | dout_t   |          |
+|    read    | din_st |      | din_st |     din_st       conv_cvt_st       conv_mul_st      | conv_st | ReLU  | relu_st |     | stm_st |     pool_cvt_st    | pool_st |    | dout_st|     | dout_st |         | dout_st  |  write   |
+|    data    |------->| ibuf |------->|pad  -------> cvt ------------> mul ------------> add|-------->| Clip  |-------->| STM | ------>| cvt --------> pool |-------->| bn |------->| add |-------->| upsize  |--------->|  data    |
+|  channels  |        |      |        |                                                     |         | Shift |         |     |        |                    |         |    |        |     |         |         |          | channels |
+| (GIHWCPI)  |        |      |        |                                                     |         |       |         |     |        |                    |         |    |        |     |         |         |          |(GOHWCPO) |
+|            |        |      |        |               direct_conv                           |         |       |         |     |        |        pool        |         |    |        |     |         |         |          |          |
+--------------        --------        -------------------------------------------------------         ---------         -------        ----------------------         ------        -------         -----------          ------------
+                                                                        ^                 ^                                                                             ^              ^
+  ---------------   w_t                                                 |                 |                                                                             |              |
+  |             |   w_st                                                |                 |                                                                             |              |
+  | read kernel | -------------------------------------------------------                 |                                                                             |              |
+  ---------------                                                                         |                                                                             |              |
+                                                                                          |                                                                             |              |
+  ---------------   b_t                                                                   |                                                                             |              |
+  |             |   b_st                                                                  |                                                                             |              |
+  | read bias   | -------------------------------------------------------------------------                                                                             |              |
+  ---------------                                                                                                                                                       |              |
+                                                                                                                                                                        |              |
+  ---------------                                                                                                                                                       |              |
+  |             |   bn_t                                                                                                                                                |              |
+  |             |   bnp_st                                                                                                                                              |              |
+  |   read      | -------------------------------------------------------------------------------------------------------------------------------------------------------              |
+  |   bn        |                                                                                                                                                                      |
+  |             |                                                                                                                                                                      |
+  ---------------                                                                                                                                                                      |
+                                                                                                                                                                                       |
+  ---------------                                                                                                                                                                      |
+  |             |   dout_t                                                                                                                                                             |
+  |             |   dout_st                                                                                                                                                            |
+  |   read      | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  |   input     |
+  |   add       |
+  ---------------
+
+din_st = din_t[CPI]; conv_pad_st = conv_pat_t[CPI]; conv_cvt_st = conv_cvt_t[CPI]
+conv_mult_st = conv_mult_t[CPO]; conv_add_st = conv_add_t[CPO], ...
+

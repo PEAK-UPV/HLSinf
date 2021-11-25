@@ -14,14 +14,14 @@
 //
 
 
-void stm(int enable_stm, int num_pixels, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &out) {
+void stm(int enable_stm, int num_pixels, hls::stream<relu_st> &in, hls::stream<stm_st> &out) {
 
   #ifdef DEBUG_STM
   printf("stm: start\n");
   #endif
 
-  pixel_out_t data_in;
-  pixel_out_t data_out;
+  relu_st data_in;
+  stm_st data_out;
   int data_size = num_pixels;
   DO_PRAGMA(HLS ARRAY_PARTITION variable=data_in complete dim=0)
   DO_PRAGMA(HLS ARRAY_PARTITION variable=data_out complete dim=0)
@@ -39,7 +39,7 @@ void stm(int enable_stm, int num_pixels, hls::stream<pixel_out_t> &in, hls::stre
       DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO)
       #pragma HLS UNROLL
 
-      data_type v_in, v_soft, v_tanh, v_mult;
+      stm_t v_in, v_soft, v_tanh, v_mult;
       v_in = data_in.pixel[cpo];
 
       if(enable_stm) {

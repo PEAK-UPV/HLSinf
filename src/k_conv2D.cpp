@@ -29,25 +29,65 @@ void set_channel_write_blocks(int num_channel_write_blocks[CPO], int H, int W) {
   }
 }
 
+#define USE_UPSIZE
+
+#ifdef USE_UPSIZE
+void upsize(int enable, int H, int W, hls::stream<dout_st> &in, hls::stream<dout_st> &out) {
+  dout_st buff[WMAX];
+
+  #ifdef DEBUG_UPSIZE
+  printf("UPSIZE: begin\n");
+  #endif
+
+  if (enable) {
+    for (int h = 0; h<H; h++) {
+      DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE)
+      for (int w = 0; w<W; w++) {
+        DO_PRAGMA(HLS loop_tripcount min=1 max=W_REFERENCE)
+        dout_st px;
+        px = in.read();
+        buff[w] = px;
+      }
+      for (int r = 0; r < 2; r++) {
+        for (int w = 0; w<2*W; w++) {
+          DO_PRAGMA(HLS loop_tripcount min=1 max=W_REFERENCE)
+          out << buff[w/2];
+          #ifdef DEBUG_UPSIZE
+          #ifdef DEBUG_VERBOSE
+          printf("UPSIZE: r %d w %d -> ", r, w);
+          for (int c=0; c<CPO; c++) printf(" %f ", buff[w/2].pixel[c]);
+          printf("\n");
+          #endif
+          #endif
+        }
+      }
+    }
+  } else {
+    for (int h = 0; h<H; h++) {
+      DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE)
+      for (int w = 0; w<W; w++) {
+        DO_PRAGMA(HLS loop_tripcount min=1 max=W_REFERENCE)
+        dout_st px;
+        px = in.read();
+	      out << px;
+      }
+    }
+  }
+
+  #ifdef DEBUG_UPSIZE
+  printf("UPSIZE: end\n");
+  #endif
+
+}
+#endif
+
 extern "C" {
 void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W, int HO, int WO, int rows, int PT, int PB, int PL, int PR, int SH, int SW, int I, int O, int I_ITER, int o_iter_first, int o_iter_last, 
-            int enable_relu, int enable_stm, data_type relu_factor,int enable_batch_norm,
-#if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
-                         data_type *ptr_kernel,
-#endif
-#ifdef DWS_CONV
-						 data_type *ptr_dw_kernel, read_kernel_pw_t *ptr_pw_kernel,
-#endif
-              pixel_out_t *ptr_bias, batch_norm_in_t *b_ptr, write_block_t *ptr_out, int read_offset, int write_offset, int enable_maxpooling, int enable_avgpooling,
-						  int enable_clipping, int enable_shift, int enable_add, int min_clip, int max_clip, int dir_shift, int pos_shift){
-
-#if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
+            int enable_relu, int enable_stm, relu_t relu_factor,int enable_batch_norm,
+            w_t *ptr_kernel,
+            b_st *ptr_bias, bnp_st *b_ptr, write_block_t *ptr_out, int read_offset, int write_offset, int enable_maxpooling, int enable_avgpooling,
+						int enable_clipping, int enable_shift, int enable_add, int min_clip, int max_clip, int dir_shift, int pos_shift, int enable_upsize){
 	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_kernel    depth=KERNEL_PORT_DEPTH    offset=slave bundle=gmem1)
-#endif
-#ifdef DWS_CONV
-    DO_PRAGMA(HLS INTERFACE m_axi port=ptr_dw_kernel depth=DW_KERNEL_PORT_DEPTH num_read_outstanding=CPI  offset=slave bundle=gmem1)
-    DO_PRAGMA(HLS INTERFACE m_axi port=ptr_pw_kernel depth=PW_KERNEL_PORT_DEPTH num_read_outstanding=CPI  offset=slave bundle=gmem4)
-#endif
 	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_data      depth=DATA_IN_PORT_DEPTH   num_read_outstanding=CPI  offset=slave bundle=gmem)
 	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_data_add  depth=DATA_IN_PORT_DEPTH   num_read_outstanding=CPI  offset=slave bundle=gmem5)
 	DO_PRAGMA(HLS INTERFACE m_axi port=b_ptr         depth=BATCH_MORM_VAL_DEPTH                           offset=slave bundle=gmem6)
@@ -96,15 +136,24 @@ void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W,
   int HI_pooling               = HO_conv;
   int WI_pooling               = WO_conv;
   int write_pixels             = enable_pooling ? (HO_conv / 2) * (WO_conv / 2) : HO_conv * WO_conv;
+  int read_pixels_add          = enable_pooling ? (HO_conv / 2) * (WO_conv / 2) : HO_conv * WO_conv;
+  int num_bn_pixels            = read_pixels_add;
+  int num_add_pixels           = read_pixels_add;
+  if (enable_upsize) write_pixels = write_pixels * 4;
+
+
   int write_rows               = enable_pooling ? HO_conv / 2 : HO_conv;
   int write_cols               = enable_pooling ? WO_conv / 2 : WO_conv;
-  int write_channel_offset     = enable_pooling ? (HO_conv  / 2) * (WO_conv / 2) : WO_conv * HO_conv;
   
   #else
   int write_pixels             = HO_conv * WO_conv;
+  if (enable_upsize) write_pixels = write_pixels * 4;
+  int read_pixels_add          = HO_conv * WO_conv;
+  int num_bn_pixels            = read_pixels_add;
+  int num_add_pixels           = read_pixels_add;
+
   int write_rows               = HO_conv;
   int write_cols               = WO_conv;
-  int write_channel_offset     = HO_conv * WO_conv;
   #endif
  
   o_iter_loop:
@@ -115,84 +164,58 @@ void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W,
 	int o_channel = (o_iter + o_iter_first) << LOG2_CPO;  // current output channel (first one in this iteration)
 
     // input and output streams
-    static hls::stream<pixel_in_t>   out_read_data;
-    static hls::stream<pixel_out_t>   out_read_data_add;
-    static hls::stream<pixel_in_t>   out_read_data_1;
-    static hls::stream<pixel_in_t>   out_read_data_2;
+    static hls::stream<din_st>   out_read_data;
+    static hls::stream<dout_st>   out_read_data_add;
+    static hls::stream<din_st>   out_read_data_1;
+    static hls::stream<din_st>   out_read_data_2;
 
     DO_PRAGMA(HLS STREAM variable=out_read_data     depth=STREAMS_DEPTH)
     DO_PRAGMA(HLS STREAM variable=out_read_data_add depth=STREAMS_DEPTH)
     DO_PRAGMA(HLS STREAM variable=out_read_data_1   depth=STREAMS_DEPTH)
     DO_PRAGMA(HLS STREAM variable=out_read_data_2   depth=STREAMS_DEPTH)
 
-	// DIRECT CONV, WINOGRAD, DWS
-    #ifdef DIRECT_CONV
-    static hls::stream<kernel_t>     out_read_kernel;
+	  // DIRECT CONV
+    static hls::stream<w_st>     out_read_kernel;
     DO_PRAGMA(HLS STREAM variable=out_read_kernel depth=STREAMS_DEPTH)
-    #endif
-    #ifdef WINOGRAD_CONV
-    static hls::stream<kernel_t>     out_read_kernel;
-    DO_PRAGMA(HLS STREAM variable=out_read_kernel depth=STREAMS_DEPTH)
-    #endif
-    #ifdef DWS_CONV
-    static hls::stream<kernel_dw_t>     str_dw_kernel;
-    static hls::stream<kernel_pw_t>     str_pw_kernel;
-    DO_PRAGMA(HLS STREAM variable=str_dw_kernel depth=DW_KERNEL_STREAM_DEPTH)
-    DO_PRAGMA(HLS STREAM variable=str_pw_kernel depth=PW_KERNEL_STREAM_DEPTH)
-    #endif
 
-    static hls::stream<pixel_out_t>  out_read_bias;
-    static hls::stream<pixel_out_t>  out_conv;
+    static hls::stream<b_st>  out_read_bias;
+    static hls::stream<conv_st>  out_conv;
     DO_PRAGMA(HLS STREAM variable=out_read_bias depth=STREAMS_DEPTH)
     DO_PRAGMA(HLS STREAM variable=out_conv depth=STREAMS_DEPTH)
 
     // RELU, CLIPPING, and SHIFT support
-    #if defined(USE_RELU) || defined(USE_CLIPPING) || defined(USE_SHIFT)
-    static hls::stream<pixel_out_t>  out_relu;
+    static hls::stream<relu_st>  out_relu;
     DO_PRAGMA(HLS STREAM variable=out_relu depth=STREAMS_DEPTH)
-    #endif
 
     //STM support
     #if defined(USE_STM)
-    static hls::stream<pixel_out_t>  out_stm;
+    static hls::stream<stm_st>  out_stm;
     DO_PRAGMA(HLS STREAM variable=out_stm depth=STREAMS_DEPTH)
     #endif
 
     // MAXPOOLING, AVGPOOLING
     #ifdef USE_POOLING
-    static hls::stream<pixel_out_t>  out_pooling;
+    static hls::stream<pool_st>  out_pooling;
     DO_PRAGMA(HLS STREAM variable=out_pooling depth=STREAMS_DEPTH)
     #endif
 
     //ADD support
-    static hls::stream<pixel_out_t>  out_add;
+    static hls::stream<dout_st>  out_add;
     DO_PRAGMA(HLS STREAM variable=out_add depth=STREAMS_DEPTH)
+
+    #ifdef USE_UPSIZE
+    static hls::stream<dout_st> out_write;
+    DO_PRAGMA(HLS STREAM variable=out_write depth=STREAMS_DEPTH)
+    #endif
 
     // BATCH NORM support
 	  #ifdef USE_BATCH_NORM
-    static hls::stream<pixel_out_t>  out_batch_norm;
+    static hls::stream<dout_st>  out_batch_norm;
     DO_PRAGMA(HLS STREAM variable=out_batch_norm depth=STREAMS_DEPTH)
 
-    static hls::stream<batch_norm_in_t>  out_read_batch_norm;
+    static hls::stream<bnp_st>  out_read_batch_norm;
 	  DO_PRAGMA(HLS STREAM variable=out_read_batch_norm depth=STREAMS_DEPTH)
 	  #endif
-
-    // -------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    // streams for read and write data
-    #ifdef IHW_DATA_FORMAT
-    hls::stream<read_block_t>  stream_data_ch_0[CPI];
-    hls::stream<data_type>     stream_data_ch_1[CPI];
-    hls::stream<data_type>     out_write_channel[CPO];
-    hls::stream<write_block_t> out_block_write_channel[CPO];
-    DO_PRAGMA(HLS STREAM variable=stream_data_ch_0        depth=STREAMS_DEPTH)
-    DO_PRAGMA(HLS STREAM variable=stream_data_ch_1        depth=STREAMS_DEPTH * READ_BLOCK_SIZE)
-    DO_PRAGMA(HLS STREAM variable=out_write_channel       depth=2)
-    DO_PRAGMA(HLS STREAM variable=out_block_write_channel depth=2)
-    DO_PRAGMA(HLS AGGREGATE variable=stream_data_ch_0)
-    DO_PRAGMA(HLS AGGREGATE variable=stream_data_ch_1)
-    DO_PRAGMA(HLS AGGREGATE variable=out_write_channel)
-    DO_PRAGMA(HLS AGGREGATE variable=out_block_write_channel)
-    #endif
 
     // -------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // variables to manage the input buffer
@@ -202,6 +225,8 @@ void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W,
     int read_pixels_total        = read_pixels * I_ITER;
     int offset_data_in_group_cpi = H * W;
     int offset_data_out_group_cpo = HO * WO;
+    int offset_read_add_group_cpo = HO * WO;
+    if (enable_upsize) offset_data_out_group_cpo = offset_data_out_group_cpo * 4;
 
     //printf("I_ITER %d W %d rows %d num_extra_rows %d read_pixels %d read_pixels_total %d\n", I_ITER, W, rows, num_extra_rows, read_pixels, read_pixels_total);
     int enable_buffer            = (read_pixels * (I / CPI)) <= INPUT_BUFFER_SIZE;
@@ -219,19 +244,12 @@ void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W,
 
     int read_channel_offset      = (W * H);
 
-
-    #ifdef IHW_DATA_FORMAT
-    int o_iter_write_offset      = (write_offset + (o_channel * write_channel_offset)) / WRITE_BLOCK_SIZE;
-    #endif
-    #ifdef GIHWCPI_DATA_FORMAT
+    int o_iter_read_add_offset   = write_offset + (offset_read_add_group_cpo * (o_iter + o_iter_first));
     int o_iter_write_offset      = write_offset + (offset_data_out_group_cpo * (o_iter + o_iter_first));
-    #endif
 
     int read_channel_blocks      = (read_pixels + READ_BLOCK_SIZE - 1) / READ_BLOCK_SIZE;
     int offset_bias              = o_iter + o_iter_first;
-    #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
     int offset_kernel            = (o_iter + o_iter_first) * ((I + CPI - 1) / CPI) * CPI * CPO * 9;
-    #endif
     #pragma HLS array_partition variable=enable_write dim=0 complete
     DO_PRAGMA(HLS ARRAY_PARTITION variable=offset_read_data_channel_i dim=0 complete)
     DO_PRAGMA(HLS ARRAY_PARTITION variable=offset_write_data_channel_i dim=0 complete)
@@ -248,130 +266,33 @@ void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W,
     set_channel_write_blocks(num_channel_write_blocks, H, W);
 
     // -------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    // read bias
+    // read bias and kernel (filters)
     read_bias(offset_bias, ptr_bias, out_read_bias);
+    read_kernel(I_ITER, offset_kernel, ptr_kernel, out_read_kernel);
 
     // -------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    // read kernel (different version based on the type of convolution)
-    #ifdef DIRECT_CONV
-    read_kernel(I_ITER, offset_kernel, ptr_kernel, out_read_kernel);
-    #endif
-    #ifdef WINOGRAD_CONV
-    read_kernel(I_ITER, offset_kernel, ptr_kernel, out_read_kernel);
-    #endif
-    #ifdef DWS_CONV
-    dws_read_dw_kernel(I_ITER, o_iter, ptr_dw_kernel, str_dw_kernel);  // o_iter as argument to load all kernels in the first iteration (o_iter==0)
-    dws_read_pw_kernel(I_ITER, O, o_iter + o_iter_first, ptr_pw_kernel, str_pw_kernel); // o_iter+o_iter_ifrst sent to let the module compute the offset to read the kernels
-    #endif
-
-    // -------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    // Read and preparation of pixels, depending on the data format we select the modules to use
-    #ifdef IHW_DATA_FORMAT
-    read_data_channels(H, W, rows, I_ITER, ptr_data, offset_read_data_channel, num_extra_rows, read_channel_blocks, stream_data_ch_0, I, enable_read);
-    ch_serialize_and_filter<CPI>(I_ITER, read_pixels, read_channel_blocks, stream_data_ch_0, stream_data_ch_1, I, enable_read);
-    join(rows, W, I_ITER, num_extra_rows, enable_read, stream_data_ch_1,  out_read_data);
-    input_buffer(read_pixels_total, write_to_input_buffer, read_from_input_buffer, out_read_data, out_read_data_1);
-    #endif
-    #ifdef GIHWCPI_DATA_FORMAT
+    // Read data and batch normalization vectors
     read_data_channels_gihwcpi(read_pixels, offset_read_data_channel, I_ITER, offset_data_in_group_cpi, ptr_data, out_read_data, enable_read);
     input_buffer(read_pixels_total, write_to_input_buffer, read_from_input_buffer, out_read_data, out_read_data_1);
-    read_input_add_gihwcpi(write_pixels, o_iter_write_offset, ptr_data_add, out_read_data_add, enable_add);
-    #ifdef USE_BATCH_NORM
-      read_batch_norm(offset_bias, b_ptr, out_read_batch_norm);
-	  #endif
-    #endif
+    read_input_add_gihwcpi(read_pixels_add, o_iter_read_add_offset, ptr_data_add, out_read_data_add, enable_add);
+    read_batch_norm(offset_bias, b_ptr, out_read_batch_norm);
 
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    // convolution: Direct, Winograd, DWS
-    #ifdef DIRECT_CONV
+    // direct convolution
     direct_conv(rows, W, PT, PB, PL, PR, SH, SW, num_output_conv_pixels, I_ITER, out_read_data_1, out_read_kernel, out_read_bias, out_conv);
-    #endif
-    #ifdef WINOGRAD_CONV
-    winograd_conv(rows, W, PT, PB, PL, PR, I_ITER, out_read_data_1, out_read_kernel, out_read_bias, out_conv);
-    #endif
-    #ifdef DWS_CONV
-    dws_conv(rows, W, I_ITER, out_read_data_1, str_dw_kernel, str_pw_kernel, out_read_bias, out_conv);
-    #endif
 
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    // Relu, Clipping, shift, and pooling
-    #if (defined(USE_RELU) || defined(USE_CLIPPING) || defined(USE_SHIFT) || defined(USE_STM))
-		  #if defined(USE_RELU) || defined(USE_CLIPPING) || defined(USE_SHIFT)
-        relu(enable_relu, enable_clipping, enable_shift, relu_factor, min_clip, max_clip, dir_shift, pos_shift, num_output_conv_pixels, out_conv, out_relu);
-		  #endif
-
-		  #ifdef USE_STM
-		  	#if defined(USE_RELU) || defined(USE_CLIPPING) || defined(USE_SHIFT)
-      			stm(enable_stm, num_output_conv_pixels, out_relu, out_stm); 
-		  	#else
-      			stm(enable_stm, num_output_conv_pixels, out_conv, out_stm);
-		  	#endif
-		  #endif
-
-      	// Pooling: avgpooling or maxpooling
-      #ifdef USE_POOLING
-		  	#if defined(USE_STM)
-            pooling(HI_pooling, WI_pooling, enable_maxpooling, enable_avgpooling, out_stm, out_pooling);
-        #else
-            pooling(HI_pooling, WI_pooling, enable_maxpooling, enable_avgpooling, out_relu, out_pooling);
-		  	#endif
-        #if defined(USE_BATCH_NORM)
-            batch_norm(enable_batch_norm, write_pixels, out_pooling, out_read_batch_norm, out_batch_norm);
-            add_data(enable_add, write_pixels, out_read_data_add, out_batch_norm, out_add); 
-        #else
-            add_data(enable_add, write_pixels, out_read_data_add, out_pooling, out_add); 
-        #endif
-		  #else
-		  	#if defined(USE_STM)
-          #if defined(USE_BATCH_NORM)
-            batch_norm(enable_batch_norm, write_pixels, out_stm, out_read_batch_norm, out_batch_norm);
-            add_data(enable_add, write_pixels, out_read_data_add, out_batch_norm, out_add); 
-          #else
-            add_data(enable_add, write_pixels, out_read_data_add, out_stm, out_add); 
-          #endif
-        #else 
-          #if defined(USE_BATCH_NORM)
-            batch_norm(enable_batch_norm, write_pixels, out_relu, out_read_batch_norm, out_batch_norm);
-            add_data(enable_add, write_pixels, out_read_data_add, out_batch_norm, out_add); 
-          #else
-            add_data(enable_add, write_pixels, out_read_data_add, out_relu, out_add); 
-          #endif
-		  	#endif
-      #endif
-	  
-    #else
-      // Pooling: avgpooling or maxpooling
-      #ifdef USE_POOLING
-        pooling(HI_pooling, WI_pooling, enable_maxpooling, enable_avgpooling, out_conv, out_pooling);
-        #if defined(USE_BATCH_NORM)
-            batch_norm(enable_batch_norm, write_pixels, out_pooling, out_read_batch_norm, out_batch_norm);
-            add_data(enable_add, write_pixels, out_read_data_add, out_batch_norm, out_add); 
-        #else
-            add_data(enable_add, write_pixels, out_read_data_add, out_pooling, out_add); 
-        #endif
-      #else
-        #if defined(USE_BATCH_NORM)
-            batch_norm(enable_batch_norm, write_pixels, out_conv, out_read_batch_norm, out_batch_norm);
-            add_data(enable_add, write_pixels, out_read_data_add, out_batch_norm, out_add); 
-        #else
-            add_data(enable_add, write_pixels, out_read_data_add, out_conv, out_add); 
-        #endif
-		  #endif
-    #endif
+    // Relu, Clipping, shift, pooling, batch normalization, add, and upsize
+    relu(enable_relu, enable_clipping, enable_shift, relu_factor, min_clip, max_clip, dir_shift, pos_shift, num_output_conv_pixels, out_conv, out_relu);
+		stm(enable_stm, num_output_conv_pixels, out_relu, out_stm); 
+    pooling(HI_pooling, WI_pooling, enable_maxpooling, enable_avgpooling, out_stm, out_pooling);
+    batch_norm(enable_batch_norm, num_bn_pixels, out_pooling, out_read_batch_norm, out_batch_norm);
+    add_data(enable_add, num_add_pixels, out_read_data_add, out_batch_norm, out_add); 
+	  upsize(enable_upsize, HO, WO, out_add, out_write);
 
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    // preparation of pixels and write on memory: Depending on the data format we build the modules structure
-
-	#ifdef IHW_DATA_FORMAT
-        split(write_rows, write_cols, out_add, out_write_channel);
-        ch_block_generate<CPO>(write_rows, write_cols, out_write_channel, out_block_write_channel);
-        write_data_channels(write_pixels, o_iter_write_offset, ptr_out, out_block_write_channel, enable_write);
-      #endif
-
-
-	#ifdef GIHWCPI_DATA_FORMAT
-        write_data_channels_gihwcpi(write_pixels, o_iter_write_offset, ptr_out, out_add);
-	#endif
+    // write to memory
+	  write_data_channels_gihwcpi(write_pixels, o_iter_write_offset, ptr_out, out_write);
 
  } // end o_iter
 

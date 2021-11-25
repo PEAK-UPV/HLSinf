@@ -59,11 +59,12 @@ int I_input = I_SIM;             // Number of input channels for the input data 
 int O_output = O_SIM;            // Number of output channels for the output data - padding (needed in GIHWCPI data format)
 int rows = H_SIM;				 // number of rows to compute by the kernel
 int enable_relu = 1;			 // enables applying the relu activation functions
-data_type relu_factor = 0;
+relu_t relu_factor = 0;
 int enable_shift = 0;			 // enables applying shift to the output
 int enable_stm = 1;			 	 // enables applying the STM functions
 int enable_batch_norm = 0;		 // enables applying batch normalization
 int enable_add = 0; 			 // enables add module
+int enable_upsize = 0;                   // enables upsize (resize)
 int dir_shift = 0;     			 // shift direction (left or right)
 int pos_shift = 0;				 // positions to shift
 int enable_clipping = 0;		 // enables applying clipping to the output
@@ -80,21 +81,19 @@ char *input_data_file;           // input data file with configurations to test
 int deterministic_input_values;  // whether input data is randomly generated or not (deterministic needed in co-simulation)
 
 // buffers
-data_type *data_in;               // Input data buffer (format I x W x H)
-data_type *data_in_add;           // Input data buffer for add module(format I x W x H)
-data_type *out;                   // Output data buffer (format O x W x H)
-data_type *kernel;                // Conv kernel buffers (format GO x GI x CPO x CPI x KH x KW) - for DirectConv and WinogradConv
-data_type *dw_kernel;             // DW kernel (format I x KH x KW) - for DWS
-data_type *pw_kernel;             // PW kernel (format GO x GI x CPO x CPI) - for DWS
-data_type *bias;                  // Conv bias buffers (format O)
-data_type *batch_norm_values;	  // Batch normalization values
-data_type *out_conv_cpu;          // Output data buffer for cpu (format O x W x H)
-data_type *out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
-data_type *out_stm_cpu; 		  // Output data buffer for STM for cpu (format O x W x H)
-data_type *out_pool_cpu;		  // Output data fuffer for pool for cpu (format O x W/2 x H/2)
-data_type *out_batch_norm_cpu;	  // Output data buffer for cpu (format O x W x H)
-data_type *out_add_cpu;          // Output data buffer for ADD for cpu (format O x W x H)
-data_type *cpu_out;               // final output
+din_t *data_in;               // Input data buffer (format I x W x H)
+din_t *data_in_add;           // Input data buffer for add module(format I x W x H)
+dout_t *out;                   // Output data buffer (format O x W x H)
+w_t *kernel;                // Conv kernel buffers (format GO x GI x CPO x CPI x KH x KW) - for DirectConv and WinogradConv
+b_t *bias;                  // Conv bias buffers (format O)
+bn_t *batch_norm_values;	  // Batch normalization values
+conv_t *out_conv_cpu;          // Output data buffer for cpu (format O x W x H)
+relu_t *out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
+stm_t *out_stm_cpu; 		  // Output data buffer for STM for cpu (format O x W x H)
+pool_t *out_pool_cpu;		  // Output data fuffer for pool for cpu (format O x W/2 x H/2)
+bn_t *out_batch_norm_cpu;	  // Output data buffer for cpu (format O x W x H)
+add_t *out_add_cpu;          // Output data buffer for ADD for cpu (format O x W x H)
+dout_t *cpu_out;               // final output
 FILE *fp;
 
 #ifdef OPENCL_TEST
@@ -162,9 +161,9 @@ void compute(int *enable, int *cpu, int *retval) {
 		 *enable = 0;
 	   }
 
-       #if !defined(API8_DATA_TYPE) && !defined(API16_DATA_TYPE) && !defined(API32_DATA_TYPE)
-	   if (enable_clipping || enable_shift) {
-		 print_message("Clipping/shift only for API (disabled)");
+       #if defined(FLOAT_DATA_TYPE)
+	   if (enable_shift) {
+		 print_message("shift only for integers (disabled)");
 		 enable_clipping = 0; enable_shift = 0;
 	   }
        #endif
@@ -247,7 +246,7 @@ void compute(int *enable, int *cpu, int *retval) {
            copy_from_fpga();
            #endif
 	       int num_differences;
-	       data_type max_difference;
+	       dout_t max_difference;
 	       *retval = check_result(&max_difference, &num_differences);
 
 	       print_check(*retval, float(max_difference), num_differences);
