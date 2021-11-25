@@ -108,7 +108,7 @@ void allocate_buffers() {
 	  OCL_CHECK(err, buffer_i_add = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_output_in_bytes, &data_in_add_ddr, &err));
   }
   else { //create a dummy buffer
-	  buffer_i_add = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , sizeof(data_dt), &data_in_ddr, &err);
+	  buffer_i_add = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , sizeof(din_t), &data_in_ddr, &err);
   }
   OCL_CHECK(err, buffer_o[0]    = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_WRITE_ONLY  | CL_MEM_USE_HOST_PTR , size_output_in_bytes, &out_ddr[0], &err));
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
