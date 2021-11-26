@@ -277,14 +277,6 @@ void compute(int *enable, int *cpu, int *retval) {
 //      // set time value from ns to us
 //      time = (unsigned long long) (diff / ((unsigned long long)1000)); // time value provided by profiling tools is given in ns
 //      time_per_iteration = time / expected_iterations;
-//      //#ifdef HLS_DEBUG
-//      printf("PROFILE EVENT - TIME KERNEL = %lu ns  (%lf ms)   Expected cicles %lu  expected time %llu (%f) ns\n", 
-//          diff,
-//          ((double)diff/(double)1000000.0), 
-//          (expected_cycles_per_iteration * expected_iterations),
-//          expected_time,
-//          et);
-//      //#endif
 //
 //#else
 //      struct timeval prof_t2;
@@ -351,11 +343,6 @@ void compute(int *enable, int *cpu, int *retval) {
         printf("\n");
       }
 
-
-#ifdef HLS_DEBUG
-      hls_debug();
-#endif
-
       #ifdef DEBUG_CPU
       print_output();
       #endif
@@ -389,15 +376,7 @@ int main(int argc, char **argv) {
   printf("\n");
 #endif
 
-printf ("JM10 - Size of data_type in this host is %lu bytes\n\n", sizeof(data_type));
-
-
-#ifdef HLS_DEBUG
-  printf(KCYN "  NOTICE: HLS_DEBUG enabled\n" KNRM);
-#endif
-#ifdef HLS_KERNEL_COUNTERS_ENABLE
-  printf(KCYN "  NOTICE: HLS_KERNEL_COUNTERS enabled\n" KNRM);
-#endif
+  printf ("JM10 - Size of data_type in this host is %lu bytes\n\n", sizeof(data_type));
 
   if (argc == 1) {
     printf("Co-simulation test...\n");

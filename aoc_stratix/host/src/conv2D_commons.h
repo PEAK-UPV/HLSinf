@@ -2,7 +2,6 @@
 #define _LIB_CONV2D_COMMONS_H_
 
 
-
 #define RANDOM_GEN_SEED_FIXED 1
 
 //#define DEBUG_VERBOSE
@@ -39,159 +38,6 @@
 
 
 #define FPGA_STRATIX_10MX
-
-
-//#define HLS_KERNEL_COUNTERS_ENABLE
-
-// HLS DEBUG MACROS
-// --------------------
-//#define HLS_DEBUG
-
-#define HLS_DBG_H_IND          0
-#define HLS_DBG_W_IND          1
-#define HLS_DBG_ROWS_IND       2
-#define HLS_DBG_I_INPUT_IND    3
-#define HLS_DBG_O_OUTPUT_IND   4
-#define HLS_DBG_I_ITER_IND           5
-#define HLS_DBG_O_ITER_FIRST_IND     6
-#define HLS_DBG_O_ITER_LAST_IND      7
-#define HLS_DBG_ENABLE_RELU_IND      8
-#define HLS_DBG_GLOBAL_OFFSET_IND    9
-#define HLS_DBG_ENABLE_UPPER_PADDING_IND   10
-#define HLS_DBG_ENABLE_LOWER_PADDING_IND   11
-#define HLS_DBG_ENABLE_MAX_POOLING_IND     12
-#define HLS_DBG_ENABLE_AVG_POOLING_IND     13
-#define HLS_DBG_ENABLE_CLIPPING_IND        14
-#define HLS_DBG_ENABLE_SHIFT_IND   15
-#define HLS_DBG_MIN_CLIP_IND       16
-#define HLS_DBG_MAX_CLIP_IND       17
-#define HLS_DBG_DIR_SHIFT_IND      18
-#define HLS_DBG_POS_SHIFT_IND      19
-
-#define HLS_DBG_VALUES_read_from_bias_IND                 20
-#define HLS_DBG_VALUES_read_from_kernel_IND               21
-#define HLS_DBG_VALUES_read_from_data_in_IND              22
-
-#define HLS_DBG_VALUES_write_to_bias_stream_IND   23 
-#define HLS_DBG_VALUES_read_from_bias_stream_IND  24
-
-#define HLS_DBG_VALUES_write_to_kernel_stream_IND  25
-#define HLS_DBG_VALUES_read_from_kernel_stream_IND 26
-
-#define HLS_DBG_VALUES_write_to_out_read_data_stream_IND  27
-#define HLS_DBG_VALUES_read_from_out_read_data_stream_IND 28
-
-#define HLS_DBG_VALUES_write_to_out_read_data_from_input_buffer_stream_IND  29
-#define HLS_DBG_VALUES_read_from_out_read_data_from_input_buffer_stream_IND 30
-
-#define HLS_DBG_VALUES_write_to_pad_cvt_stream_IND  31
-#define HLS_DBG_VALUES_read_from_pad_cvt_stream_IND 32
-
-#define HLS_DBG_VALUES_write_to_cvt_mul_stream_IND  33
-#define HLS_DBG_VALUES_read_from_cvt_mul_stream_IND 34
-
-#define HLS_DBG_VALUES_write_to_mul_add_stream_IND  35
-#define HLS_DBG_VALUES_read_from_mul_add_stream_IND 36
-
-#define HLS_DBG_VALUES_write_to_out_conv_stream_IND  37
-#define HLS_DBG_VALUES_read_from_out_conv_stream_IND 38
-
-#define HLS_DBG_VALUES_write_to_out_relu_stream_IND  39
-#define HLS_DBG_VALUES_read_from_out_relu_stream_IND 40
-
-#define HLS_DBG_VALUES_write_to_stream_pool_stream_IND  41 
-#define HLS_DBG_VALUES_read_from_stream_pool_stream_IND 42
-
-#define HLS_DBG_VALUES_write_to_out_pooling_stream_IND  43
-#define HLS_DBG_VALUES_read_from_out_polling_stream_IND 44
-
-#define HLS_DBG_VALUES_write_to_data_out_IND   45
-
-#define HLS_DBG_VALUES_write_to_out_conv_sbs_stream_IND  46
-
-#define HLS_DBG_VALUES_words_write_to_out_read_data_stream_IND    47
-#define HLS_DBG_VALUES_words_write_to_out_read_data_from_input_buffer_stream_IND    48
-#define HLS_DBG_VALUES_words_write_to_pad_cvt_stream_IND      49
-#define HLS_DBG_VALUES_words_write_to_cvt_mul_stream_IND      50
-#define HLS_DBG_VALUES_words_write_to_mul_add_stream_IND      51
-#define HLS_DBG_VALUES_words_write_to_out_conv_stream_IND     52
-#define HLS_DBG_VALUES_words_write_to_out_relu_stream_IND     53
-#define HLS_DBG_VALUES_words_write_to_stream_pool_stream_IND  54
-#define HLS_DBG_VALUES_words_write_to_out_pooling_stream_IND  55
-#define HLS_DBG_VALUES_words_write_to_data_out_IND            56
-
-//
-#define HLS_DBG_DT_bias_sum_IND              0
-#define HLS_DBG_DT_kernel_sum_IND            1
-#define HLS_DBG_DT_din_sum_IND               2
-#define HLS_DBG_DT_dout_sum_IND              3
-
-// max index in both arrays (plus one)
-#define NUM_HLS_DBG_VALUE_ARRAY_ENTRIES  57
-
-
-
-#define NUM_HLS_DBG_SBS_CONTROL_iter_IND                  0
-#define NUM_HLS_DBG_SBS_CONTROL_pin_row_IND               1
-#define NUM_HLS_DBG_SBS_CONTROL_pin_col_IND               2
-#define NUM_HLS_DBG_SBS_CONTROL_row0_buffer_write_IND     3
-#define NUM_HLS_DBG_SBS_CONTROL_row1_buffer_write_IND     4
-#define NUM_HLS_DBG_SBS_CONTROL_row2_buffer_write_IND     5
-#define NUM_HLS_DBG_SBS_CONTROL_p_IND                     6
-#define NUM_HLS_DBG_SBS_CONTROL_pin_col0_IND              7
-#define NUM_HLS_DBG_SBS_CONTROL_pin_col1_IND              8
-#define NUM_HLS_DBG_SBS_CONTROL_row0_IND                  9
-#define NUM_HLS_DBG_SBS_CONTROL_row1_IND                 10
-#define NUM_HLS_DBG_SBS_CONTROL_shift_frame_IND          11
-#define NUM_HLS_DBG_SBS_CONTROL_send_frame_IND           12
-
-#define NUM_HLS_DBG_SBS_CONTROL_ARRAY_ENTRIES            13
-
-#define HLS_DBG_ENABLE_STREAM_hls_o_iter_monitor_MASK      (unsigned long)63
-#define HLS_DBG_ENABLE_STREAM_data_in_MASK                 (unsigned long)64
-#define HLS_DBG_ENABLE_STREAM_input_buffer_MASK            (unsigned long)128
-#define HLS_DBG_ENABLE_STREAM_dc_pad_out_MASK              (unsigned long)256
-#define HLS_DBG_ENABLE_STREAM_dc_cvt_out_MASK              (unsigned long)512
-#define HLS_DBG_ENABLE_STREAM_dc_cvt_sbs_control_out_MASK  (unsigned long)1024
-#define HLS_DBG_ENABLE_STREAM_dc_cvt_sbs_frame_out_MASK    (unsigned long)2048
-#define HLS_DBG_ENABLE_STREAM_dc_mul_out_MASK              (unsigned long)4096
-#define HLS_DBG_ENABLE_STREAM_data_directconv_out_MASK     (unsigned long)8192
-
-
-
-// HLS_DBG_KRNL_COUNTERS_ENABLE indices
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_index_IND                 0  
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_state_index_IND           1
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_value_1_IND               2
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_value_2_IND               3
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_value_3_IND               4
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_value_4_IND               5
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_value_5_IND               6
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_value_6_IND               7
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_value_IB_out_IND          8 
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_value_PAD_out_IND         9
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_value_CVT_out_IND        10
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_value_MUL_out_IND        11
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_value_ADD_out_IND        12
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_value_RELU_out_IND       13
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_value_POOLCVT_out_IND        14
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_value_POOLPOOLING_out_IND    15
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_value_enable_buffer          16
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_value_write_to_input_buffer  17
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_value_read_from_input_buffer 18
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_value_enable_read            19
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_value_POOLCVT_it_limit_IND       20
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_value_POOLPOOLING_it_limit_IND   21
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_value_bias_elements_in_iter_IND    22
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_value_kernel_elements_in_iter_IND  23
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_pooling_enable_value_IND           24
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_poolingcvt_enable_value_IND        25
-#define HLS_DBG_KRNL_COUNTERS_kernel_o_iter_poolingpooling_enable_value_IND    26
-
-#define HLS_DBG_KRNL_COUNTERS_ARRAY_NUM_ENTRIES                      27
-
-
-//----end of HLS debug macros
 
 // #define EMULATION_CONFIG_ENABLED
 
@@ -788,27 +634,6 @@ struct kernel_pw_t_st {
   data_type pixel[CPO][CPI];
 }__attribute__((packed));
 typedef struct kernel_pw_t_st kernel_pw_t;
-
-//#ifdef HLS_DEBUG
-// kernel struct (pointwise)
-struct hls_cvt_sbs_control_t_st {
-  unsigned long iter;//                  0
-  unsigned long pin_row;//               1
-  unsigned long pin_col;//               2
-  unsigned long row0_buffer_write;//     3
-  unsigned long row1_buffer_write;//     4
-  unsigned long row2_buffer_write;//     5
-  unsigned long p;//                     6
-  unsigned long pin_col0;//              7
-  unsigned long pin_col1;//              8
-  unsigned long row0;//                  9
-  unsigned long row1;//                 10
-  unsigned long shift_frame;//          11
-  unsigned long send_frame;//           12
-
-}__attribute__((packed));
-typedef struct hls_cvt_sbs_control_t_st hls_cvt_sbs_control_t;
-//#endif
 
 #define read_kernel_pw_t ac_int<CPI*DATA_TYPE_WIDTH>
 // typedef ac_int<CPI*DATA_TYPE_WIDTH> read_kernel_pw_t;

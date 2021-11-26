@@ -6,15 +6,6 @@
 
 #include "conv2D.h"
 
-
-#ifdef HLS_DEBUG
-#include "hls_debug.h"
-#endif
-
-#ifdef HLS_KERNEL_COUNTERS_ENABLE
-#include "hls_kernel_counters.h"
-#endif
-
 #include <cstdio>      /* printf, scanf, NULL */
 #include <cstdlib>     /* malloc, free, rand */
 
