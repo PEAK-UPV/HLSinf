@@ -363,7 +363,7 @@ kernel void data_out(global pixel_out_t * restrict data_out, uint H, uint W, uin
 }
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
-// datapath kernels
+// datapath kernels  -- called as tasks
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
@@ -431,10 +431,13 @@ kernel void padding(uint H, uint W, uint i_iter, uint O_ITER, uint enable_lower_
   #endif
 
   uint num_iters;
-  uint h;
-  uint w;
+  //uint h;
+  //uint w;
   pixel_in_t px_data;
   pixel_in_t px_zero;
+
+  uint HH = H + 2;;
+  uint WW = W + 2; 
   
   padding_cpi_loop:
   #pragma unroll CPI
@@ -442,7 +445,7 @@ kernel void padding(uint H, uint W, uint i_iter, uint O_ITER, uint enable_lower_
     px_zero.pixel[cpi] = 0.f;
   }
 
-  num_iters = i_iter * (H + 2) * (W + 2);
+  num_iters = i_iter * (HH) * (WW);
 
   #ifdef DEBUG_PADDING
     #ifdef DEBUG_VERBOSE
@@ -457,8 +460,8 @@ kernel void padding(uint H, uint W, uint i_iter, uint O_ITER, uint enable_lower_
         printf("PADDING: o_iter %u   for %u iters \n", o_iter, num_iters);
       #endif
     #endif
-    h = 0;
-    w = 0;
+    //h = 0;
+    //w = 0;
   
     // JM10, perque no es fan 3 bucles for per tal de evitar les comparacions finals de w y h ?
     //   lógicament és el mateix, però de l'altra forma el codi es llig més facilment
@@ -466,38 +469,35 @@ kernel void padding(uint H, uint W, uint i_iter, uint O_ITER, uint enable_lower_
     //         - àrea ocupada pel kernel
     //         - thput del kernel: II / fmax
     padding_loop:
-    for (uint i = 0; i < num_iters; i++) {
-      uint enable1 = enable_upper_padding & (h==0);
-      uint enable2 = enable_lower_padding & (h == H+1);
-      uint enable3 = (w == 0);
-      uint enable4 = (w == W+1);
-      
-      if (enable1 | enable2 | enable3 | enable4) {
-        px_data = px_zero; 
-      } else {
-        px_data = read_channel_intel(CH_PADD_IN);
-      }
+    #pragma loop_coalesce
+    for (uint i = 0; i < i_iter; i++) {
+      for (uint h = 0; h < HH ;h++) {
+        for (uint w = 0; w < WW; w++) {
 
-      #ifdef DEBUG_PADDING
-        #ifdef DEBUG_VERBOSE
-          uint i_it = i / ((H + 2) * (W + 2));
-          uint px   = i % ((H + 2) * (W + 2));
-          uint ch_low = i_it * CPI;
-          uint ch_hi  = (i_it + 1) * CPI - 1;
-          printf("PADDING: o_it: %2u   i_it: %2u   px %2u [%2u, %2u]: ", o_iter, i_it, px, ch_low, ch_hi);
-          for (uint p = 0; p < CPI; p++) printf("  %8.2f", px_data.pixel[p]);
-          printf("\n");
-        #endif
-      #endif
-  
-      write_channel_intel(CH_PADD_OUT, px_data);
-  
-      w = w+1;
-      if (w == W+2) {
-        w = 0;
-        h = h + 1;
-        if (h == H+2) {
-          h = 0;
+          uint enable1 = enable_upper_padding & (h==0);
+          uint enable2 = enable_lower_padding & (h == H+1);
+          uint enable3 = (w == 0);
+          uint enable4 = (w == W+1);
+          
+          if (enable1 | enable2 | enable3 | enable4) {
+            px_data = px_zero; 
+          } else {
+            px_data = read_channel_intel(CH_PADD_IN);
+          }
+    
+          #ifdef DEBUG_PADDING
+            #ifdef DEBUG_VERBOSE
+              uint i_it = i / ((HH) * (WW));
+              uint px   = i % ((HH) * (WW));
+              uint ch_low = i_it * CPI;
+              uint ch_hi  = (i_it + 1) * CPI - 1;
+              printf("PADDING: o_it: %2u   i_it: %2u   px %2u [%2u, %2u]: ", o_iter, i_it, px, ch_low, ch_hi);
+              for (uint p = 0; p < CPI; p++) printf("  %8.2f", px_data.pixel[p]);
+              printf("\n");
+            #endif
+          #endif
+      
+          write_channel_intel(CH_PADD_OUT, px_data);
         }
       }
     }
@@ -663,10 +663,6 @@ kernel void cvt(uint H, uint W, uint I_ITER, uint O_ITER){
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 kernel void mul (uint H, uint W, uint i_iter, uint O_ITER) {
-
-// WARNING JM10, he re-estructurat els bucles del kernel respecte al fitxer original....
-//               però he verificat em dona exactament el mateix que l'original
-
   #ifdef DEBUG_MUL
   printf("MUL: start   i_iter %2u  o_iter %2u\n", i_iter, O_ITER);
   #endif
@@ -713,7 +709,6 @@ kernel void mul (uint H, uint W, uint i_iter, uint O_ITER) {
   
         data_in = read_channel_intel(CH_MUL_IN); // frame_t from cvt stage-> 9 pixels (pixel_in_t)
 
-  
         loop_mul_cpi:
         #pragma unroll CPI
         for (int cpi=0; cpi<CPI; cpi++) {
@@ -757,91 +752,6 @@ kernel void mul (uint H, uint W, uint i_iter, uint O_ITER) {
   #ifdef DEBUG_MUL
   printf("MUL: end\n");
   #endif
-
-
-
-/*
-  #ifdef DEBUG_MUL
-  printf("mul: start\n");
-  #endif
-
-  kernel_t kernel_frame;
-  kernel_in_t k;
-  frame_t data_in;
-  data_type sum[CPO];
-  pixel_out_t p_out;
-
-  int load_kernel = 0;
-  int num_iter = i_iter * H * W;
-  int iter_load_kernel = 0;
-
-  mul_loop_1:
-  #pragma ii 1
-  for(int i = 0; i < num_iter; i++){
-    load_kernel = (iter_load_kernel == 0);
-    if (load_kernel){
-      kernel_frame = read_channel_intel(CH_KERNEL_IN);
-      #ifdef DEBUG_MUL
-      #ifdef DEBUG_VERBOSE
-      printf("MUL: kernel read\n");
-      for(int i=0; i<CPI; i++){
-        for(int o=0; o<CPO; o++){
-          printf("kernel cpi=%d cpo=%d\n", i, o);
-          for (int p=0; p<9; p++){
-            printf(" %f ", (float)kernel_frame.pixel[o][i][p]);
-            if((p+1)%3==0)printf("\n");
-          }
-          printf("\n");
-        }
-      }
-      #endif
-      #endif
-    }
-
-    mul_loop_2:
-    #pragma unroll
-    for(int i=0; i<CPO; i++){
-      sum[i] = 0;
-    }
-
-    data_in = read_channel_intel(CH_MUL_IN);
-
-    loop_mul_cpi:
-    #pragma unroll
-    for (int cpi=0; cpi<CPI; cpi++) {
-      loop_mul_j:
-      #pragma unroll
-      for (int j=0; j<KW*KH; j++) {
-        loop_mul_cpo:
-        #pragma unroll
-        for (int cpo=0; cpo<CPO; cpo++) {
-          sum[cpo] += data_in.pixel[j].pixel[cpi] * kernel_frame.pixel[cpo][cpi][j];
-        }
-      }
-    }
-
-    #pragma unroll
-    for(int i=0; i<CPO; i++){
-      p_out.pixel[i] = sum[i];
-    }
-    #ifdef DEBUG_MUL
-    #ifdef DEBUG_VERBOSE
-    for(int i = 0;i<CPO;i++) {
-      printf("mult: p_out.pixel[%d] = %6.2f  ", i, (float)p_out.pixel[i]);
-    }
-    printf("\n");
-    #endif
-    #endif
-    write_channel_intel(CH_MUL_OUT, p_out);
-    iter_load_kernel++;
-    if (iter_load_kernel == W*H) iter_load_kernel = 0;
-  }
-
-  #ifdef DEBUG_MUL
-  printf("mul: end\n");
-  #endif
-*/
-
 }
 
 // ----------------------------------------------------------------------------
@@ -863,20 +773,8 @@ kernel void add (uint H, uint W, uint i_iter, uint O_ITER) {
   // number of iterations by CPI || CPO channels
   uint num_iterations = W * H;
 
-  //pixel_out_t pz;
-  //for (uint c = 0; c < CPO; c++) {
-  //  pz.pixel[c] = (data_type)0;
-  //}
-
   add_o_iter_loop:
   for(uint o_iter = 0; o_iter < O_ITER; o_iter++) {
-
-
-    //#pragma unroll
-    //for (uint z = 0; z < (WMAX)*(HMAX); z++) {
-    //  buff_o_channels[z] = pz;
-    //}
-
     #ifdef DEBUG_ADD
       printf("ADD: o_iter %u \n", o_iter);
     #endif
@@ -1071,6 +969,7 @@ kernel void relu(uint W, uint H, uint O_ITER, uint enable_relu) {
 // In case enable_pooling is not set, the module bypasses the input
 //	to the output, sending the pixel on the first position of the output frame.
 // ----------------------------------------------------------------------------
+/*
 kernel void pool_cvt(uint H, uint W, uint enable_max_pooling, uint enable_avg_pooling, uint O_ITER) {
 	pixel_out_t  buffer0[WMAX];
 	pixel_out_t  buffer1[WMAX];
@@ -1091,6 +990,7 @@ kernel void pool_cvt(uint H, uint W, uint enable_max_pooling, uint enable_avg_po
   uint          kpcpo = KW_POOLING * KH_POOLING;
   uint enable_pooling =  enable_max_pooling || enable_avg_pooling;
 
+  #pragma unroll
   for (uint i = 0; i < CPO; i++) {
     poz.pixel[i] = (data_type)0;
   }
@@ -1099,6 +999,10 @@ kernel void pool_cvt(uint H, uint W, uint enable_max_pooling, uint enable_avg_po
 	printf("POOL_CVT: start   H %u   W %u   ena_max_pool %u   ena_avg_pool %u  O_ITER %u\n", 
       H, W, enable_max_pooling, enable_avg_pooling, O_ITER
       );
+    #ifdef DEBUG_VERBOSE
+      uint index_rd = 0;
+      uint index_wr = 0;
+    #endif
   #endif
 
   pool_cvt_o_iter_loop:
@@ -1111,14 +1015,14 @@ kernel void pool_cvt(uint H, uint W, uint enable_max_pooling, uint enable_avg_po
       pixel_out_t pixel = read_channel_intel(CH_POOL_CVT_IN);
       #ifdef DEBUG_POOL
         #ifdef DEBUG_VERBOSE
-          printf("DEBUG_POOL: pixel read: ");
+          printf("POOL_CVT: pixel read %u : ", index_rd++);
           for (int x=0; x<CPO; x++) printf(" %f ", (float)pixel.pixel[x]);
           printf("\n");
         #endif
       #endif
 
 // principio truco prueba prestaciones
-/*
+
       if (enable_pooling) {
   
         row_write = pin_row % 2;
@@ -1164,7 +1068,7 @@ kernel void pool_cvt(uint H, uint W, uint enable_max_pooling, uint enable_avg_po
           write_channel_intel(CH_POOL_CVT_OUT, kernel_frame);
           #ifdef DEBUG_POOL
             #ifdef DEBUG_VERBOSE
-            printf("POOL_CVT: Send Frame:\n");
+            printf("POOL_CVT: a Send Frame %u :\n", index_wr++);
             for (int x=0; x<CPO; x++) printf(" cpo %d: %f %f %f %f\n", x, (float)p0.pixel[x], (float)p1.pixel[x], (float)p2.pixel[x], (float)p3.pixel[x]);
             #endif
           #endif
@@ -1177,19 +1081,28 @@ kernel void pool_cvt(uint H, uint W, uint enable_max_pooling, uint enable_avg_po
           kernel_frame.pixel[z] = poz;
         }
         write_channel_intel(CH_POOL_CVT_OUT, kernel_frame);
+        #ifdef DEBUG_POOL
+          #ifdef DEBUG_VERBOSE
+            printf("POOL_CVT: b Send Frame %u :\n", index_wr++);
+            for (int x=0; x<CPO; x++) printf(" cpo %d: %f %f %f %f\n", x, (float)kernel_frame.pixel[0].pixel[x], (float)kernel_frame.pixel[1].pixel[x], (float)kernel_frame.pixel[2].pixel[x], (float)kernel_frame.pixel[3].pixel[x]);
+          #endif
+        #endif
+
       }
-    */
-      // truco prueba prestaciones
-      // este el codigo que hay dentro del else
-      {
-       frame_pool_t kernel_frame;
-        kernel_frame.pixel[0] = pixel;
-        #pragma unroll
-        for (uint z = 1; z < kpcpo; z++) {
-          kernel_frame.pixel[z] = poz;
-        }
-        write_channel_intel(CH_POOL_CVT_OUT, kernel_frame);
-      }
+    
+//
+//      // truco prueba prestaciones
+//      // este el codigo que hay dentro del else
+//      {
+//       frame_pool_t kernel_frame;
+//        kernel_frame.pixel[0] = pixel;
+//        #pragma unroll
+//        for (uint z = 1; z < kpcpo; z++) {
+//          kernel_frame.pixel[z] = poz;
+//        }
+//        write_channel_intel(CH_POOL_CVT_OUT, kernel_frame);
+//      }
+//
 // fin de truco prueba
 
 
@@ -1199,6 +1112,118 @@ kernel void pool_cvt(uint H, uint W, uint enable_max_pooling, uint enable_avg_po
 	printf("POOL_CVT: end \n");
   #endif
 }
+*/
+
+kernel void pool_cvt(uint H, uint W, uint enable_max_pooling, uint enable_avg_pooling, uint O_ITER) {
+	pixel_out_t  buffer0[WMAX];
+	pixel_out_t  buffer1[WMAX];
+	uint          row0;
+	uint          shift_frame;
+	uint          send_frame;
+	uint          odd_col = 0;       // whether we are in an odd col (so to be able to send a frame)
+	uint          pin_row = 0;
+	uint          pin_col = 0;
+	uint          row_write;			// either 0 or 1 (we assume 2x2 kernel)
+	uint          size_channel = H * W;
+	uint          iterations = size_channel;
+	// pixel_out_t  pixel; 
+	pixel_out_t  p0, p1, p2, p3;
+	pixel_out_t  pix_b0, pix_b1;
+  pixel_out_t  poz; // pixel_out_zero -> output pixel set to zeros
+  
+  uint          kpcpo = KW_POOLING * KH_POOLING;
+  uint enable_pooling =  enable_max_pooling || enable_avg_pooling;
+
+  #pragma unroll
+  for (uint i = 0; i < CPO; i++) {
+    poz.pixel[i] = (data_type)0;
+  }
+
+  #ifdef DEBUG_POOL
+	printf("POOL_CVT: start   H %u   W %u   ena_max_pool %u   ena_avg_pool %u  O_ITER %u\n", 
+      H, W, enable_max_pooling, enable_avg_pooling, O_ITER
+      );
+  #endif
+
+  pool_cvt_o_iter_loop:
+  for(uint o_iter = 0; o_iter < O_ITER; o_iter++) {
+    #ifdef DEBUG_POOL 
+      printf("POOL_CVT: o_iter %u\n", o_iter);
+    #endif
+  	pool_cvt_loop:
+    #pragma loop_coalesce
+    for(uint pin_row = 0; pin_row < H; pin_row++) {
+      for (uint pin_col = 0; pin_col < W; pin_col++) {
+        // read pixel from channel
+        pixel_out_t pixel = read_channel_intel(CH_POOL_CVT_IN);
+        
+        #ifdef DEBUG_POOL
+          #ifdef DEBUG_VERBOSE
+            printf("DEBUG_POOL: pixel read: ");
+            for (int x=0; x<CPO; x++) printf(" %f ", (float)pixel.pixel[x]);
+            printf("\n");
+          #endif
+        #endif
+    
+        // allways perform all operations as done in the pool_pooling kernel
+        //    then decide at the final stage whether to send the frame or not yet
+        row_write = pin_row % 2;
+        // Let's compute shift and send flag variables
+        shift_frame = (pin_row > 0) & (pin_col > 1);
+        send_frame = (row_write & odd_col) | !(enable_pooling);
+        row0 = (row_write == 0);
+    
+        // Let's write on the buffer and at the same time
+        // we set the two pixels pix_b0 and pix_b1
+        if (row_write==0) {
+          buffer0[pin_col] = pixel;
+          pix_b0 = pixel;
+          pix_b1 = buffer1[pin_col];
+        } else {
+          buffer1[pin_col] = pixel;
+          pix_b0 = buffer0[pin_col];
+          pix_b1 = pixel;
+        }
+    
+        // p0 p1
+        if (shift_frame) {p0 = p1;} else if (pin_col == 0) p0 = pix_b0;
+        p1 = pix_b0;
+        // p2 p3
+        if (shift_frame) {p2 = p3;} else if (!pin_col) p2 = pix_b1;
+        p3 = pix_b1;
+    
+        // Control the iteration count 
+        odd_col = (odd_col + 1) % 2;
+    
+        if (send_frame) {
+          frame_pool_t kernel_frame;
+          if (enable_pooling) {
+            kernel_frame.pixel[0] = p0; kernel_frame.pixel[1] = p1;
+            kernel_frame.pixel[2] = p2; kernel_frame.pixel[3] = p3;
+          } else {
+            kernel_frame.pixel[0] = pixel;
+            #pragma unroll
+            for (uint z = 1; z < kpcpo; z++) {
+              kernel_frame.pixel[z] = poz;
+            }
+          }
+          write_channel_intel(CH_POOL_CVT_OUT, kernel_frame);
+          #ifdef DEBUG_POOL
+            #ifdef DEBUG_VERBOSE
+            printf("POOL_CVT: Send Frame  pooling %s:\n", enable_pooling?" enabled":" NOT enabled");
+            for (int x=0; x<CPO; x++) printf(" cpo %d: %f %f %f %f\n", x, (float)kernel_frame.pixel[0].pixel[x], (float)kernel_frame.pixel[1].pixel[x], (float)kernel_frame.pixel[2].pixel[x], (float)kernel_frame.pixel[3].pixel[x]);
+            #endif
+          #endif
+        }
+      }
+    } // iterations
+  } // o_iter
+  #ifdef DEBUG_POOL
+	printf("POOL_CVT: end \n");
+  #endif
+}
+
+
 
 // ----------------------------------------------------------------------------
 // Pooling operation of the layer
@@ -1214,6 +1239,7 @@ kernel void pool_cvt(uint H, uint W, uint enable_max_pooling, uint enable_avg_po
 //   If no enable is active then the module bypasses the first pixel of the incomming frame to the output stream
 //
 // ----------------------------------------------------------------------------
+/*
 kernel void pool_pooling (uint H, uint W, uint enable_maxpooling, uint enable_avgpooling, uint O_ITER){
 
   frame_pool_t kernel_frame;
@@ -1231,6 +1257,10 @@ kernel void pool_pooling (uint H, uint W, uint enable_maxpooling, uint enable_av
     printf("POOL_POOLING: start  H %u   W %u   ena_max_pooling %u   ena_avg_pooling %u\n", 
         H, W, enable_maxpooling, enable_avgpooling
         );
+    #ifdef DEBUG_VERBOSE
+      uint index_wr = 0;
+      uint index_rd = 0;
+    #endif
   #endif
 
   pool_pooling_o_iter_loop:
@@ -1246,13 +1276,13 @@ kernel void pool_pooling (uint H, uint W, uint enable_maxpooling, uint enable_av
       kernel_frame = read_channel_intel(CH_POOL_POOL_IN);
 
 // principio truco prueba prestaciones
-/*
+
 
       #ifdef DEBUG_POOL
         #ifdef DEBUG_VERBOSE
-        printf("POOL_POOLING: read ");
+        printf("POOL_POOLING: read  %u\n", index_rd++);
         for (uint x=0; x<CPO; x++) {
-          printf("cpo %d: ", x);
+          printf("  cpo %d: ", x);
           for (uint xx=0; xx<size_kernel; xx++) printf(" %f", (float)kernel_frame.pixel[xx].pixel[x]);
           printf("\n");
         }
@@ -1288,20 +1318,20 @@ kernel void pool_pooling (uint H, uint W, uint enable_maxpooling, uint enable_av
         out_pix.pixel[cpo] = enable_maxpooling ? maxpool_value[cpo] : enable_avgpooling ? avgpool_value[cpo] : kernel_frame.pixel[0].pixel[cpo];
       }
 
-*/
-// truco prueba prestaciones
-      #pragma unroll
-      for (uint cpo=0; cpo < CPO; cpo++) {
-        out_pix.pixel[cpo] = kernel_frame.pixel[0].pixel[cpo];
-      }
 
+// truco prueba prestaciones
+//      #pragma unroll
+//      for (uint cpo=0; cpo < CPO; cpo++) {
+//        out_pix.pixel[cpo] = kernel_frame.pixel[0].pixel[cpo];
+//      }
+//
 // fin de truco prueba
 
 
       write_channel_intel(CH_POOL_POOL_OUT, out_pix);
       #ifdef DEBUG_POOL
         #ifdef DEBUG_VERBOSE
-          printf("POOL_POOLING: send pixel: ");
+          printf("POOL_POOLING: send pixel  %u: ", index_wr++);
             for (uint x=0; x<CPO; x++) printf(" %f", (float)out_pix.pixel[x]);
         #endif
       #endif
@@ -1312,6 +1342,154 @@ kernel void pool_pooling (uint H, uint W, uint enable_maxpooling, uint enable_av
     printf("POOL_POOLING: end\n");
   #endif
 }
+*/
+
+kernel void pool_pooling (uint H, uint W, uint enable_maxpooling, uint enable_avgpooling, uint O_ITER){
+
+  frame_pool_t kernel_frame;
+  pixel_out_t out_pix;
+
+  uint enable_pooling = enable_maxpooling || enable_avgpooling;
+  uint WO = enable_pooling ? ((W - KW_POOLING)/SW_POOLING + 1) : W;
+  uint HO = enable_pooling ? ((H - KH_POOLING)/SH_POOLING + 1) : H;
+
+  uint size_out = HO * WO;
+  uint size_kernel = KH_POOLING * KW_POOLING;
+  uint iterations = size_out;
+
+  #ifdef DEBUG_POOL
+    printf("POOL_POOLING: start  H %u   W %u   ena_max_pooling %u   ena_avg_pooling %u\n", 
+        H, W, enable_maxpooling, enable_avgpooling
+        );
+    #ifdef DEBUG_VERBOSE
+      uint index_rd = 0; 
+      uint index_wr = 0;
+    #endif
+  #endif
+
+  pool_pooling_o_iter_loop:
+  for(uint o_iter = 0; o_iter < O_ITER; o_iter++) {
+    #ifdef DEBUG_POOL 
+      printf("POOL_POOLING: o_iter %u\n", o_iter);
+    #endif
+  
+    pool_pooling_loop_iter:
+    for (uint i=0; i < iterations; i++) {
+      
+      // Let's read the input frame
+      kernel_frame = read_channel_intel(CH_POOL_POOL_IN);
+
+
+      #ifdef DEBUG_POOL
+        #ifdef DEBUG_VERBOSE
+        printf("POOL_POOLING: read  frame %u \n", index_rd++);
+        for (uint x=0; x<CPO; x++) {
+          printf("  cpo %d: ", x);
+          for (uint xx=0; xx<size_kernel; xx++) printf(" %f", (float)kernel_frame.pixel[xx].pixel[x]);
+          printf("\n");
+        }
+        #endif
+      #endif
+  
+
+      data_type maxpool_value[CPO];
+      data_type avgpool_accumulator[CPO];
+      data_type avgpool_value[CPO];
+      data_type pool_value[CPO];
+
+//      pooling_loop_vars_initialization:
+//      #pragma unroll
+//      for (uint cpo=0; cpo < CPO; cpo++) {
+////        maxpool_value[cpo] = MIN_DATA_TYPE_VALUE;
+//        avgpool_accumulator[cpo] = 0;
+//      }
+
+
+//      //1 WARNINGGGGG  reactivar también  el maxpool_value[cpo] aal reactivar el código original
+//      pooling_loop_kernel:
+//      #pragma ii  1
+//      for (uint k=0; k < size_kernel; k++) {
+//        pooling_loop_cpo:
+//        #pragma unroll  
+//        for (uint cpo=0; cpo < CPO; cpo++) {
+//          data_type value = kernel_frame.pixel[k].pixel[cpo];
+//          if (value > maxpool_value[cpo]) maxpool_value[cpo] = value;
+//          avgpool_accumulator[cpo] += value;
+//        }
+//      }
+
+
+
+     // printf ("Jelou world, this is jm10, size of sizekernel is: %u\n\n", size_kernel);
+      pooling_loop_kernel:
+      #pragma unroll
+      for (uint cpo=0; cpo < CPO; cpo++) {
+        data_type v_0 = kernel_frame.pixel[0].pixel[cpo];
+        data_type v_1 = kernel_frame.pixel[1].pixel[cpo];
+        data_type v_2 = kernel_frame.pixel[2].pixel[cpo];
+        data_type v_3 = kernel_frame.pixel[3].pixel[cpo];
+
+        data_type v_max_0_a = v_0 > v_2 ? v_0 : v_2;
+        data_type v_max_0_b = v_1 > v_3 ? v_1 : v_3;;
+
+        data_type v_max_1_a = v_max_0_a > v_max_0_b ? v_max_0_a : v_max_0_b;
+        
+        maxpool_value[cpo] = v_max_1_a ;
+
+        data_type v_avg_0_a = v_0 + v_2;
+        data_type v_avg_0_b = v_1 + v_3; 
+        data_type v_avg_1_a = v_avg_0_a + v_avg_0_b;
+        avgpool_accumulator[cpo] = v_avg_1_a;
+
+      }
+
+//      pooling_loop_avg_kernel:
+//      #pragma unroll  
+//      for (uint cpo=0; cpo < CPO; cpo++) {
+//        //avgpool_accumulator[cpo] = kernel_frame.pixel[0].pixel[cpo] + kernel_frame.pixel[1].pixel[cpo]; + kernel_frame.pixel[2].pixel[cpo] + kernel_frame.pixel[3].pixel[cpo];
+//        data_type v0_a = kernel_frame.pixel[0].pixel[cpo] + kernel_frame.pixel[1].pixel[cpo];
+//        data_type v0_b = kernel_frame.pixel[2].pixel[cpo] + kernel_frame.pixel[3].pixel[cpo];
+//      
+//        data_type v1_a = v0_a + v0_b;
+//
+//        avgpool_accumulator[cpo] = v1_a;
+//      }
+      
+
+      #pragma unroll
+      for (uint cpo=0; cpo < CPO; cpo++) {
+        avgpool_value[cpo] = avgpool_accumulator[cpo] / (data_type)size_kernel;
+      }
+
+      #pragma unroll
+      for (uint cpo=0; cpo < CPO; cpo++) {
+        pool_value[cpo] = enable_maxpooling ? maxpool_value[cpo] : avgpool_value[cpo];
+      }
+
+      #pragma unroll
+      for (uint cpo=0; cpo < CPO; cpo++) {
+        out_pix.pixel[cpo] = enable_pooling ? pool_value[cpo] : kernel_frame.pixel[0].pixel[cpo];
+      }
+
+      write_channel_intel(CH_POOL_POOL_OUT, out_pix);
+      #ifdef DEBUG_POOL
+        #ifdef DEBUG_VERBOSE
+          printf("POOL_POOLING: send pixel  %u: ", index_wr++);
+            for (uint x=0; x<CPO; x++) printf(" %f", (float)out_pix.pixel[x]);
+            printf("\n");
+        #endif
+      #endif
+    }
+  }
+
+  #ifdef DEBUG_POOL
+    printf("POOL_POOLING: end\n");
+  #endif
+}
+
+
+
+
 
 //*********************************************************************************************************************
 // end of file: k_conv2D.cl

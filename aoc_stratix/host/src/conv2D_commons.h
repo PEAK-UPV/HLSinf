@@ -29,7 +29,7 @@
 ////#define DEBUG_BLOCK
 //#define DEBUG_WRITE_DATA
 ////#define DEBUG_RELU
-////#define DEBUG_POOL
+//#define DEBUG_POOL
 //
 // host side (again)
 //#define DEBUG_CPU
