@@ -47,8 +47,7 @@
 
 #ifdef FPGA_STRATIX_10MX
   //#define KERNEL_FREQUENCY_MHZ 43  BSP 20.4 WITH TIMING VIOLATIONS
-  //#define KERNEL_FREQUENCY_MHZ ((float)316.67)
-  #define KERNEL_FREQUENCY_MHZ ((float)358.33)
+  #define KERNEL_FREQUENCY_MHZ ((float)361.11)
 #else
   // let's set the alveo u200 as the default device
 //iffdef FPGA_ALVEO_U200
@@ -60,17 +59,6 @@
 //  Public Global variables
 // 
 //*********************************************************************************************************************
-//#include "ihc_apint.h"
-//using std::vector;
-
-//bfloat16 aaaaa;
-//bfloat16
-//ap_int<4,11,5>
-
-int16_t unknown_type; 
-//half    unknown2;
-//typedef ac_fixed<__HLS_AC_W_SHORT, __HLS_AC_I_SHORT, true, AC_RND, AC_SAT>
-
 // Global variables
 int CONVS;                       // Number of convolutional layers
 int KERNELS;                     // Number of FPGA kernels to use
@@ -121,8 +109,6 @@ FILE *fp;
 int use_emulator = 0;
 
 // kernels execution time
-//double kernels_start_time;
-//double kernels_end_time;
 double kernels_execution_time = 0;
 
 #ifdef OPENCL_TEST
@@ -301,7 +287,6 @@ void compute(int *enable, int *cpu, int *retval) {
       
       cl_ulong expected_cycles_per_iteration;
       cl_ulong expected_iterations;
-
      
       expected_cycles_per_iteration =  W * H ;
       expected_iterations = I_input/CPI *O_output/CPO;
@@ -394,17 +379,10 @@ int main(int argc, char **argv) {
     printf("File-based test...\n");
     deterministic_input_values = 0;
 
-    //----------------jm10 under devel
-    printf("\n\n");
-    printf(KRED "  forcing data_in deterministic values\n" KNRM);
-    printf("\n\n");
-//    deterministic_input_values = 1;
-    //----------------jm10 under devel
-
+    // parese arguments: get input data file and kernels file
     parse_arguments(argc, argv);
 
     #ifdef OPENCL_TEST
-
     enable = fn_init_fpga();
     if (!enable) {
       printf(KRED "Error initializing fpga device\n" KNRM);
