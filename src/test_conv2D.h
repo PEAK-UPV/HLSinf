@@ -22,7 +22,7 @@ using std::vector;
 #define MAX_CONVS        8  // Maximum number of convolutional layers
 #define MAX_KERNELS      4  // Maximum number of kernels implemented
 #define MAX_WORK_ITEMS 512  // Maximum number of work items to process
-#define NUM_KERNELS      1
+#define NUM_KERNELS      2
 
 // Global variables
 extern int CONVS;                        // Number of convolutional layers

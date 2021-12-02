@@ -76,12 +76,29 @@ void mul(int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::str
       for (int j=0; j<KW*KH; j++) {
         DO_PRAGMA(HLS loop_tripcount  min=1 max=KW*KH)
         #pragma HLS UNROLL
+#ifdef DSP_OPTIMIZATION
         loop_mul_cpo:
+        for (int cpo=0; cpo<CPO; cpo = cpo + 2) {
+	  DO_PRAGMA(HLS loop_tripcount min=1 max=CPO/2)
+          #pragma HLS UNROLL
+	  ap_int<27> op1;
+          op1.range(26, 18) = kernel.pixel[cpo][cpi][j];
+          op1.range(17, 0) = 0;
+	  ap_uint<27> op2;
+	  op2 = kernel.pixel[cpo+1][cpi][j];
+	  ap_int<45> result;
+	  result = (op1 + op2) * data_in.pixel[j].pixel[cpi];
+	  sum[cpo] += result.range(33, 18);
+	  sum[cpo+1] += result.range(15, 0);
+	}
+#else
+	loop_mul_cpo:
         for (int cpo=0; cpo<CPO; cpo++) {
           DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO)
           #pragma HLS UNROLL
           sum[cpo] += data_in.pixel[j].pixel[cpi] * kernel.pixel[cpo][cpi][j];
         }
+#endif
       }
     }
 

@@ -42,6 +42,7 @@ void stm(int enable_stm, int num_pixels, hls::stream<relu_st> &in, hls::stream<s
       stm_t v_in, v_soft, v_tanh, v_mult;
       v_in = data_in.pixel[cpo];
 
+#ifdef USE_STM
       if(enable_stm) {
     	  // softplus
     	  v_soft = hls::logf(hls::expf(v_in) + 1); //logf for single-precision natural logarithm
@@ -57,6 +58,9 @@ void stm(int enable_stm, int num_pixels, hls::stream<relu_st> &in, hls::stream<s
       else {
     	  data_out.pixel[cpo] = v_in;
       }
+#else
+      data_out.pixel[cpo] = v_in;
+#endif
     }
 
     #ifdef DEBUG_STM

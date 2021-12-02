@@ -188,10 +188,8 @@ void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W,
     DO_PRAGMA(HLS STREAM variable=out_relu depth=STREAMS_DEPTH)
 
     //STM support
-    #if defined(USE_STM)
     static hls::stream<stm_st>  out_stm;
     DO_PRAGMA(HLS STREAM variable=out_stm depth=STREAMS_DEPTH)
-    #endif
 
     // MAXPOOLING, AVGPOOLING
     #ifdef USE_POOLING
@@ -284,11 +282,11 @@ void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W,
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // Relu, Clipping, shift, pooling, batch normalization, add, and upsize
     relu(enable_relu, enable_clipping, enable_shift, relu_factor, min_clip, max_clip, dir_shift, pos_shift, num_output_conv_pixels, out_conv, out_relu);
-		stm(enable_stm, num_output_conv_pixels, out_relu, out_stm); 
+    stm(enable_stm, num_output_conv_pixels, out_relu, out_stm); 
     pooling(HI_pooling, WI_pooling, enable_maxpooling, enable_avgpooling, out_stm, out_pooling);
     batch_norm(enable_batch_norm, num_bn_pixels, out_pooling, out_read_batch_norm, out_batch_norm);
     add_data(enable_add, num_add_pixels, out_read_data_add, out_batch_norm, out_add); 
-	  upsize(enable_upsize, HO, WO, out_add, out_write);
+    upsize(enable_upsize, write_rows, write_cols, out_add, out_write);
 
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // write to memory

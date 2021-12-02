@@ -86,6 +86,46 @@
 // -----------------------------------------------------------------------------------------------------------
 // Automatic defines (do not change; add new ones if needed)
 // -----------------------------------------------------------------------------------------------------------
+
+// Configuration 1.0: U200, 4x4, FP32: DIRECT_CONV, RELU, STM, CLIPPING, POOLING, BATCH_NORM, ADD, UPSIZE
+#ifdef HLSINF_1_0
+#define ALVEO_U200
+#define DIRECT_CONV
+#define USE_RELU
+#define USE_CLIPPING
+//#define USE_SHIFT
+#define USE_POOLING
+#define USE_BATCH_NORM
+#define USE_STM
+#define FLOAT_DATA_TYPE               // we use float numbers as input data
+#define CPI                          4
+#define CPO                          4
+#define LOG2_CPO                     2
+#define WMAX                      1024 
+#define HMAX                       128 
+#define READ_BURST_SIZE             16
+#define STREAMS_DEPTH               16
+#define INPUT_BUFFER_SIZE        16384 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define EPSILON_VALUE          0.00001
+#define MIN_DATA_TYPE_VALUE   -9999999
+#define READ_BLOCK_SIZE             16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define WRITE_BLOCK_SIZE            16   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define din_t                    float
+#define conv_cvt_t               float
+#define conv_mul_t               float
+#define relu_t                   float
+#define stm_t                    float
+#define pool_cvt_t               float
+#define pool_t                   float
+#define bn_t                     float
+#define add_t                    float
+#define w_t                      float
+#define b_t                      float
+#define conv_t                   float
+#define dout_t                   float
+#endif
+
+
 #ifdef CONF_ALVEO_U200_4x4_DIRECT_STM_BN_FP32
 #define ALVEO_U200
 #define DIRECT_CONV
@@ -119,26 +159,6 @@
 #define READ_BURST_SIZE              4
 #define STREAMS_DEPTH                4
 #define INPUT_BUFFER_SIZE        65536 		//524288
-#endif
-
-#ifdef CONF_ALVEO_U200_4x4_DIRECT_FP32
-#define ALVEO_U200
-#define DIRECT_CONV
-#define FP32_DATA_TYPE
-#define USE_RELU
-#define USE_POOLING
-#define CPI                          4
-#define CPO                          4
-#define LOG2_CPO                     2
-#define WMAX                       256
-#define HMAX                       256
-#define READ_BURST_SIZE              4
-#define STREAMS_DEPTH                4
-#define INPUT_BUFFER_SIZE        65536 //524288
-#define MAX_KERNELS_DW         512/CPI
-#define DW_KERNEL_STREAM_DEPTH       4      // 512 DW kernels
-#define PW_KERNEL_STREAM_DEPTH       4      // 512 * 512 PW kernels
-#define DWS_STREAM_DEPTH            64
 #endif
 
 #ifdef CONF_ALVEO_U200_8x8_DIRECT_API8
@@ -461,7 +481,46 @@
 #define DWS_STREAM_DEPTH            64
 #endif
 
-#ifdef CONF_ALVEO_U200_8x8_DIRECT_MIXEDPRECISION_TEST
+// Configuration 1.1: U200, 8x8, MIXED PRECISSION: DIRECT_CONV, RELU, CLIPPING, SHIFT, POOLING, BN, ADD, UPSIZE
+#ifdef HLSINF_1_1
+#define ALVEO_U200
+//#define DSP_OPTIMIZATION
+#define DIRECT_CONV
+#define USE_RELU
+#define USE_CLIPPING
+#define USE_SHIFT
+#define USE_POOLING
+#define USE_BATCH_NORM
+//#define USE_STM
+#define CPI                               8
+#define CPO                               8
+#define LOG2_CPO                          3
+#define WMAX                           1024 
+#define HMAX                            256
+#define READ_BURST_SIZE                  16
+#define STREAMS_DEPTH                    16
+#define INPUT_BUFFER_SIZE             32768 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define EPSILON_VALUE               0.00001
+#define MIN_DATA_TYPE_VALUE            -127
+#define READ_BLOCK_SIZE                  64   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define WRITE_BLOCK_SIZE                 64   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define din_t                    ap_uint<8>
+#define conv_cvt_t               ap_uint<8>
+#define conv_mul_t               ap_int<32>
+#define relu_t                   ap_uint<8>
+#define stm_t                    ap_uint<8>
+#define pool_cvt_t               ap_uint<8>
+#define pool_t                   ap_uint<8>
+#define bn_t                     ap_uint<8>
+#define add_t                    ap_uint<8>
+#define w_t                       ap_int<8>
+#define b_t                      ap_int<32>
+#define conv_t                   ap_int<32>
+#define dout_t                   ap_uint<8>
+#endif
+
+// HLSINF_1_2: U200, 16x16, MIXED PRECISSION: DIRECT_CONV, RELU, CLIPPING, SHIFT, POOLING, BN, ADD, UPSIZE
+#ifdef HLSINF_1_2
 #define ALVEO_U200
 #define DIRECT_CONV
 #define USE_RELU
@@ -469,35 +528,36 @@
 #define USE_SHIFT
 #define USE_POOLING
 #define USE_BATCH_NORM
-#define USE_STM
-#define CPI                         8
-#define CPO                         8
-#define LOG2_CPO                    3
-#define WMAX                       256
-#define HMAX                       256
-#define READ_BURST_SIZE             16
-#define STREAMS_DEPTH               16
-#define INPUT_BUFFER_SIZE        32768 // 32 rows x 32 cols x (512/CPI) pixels_in
-#define EPSILON_VALUE          0.00001
-#define MIN_DATA_TYPE_VALUE       -127
-#define READ_BLOCK_SIZE             64   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
-#define WRITE_BLOCK_SIZE            64   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
-#define din_t                    ap_int<8>
-#define conv_cvt_t               ap_int<8>
+//#define USE_STM
+#define CPI                              16
+#define CPO                              16
+#define LOG2_CPO                          4
+#define WMAX                           1024
+#define HMAX                            128
+#define READ_BURST_SIZE                  16
+#define STREAMS_DEPTH                    16
+#define INPUT_BUFFER_SIZE             32768 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define EPSILON_VALUE               0.00001
+#define MIN_DATA_TYPE_VALUE            -127
+#define READ_BLOCK_SIZE                  64   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define WRITE_BLOCK_SIZE                 64   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define din_t                    ap_uint<8>
+#define conv_cvt_t               ap_uint<8>
 #define conv_mul_t               ap_int<32>
-#define relu_t                   ap_int<8>
-#define stm_t                    ap_int<8>
-#define pool_cvt_t               ap_int<8>
-#define pool_t                   ap_int<8>
-#define bn_t                     ap_int<8>
-#define add_t                    ap_int<8>
+#define relu_t                   ap_uint<8>
+#define stm_t                    ap_uint<8>
+#define pool_cvt_t               ap_uint<8>
+#define pool_t                   ap_uint<8>
+#define bn_t                     ap_uint<8>
+#define add_t                    ap_uint<8>
 #define w_t                      ap_int<8>
 #define b_t                      ap_int<32>
 #define conv_t                   ap_int<32>
-#define dout_t                   ap_int<8>
+#define dout_t                   ap_uint<8>
 #endif
 
-#ifdef CONF_ALVEO_U200_4x4_DIRECT_FP32_TEST
+
+#ifdef CONF_ALVEO_U200_4x4_DIRECT_FP32
 #define ALVEO_U200
 #define DIRECT_CONV
 #define USE_RELU
@@ -510,7 +570,44 @@
 #define CPI                          4
 #define CPO                          4
 #define LOG2_CPO                     2
-#define WMAX                       256
+#define WMAX                      1024 
+#define HMAX                       128 
+#define READ_BURST_SIZE             16
+#define STREAMS_DEPTH               16
+#define INPUT_BUFFER_SIZE        16384 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define EPSILON_VALUE          0.00001
+#define MIN_DATA_TYPE_VALUE   -9999999
+#define READ_BLOCK_SIZE             16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define WRITE_BLOCK_SIZE            16   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define din_t                    float
+#define conv_cvt_t               float
+#define conv_mul_t               float
+#define relu_t                   float
+#define stm_t                    float
+#define pool_cvt_t               float
+#define pool_t                   float
+#define bn_t                     float
+#define add_t                    float
+#define w_t                      float
+#define b_t                      float
+#define conv_t                   float
+#define dout_t                   float
+#endif
+
+#ifdef CONF_ALVEO_U200_8x8_DIRECT_FP32_TEST
+#define ALVEO_U200
+#define DIRECT_CONV
+#define USE_RELU
+#define USE_CLIPPING
+//#define USE_SHIFT
+#define USE_POOLING
+#define USE_BATCH_NORM
+#define USE_STM
+#define FLOAT_DATA_TYPE               // we use float numbers as input data
+#define CPI                          8
+#define CPO                          8
+#define LOG2_CPO                     3
+#define WMAX                      1024
 #define HMAX                       256
 #define READ_BURST_SIZE             16
 #define STREAMS_DEPTH               16
