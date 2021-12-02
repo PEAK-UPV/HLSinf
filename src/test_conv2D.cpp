@@ -125,7 +125,7 @@ cl_mem_ext_ptr_t kernel_dw_ddr[MAX_CONVS];    // PointWise conv kernel buffers
 cl_mem_ext_ptr_t bias_ddr[MAX_CONVS];         // Conv bias buffers
 #endif
 
-void compute(int *enable, int *cpu, int *retval) {
+void compute(int *enable, int *from_file, int *cpu, int *retval) {
 
     if (*enable) {
        print_configuration();
@@ -194,7 +194,7 @@ void compute(int *enable, int *cpu, int *retval) {
 
 	   if (*enable) {
 	     allocate_buffers();
-	     init_data();
+	     init_data(*from_file);
 
          #ifdef OPENCL_TEST
 	     copy_to_fpga();
@@ -208,6 +208,7 @@ void compute(int *enable, int *cpu, int *retval) {
              #ifdef USE_BATCH_NORM
 	     print_batch_norm();
              #endif
+	     if (from_file) print_output(1);
 	     #endif
 
 	     // timing stats
@@ -240,11 +241,12 @@ void compute(int *enable, int *cpu, int *retval) {
 
 
 
-	     if (*cpu) {
-	       cpu_conv2D();
-           #ifdef OPENCL_TEST
-           copy_from_fpga();
-           #endif
+	     if (*cpu) cpu_conv2D();
+
+	     if (*cpu || *from_file) {
+               #ifdef OPENCL_TEST
+               copy_from_fpga();
+               #endif
 	       int num_differences;
 	       dout_t max_difference;
 	       *retval = check_result(&max_difference, &num_differences);
@@ -254,9 +256,10 @@ void compute(int *enable, int *cpu, int *retval) {
 	     } else {
 	    	 printf("\n");
 	     }
+	     
 
          #ifdef DEBUG_CPU
-	     print_output();
+	     print_output(0);
 	     #endif
 
 	     deallocate_buffers();
@@ -270,15 +273,17 @@ int main(int argc, char **argv) {
   int retval = 0;
   int global_retval = 0;
   int cpu;
+  int from_file;
   int enable;
 
 
   if (argc == 1) {
 	printf("Co-simulation test...\n");
 	enable = 1;
+	from_file = 0;
 	cpu = 1;
 	deterministic_input_values = 1;
-	for (int i=0; i<INSTANCES_SIM; i++) compute(&enable, &cpu, &retval);
+	for (int i=0; i<INSTANCES_SIM; i++) compute(&enable, &from_file, &cpu, &retval);
     global_retval = retval;
   } else {
 	printf("File-based test...\n");
@@ -291,9 +296,9 @@ int main(int argc, char **argv) {
 
     if (open_test_file() == 1) return 1;
 
-    while (!read_test_file(&enable, &cpu)) {
+    while (!read_test_file(&enable, &from_file, &cpu)) {
 
-	  compute(&enable, &cpu, &retval);
+	  compute(&enable, &from_file, &cpu, &retval);
       if (enable) global_retval = global_retval || retval;
     }
 

@@ -124,12 +124,12 @@ void print_batch_norm();
 #endif
 void print_input();
 void print_input_add();
-void print_output();
+void print_output(int only_cpu);
 void print_kernel();
 int check_result(dout_t *max_difference, int *num_elements_differ);
-void init_data();
+void init_data(int from_file);
 int open_test_file();
-int read_test_file(int *enable, int *cpu);
+int read_test_file(int *enable, int *from_file, int *cpu);
 int close_test_file();
 void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_offset_p, int write_offset_p);
 void compute();

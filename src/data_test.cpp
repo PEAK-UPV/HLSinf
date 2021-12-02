@@ -4,15 +4,35 @@
 
 #include "test_conv2D.h"
 
-void init_data() {
+void read_from_file(char *file, int size, int data_size, void *buf) {
+  FILE *fd = fopen(file, "r");
+  if (fd == NULL) {printf("Error, file not found\n"); exit(1);}
+  fread(buf, data_size, size, fd); 
+  fclose(fd);
+}
+
+void init_data(int from_file) {
   std::random_device rd;
   std::mt19937 gen(rd());
+
+  if (from_file) {
+    read_from_file("input.bin", I_input * H * W, sizeof(din_t), (void *)data_in);
+    if (enable_add) read_from_file("add.bin", O_output * HO_final * WO_final, sizeof(din_t), (void *)data_in_add);
+    read_from_file("weights.bin", I_kernel * O_kernel * KH * KW, sizeof(w_t), (void *)kernel);
+    read_from_file("bias.bin", O, sizeof(b_t), bias);
+    read_from_file("output.bin", O_output * HO_final * WO_final, sizeof(dout_t), (void *)cpu_out);
+    return;
+  }
 
   // random number generators
   #if defined(FLOAT_DATA_TYPE)
   std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
+  std::uniform_real_distribution<float> dist_filters(-2.0f, 2.0f);
+  std::uniform_real_distribution<float> dist_bias(-1000.0f, 1000.0f);
   #else
-  std::uniform_int_distribution<int> dist(-10, 10);
+  std::uniform_int_distribution<int> dist(0, 255);
+  std::uniform_int_distribution<int> dist_filters(-125, 127);
+  std::uniform_int_distribution<int> dist_bias(-32700, 32700);
   #endif
   
   // input data
@@ -64,7 +84,7 @@ void init_data() {
                        (ki * KH * KW) +
                        (kh * KW) +
                        kw;
-          if ((i<I) && (o<O)) kernel[addr_k] = deterministic_input_values?(i % 20):dist(gen);
+          if ((i<I) && (o<O)) kernel[addr_k] = deterministic_input_values?(i % 20):dist_filters(gen);
           else kernel[addr_k] = 0;
 	    }
 	  }
@@ -87,5 +107,5 @@ void init_data() {
   }
   #endif
 
-  for (int cout=0; cout<O; cout++) bias[cout] = deterministic_input_values?(cout%20)-10:dist(gen);
+  for (int cout=0; cout<O; cout++) bias[cout] = deterministic_input_values?(cout%20)-10:dist_bias(gen);
 }

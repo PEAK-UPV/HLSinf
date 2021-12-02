@@ -64,9 +64,9 @@ void relu(int enable_relu, int enable_clipping, int enable_shift, relu_t relu_fa
 #endif
 
       #ifdef DEBUG_RELU
-      #ifdef DEBUG_VERBOSE
+//      #ifdef DEBUG_VERBOSE
       printf("SHIFT(pixel %d, cpo %d): in %f out %f\n", i, cpo, float(v_in), float(v_shift));
-      #endif
+//      #endif
       #endif
       // clipping
       v_clipping = v_shift;
@@ -79,9 +79,9 @@ void relu(int enable_relu, int enable_clipping, int enable_shift, relu_t relu_fa
       }
 
       #ifdef DEBUG_RELU
-      #ifdef DEBUG_VERBOSE
+  //    #ifdef DEBUG_VERBOSE
       printf("CLIP(pixel %d, cpo %d): in %f out %f\n", i, cpo, float(v_shift), float(v_clipping));
-      #endif
+    //  #endif
       #endif
 
       // relu
@@ -94,20 +94,20 @@ void relu(int enable_relu, int enable_clipping, int enable_shift, relu_t relu_fa
       data_out.pixel[cpo] = v_relu;
 
       #ifdef DEBUG_RELU
-      #ifdef DEBUG_VERBOSE
+      //#ifdef DEBUG_VERBOSE
       printf("RELU(pixel %d, cpo %d): in %f out %f\n", i, cpo, float(v_clipping), float(v_relu));
-      #endif
+      //#endif
       #endif
 
     }
 
     #ifdef DEBUG_RELU
-    #ifdef DEBUG_VERBOSE
+    //#ifdef DEBUG_VERBOSE
     printf("RELU (pixel %d):\n", i);
     for (int x=0; x<CPI; x++) {
     	printf("  cpi %d : in %f out %f\n", x, float(data_in.pixel[x]), float(data_out.pixel[x]));
     }
-    #endif
+    //#endif
     #endif
 
     out << data_out;

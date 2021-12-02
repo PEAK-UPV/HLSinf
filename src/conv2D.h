@@ -77,11 +77,12 @@
 //#define DEBUG_BLOCK
 //#define DEBUG_WRITE_DATA
 //#define DEBUG_RELU
+
 //#define DEBUG_STM
 //#define DEBUG_POOL
 //#define DEBUG_BATCH_NORM
 //#define DEBUG_ADD_DATA
-//#define DEBUG_CPU
+#define DEBUG_CPU
 
 // -----------------------------------------------------------------------------------------------------------
 // Automatic defines (do not change; add new ones if needed)

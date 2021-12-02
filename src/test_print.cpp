@@ -124,16 +124,18 @@ void print_input_add() {
 }
 
 
-void print_output() {
+void print_output(int only_cpu) {
   printf("Output:\n");
   for (int o=0; o<O_output; o++) {
     printf("channel %d:\n", o);
     int rows = enable_upsize ? HO_final * 2 : HO_final;
     int cols = enable_upsize ? WO_final * 2 : WO_final;
+    if (rows > 5) rows = 5;
+    if (cols > 5) cols = 5;
     for (int h=0; h<rows; h++) {
       for (int w=0; w<cols; w++) {
         int addr_o = output_data_address(o, h, w, rows, cols);
-        printf("%6.4f (%6.4f) ", float(out[addr_o]), float(cpu_out[addr_o]));
+        if (only_cpu) printf("%6.4f ", float(cpu_out[addr_o])); else printf("%6.4f (%6.4f) ", float(out[addr_o]), float(cpu_out[addr_o]));
       }
       printf("\n");
     }
