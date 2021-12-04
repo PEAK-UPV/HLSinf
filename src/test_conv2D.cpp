@@ -59,7 +59,7 @@ int I_input = I_SIM;             // Number of input channels for the input data 
 int O_output = O_SIM;            // Number of output channels for the output data - padding (needed in GIHWCPI data format)
 int rows = H_SIM;				 // number of rows to compute by the kernel
 int enable_relu = 1;			 // enables applying the relu activation functions
-relu_t relu_factor = 0;
+float relu_factor = 0;
 int enable_shift = 0;			 // enables applying shift to the output
 int enable_stm = 1;			 	 // enables applying the STM functions
 int enable_batch_norm = 0;		 // enables applying batch normalization
@@ -202,12 +202,12 @@ void compute(int *enable, int *from_file, int *cpu, int *retval) {
 
 	     #ifdef DEBUG_CPU
 	     print_input();
-    	     if (enable_add) print_input_add();
+    	 if (enable_add) print_input_add();
 	     print_bias();
 	     print_kernel();
-             #ifdef USE_BATCH_NORM
+         #ifdef USE_BATCH_NORM
 	     print_batch_norm();
-             #endif
+         #endif
 	     if (from_file) print_output(1);
 	     #endif
 
@@ -217,6 +217,8 @@ void compute(int *enable, int *from_file, int *cpu, int *retval) {
 	     gettimeofday(&prof_t1, NULL);
 
 	     compute();
+
+		 printf("compute terminated\n");
 
 	     // timing
          struct timeval prof_t2;
@@ -239,22 +241,20 @@ void compute(int *enable, int *from_file, int *cpu, int *retval) {
          std::cout<< "TIME KERNEL = " << (diff/1000000)<<" ms \n"<<std::endl;
          #endif
 
-
-
 	     if (*cpu) cpu_conv2D();
 
 	     if (*cpu || *from_file) {
-               #ifdef OPENCL_TEST
-               copy_from_fpga();
-               #endif
-	       int num_differences;
+           #ifdef OPENCL_TEST
+           copy_from_fpga();
+           #endif
+           int num_differences;
 	       dout_t max_difference;
 	       *retval = check_result(&max_difference, &num_differences);
 
 	       print_check(*retval, float(max_difference), num_differences);
 
 	     } else {
-	    	 printf("\n");
+	    	printf("\n");
 	     }
 	     
 

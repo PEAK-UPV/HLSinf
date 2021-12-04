@@ -20,7 +20,7 @@
 //
 //
 
-void relu(int enable_relu, int enable_clipping, int enable_shift, relu_t relu_factor, int min_clip, int max_clip, int direction_shift, int pos_shift,
+void relu(int enable_relu, int enable_clipping, int enable_shift, float relu_factor, int min_clip, int max_clip, int direction_shift, int pos_shift,
 		  int num_pixels, hls::stream<conv_st> &in, hls::stream<relu_st> &out) {
 
   #ifdef DEBUG_RELU
@@ -87,7 +87,11 @@ void relu(int enable_relu, int enable_clipping, int enable_shift, relu_t relu_fa
       // relu
 #ifdef USE_RELU
       v_relu = v_clipping;
-      if(enable_relu && (v_relu < 0)) v_relu = relu_factor * v_clipping;
+      #ifdef FLOAT_DATA_TYPE
+        if(enable_relu && (v_relu < 0)) v_relu = relu_factor * v_clipping;
+      #else 
+        if(enable_relu && (v_relu < 0)) v_relu = v_clipping;
+      #endif
 #else
       v_relu = v_clipping;
 #endif

@@ -32,9 +32,7 @@ void allocate_buffers() {
   // batch norm values buffer
   size_t size_bnvalues_in_bytes = (O_output * 4) * sizeof(bn_t);
   posix_memalign((void **)&batch_norm_values, 4096, size_bnvalues_in_bytes);
-  if (enable_batch_norm) {
-    posix_memalign((void **)&out_batch_norm_cpu, 4096, HO_final * WO_final * O_output * sizeof(bn_t));
-  }
+  posix_memalign((void **)&out_batch_norm_cpu, 4096, HO_final * WO_final * O_output * sizeof(bn_t));
 
   // output buffer for fpga
   size_t size_output_in_bytes;
@@ -99,10 +97,11 @@ void allocate_buffers() {
   bias_ddr[0].flags  = 0 | XCL_MEM_TOPOLOGY;
   bias_ddr[0].obj = bias;
   bias_ddr[0].param = 0;
+
   OCL_CHECK(err, buffer_i    = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_data_in_bytes, &data_in_ddr, &err));
 
 #if defined(USE_BATCH_NORM)
-  OCL_CHECK(err, buffer_batch_norm_val[0]    = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_WRITE_ONLY  | CL_MEM_USE_HOST_PTR , size_output_in_bytes, &batch_norm_val_ddr[0], &err));
+  OCL_CHECK(err, buffer_batch_norm_val[0]    = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_bnvalues_in_bytes, &batch_norm_val_ddr[0], &err));
 #endif
   if (enable_add){
 	  OCL_CHECK(err, buffer_i_add = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_output_in_bytes, &data_in_add_ddr, &err));
@@ -153,8 +152,7 @@ void copy_to_fpga() {
   OCL_CHECK(err, err = q.enqueueMigrateMemObjects( {*buffer_i}, 0 /*0 means from host*/, NULL, &write_events[0]));
   set_callback(write_events[0], "ooo_queue");
   OCL_CHECK(err, err = write_events[0].wait());
-
-
+  
   OCL_CHECK(err, err = q.enqueueMigrateMemObjects( {*buffer_i_add}, 0 /*0 means from host*/, NULL, &write_events[0]));
   set_callback(write_events[0], "ooo_queue");
   OCL_CHECK(err, err = write_events[0].wait());

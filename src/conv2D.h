@@ -810,7 +810,7 @@ struct bnp_st {bn_t values[CPO*4];};
 extern "C" void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, 
                          int H, int W, int HO, int WO, int rows, int PT, int PB, int PL, int PR, int SH, int SW, 
                          int I, int O, int I_ITER, int o_iter_first, int o_iter_last, 
-                         int enable_relu, int enable_stm, relu_t relu_factor, int enable_batch_norm,
+                         int enable_relu, int enable_stm, float relu_factor, int enable_batch_norm,
                          w_t *ptr_kernel,
             						 b_st *ptr_bias, bnp_st *b_ptr, write_block_t *ptr_out, 
                          int read_offset, int write_offset, int enable_maxpooling, int enable_avgpooling,
@@ -832,7 +832,7 @@ void direct_conv(int H, int W, int PT, int PB, int PL, int PR, int SH, int SW, i
 void input_buffer(int num_pixels, int write_to_buff, int read_from_buff, hls::stream<din_st> &in, hls::stream<din_st> &out);
 
 // activation functions
-void relu(int enable_relu, int enable_clipping, int enable_shift, relu_t relu_factor, int min_clip, int max_clip, int direction_shift, int pos_shift,
+void relu(int enable_relu, int enable_clipping, int enable_shift, float relu_factor, int min_clip, int max_clip, int direction_shift, int pos_shift,
 		  int num_pixels, hls::stream<conv_st> &in, hls::stream<relu_st> &out);
 void stm(int enable_stm, int num_pixels, hls::stream<relu_st> &in, hls::stream<stm_st> &out);
 

@@ -107,5 +107,8 @@ void init_data(int from_file) {
   }
   #endif
 
-  for (int cout=0; cout<O; cout++) bias[cout] = deterministic_input_values?(cout%20)-10:dist_bias(gen);
+  for (int cout=0; cout<O_output; cout++) {
+    if (cout < O) bias[cout] = deterministic_input_values?(cout%20)-10:dist_bias(gen);
+    else bias[cout] = 0;
+  }
 }

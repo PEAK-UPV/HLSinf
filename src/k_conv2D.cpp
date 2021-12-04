@@ -83,7 +83,7 @@ void upsize(int enable, int H, int W, hls::stream<dout_st> &in, hls::stream<dout
 
 extern "C" {
 void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W, int HO, int WO, int rows, int PT, int PB, int PL, int PR, int SH, int SW, int I, int O, int I_ITER, int o_iter_first, int o_iter_last, 
-            int enable_relu, int enable_stm, relu_t relu_factor,int enable_batch_norm,
+            int enable_relu, int enable_stm, float relu_factor,int enable_batch_norm,
             w_t *ptr_kernel,
             b_st *ptr_bias, bnp_st *b_ptr, write_block_t *ptr_out, int read_offset, int write_offset, int enable_maxpooling, int enable_avgpooling,
 						int enable_clipping, int enable_shift, int enable_add, int min_clip, int max_clip, int dir_shift, int pos_shift, int enable_upsize){

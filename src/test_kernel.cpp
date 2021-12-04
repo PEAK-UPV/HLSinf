@@ -113,6 +113,8 @@ void compute() {
     // 
     for (int fr=0; fr < num_frames; fr++) {
 
+      printf("frame %d out of %d\n", fr, num_frames);
+
       // first output row for this frame
       int row_o = fr * HMAX;
 

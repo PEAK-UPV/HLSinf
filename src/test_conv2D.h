@@ -49,7 +49,7 @@ extern int O_output;                     // Number of output channels for the ou
 extern int rows;						 // number of rows to compute by the kernel
 extern int enable_relu;				     // enables applying the relu activation functions
 extern int enable_stm;  			 	 // enables applying the STM functions
-extern relu_t relu_factor;
+extern float relu_factor;
 extern int enable_shift;				 // enables applying shift to the output
 extern int enable_add; 				     // enables add module
 extern int dir_shift;			         // shift direction (left or right)
@@ -66,6 +66,7 @@ extern int o_iter;						 // number of output iterations
 extern int global_offset;				 // global offset for the output data for the kernel
 extern int GI;							 // number of groups for input channels
 extern int GO;							 // number of groups for output channels
+
 extern din_t *data_in;               // Input data buffer (format I x W x H)
 extern din_t *data_in_add;           // Input data buffer for add module(format I x W x H)
 extern dout_t *out;                   // Output data buffer (format O x W x H)
