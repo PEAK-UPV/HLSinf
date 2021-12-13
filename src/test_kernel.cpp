@@ -136,10 +136,11 @@ void compute() {
       if (row_i < 0) row_i = 0;
 
       // rows to read for this frame
-      int rows_to_read = (output_rows_frame * SH) - PT_frame - PB_frame + (KH - 1);
+      int rows_to_read = KH + ((output_rows_frame - 1) * SH) - PT_frame - PB_frame;
 
       // read and write offsets
       int read_offset_frame = row_i * W;
+      printf("fr %d HMAX %d WO %d\n", fr, HMAX, WO);
       int write_offset_frame = (fr * HMAX * WO);
 
       sprintf(str, "Frame %d: HxW = %3dx%3d, Pad = %1d-%1d-%1d-%1d, off_rd %d, off_wr %d, rows_to_read %d", fr, H, W, PT_frame, PB_frame, PL_frame, PR_frame, read_offset_frame, write_offset_frame, rows_to_read);
