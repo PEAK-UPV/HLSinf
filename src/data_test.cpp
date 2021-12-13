@@ -102,7 +102,10 @@ void init_data(int from_file) {
       batch_norm_values[cout*4+3] = 1;
 		  //batch_norm_values[cout] = deterministic_input_values?(cout%20)-10:dist(gen);
 	  } else {
-		  batch_norm_values[cout] = 0;
+		  batch_norm_values[cout*4+0] = 0;
+		  batch_norm_values[cout*4+1] = 0;
+		  batch_norm_values[cout*4+2] = 0;
+		  batch_norm_values[cout*4+3] = 0;
 	  }
   }
   #endif

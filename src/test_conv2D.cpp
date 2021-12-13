@@ -208,7 +208,7 @@ void compute(int *enable, int *from_file, int *cpu, int *retval) {
          #ifdef USE_BATCH_NORM
 	     print_batch_norm();
          #endif
-	     if (from_file) print_output(1);
+	     if (*from_file) print_output(1);
 	     #endif
 
 	     // timing stats

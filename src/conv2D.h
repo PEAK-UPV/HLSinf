@@ -502,7 +502,7 @@
 #define STREAMS_DEPTH                    16
 #define INPUT_BUFFER_SIZE             32768 // 32 rows x 32 cols x (512/CPI) pixels_in
 #define EPSILON_VALUE               0.00001
-#define MIN_DATA_TYPE_VALUE            -127
+#define MIN_DATA_TYPE_VALUE               0
 #define READ_BLOCK_SIZE                  64   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 #define WRITE_BLOCK_SIZE                 64   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 #define din_t                    ap_uint<8>
@@ -539,7 +539,7 @@
 #define STREAMS_DEPTH                    16
 #define INPUT_BUFFER_SIZE             32768 // 32 rows x 32 cols x (512/CPI) pixels_in
 #define EPSILON_VALUE               0.00001
-#define MIN_DATA_TYPE_VALUE            -127
+#define MIN_DATA_TYPE_VALUE               0
 #define READ_BLOCK_SIZE                  64   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 #define WRITE_BLOCK_SIZE                 64   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 #define din_t                    ap_uint<8>
@@ -551,7 +551,7 @@
 #define pool_t                   ap_uint<8>
 #define bn_t                     ap_uint<8>
 #define add_t                    ap_uint<8>
-#define w_t                      ap_int<8>
+#define w_t                       ap_int<8>
 #define b_t                      ap_int<32>
 #define conv_t                   ap_int<32>
 #define dout_t                   ap_uint<8>

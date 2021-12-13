@@ -15,7 +15,7 @@ void print_bias() {
 void print_batch_norm() {
 	printf("Batch Normalization Values: ");
 	for (int o=0; o<O_output*4; o++) printf("%6.4f ", float(batch_norm_values[o]));
-	printf(" end\n");
+	printf("\n");
 }
 #endif
 
@@ -130,8 +130,8 @@ void print_output(int only_cpu) {
     printf("channel %d:\n", o);
     int rows = enable_upsize ? HO_final * 2 : HO_final;
     int cols = enable_upsize ? WO_final * 2 : WO_final;
-    if (rows > 5) rows = 5;
-    if (cols > 5) cols = 5;
+    //if (rows > 5) rows = 5;
+    //if (cols > 5) cols = 5;
     for (int h=0; h<rows; h++) {
       for (int w=0; w<cols; w++) {
         int addr_o = output_data_address(o, h, w, rows, cols);

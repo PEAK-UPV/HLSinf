@@ -21,6 +21,7 @@ int check_result(dout_t *max_difference, int *num_elements_differ) {
         dout_t diff = dout_t(fabs(float(cpu_out[addr_out]) - float(out[addr_out])));
         if (float(diff) > float(epsilon)) {
           (*num_elements_differ)++;
+//	  printf("difference at cout %d h %d w %d %6.4f cpu %6.4f fpga\n", cout, h, w, float(cpu_out[addr_out]), float(out[addr_out]));
           if (*max_difference < diff) *max_difference = diff;
         }
       }
