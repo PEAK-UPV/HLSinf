@@ -42,38 +42,23 @@ int filter_address_dws_conv(int i, int o) {
 }
 
 int input_data_address(int i, int h, int w) {
-    #ifdef GIHWCPI_DATA_FORMAT
 	int gi = i / CPI;
 	int ii = i % CPI;
 	int addr = (gi * H * W * CPI) + (h * W * CPI) + (w * CPI) + ii;
-    #endif
-    #ifdef IHW_DATA_FORMAT
-    int addr = (i * H * W) + (h * W) + w;
-    #endif
 	return addr;
 }
 
 int output_data_address(int o, int h, int w, int height, int width) {
-    #ifdef GIHWCPI_DATA_FORMAT
 	int go = o / CPO;
 	int oo = o % CPO;
 	int addr = (go * height * width * CPO) + (h * width * CPO) + (w * CPO) + oo;
-    #endif
-    #ifdef IHW_DATA_FORMAT
-    int addr = (o * height * width) + (h * width) + w;
-    #endif
 	return addr;
 }
 
 int output_data_address_div(int o, int h, int w) {
-    #ifdef GIHWCPI_DATA_FORMAT
 	int go = o / CPO;
 	int oo = o % CPO;
 	int addr = (go * (HO/2) * (WO/2) * CPO) + (h * (WO/2) * CPO) + (w * CPO) + oo;
-    #endif
-    #ifdef IHW_DATA_FORMAT
-    int addr = (o * (HO/2) * (WO/2)) + (h * (WO/2)) + w;
-    #endif
 	return addr;
 }
 

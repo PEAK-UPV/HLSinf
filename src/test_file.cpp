@@ -44,15 +44,9 @@ int read_test_file(int *enable, int *from_files, int *cpu) {
  if (enable_maxpooling | enable_avgpooling) HO_final = HO / 2; else HO_final = HO;
  if (enable_maxpooling | enable_avgpooling) WO_final = WO / 2; else WO_final = WO;
 
- #ifdef IHW_DATA_FORMAT
- I_input = I;
- O_output = O;
- #endif
- #ifdef GIHWCPI_DATA_FORMAT
  I_input = ((I + (CPI - 1)) / CPI) * CPI;
  O_output = ((O + (CPO - 1)) / CPO) * CPO;
- #endif
-
+ 
  return 0;
 }
 

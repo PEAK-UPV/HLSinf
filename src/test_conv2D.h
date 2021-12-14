@@ -53,8 +53,8 @@ extern int HO_final;                     // HO at the output of the kernel
 extern int WO_final;                     // WO at the output of the kernel
 extern int I_kernel;					 // Number of input channels for the kernel (filter) - padding
 extern int O_kernel;  					 // Number of output channels for the kernel (filter) - padding
-extern int I_input;                      // Number of input channels for the input data - padding (needed in GIHWCPI data format)
-extern int O_output;                     // Number of output channels for the output data - padding (needed in GIHWCPI data format)
+extern int I_input;                      // Number of input channels for the input data - padding (needed in GHWC data format)
+extern int O_output;                     // Number of output channels for the output data - padding (needed in GHWC data format)
 extern int rows;						 // number of rows to compute by the kernel
 extern int enable_relu;				     // enables applying the relu activation functions
 extern int enable_stm;  			 	 // enables applying the STM functions

@@ -7,75 +7,72 @@ It is highly recommended to use vitis_hls (Vitis 2020.1) to work with the projec
 
 cd HLSinf
   
-source scripts/setenv.sh
+source scripts/setenv_2020.2.sh
 
-vitis_hls
+You can use either VITIS IDE or the shell scripts. Scripts are provided for all the needed processes (C simulation, C synthesis, implementation).
 
-(the project is located at <HLSinf/project/HLSinf)
+Several configurations are available for the accelerator. You can try any of them or create new configurations. All configurations are listed and defined in conv2D.h file. Each configuration is named HLSINF_x_y where x is the version identifier and y is the subversion identifier. 
 
---------------------------------------------------------------
-First try: Configure the accelerator
---------------------------------------------------------------
+How to run C simulation from shell:
+-----------------------------------
 
-Within vitis_hls edit the conv2D.h file and select the data type of the accelerator (float, ap_fixed, ap_int) and the accelerator width (CPI and CPO). Recommendation is to test first float and 4x4 configuration (data_type set to float and CPI CPO set both to 4). You can also select whether using ReLU activation function and a pooling layer (maxpool and avgpool supported). Enable the use of ReLU only.
+$ cd HLSinf
+$ source scripts/setenv_2020.2.sh
+$ cd project
+$ vitis_hls -f ../scripts/alveo_u200_csim.tcl HLSINF_1_0
+$ ./HLSinf/HLSINF_1_0/csim/build/csim.exe ../src/input.data
 
-Once done, launch C Simulation process (Project|Run C Simulation) and select "Build Only". The simulator will be built. You can find the binary for the simulator at HLSinf/project/HLSinf/AlveoU200/csim/build folder. Run ./csim.exe there. Several tests are launched, indicating for each one whether it succeeded or failed. Some tests may be skipped as some specific support (e.g. pooling) has not been activated.
-  
---------------------------------------------------------------
-Second try: Launch C synthesis
---------------------------------------------------------------
-  
-Launch C synthesis (Solution|Run C Synthesis|Active Solution). Once completed you will see a summary of the synthesis process. Notice that estimated execution time of the accelerator is indicated. For an specific input geometry of the data you can change the defines I_REFERENCE, O_REFERENCE, W_REFERENCE, and H_REFERENCE, located in the conv2D.h file. These defines set the number of input and output channels as well as the image width and height. Those defines are used only for C synthesis in order to compute the execution time of the accelerator in cycles. As a reference, for an input image of 256x256 pixels with 4 input channels and 4 output channels, the expected execution time is around 64K cycles (assuming CPI = 4 and CPO = 4; the accelerator handles CPI pixels per cycle).
+Note: The tcl script is launched with the proper configuration (HLSINF_...). See k_conv2d.h file for available configurations of the HLS accelerator.
+Note: A new solution directory will be created with the solution implemented and reported
+Note: no configuration must be enabled in conv2d.h file
+Note: The solution can be opened with the Vitis HLS GUI
+Note: A tcl script is used for each FPGA type
 
---------------------------------------------------------------
-Third try: Compile and launch test with OpenCL (sw_emu)
---------------------------------------------------------------
+How to run C-Synthesis from shell:
+-----------------------------------
 
-You can also compile and build an xclbin binary and use it with OpenCL. To do this, go to the opencl folder and make the project for sw_emu as follows:
+$ cd HLSinf
+$ source scripts/setenv_2020.2.sh
+$ cd project
+$ vitis_hls -f ../scripts/alveo_u200_csynth.tcl HLSINF_1_0
 
-make all TARGET=sw_emu
+Note: The tcl script is launched with the proper configuration (HLSINF_...). See k_conv2d.h file for available configurations of the HLS accelerator.
+Note: A new solution directory will be created with the solution implemented and reported
+Note: no configuration must be enabled in conv2d.h file
+Note: The solution can be opened with the Vitis HLS GUI
+Note: A tcl script is used for each FPGA type
 
-Once completed the xclbin has been generated in the build_dir.sw_emu.xilinx_u200_xdma_201830_2
+How to run C-Synthesis in a batch queuing system:
+-------------------------------------------------
 
-In order to run the OpenCL test type:
+$ cd HLSinf
+$ sbatch -N 1 scripts/launch_alveo_u200_csynth.sh
 
-export XCL_EMULATION_MODE=sw_emu
-./test_conv2D build_dir.sw_emu.xilinx_u200_xdma_201830_2/kernel_conv2D.xclbin 1 1 1 64 64 4 4
+The sh script can be edited to indicate the target FPGA and the configuration to synthesize. You can create new scripts for each configuration you may need to launch. Each solution is reported in a different directory. The solutions can be opened with the VITIS HLS GUI.
 
-The test will perform a convolution operation for images of 64x64 with 4 input channels and 4 output channels. The test will determine success or failure.
+How to create an xclbin binary
+------------------------------
 
---------------------------------------------------------------
-Fourth try: Compile and launch test with OpenCL (hw_emu)
---------------------------------------------------------------
+XCLBIN implementations can be launched with SLURM. In the HLSinf/opencl directory there are several run directories which enable to launch an implementation process on each directory. If you need more directories then simply create the directory and set
+the proper links to files and directories (take as an example run1 folder).
 
-The previous step can be done for hardware emulation. Just type:
+In each run directory you will find an script file (launch.sh). This file runs the implementation for a given configuration and target device. Change the file accordingly to your need.
 
-make all TARGET=hw_emu
+The possible configurations are: sw_emu, hw_emu, and hw
 
-and run the test but using the new generated xclbin file (and with the XCL_EMULATION_MODE properly set):
+Once the file is ready you need to launch the job on SLURM, for instance:
 
-export XCL_EMULATION_MODE=hw_emu
-./test_conv2D build_dir.hw_emu.xilinx_u200_xdma_201830_2/kernel_conv2D.xclbin 1 1 1 64 64 4 4
+sbatch -N 1 -q compute --exclusive run1/launch.sh
 
-This process will take much more time but at the end you will get the estimated execution time of your kernel.
+you can track the job with
 
---------------------------------------------------------------
-Final try: Compile and launch test with OpenCL (hw)
---------------------------------------------------------------
+squeue
 
-As a final try you can generate the xclbin binary for hw, that is running it on real hardware. To do this:
+Once the implementation is done you will find all the associated files in the run folder.
 
-make all TARGET=hw
+IMPORTANT NOTE: Pay attention to the configuration of the HLSinf accelerator.
+The launch scripts will set the configuration. Therefore, you need to guarantee that
+in the conv2D.h file no configuration is set (all defines for configurations must be
+disabled).
 
-and run the test but using the new generated xclbin file (and with the XCL_EMULATION_MODE unset):
 
-unset XCL_EMULATION_MODE
-./test_conv2D build_dir.hw.xilinx_u200_xdma_201830_2/kernel_conv2D.xclbin 1 1 1 64 64 4 4
-
-good luck!!!
-
-------------------------------------------------------------------------------------------
-Current Versions supported
-------------------------------------------------------------------------------------------
-
-For a list of achieved configurations and performance see solutions/achieved_solutions.txt
