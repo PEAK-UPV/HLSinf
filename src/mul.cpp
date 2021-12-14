@@ -76,6 +76,11 @@ void mul(int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::str
     }
 
     data_in = in.read();
+    #ifdef DEBUG_MUL
+    printf("mult: frame received:");
+    for (int x=0; x<KW*KH; x++) for (int xx=0; xx<CPI; xx++) printf("%f ", float(data_in.pixel[x].pixel[xx]));
+    printf("\n");
+    #endif
 
     loop_mul_cpi:
     for (int cpi=0; cpi<CPI; cpi++) {

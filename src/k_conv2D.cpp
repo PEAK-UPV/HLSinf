@@ -236,7 +236,7 @@ void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W,
     if (enable_upsize) offset_data_out_group_cpo = offset_data_out_group_cpo * 4;
 
     //printf("I_ITER %d W %d rows %d num_extra_rows %d read_pixels %d read_pixels_total %d\n", I_ITER, W, rows, num_extra_rows, read_pixels, read_pixels_total);
-    int enable_buffer            = (read_pixels * (I / CPI)) <= INPUT_BUFFER_SIZE;
+    int enable_buffer            = (read_pixels_total <= INPUT_BUFFER_SIZE);
     int write_to_input_buffer    = enable_buffer && (o_iter == 0) && (O_ITER>1);
     int read_from_input_buffer   = enable_buffer && (o_iter != 0);
     int enable_read              = (o_iter == 0) || !enable_buffer;

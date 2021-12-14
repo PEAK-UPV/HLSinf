@@ -76,7 +76,9 @@ void cvt(int H, int W, int I_ITER, int SH, int SW, hls::stream<din_st> &in, hls:
     DO_PRAGMA(HLS ARRAY_PARTITION variable=pixel complete dim=0)
     pixel = in.read();
 #ifdef DEBUG_CVT
-    printf("CVT: read data (i %d pin_row %d pin_col %d stride_row %d stride_col %d)\n", i_iter, pin_row, pin_col, stride_row, stride_col);
+    printf("CVT: read data (i %d pin_row %d pin_col %d stride_row %d stride_col %d):", i_iter, pin_row, pin_col, stride_row, stride_col);
+    for (int x=0; x<CPI; x++) printf(" %f", float(pixel.pixel[x]));
+    printf("\n");
 #endif
 
     // row buffer write (in which buffer row we write the pixel)

@@ -78,7 +78,7 @@
 #define CPO                          4
 #define LOG2_CPO                     2
 #define WMAX                      1024 
-#define HMAX                       128 
+#define HMAX                       256 
 #define READ_BURST_SIZE             16
 #define STREAMS_DEPTH               16
 #define INPUT_BUFFER_SIZE        16384 // 32 rows x 32 cols x (512/CPI) pixels_in

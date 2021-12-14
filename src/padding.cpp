@@ -54,7 +54,9 @@ void padding(int H, int W, int PT, int PB, int PL, int PR, int I_ITER, hls::stre
     if (enable1 | enable2 | enable3 | enable4) data = zero; else data = in.read();
     out << data;
 #ifdef DEBUG_PADDING
-	printf("PADDING: send data (i %d, h %d, w %d, |enableX %d)\n", i, h, w, enable1|enable2|enable3|enable4);
+	printf("PADDING: send data (i %d, h %d, w %d, |enableX %d): ", i, h, w, enable1|enable2|enable3|enable4);
+  for (int x=0; x<CPI; x++) printf(" %f", float(data.pixel[x]));
+  printf("\n");
 #endif
 	w = w+1;
 	if (w == W+PL+PR) {

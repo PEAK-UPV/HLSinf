@@ -13,23 +13,23 @@
 
 void input_buffer(int read_pixels_total, int write_to_buff, int read_from_buff, hls::stream<din_st> &in, hls::stream<din_st> &out) {
 
-  #ifdef DEBUG_INPUT_BUFFER
-  printf("INPUT_BUFFER: starts (%d pixels; write_to_buff %d; read_from_buff %d)\n", read_pixels_total, write_to_buff, read_from_buff);
-  #endif
-
   din_st px_input;
   din_st px_buff;
   DO_PRAGMA(HLS AGGREGATE variable=px_input)
   DO_PRAGMA(HLS AGGREGATE variable=px_buff)
 
-  din_st buffer[INPUT_BUFFER_SIZE];
+  static din_st buffer[INPUT_BUFFER_SIZE];
   DO_PRAGMA(HLS aggregate variable=buffer)
-
   #ifdef ALVEO_U200
   DO_PRAGMA(HLS bind_storage variable=buffer type=ram_t2p impl=uram)
   #endif
   #ifdef ALVEO_U280
   DO_PRAGMA(HLS bind_storage variable=buffer type=ram_t2p impl=uram)
+  #endif
+
+  #ifdef DEBUG_INPUT_BUFFER
+  printf("INPUT_BUFFER: starts (%d pixels; write_to_buff %d; read_from_buff %d. Input buffer size %d)\n", read_pixels_total, write_to_buff, read_from_buff, INPUT_BUFFER_SIZE);
+  printf("INPUT_BUFFER: sizeof %d\n", sizeof(buffer));
   #endif
 
   input_buffer_loop_pixels:
@@ -39,9 +39,29 @@ void input_buffer(int read_pixels_total, int write_to_buff, int read_from_buff, 
 
 	if (!read_from_buff) px_input = in.read();
 	if (read_from_buff)  px_buff = buffer[p];
-	if (write_to_buff)   buffer[p] = px_input;
 
-	if (read_from_buff)  out << px_buff;
+	if (write_to_buff)  {
+    buffer[p] = px_input;
+
+    #ifdef DEBUG_INPUT_BUFFER
+    printf("BUFFER: write to buff p=%d ", p);
+    for (int x=0; x<CPI; x++) printf("%f ", float(px_input.pixel[x]));
+    printf(" FROM BUFF: ");
+    for (int x=0; x<CPI; x++) printf("%f ", float(buffer[p].pixel[x]));
+    printf("\n");
+    #endif
+  }
+
+
+	if (read_from_buff)  {
+    out << px_buff;
+
+    #ifdef DEBUG_INPUT_BUFFER
+    printf("BUFFER: read from buff p=%d ", p);
+    for (int x=0; x<CPI; x++) printf("%f ", float(px_buff.pixel[x]));
+    printf("\n");
+    #endif
+  }
 	else out << px_input;
   }
   #ifdef DEBUG_INPUT_BUFFER

@@ -96,9 +96,9 @@ void add(int num_pixels, int I_ITER, hls::stream<conv_mul_st> &in, hls::stream<b
 
   #ifdef DEBUG_ADD
   #ifdef DEBUG_VERBOSE
-  for (int cpo=0; cpo<CPO; cpo++) {
-    printf("CH %d: ", cpo);
-    for (int it=0; it<num_iterations; it++) {
+  for (int it=0; it<num_iterations; it++) {
+    printf("ADD: ");
+    for (int cpo=0; cpo<CPO; cpo++) {
       printf("%6.2f ", float(buff_o_channels[it].pixel[cpo]));
     }
     printf("\n");
