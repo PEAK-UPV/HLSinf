@@ -1,0 +1,304 @@
+Introduction
+============
+
+This document describes the HLSinf kernel architecture. Before the architecture is described, this document introduces the main operations 
+the kernel is able to perform and some aspects about parameters, alignment requirements and specific design constraints. This information 
+is needed to fully understand the HLSinf architecture.
+
+Operations supported
+====================
+
+The HLSinf kernel is designed to perform the following operations:
+  - 2D Direct convolutions (DIRECT_CONV)
+  - 2D Winograd convolutions (WINOGRAD_CONV)
+  - 2D DeepWise Separable convolutions (DWS_CONV)
+  - 2D MaxPooling 
+  - 2D AvgPooling
+  - ReLU activation
+  - Clipping
+  - Shift
+  - Batch Normalization
+  - Upsize
+  - Vector add
+  - Softplus
+  - Tanh
+  - Vector mult
+
+Those operations can be implemented in the kernel and perform sequentially and in a streamed/pipelined fashion on the input data, therefore, 
+maximizing performance.
+
+Precision formats supported
+===========================
+
+The HLSinf kernel is able to operate in multiple data type precision formats. Current formats supported are:
+ - FP32 (32-bit floating point)
+ - APF8 (8-bit fixed point)
+ - API8 (8-bit integer)
+ 
+The current supported precision formats can be mixed within the kernel. The kernel needs to be re-implemented in order to use a different precision format.
+
+Although other precision formats can be easily added they could affect the expected performance of the kernel. Therefore, adding a new precision
+format needs to be carefully analyzed. The three listed formats have been validated and they do not affect the performance of the kernel.
+
+Current Restrictions on the supported operations
+================================================
+
+Some limitations or restrictions exist on the supported operations. They are the following:
+
+ - DIRECT, WINOGRAD and DWS convolutions:
+   - The filter size is fixed to KH x KW = 3 x 3
+ - MaxPooling and AvgPooling:
+   - The filter size is fixed to KH x KW = 2 x 2
+   - The stride is fixed to SH x SW = 2 x 2
+   - No padding is supported
+ - Clipping and shift:
+   - Must be used only in API8
+   
+Kernel geometries and parameters
+================================
+
+In order to better understand the architecture, we define a set of parameters:
+
+ - For data:
+   - I = number of input channels to process
+   - H = height of the channel (sometimes we refer to HI and HO for the height of input and output channels when they differ)
+   - W = width of the channel (sometimes we refer to WI and WO for the width of the input and output channels when they differ)
+   - O = number of output channels produced
+ - For convolution filters:
+   - KH = height of the filter
+   - KW = width of the filter
+   - SH = vertical stride of the filter (along the height)
+   - SW = horizontal stride of the filter (along the width)
+   - PH = upper and lower padding
+   - PW = left and right padding
+   
+ - For the kernel geometry
+   - CPI = Number of input channels processed in parallel by the kernel
+   - CPO = Number of output channels produced in parallel by the kernel
+   
+Memory alignment requirements
+=============================
+
+For performance issues, the kernel expects some specific alignment and storage formats of input data, output data, filters and bias. Next we describe
+those alignments and storage formats.
+
+Input data and output data
+--------------------------
+
+Input and output data can be stored in GHWC format. GIHWCPI stands for Group x Height x Width x Channel and is the ordering of data in memory. 
+
+In GHWC, channels are grouped in groups of CPI (CPO) channels and they are stored in memory in an interleaved manner. There is no restriction on the size of the channels. 
+However, padding is needed to the number of channels. This means, complete groups of CPI (CPO) channels are expected.
+
+The exact location in memory of an input pixel for a given channel i, a given row h and a given column w is:
+
+   gi = i / CPI
+   ii = i % CPI
+   addr = (gi * H * W * CPI) + (h * W * CPI) + (w * CPI) + ii
+
+being I H and W the number of input channels, the height of the channel and the width of the channel, respectively. Notice that the same applies to
+the output data (CPO and O instead of CPI and I, respectively).
+ 
+The GHWC format simplifies the HLSinf read and write infrastructure as data is stored in memory as it is needed by the internal operations of the kernel. This
+format, however, may need data rearrangments at the host side.
+
+DIRECT and WINOGRAD Convolution filters
+---------------------------------------
+
+Filters are stored in memory in the GO x GI x CPO x CPI x KH x KW format.
+ 
+KH and KW define the filter height and width, respectively. GO and GI define the groups of filter of size CPO and CPI, respectively. For a given number 
+of input I and output O channels, GI and GO are computed as follows:
+  
+  GI = I / CPI
+  GO = O / CPO
+  
+GI must be set to 1 if I < CPI
+GO must be set to 1 if O < CPO
+ 
+This method of storing filters in memory is motivated by the efficient read of filters performed by the module. Indeed, as the HLSinf kernel performs
+operations in groups of CPI and CPO, the way the filters are stored enable the module to simply read the memory sequentially.
+
+One memory pointer is provided to the HLSinf kernel to access the filters.
+
+DWS Convolution filters
+-----------------------
+
+For this type of convolutions two groups of filters are used: deepwise (DW) and pointwise (PW). DW filters are stored following the format C x KH x KW.
+
+PW filters are stored following the format GO x GI x CPO x CPI. In this case, the filter size is 1 (KH = 1, KW = 1). GI and GO parameters follow the same
+rules defined for the DIRECT and WINOGRAD convolutions.
+    
+Two different memory pointers are provided to the HLSinf kernel to access both types of filters.
+
+Convolution bias
+----------------
+
+Bias data is stored in memory in one single buffer with O items. There is one bias item per output channel. A single memory pointer is provided to the HLSinf
+kernel to access bias.
+
+Dataflow and Streams
+====================
+
+The HLSinf kernel follows the dataflow model. Within a dataflow modules are connected through streams and each module works independently from the others 
+as data becomes available on the input streams. Each module is pipelined in order to provide convenient processing speed.
+
+Several dataflows are implemented within HLSinf. The main dataflow model is the one that combines all the top level modules. Several modules in this dataflow
+are implemented as dataflows as well. The main dataflow model runs iteratively O / CPO times. On each iteration CPO output channels are computed and stored 
+in memory. Within one iteration all the input channels are read. Buffering of input channels is provided. Therefore, the kernel may buffer read data (depending
+on the actual input data size).
+
+Main dataflow
+-------------
+
+Next figure shows the global dataflow. Since HLSinf supports multiple data types along the dataflow it instantiates, in the figue we can see 
+the different data types defined. Data types are indicated as *_t whereas structs are indicated as *_st.
+ 
+--------------        --------        -------------------------------------------------------         ---------         -------        ----------------------         ------        -------         -----------          ------------
+|            |        |      |        |                                                     |         |       |         |     |        |                    |         |    |        |     |         |         |          |          |
+|            | din_t  |      | din_t  |     din_t        conv_cvt_t        conv_mul_t       | conv_t  |       | relu_t  |     | stm_t  |     pool_cvt_t     | pool_t  |    | dout_t |     | dout_t  |         | dout_t   |          |
+|    read    | din_st |      | din_st |     din_st       conv_cvt_st       conv_mul_st      | conv_st | ReLU  | relu_st |     | stm_st |     pool_cvt_st    | pool_st |    | dout_st|     | dout_st |         | dout_st  |  write   |
+|    data    |------->| ibuf |------->|pad  -------> cvt ------------> mul ------------> add|-------->| Clip  |-------->| STM | ------>| cvt --------> pool |-------->| bn |------->| add |-------->| upsize  |--------->|  data    |
+|  channels  |        |      |        |                                                     |         | Shift |         |     |        |                    |         |    |        |     |         |         |          | channels |
+|   (GHWC)   |        |      |        |                                                     |         |       |         |     |        |                    |         |    |        |     |         |         |          |  (GHWC)  |
+|            |        |      |        |                  direct_conv                        |         |       |         |     |        |        pool        |         |    |        |     |         |         |          |          |
+--------------        --------        -------------------------------------------------------         ---------         -------        ----------------------         ------        -------         -----------          ------------
+                                                                        ^                 ^                                                                             ^              ^
+  ---------------   w_t                                                 |                 |                                                                             |              |
+  |             |   w_st                                                |                 |                                                                             |              |
+  | read kernel | -------------------------------------------------------                 |                                                                             |              |
+  ---------------                                                                         |                                                                             |              |
+                                                                                          |                                                                             |              |
+  ---------------   b_t                                                                   |                                                                             |              |
+  |             |   b_st                                                                  |                                                                             |              |
+  | read bias   | -------------------------------------------------------------------------                                                                             |              |
+  ---------------                                                                                                                                                       |              |
+                                                                                                                                                                        |              |
+  ---------------                                                                                                                                                       |              |
+  |             |   bn_t                                                                                                                                                |              |
+  |             |   bnp_st                                                                                                                                              |              |
+  |   read      | -------------------------------------------------------------------------------------------------------------------------------------------------------              |
+  |   bn        |                                                                                                                                                                      |
+  |             |                                                                                                                                                                      |
+  ---------------                                                                                                                                                                      |
+                                                                                                                                                                                       |
+  ---------------                                                                                                                                                                      |
+  |             |   dout_t                                                                                                                                                             |
+  |             |   dout_st                                                                                                                                                            |
+  |   read      | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  |   input     |
+  |   add       |
+  ---------------
+
+din_st = din_t[CPI]; conv_pad_st = conv_pat_t[CPI]; conv_cvt_st = conv_cvt_t[CPI]
+conv_mult_st = conv_mult_t[CPO]; conv_add_st = conv_add_t[CPO], ...
+
+As previously described, the kernel works iteratively on CPI and CPO channels. Next, we describe each module within the dataflow model.
+
+
+read_data_channels module (GHWC format)
+---------------------------------------
+
+This module reads data using the GHWC format. Groups of CPI pixels are read consecutively and fed to the next module. There are no limitations on the sizes of
+the input channels. However, padding is needed for the input channels. The kernel reads complete groups of CPI channels.
+
+
+read_kernel module
+------------------
+
+This module reads filters of the convolution (also named kernels) from memory. Depending on the type of convolution implemented (current options are DIRECT_CONV, WINOGRAD_CONV, DWS_CONV),
+the format of the filters is different and they are stored in memory in a different way (described previously in this document). 
+The module produces at its output one complete filter set. CPO x CPI x KH x KW filter for the DIRECT_CONV or WINOGRAD_CONV types, or CPI x KW x KH (dw) and CPO x CPI (pw) for the DWS_CONV type.   
+
+read_bias module
+----------------
+
+This module reads bias and forwards it through its output stream. Bias are forwarded as packed items of CPO. Therefore, the module reads all bias (O bias; one per output channel) in groups of CPO.
+
+read_bn module
+--------------
+
+This module reads a vector of values for batch normalization. On each cycle it reads CPO items of four values which are applied to the channel in the batch normalization procedure.
+
+read_input_add module
+---------------------
+
+The module reads a vector in order to perform the add operation on the data that is being produced. On each cycle it reads CPO elements.
+
+ibuf module
+-----------
+
+This module implements a buffer to keep input data. As the kernel may iterate several times with the input data, keeping the data in buffers is convenient. However, if the input data size is larger
+than the available buffer then the buffer is deactivated and the kernel reads all the data from memory on every iteration. If the buffer is activated, then in the first iteration the buffer stores
+all the input data read from memory. On every iteration the buffer serves the data from the buffer (if activated).
+
+conv module
+-----------
+
+This module performs the convolution operation. The module receives the kernels (filters) and bias as well as the packed pixels that are streamlined. The module produces at the output
+a packed groups of output pixels, which correspond to a subset of output channels. Indeed, the CPO parameter defines the number of produced channels of the kernel. The produced pixels
+for each output channel are consecutive and follow the H x W format. Indeed, the output data of the HLSinf kernel is H x W x O. Thus, all the data pixels of the same channel are consecutively
+written into memory. 
+
+Depending on the type of convolution (current supported types are DIRECT_CONV, WINOGRAD_CONV, DWS_CONV) the module is adapted. This 
+affects to the input streams from the read_kernel and read_bias modules. However, the input data stream and the output data stream do not change. This module is implemented as a
+dataflow module and is described later in this document. 
+
+relu (clip, shift) module
+-------------------------
+
+This module performs basic linear operations at item granularity. It receives a packed set of CPO items and performs the same operation on all items. The supported operations are:
+
+  - ReLU: If the item value is negative, it is multiplied by a factor (if the factor is 0 then the ReLu activation is performed, if not then Leaky ReLu activation is performed)
+  - clip: The item value is clipped to a minimum and a maximum value (defined as a parameter)
+  - shift: The item value is shifted several positions either to the left or to the right (direction and number of positions defined as a parameter)
+  
+The clip and shift operations are supported only on integer precision mode (e.g. API8 or API32). The ReLU operation can be performed on every type of precision supported. Each operation can be enabled or disabled with a parameter.
+
+The module produces a packed set of CPO items once the operations are performed. Therefore, this module reads one packed set on every cycle and produces one packed set on every cycle.  
+
+STM module
+----------
+
+This module performs three basic element wise operations to the input vector. First, the input data is used to compute the Softplus operation. Then, the output of this operation is used to compute the tanh operations. The result is then
+multiplied by the module input and the result is forwarded to the output.
+
+pooling module
+--------------
+ 
+This module performs pooling operations on the receiving items. The module is implemented as a dataflow model and is described later in this document. Current supported operations are Maxpooling and Avgpooling.
+The module receives a packed set of CPO items on every cycle and outputs a packed set of CPO items on every cycle.
+ 
+BN module
+---------
+
+This module performs batch normalization. On every cycle receives CPO input values and applies the batch normalization operation in paralel to every value. The output is then produced (a set of CPO output values).
+
+ADD module
+----------
+
+This module performs the element wise add operation. It receives two vectors of N elements. Each element has CPO values. All CPO values are added in parallel. On every cycle it produces a set of CPO values which are forwarded.
+
+UPSIZE module
+-------------
+
+This module performs the upsize operation which means that an input image of H x W values is expanded to 2H x 2W. Individual image values are replicated in a 2 x 2 region. 
+
+write_data_channels module
+--------------------------
+
+The module receives streams of CPO pixels and it writes them directly into memory. As the data is in GHWC format the writting to memory is efficient as it is consecutive. Groups of CPO channels are delivered 
+to the module.
+ 
+Direct Convolution
+==================
+ 
+Winograd Convolution
+====================
+ 
+DWS Convolution
+===============
+ 
+Pooling
+=======
+ 

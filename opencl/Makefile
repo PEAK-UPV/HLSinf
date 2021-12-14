@@ -44,6 +44,9 @@ TARGET := hw
 HOST_ARCH := x86
 SYSROOT :=
 DEVICE := xilinx_u200_xdma_201830_2
+#DEVICE := xilinx_u280_xdma_201920_3
+CFG_FILE := ./cfg_u200.ini
+CONF := CONF_ALVEO_U280_4x4_DIRECT_FP32
 
 include ./utils.mk
 
@@ -70,11 +73,11 @@ LDFLAGS += $(opencl_LDFLAGS)
 
 ############################## Setting up Host Variables ##############################
 #Include Required Host Source Files
-CXXFLAGS += -I$(ABS_COMMON_REPO)/common/includes/xcl2
-HOST_SRCS += $(ABS_COMMON_REPO)/common/includes/xcl2/xcl2.cpp ./src/test_conv2D.cpp
+CXXFLAGS += -I$(ABS_COMMON_REPO)/common/includes/xcl2 -D$(CONF)
+HOST_SRCS += $(ABS_COMMON_REPO)/common/includes/xcl2/xcl2.cpp ./src/test_conv2D.cpp ./src/test_print.cpp ./src/test_kernel.cpp ./src/test_file.cpp ./src/test_cpu.cpp ./src/test_check.cpp ./src/test_buffers.cpp ./src/test_arguments.cpp ./src/data_test.cpp ./src/opencl.cpp
 # Host compiler global settings
 CXXFLAGS += -fmessage-length=0
-LDFLAGS += -lrt -lstdc++
+LDFLAGS += -lrt -lstdc++ -lpthread
 
 ifneq ($(HOST_ARCH), x86)
 	LDFLAGS += --sysroot=$(SYSROOT)
@@ -82,7 +85,7 @@ endif
 
 ############################## Setting up Kernel Variables ##############################
 # Kernel compiler global settings
-CLFLAGS += -t $(TARGET) --platform $(DEVICE) --save-temps --config ./cfg_conv2D.ini 
+CLFLAGS += -t $(TARGET) --platform $(DEVICE) --save-temps --config $(CFG_FILE) -D$(CONF)
 ifneq ($(TARGET), hw)
 	CLFLAGS += -g
 endif

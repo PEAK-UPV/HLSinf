@@ -1,208 +1,372 @@
+/*
+* HLSinf accelerator
+* Version: 1.0
+* copyright (c) 2020, Universidad Politécnica de Valencia (UPV), GAP research group
+* Date: December 2021
+* Author: GAP Research Group (UPV), contact: jflich@disca.upv.es
+* All rights reserved
+*/
+
 #ifndef _CONV2D_H_
 #define _CONV2D_H_
+
+#define AP_INT_MAX_W 4096 // Must be defined before includes
 
 #include <stdio.h>
 #include <ap_fixed.h>
 #include <ap_int.h>
+
+#ifndef OPENCL_TEST
 #include <hls_stream.h>
+#include <hls_math.h>
+#endif
 
 // -----------------------------------------------------------------------------------------------------------
-// Convolution type (direct, winograd, deepwise separable)
-// Select only one type of convolution
+// Configuration selection.
+// Select only one configuration. Each configuration defines the target device, the type of convolution, the
+// arithmetic precision format, and the size of the kernel in input channels and output channels.
+// Each configuration is optimized for the specific targeted board
 // -----------------------------------------------------------------------------------------------------------
-#define DIRECT_CONV
-//#define WINOGRAD_CONV
-//#define DWS_CONV
+
+//#define HLSINF_1_0  // U200, 4x4,  FP32:             DIRECT_CONV, RELU, STM, CLIPPING,        POOLING, BN, ADD, UPSIZE
+//#define HLSINF_1_1  // U200, 8x8,  MIXED PRECISSION: DIRECT_CONV, RELU,      CLIPPING, SHIFT, POOLING, BN, ADD, UPSIZE
+//#define HLSINF_1_2  // U200, 16x8, MIXED PRECISSION: DIRECT_CONV, RELU,      CLIPPING, SHIFT, POOLING, BN, ADD, UPSIZE
+//#define HLSINF_1_3  // U200, 8x4,  FP32:             DIRECT_CONV, RELU, STM, CLIPPING,        POOLING, BN, ADD, UPSIZE
 
 // -----------------------------------------------------------------------------------------------------------
-// data type. Defines the basic data type of the kernel
-// Select only one data type
+// defines for debug (DEBUG_ALL activates all debug defines)
 // -----------------------------------------------------------------------------------------------------------
-// FP32 (comment out the next four lines for FP32 support)
-#define data_type float
-#define DATA_TYPE_WIDTH  32	  // data type width in bits (32 for float)
-#define READ_BLOCK_SIZE  16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
-#define WRITE_BLOCK_SIZE 16   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
-
-// APFIXED<8> (comment out the next four lines for APFIXED<8> support)
-//#define data_type ap_fixed<8,4,AP_TRN,AP_WRAP>
-//#define DATA_TYPE_WIDTH   8	  // data type width in bits (32 for float)
-//#define READ_BLOCK_SIZE  64   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
-//#define WRITE_BLOCK_SIZE 64   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
-
-// APINT<8> (comment out the next four lines for APINT<8> support)
-//#define data_type ap_int<8>
-//#define DATA_TYPE_WIDTH   8	  // data type width in bits (32 for float)
-//#define READ_BLOCK_SIZE  64   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
-//#define WRITE_BLOCK_SIZE 64   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
-
-// -----------------------------------------------------------------------------------------------------------
-// Defines for the kernel
-// -----------------------------------------------------------------------------------------------------------
-#define WMAX            256   // Maximum image width
-#define HMAX            256   // Maximum image height
-#define CPI               4   // Basic kernel number of input channels
-#define CPO              16   // Basic kernel number of output channels
-#define LOG2_CPO	      4   // number of bits for CPO (if you change CPO please change LOG2_CPO accordingly)
-#define KW                3   // Convolutional kernel width
-#define KH                3   // Convolutional kernel height
-
-// -----------------------------------------------------------------------------------------------------------
-// Defines for the added modules to the conv layer
-// -----------------------------------------------------------------------------------------------------------
-#define USE_RELU		      // Enables the use of the ReLU activation
-#define USE_CLIPPING          // Enables the use of the clipping function (implemented in the ReLU module)
-//#define USE_SHIFT             // Enables the use of the shift function (implemented in the ReLU module)
-							  // The shift function must be used only for ap_int data types
-//#define USE_MAXPOOLING		  // Enables the use of the Maxpooling function
-
-// -----------------------------------------------------------------------------------------------------------
-// Defines for the maxpooling layer (USE_MAXPOOLING must be defined)
-// -----------------------------------------------------------------------------------------------------------
-#define KW_MAXPOOLING	  2	  // Maxpooling kernel width
-#define KH_MAXPOOLING     2   // Maxpooling kernel height
-#define SW_MAXPOOLING     2   // MAxpooling horizontal stride
-#define SH_MAXPOOLING     2   // MAxpooling vertical stride
-
-// -----------------------------------------------------------------------------------------------------------
-// Defines for latency estimation
-// Change those values and run C Synthesis in order to obtain the delay of the kernel
-// -----------------------------------------------------------------------------------------------------------
-#define I_REFERENCE       4  // I for delay estimation (must be equal or higher than CPI)
-#define O_REFERENCE      16  // O for delay estimation (must be equal or higher than CPO)
-#define W_REFERENCE     256  // W for delay estimation
-#define H_REFERENCE     256  // H for delay estimation
-
-// -----------------------------------------------------------------------------------------------------------
-// defines for debug
-// -----------------------------------------------------------------------------------------------------------
+//#define DEBUG_ALL
+//#define DEBUG_VERBOSE
 //#define DEBUG_READ_BIAS
 //#define DEBUG_READ_KERNEL
 //#define DEBUG_READ_DATA
+//#define DEBUG_READ_BATCH_NORM
 //#define DEBUG_SERIALIZE
+//#define DEBUG_JOIN
+//#define DEBUG_INPUT_BUFFER
+//#define DEBUG_PADDING
 //#define DEBUG_CVT
 //#define DEBUG_MUL
+//#define DEBUG_ADD
 //#define DEBUG_SPLIT
+//#define DEBUG_BLOCK
 //#define DEBUG_WRITE_DATA
 //#define DEBUG_RELU
+//#define DEBUG_STM
+//#define DEBUG_POOL
+//#define DEBUG_BATCH_NORM
+//#define DEBUG_ADD_DATA
 //#define DEBUG_CPU
 
-// Defines (do not change)
-#define LEFT_DIRECTION 0	// direction used in ReLU (shift) module
+// -----------------------------------------------------------------------------------------------------------
+// Automatic defines (do not change; add new ones if needed)
+// -----------------------------------------------------------------------------------------------------------
+
+// Configuration 1.0: U200, 4x4, FP32: DIRECT_CONV, RELU, STM, CLIPPING, POOLING, BATCH_NORM, ADD, UPSIZE
+#ifdef HLSINF_1_0
+#define ALVEO_U200
+#define DIRECT_CONV
+#define USE_RELU
+#define USE_CLIPPING
+//#define USE_SHIFT
+#define USE_POOLING
+#define USE_BATCH_NORM
+#define USE_STM
+#define FLOAT_DATA_TYPE               // we use float numbers as input data
+#define CPI                          4
+#define CPO                          4
+#define LOG2_CPO                     2
+#define WMAX                      1024 
+#define HMAX                       128 
+#define READ_BURST_SIZE             16
+#define STREAMS_DEPTH               16
+#define INPUT_BUFFER_SIZE        16384 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define EPSILON_VALUE          0.00001
+#define MIN_DATA_TYPE_VALUE   -9999999
+#define READ_BLOCK_SIZE             16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define WRITE_BLOCK_SIZE            16   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define din_t                    float
+#define conv_cvt_t               float
+#define conv_mul_t               float
+#define relu_t                   float
+#define stm_t                    float
+#define pool_cvt_t               float
+#define pool_t                   float
+#define bn_t                     float
+#define add_t                    float
+#define w_t                      float
+#define b_t                      float
+#define conv_t                   float
+#define dout_t                   float
+#endif
+
+// Configuration 1.1: U200, 8x8, MIXED PRECISSION: DIRECT_CONV, RELU, CLIPPING, SHIFT, POOLING, BN, ADD, UPSIZE
+#ifdef HLSINF_1_1
+#define ALVEO_U200
+//#define DSP_OPTIMIZATION
+#define DIRECT_CONV
+#define USE_RELU
+#define USE_CLIPPING
+#define USE_SHIFT
+#define USE_POOLING
+#define USE_BATCH_NORM
+//#define USE_STM
+#define CPI                               8
+#define CPO                               8
+#define LOG2_CPO                          3
+#define WMAX                           1024 
+#define HMAX                            256
+#define READ_BURST_SIZE                  16
+#define STREAMS_DEPTH                    16
+#define INPUT_BUFFER_SIZE             32768 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define EPSILON_VALUE               0.00001
+#define MIN_DATA_TYPE_VALUE               0
+#define READ_BLOCK_SIZE                  64   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define WRITE_BLOCK_SIZE                 64   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define din_t                    ap_uint<8>
+#define conv_cvt_t               ap_uint<8>
+#define conv_mul_t               ap_int<32>
+#define relu_t                   ap_uint<8>
+#define stm_t                    ap_uint<8>
+#define pool_cvt_t               ap_uint<8>
+#define pool_t                   ap_uint<8>
+#define bn_t                     ap_uint<8>
+#define add_t                    ap_uint<8>
+#define w_t                       ap_int<8>
+#define b_t                      ap_int<32>
+#define conv_t                   ap_int<32>
+#define dout_t                   ap_uint<8>
+#endif
+
+// HLSINF_1_2: U200, 16x8, MIXED PRECISSION: DIRECT_CONV, RELU, CLIPPING, SHIFT, POOLING, BN, ADD, UPSIZE
+#ifdef HLSINF_1_2
+#define ALVEO_U200
+#define DIRECT_CONV
+#define USE_RELU
+#define USE_CLIPPING
+#define USE_SHIFT
+#define USE_POOLING
+#define USE_BATCH_NORM
+//#define USE_STM
+#define CPI                              16
+#define CPO                               8
+#define LOG2_CPO                          3
+#define WMAX                            256
+#define HMAX                            128
+#define READ_BURST_SIZE                  16
+#define STREAMS_DEPTH                    16
+#define INPUT_BUFFER_SIZE              8192 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define EPSILON_VALUE               0.00001
+#define MIN_DATA_TYPE_VALUE               0
+#define READ_BLOCK_SIZE                  64   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define WRITE_BLOCK_SIZE                 64   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define din_t                    ap_uint<8>
+#define conv_cvt_t               ap_uint<8>
+#define conv_mul_t               ap_int<32>
+#define relu_t                   ap_uint<8>
+#define stm_t                    ap_uint<8>
+#define pool_cvt_t               ap_uint<8>
+#define pool_t                   ap_uint<8>
+#define bn_t                     ap_uint<8>
+#define add_t                    ap_uint<8>
+#define w_t                       ap_int<8>
+#define b_t                      ap_int<32>
+#define conv_t                   ap_int<32>
+#define dout_t                   ap_uint<8>
+#endif
+
+// Configuration 1.3: U200, 8x4, FP32: DIRECT_CONV, RELU, STM, CLIPPING, POOLING, BATCH_NORM, ADD, UPSIZE
+#ifdef HLSINF_1_3
+#define ALVEO_U200
+#define DIRECT_CONV
+#define USE_RELU
+#define USE_CLIPPING
+//#define USE_SHIFT
+#define USE_POOLING
+#define USE_BATCH_NORM
+#define USE_STM
+#define FLOAT_DATA_TYPE               // we use float numbers as input data
+#define CPI                          8
+#define CPO                          4
+#define LOG2_CPO                     2
+#define WMAX                       256
+#define HMAX                       128
+#define READ_BURST_SIZE             16
+#define STREAMS_DEPTH               16
+#define INPUT_BUFFER_SIZE         8192 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define EPSILON_VALUE          0.00001
+#define MIN_DATA_TYPE_VALUE   -9999999
+#define READ_BLOCK_SIZE             16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define WRITE_BLOCK_SIZE            16   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define din_t                    float
+#define conv_cvt_t               float
+#define conv_mul_t               float
+#define relu_t                   float
+#define stm_t                    float
+#define pool_cvt_t               float
+#define pool_t                   float
+#define bn_t                     float
+#define add_t                    float
+#define w_t                      float
+#define b_t                      float
+#define conv_t                   float
+#define dout_t                   float
+#endif
+
+// ***********************************************************************************************************
+// ***********************************************************************************************************
+// ***********************************************************************************************************
+// What follows is the definition of data types (do not change!!!!!!)
+// ***********************************************************************************************************
+// ***********************************************************************************************************
+// ***********************************************************************************************************
+
+// -----------------------------------------------------------------------------------------------------------
+// Defines for latency estimation in C synthesis
+// -----------------------------------------------------------------------------------------------------------
+#define I_REFERENCE     CPI  // I for delay estimation (must be equal or higher than CPI)
+#define O_REFERENCE     CPO  // O for delay estimation (must be equal or higher than CPO)
+#define W_REFERENCE    WMAX  // W for delay estimation
+#define H_REFERENCE    HMAX  // H for delay estimation
+
+// -----------------------------------------------------------------------------------------------------------
+// defines for C simulation and C/RTL co-simulation
+// -----------------------------------------------------------------------------------------------------------
+#define W_SIM         256 //WMAX
+#define H_SIM         256 //HMAX
+#define I_SIM         CPI //I_REFERENCE
+#define O_SIM         CPO //O_REFERENCE
+#define PT_SIM        1   
+#define PB_SIM        1
+#define PL_SIM        1
+#define PR_SIM        1
+#define SH_SIM        1   // SH
+#define SW_SIM        1   // SW
+#define INSTANCES_SIM 2   //2
+
+// -----------------------------------------------------------------------------------------------------------
+// Direction defines (for shift operations)
+// -----------------------------------------------------------------------------------------------------------
+#define LEFT_DIRECTION  0	// direction used in ReLU (shift) module
 #define RIGHT_DIRECTION 1   // direction used in ReLU (shift) module
 
-// What follows is the definition of data types (do not change)
+// -----------------------------------------------------------------------------------------------------------
+// depth of pointers for co-simulation support
+// -----------------------------------------------------------------------------------------------------------
+#define DATA_IN_PORT_DEPTH   W_SIM * H_SIM * I_SIM / CPI
+#define DATA_OUT_PORT_DEPTH  W_SIM * H_SIM * O_SIM / CPO
+#define KERNEL_PORT_DEPTH    3 * 3 * I_SIM * O_SIM
+#define DW_KERNEL_PORT_DEPTH I_SIM * 9
+#define PW_KERNEL_PORT_DEPTH O_SIM * (I_SIM / CPI)
+#define BIAS_PORT_DEPTH      O_SIM / CPO
+#define BATCH_MORM_VAL_DEPTH O_SIM * 4
 
 // -----------------------------------------------------------------------------------------------------------
-// Data type for input data to the conv module
-struct pixel_in_t {
-	data_type pixel[CPI];
-};
+// Defines for the CONV layer
+// -----------------------------------------------------------------------------------------------------------
+#define KW             3   // Convolutional kernel width
+#define KH             3   // Convolutional kernel height
 
 // -----------------------------------------------------------------------------------------------------------
-// Data type for output data from the conv module
-struct pixel_out_t {
-  data_type pixel[CPO];
-};
+// Defines for the POOLING layer (USE_MAXPOOLING or USE_AVGPOOLING must be defined)
+// -----------------------------------------------------------------------------------------------------------
+#define KW_POOLING	   2   // Maxpooling kernel width
+#define KH_POOLING     2   // Maxpooling kernel height
+#define SW_POOLING     2   // MAxpooling horizontal stride
+#define SH_POOLING     2   // MAxpooling vertical stride
 
 // -----------------------------------------------------------------------------------------------------------
-// frames struct (KWxKH)
-struct frame_t {
-  pixel_in_t pixel[9];
-};
+// Defines for debug
+// -----------------------------------------------------------------------------------------------------------
+#ifdef DEBUG_ALL
+#define DEBUG_READ_BIAS
+#define DEBUG_READ_KERNEL
+#define DEBUG_READ_DATA
+#define DEBUG_READ_BATCH_NORM
+#define DEBUG_SERIALIZE
+#define DEBUG_JOIN
+#define DEBUG_INPUT_BUFFER
+#define DEBUG_PADDING
+#define DEBUG_CVT
+#define DEBUG_MUL
+#define DEBUG_ADD
+#define DEBUG_SPLIT
+#define DEBUG_BLOCK
+#define DEBUG_WRITE_DATA
+#define DEBUG_RELU
+#define DEBUG_STM
+#define DEBUG_POOL
+#define DEBUG_BATCH_NORM
+#define DEBUG_ADD_DATA
+#define DEBUG_UPSIZE
+#define DEBUG_CPU
+#endif
+
+// ----------------------------------------------------------------------------------------------------------
+// Data types
+struct din_st      {din_t      pixel[CPI];};
+struct conv_cvt_st {din_st     pixel[9];};
+struct conv_mul_st {conv_mul_t pixel[CPO];};
+struct conv_st     {conv_t     pixel[CPO];};
+struct relu_st     {relu_t     pixel[CPO];};
+struct stm_st      {stm_t      pixel[CPO];};
+struct pool_cvt_st {pool_cvt_t pixel[4];};
+struct pool_st     {pool_t     pixel[CPO];};
+struct bn_st       {bn_t       pixel[CPO];};
+struct add_st      {add_t      pixel[CPO];};
+struct dout_st     {dout_t     pixel[CPO];};
+struct w_st        {w_t        pixel[CPO][CPI][9];};
+struct w_in_st     {w_t        pixel[9];};
+struct b_st        {b_t        pixel[CPO];};
+struct bnp_st      {bn_t       values[CPO*4];};
 
 // -----------------------------------------------------------------------------------------------------------
-// kernel struct
-struct kernel_t {
-  data_type pixel[CPO][CPI][9];
-};
-
-// -----------------------------------------------------------------------------------------------------------
-//kernel read struct
-struct kernel_in_t {
-  data_type pixel[9];
-};
-
-// -----------------------------------------------------------------------------------------------------------
-// kernel struct (deepwise)
-struct kernel_dw_t {
-  data_type pixel[CPI][KH*KW];
-};
-
-// -----------------------------------------------------------------------------------------------------------
-// kernel struct (pointwise)
-struct kernel_pw_t {
-  data_type pixel[CPO][CPI];
-};
-
-// -----------------------------------------------------------------------------------------------------------
-// Read block struct
-typedef struct {
-  data_type pixel[READ_BLOCK_SIZE];
-} read_block_t;
-
-// -----------------------------------------------------------------------------------------------------------
-// Write block struct
-struct write_block_t {
-  data_type pixel[WRITE_BLOCK_SIZE];
-};
+// Read and write block struct
+#define read_block_t  din_st
+#define write_block_t dout_st
 
 // What follows is the function prototypes
 
+// Function prototypes protected with the no-definition of OPENCL_TEST to avoid warnings when compiling for OpenCL
+#ifndef OPENCL_TEST
+
 // -----------------------------------------------------------------------------------------------------------
 // function prototypes
-extern "C" void k_conv2D(ap_uint<512> *ptr_data, int H, int W, int rows, int I, int O, int I_ITER, int O_ITER, int enable_relu, data_type *ptr_kernel, pixel_out_t *ptr_bias, ap_uint<512> *ptr_out, int global_offset, int enable_upper_padding, int enable_lower_padding);
+extern "C" void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, 
+                         int H, int W, int HO, int WO, int rows, int PT, int PB, int PL, int PR, int SH, int SW, 
+                         int I, int O, int I_ITER, int o_iter_first, int o_iter_last, 
+                         int enable_relu, int enable_stm, float relu_factor, int enable_batch_norm,
+                         w_t *ptr_kernel,
+            			 b_st *ptr_bias, bnp_st *b_ptr, write_block_t *ptr_out, 
+                         int read_offset, int write_offset, int enable_maxpooling, int enable_avgpooling,
+						 int enable_clipping, int enable_shift, int enable_add, int min_clip, int max_clip, 
+                         int dir_shift, int pos_shift, int enable_upsize);
 
-void serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int channel_size, int offset, hls::stream<read_block_t> &in, hls::stream<data_type> &out, int first_channel, int I);
-template <int LEVELS> void ch_serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int channel_size, int *offset_read_data_channel_i, hls::stream<read_block_t> stream_data_ch_0[LEVELS], hls::stream<data_type> stream_data_ch_1[LEVELS], int I){
-#pragma HLS inline
-ch_serialize_and_filter:
-  for (int i = 0; i < LEVELS; i++) {
-    #pragma HLS UNROLL
-    serialize_and_filter(I_ITER, num_pixels, channel_blocks, channel_size, offset_read_data_channel_i[i], stream_data_ch_0[i], stream_data_ch_1[i], i, I);
-  }
-}
-
-// read functions
-void read_bias(int offset_bias, pixel_out_t *b_ptr, hls::stream<pixel_out_t> &out);
-void read_kernel(int I_ITER, int offset_kernel, data_type *k_ptr, hls::stream<kernel_t> &k_out);
-void read_data_channels(int H, int W, int rows, int I_ITER, ap_uint<512> *ptr, int offset, int num_extra_rows, int channel_blocks, hls::stream<read_block_t> out[CPI], int I);
-
-// write functions
-void write_data_channels(int num_pixels, ap_uint<512> *ptr, int *offset_i, hls::stream<write_block_t> in[CPO], int *enable_write);
-
-// direct conv functions
-void direct_conv(int H, int W, int I_ITER, int enable_upper_padding, int enable_lower_padding, hls::stream<pixel_in_t> &in, hls::stream<kernel_t> &k_in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out);
-
-// winograd functions
-void winograd_conv(int H, int W, int I_ITER, int enable_upper_padding, int enable_lower_padding, hls::stream<pixel_in_t> &in, hls::stream<kernel_t> &k_in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out);
-
-// dws functions
-void dws_conv(int H, int W, int I_ITER, int enable_upper_padding, int enable_lower_padding, hls::stream<pixel_in_t> &in, hls::stream<kernel_dw_t> &k_dw_in, hls::stream<kernel_pw_t> &k_pw_in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out);
-void dws_read_kernel(int I_ITER, int offset_kernel, data_type *k_ptr, hls::stream<kernel_dw_t> &k_dw_out, hls::stream<kernel_pw_t> &k_pw_out);
-void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<kernel_dw_t> &k_dw_in, hls::stream<kernel_pw_t> &k_pw_in, hls::stream<pixel_out_t> &out);
-
-// data reorganization
-void join(int H, int W, int I_ITER, int num_extra_rows, hls::stream<data_type> in[CPI], hls::stream<pixel_in_t> &out);
-void split(int H, int W, int *block_offset_channel, int num_blocks_channel, hls::stream<pixel_out_t> &in, hls::stream<write_block_t> out[CPO]);
-
-// activation functions
-void relu(int enable_relu, int enable_clipping, int enable_shift, int min_clip, int max_clip, int direction_shift, int pos_shift,
-		  int H, int W, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &out);
-
-// padding functions
-void padding(int H, int W, int I_ITER, int enable_upper_padding, int enable_lower_padding, hls::stream<pixel_in_t> &in, hls::stream<pixel_in_t> &out);
-
-// other functions
-void add(int H, int W, int I_ITER, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out);
-void mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<kernel_t> &k_in, hls::stream<pixel_out_t> &out);
-void cvt(int H, int W, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<frame_t> &out);
-
-// What follows are macros used in the code
+void read_bias                    (int offset_bias, b_st *b_ptr, hls::stream<b_st> &out);
+void read_batch_norm              (int offset_batchnorm, bnp_st *b_ptr, hls::stream<bnp_st> &out);
+void read_kernel                  (int I_ITER, int offset_kernel, w_t *k_ptr, hls::stream<w_st> &k_out);
+void read_data_channels_gihwcpi   (int num_pixels, int offset, int I_ITER, int cpi_group_offset, read_block_t *ptr, hls::stream<din_st> &out, int enable);
+void read_input_add_gihwcpi       (int num_pixels, int offset, write_block_t *ptr, hls::stream<dout_st> &out, int enable);
+void write_data_channels_gihwcpi  (int num_pixels, int offset, write_block_t *ptr, hls::stream<dout_st> &in);
+void direct_conv                  (int H, int W, int PT, int PB, int PL, int PR, int SH, int SW, int num_output_conv_pixels, int I_ITER, hls::stream<din_st> &in, hls::stream<w_st> &k_in, hls::stream<b_st> &b_in, hls::stream<conv_st> &out);
+void input_buffer                 (int num_pixels, int write_to_buff, int read_from_buff, hls::stream<din_st> &in, hls::stream<din_st> &out);
+void relu                         (int enable_relu, int enable_clipping, int enable_shift, float relu_factor, int min_clip, int max_clip, int direction_shift, int pos_shift, int num_pixels, hls::stream<conv_st> &in, hls::stream<relu_st> &out);
+void stm                          (int enable_stm, int num_pixels, hls::stream<relu_st> &in, hls::stream<stm_st> &out);
+void pooling                      (int H, int W, int enable_maxpooling, int enable_avgpooling, hls::stream<stm_st> &input, hls::stream<pool_st> &output);
+void batch_norm                   (int enable_batch_norm, int num_pixels, hls::stream<pool_st> &in, hls::stream<bnp_st> &bn_values, hls::stream<dout_st> &out);
+void add_data                     (int enable_add, int num_pixels, hls::stream<dout_st> &in_r, hls::stream<dout_st> &in_stm, hls::stream<dout_st> &out);
+void padding                      (int H, int W, int PT, int PB, int PL, int PR, int I_ITER, hls::stream<din_st> &in, hls::stream<din_st> &out);
+void add                          (int num_pixels, int I_ITER, hls::stream<conv_mul_st> &in, hls::stream<b_st> &b_in, hls::stream<conv_st> &out);
+void mul                          (int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::stream<w_st> &k_in, hls::stream<conv_mul_st> &out);
+void cvt                          (int H, int W, int SH, int SW, int I_ITER, hls::stream<din_st> &in, hls::stream<conv_cvt_st> &out);
 
 // -----------------------------------------------------------------------------------------------------------
+// What follows are macros used in the code
 // To allow using defines inside Xilinx pragmas
 #define PRAGMA_SUB(x) _Pragma (#x)
 #define DO_PRAGMA(x) PRAGMA_SUB(x)
+
+#endif
 
 #endif

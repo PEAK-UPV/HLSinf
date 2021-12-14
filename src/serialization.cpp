@@ -1,5 +1,15 @@
+/*
+* HLSinf accelerator
+* Version: 1.0
+* copyright (c) 2020, Universidad Politécnica de Valencia (UPV), GAP research group
+* Date: December 2021
+* Author: GAP Research Group (UPV), contact: jflich@disca.upv.es
+* All rights reserved
+*/
+
 #include "conv2D.h"
 
+#ifdef IHW_DATA_FORMAT
 // -------------------------------------------------------------------
 // serialize and filter
 //
@@ -16,7 +26,7 @@
 // num_pixels parameter indicates how many pixels (items) need to be forwarded
 // offset indicates the first item offset within a block in order to filter out first items
 //
-void serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int channel_size, int offset, hls::stream<read_block_t> &in, hls::stream<data_type> &out, int first_channel, int I) {
+void serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, hls::stream<read_block_t> &in, hls::stream<data_type> &out, int first_channel, int I, int enable) {
 
   #ifdef DEBUG_SERIALIZE
   printf("SERIALIZE: starts (num_pixels = %d)\n", num_pixels);
@@ -24,40 +34,46 @@ void serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int ch
 
   int num_pixels_cnt;
 
+  if (!enable) return;
+
   // Zero block initialization
   read_block_t data_zeros;
-  for (int b=0; b<READ_BLOCK_SIZE; b++) {
-    #pragma HLS UNROLL
-    data_zeros.pixel[b] = 0;
-  }
+  data_zeros = 0;
 
   int iters = I_ITER * channel_blocks * READ_BLOCK_SIZE;
   int b = 0;
   int p = 0;
   int iter = 0;
-  int offset_ch = 0;
   int current_channel = first_channel;
+
+  serialize_and_filter_loop_i_iter:
   for (int i_iter=0; i_iter < iters; i_iter++) {
-	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE/CPI * READ_BLOCK_SIZE * (W_REFERENCE * H_REFERENCE / READ_BLOCK_SIZE))
+	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=(I_REFERENCE/CPI) * W_REFERENCE * H_REFERENCE)
     #pragma HLS pipeline II=1
-    // offset
+
     if ((b==0) && (p==0)) {
-      offset_ch = (offset + (channel_size * CPI * iter)) % READ_BLOCK_SIZE;
       num_pixels_cnt = num_pixels;
     }
+
     read_block_t bx;
-    DO_PRAGMA(HLS ARRAY_PARTITION variable=bx dim=0 complete)
+
     if (p==0) {
       if (current_channel < I) bx = in.read(); else bx = data_zeros;
     }
-    if ((offset_ch==0) && (num_pixels_cnt !=0)) {
-      out << bx.pixel[p];
+    if (num_pixels_cnt != 0) {
+      ap_int<DATA_TYPE_WIDTH> aux = bx.range(DATA_TYPE_WIDTH-1, 0);
+
+      data_type bx2 = *(data_type *)(&aux);
+      out << bx2;
       num_pixels_cnt = num_pixels_cnt - 1;
+
+      bx = bx >> DATA_TYPE_WIDTH;
+
       #ifdef DEBUG_SERIALIZE
-      printf("SERIALIZE: pixel forwarded %f\n", (float)bx.pixel[p]);
+      #ifdef DEBUG_VERBOSE
+      printf("SERIALIZE: pixel forwarded %f\n", (float)bx2);
       #endif
-    } else {
-      offset_ch = offset_ch - 1;
+      #endif
     }
     p = p + 1;
     if (p == READ_BLOCK_SIZE) {
@@ -76,4 +92,4 @@ void serialize_and_filter(int I_ITER, int num_pixels, int channel_blocks, int ch
   #endif
 
 }
-
+#endif
