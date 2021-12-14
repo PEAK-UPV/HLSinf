@@ -1,3 +1,12 @@
+/*
+* HLSinf accelerator
+* Version: 1.0
+* copyright (c) 2020, Universidad Politécnica de Valencia (UPV), GAP research group
+* Date: December 2021
+* Author: GAP Research Group (UPV), contact: jflich@disca.upv.es
+* All rights reserved
+*/
+
 #include "conv2D.h"
 
 // ----------------------------------------------------------------------------------------
@@ -13,26 +22,26 @@
 //
 // This module is used in the Direct Convolution method
 //
-void mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<kernel_t> &k_in, hls::stream<pixel_out_t> &out) {
+void mul(int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::stream<w_st> &k_in, hls::stream<conv_mul_st> &out) {
 
   #ifdef DEBUG_MUL
   printf("mul: start\n");
   #endif
 
-  kernel_t kernel;
-  kernel_in_t k;
+  w_st kernel;
+  w_in_st k;
   DO_PRAGMA(HLS ARRAY_PARTITION variable=kernel dim=0 complete)
   #pragma HLS array_partition variable=k dim=0 complete
 
-  frame_t data_in;
+  conv_cvt_st data_in;
 
-  data_type sum[CPO];
+  conv_mul_t sum[CPO];
   DO_PRAGMA(HLS ARRAY_PARTITION variable=sum dim=0 block factor=CPO)
 
-  pixel_out_t p_out;
+  conv_mul_st p_out;
 
   int load_kernel = 0;
-  int num_iter = I_ITER * H * W;
+  int num_iter = I_ITER * num_data_frames;
   int iter_load_kernel = 0;
 
   mul_loop_1:
@@ -76,12 +85,29 @@ void mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<kernel_
       for (int j=0; j<KW*KH; j++) {
         DO_PRAGMA(HLS loop_tripcount  min=1 max=KW*KH)
         #pragma HLS UNROLL
+#ifdef DSP_OPTIMIZATION
         loop_mul_cpo:
+        for (int cpo=0; cpo<CPO; cpo = cpo + 2) {
+	  DO_PRAGMA(HLS loop_tripcount min=1 max=CPO/2)
+          #pragma HLS UNROLL
+	  ap_int<27> op1;
+          op1.range(26, 18) = kernel.pixel[cpo][cpi][j];
+          op1.range(17, 0) = 0;
+	  ap_uint<27> op2;
+	  op2 = kernel.pixel[cpo+1][cpi][j];
+	  ap_int<45> result;
+	  result = (op1 + op2) * data_in.pixel[j].pixel[cpi];
+	  sum[cpo] += result.range(33, 18);
+	  sum[cpo+1] += result.range(15, 0);
+	}
+#else
+	loop_mul_cpo:
         for (int cpo=0; cpo<CPO; cpo++) {
           DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO)
           #pragma HLS UNROLL
           sum[cpo] += data_in.pixel[j].pixel[cpi] * kernel.pixel[cpo][cpi][j];
         }
+#endif
       }
     }
 
@@ -100,7 +126,7 @@ void mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<kernel_
     #endif
     out << p_out;
     iter_load_kernel++;
-    if (iter_load_kernel == W*H) iter_load_kernel = 0;
+    if (iter_load_kernel == num_data_frames) iter_load_kernel = 0;
   }
 
   #ifdef DEBUG_MUL
@@ -108,6 +134,7 @@ void mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<kernel_
   #endif
 }
 
+#ifdef DWS_CONV
 // ----------------------------------------------------------------------------------------
 // dws_mul: This function performs the deewise separable multiplication of an input frame
 // with the stored kernels and sends the produced pixels. 
@@ -286,3 +313,4 @@ void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<ker
   #endif
 }
 
+#endif

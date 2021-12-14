@@ -1,51 +1,40 @@
 /*
+* HLSinf accelerator
+* Version: 1.0
+* copyright (c) 2020, Universidad Politécnica de Valencia (UPV), GAP research group
+* Date: December 2021
+* Author: GAP Research Group (UPV), contact: jflich@disca.upv.es
+* All rights reserved
+*/
+
+/*
  * check-related test functions
  */
 
 #include "test_conv2D.h"
 
 // check_result function. Checks output produced by the CPU and by the FPGA
-int check_result(data_type *max_difference, int *num_elements_differ) {
+int check_result(dout_t *max_difference, int *num_elements_differ) {
   *num_elements_differ = 0;
-  *max_difference = data_type(0);
+  *max_difference = dout_t(0);
   float epsilon = EPSILON_VALUE;
 
-  if ((enable_maxpooling) || (enable_avgpooling)) {
+  int rows = enable_upsize ? HO_final * 2 : HO_final;
+  int cols = enable_upsize ? WO_final * 2 : WO_final;
 
-    for (int cout=0; cout < O_output; cout++) {
-      for (int h=0; h<H/2; h++) {
-        for (int w=0; w<W/2; w++) {
-          // data_out pixel position
-          int addr_o = output_data_address_div(cout, h, w);
-          data_type diff = data_type(fabs(float(out_pool_cpu[addr_o]) - float(out[addr_o])));
-          if (float(diff) > float(epsilon)) {
-            (*num_elements_differ)++;
-            if (*max_difference < diff) *max_difference = diff;
-          }
+
+  for (int cout = 0; cout < O_output; cout++) {
+    for (int h = 0; h < rows; h++) {
+      for (int w = 0; w < cols; w++) {
+	      int addr_out = output_data_address(cout, h, w, rows, cols);
+        dout_t diff = dout_t(fabs(float(cpu_out[addr_out]) - float(out[addr_out])));
+        if (float(diff) > float(epsilon)) {
+          (*num_elements_differ)++;
+//	  printf("difference at cout %d h %d w %d %6.4f cpu %6.4f fpga\n", cout, h, w, float(cpu_out[addr_out]), float(out[addr_out]));
+          if (*max_difference < diff) *max_difference = diff;
         }
       }
     }
-    return (*num_elements_differ != 0);
-
-  } else {
-
-	for (int cout=0; cout < O_output; cout++) {
-      for (int h=0; h<H; h++) {
-        for (int w=0; w<W; w++) {
-          // data_out pixel position
-          int addr_o = output_data_address(cout, h, w);
-          data_type diff;
-          if (enable_relu) diff = data_type(fabs(float(out_relu_cpu[addr_o]) - float(out[addr_o])));
-          else diff = fabs(float(out_conv_cpu[addr_o]) - float(out[addr_o]));
-          if (float(diff) > float(epsilon)) {
-            (*num_elements_differ)++;
-            if (*max_difference < diff) *max_difference = diff;
-          }
-        }
-      }
-    }
-    return (*num_elements_differ != 0);
-
   }
-
+  return (*num_elements_differ != 0);
 }

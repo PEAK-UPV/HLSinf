@@ -1,4 +1,13 @@
 /*
+* HLSinf accelerator
+* Version: 1.0
+* copyright (c) 2020, Universidad Politécnica de Valencia (UPV), GAP research group
+* Date: December 2021
+* Author: GAP Research Group (UPV), contact: jflich@disca.upv.es
+* All rights reserved
+*/
+
+/*
  * Print-related test functions
  *
  */
@@ -10,6 +19,14 @@ void print_bias() {
   for (int o=0; o<O_output; o++) printf("%6.4f ", float(bias[o]));
   printf("\n");
 }
+
+#ifdef USE_BATCH_NORM
+void print_batch_norm() {
+	printf("Batch Normalization Values: ");
+	for (int o=0; o<O_output*4; o++) printf("%6.4f ", float(batch_norm_values[o]));
+	printf("\n");
+}
+#endif
 
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
 void print_kernel() {
@@ -73,8 +90,8 @@ void print_input() {
 
   int Hmax = H;
   int Wmax = W;
-  if (H > 5) Hmax = 5;
-  if (W > 5) Wmax = 5;
+  if (H > 8) Hmax = 8;
+  if (W > 8) Wmax = 8;
 
   printf("Input:\n");
   for (int i=0; i<I_input; i++) {
@@ -92,48 +109,55 @@ void print_input() {
   }
 }
 
+void print_input_add() {
 
-void print_output() {
-  if ((enable_maxpooling) || (enable_avgpooling)) {
+  int Hmax = HO_final;
+  int Wmax = WO_final;
+  if (H > 5) Hmax = 5;
+  if (W > 5) Wmax = 5;
 
-	printf("Output:\n");
-	for (int o=0; o<O_output; o++) {
-		printf("channel %d:\n", o);
-		for (int h=0; h<H/2; h++) {
-			for (int w=0; w<W/2; w++) {
-				int addr_o = output_data_address_div(o, h, w);
-				printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_pool_cpu[addr_o]));
-			}
-			printf("\n");
-		}
+  printf("Input ADD:\n");
+  for (int i=0; i<I_input; i++) {
+    printf("channel %d:\n", i);
+	for (int h=0; h<Hmax; h++) {
+	  for (int w=0; w<Wmax; w++) {
+		int addr = input_data_address(i, h, w);
+	    printf("%4.2f ", float(data_in_add[addr]));
+        addr++;
+	  }
+	  if (W != Wmax) printf(" ...");
+	  printf("\n");
 	}
-
-  } else {
-
-	printf("Output:\n");
-	for (int o=0; o<O_output; o++) {
-		printf("channel %d:\n", o);
-		for (int h=0; h<H; h++) {
-			for (int w=0; w<W; w++) {
-				int addr_o = output_data_address(o, h, w);
-				if (enable_relu) printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_relu_cpu[addr_o]));
-				else printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_conv_cpu[addr_o]));
-			}
-			printf("\n");
-		}
-	}
-
+	if (H != Hmax) printf("...\n");
   }
+}
 
+
+void print_output(int only_cpu) {
+  printf("Output:\n");
+  for (int o=0; o<O_output; o++) {
+    printf("channel %d:\n", o);
+    int rows = enable_upsize ? HO_final * 2 : HO_final;
+    int cols = enable_upsize ? WO_final * 2 : WO_final;
+    //if (rows > 5) rows = 5;
+    //if (cols > 5) cols = 5;
+    for (int h=0; h<rows; h++) {
+      for (int w=0; w<cols; w++) {
+        int addr_o = output_data_address(o, h, w, rows, cols);
+        if (only_cpu) printf("%6.4f ", float(cpu_out[addr_o])); else printf("%6.4f (%6.4f) ", float(out[addr_o]), float(cpu_out[addr_o]));
+      }
+      printf("\n");
+    }
+  }
 }
 
 void print_configuration() {
   printf("\n");
   printf("====================================================================================================================\n");
-  printf("| Input: %3d x %3d x %3d x %3d      |  Kernel: %3d x %3d   |    Padding: %3d x %3d     |     Stride: %3d x %3d     |\n", H, W, I, O, KH, KW, 1, 1, 1, 1);
+  printf("| In: %3d x %3d x %3d | Out: %3d x %3d x %3d | Kernel: %3d x %3d  | Pad (TBLR): %1d x %1d x %1d x %1d | Stride: %3d x %3d  |\n", H, W, I, HO, WO, O, KH, KW, PT, PB, PL, PR, SH, SW);
   printf("|------------------------------------------------------------------------------------------------------------------|\n");
-  printf("| ReLU: %s   |   MaxPooling: %s   |   AvgPooling: %s    |  Clipping: %s (%2d:%2d)    |  Shift: %s (%s,%2d)    |\n", enable_relu?"Yes":"No ",
-		    enable_maxpooling?"Yes":"No ", enable_avgpooling?"Yes":"No ", enable_clipping?"Yes":"No ", min_clip, max_clip, enable_shift?"Yes":"No ", dir_shift==LEFT_DIRECTION?"LEFT ":"RIGHT", pos_shift);
+  printf("| ReLU: %s | STM: %s | MaxP: %s | AvgP: %s | BN: %s |Add: %s | Clip: %s (%2d:%2d) | Shift: %s (%s,%2d) | Upsize %s|\n", enable_relu?"Yes":"No ", enable_stm?"Yes":"No ",
+  		    enable_maxpooling?"Y":"N", enable_avgpooling?"Y":"N", enable_batch_norm?"Y":"N", enable_add?"Y":"N", enable_clipping?"Y":"N", min_clip, max_clip, enable_shift?"Y":"N", dir_shift==LEFT_DIRECTION?"LEFT ":"RIGHT", pos_shift, enable_upsize?"Y":"N");
   printf("====================================================================================================================\n");
 }
 

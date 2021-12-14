@@ -1,3 +1,12 @@
+/*
+* HLSinf accelerator
+* Version: 1.0
+* copyright (c) 2020, Universidad Politécnica de Valencia (UPV), GAP research group
+* Date: December 2021
+* Author: GAP Research Group (UPV), contact: jflich@disca.upv.es
+* All rights reserved
+*/
+
 /**
  * Pooling layer 
  * 		
@@ -11,7 +20,7 @@
 #include "conv2D.h"
 
 struct frame_pool_t {
-	pixel_out_t pixel[KW_POOLING * KH_POOLING];
+	stm_st pixel[KW_POOLING * KH_POOLING];
 };
 
 
@@ -31,11 +40,11 @@ struct frame_pool_t {
 *	In case enable_pooling is not set, the module bypasses the input
 *	to the output, sending the pixel on the first position of the output frame.
 */
-static void pool_cvt(int H, int W, int enable_pooling, hls::stream<pixel_out_t> &in, hls::stream<frame_pool_t> &out) {
+static void pool_cvt(int H, int W, int enable_pooling, hls::stream<stm_st> &in, hls::stream<frame_pool_t> &out) {
 
 	frame_pool_t kernel;
-	pixel_out_t  buffer0[WMAX];
-	pixel_out_t  buffer1[WMAX];
+	stm_st  buffer0[WMAX];
+	stm_st  buffer1[WMAX];
 	int          row0;
 	int          shift_frame;
 	int          send_frame;
@@ -45,9 +54,9 @@ static void pool_cvt(int H, int W, int enable_pooling, hls::stream<pixel_out_t> 
 	int          row_write;			// either 0 or 1 (we assume 2x2 kernel)
 	int          size_channel = H * W;
 	int          iterations = size_channel;
-	pixel_out_t  pixel;
-	pixel_out_t  p0, p1, p2, p3;
-	pixel_out_t  pix_b0, pix_b1;
+	stm_st  pixel;
+	stm_st  p0, p1, p2, p3;
+	stm_st  pix_b0, pix_b1;
     #ifdef ALVEO_U200
 	DO_PRAGMA(HLS bind_storage variable=buffer0 type=ram_2p impl=uram)
 	DO_PRAGMA(HLS bind_storage variable=buffer1 type=ram_2p impl=uram)
@@ -61,6 +70,7 @@ static void pool_cvt(int H, int W, int enable_pooling, hls::stream<pixel_out_t> 
 
     #ifdef DEBUG_POOL
 	printf("DEBUG_POOL: starts (cvt)\n");
+	printf("  H %d W %d\n", H, W);
     #endif
 
 
@@ -114,6 +124,7 @@ static void pool_cvt(int H, int W, int enable_pooling, hls::stream<pixel_out_t> 
 		  odd_col = (odd_col + 1) % 2;
 		  if (pin_col == W) {
 			pin_col = 0;
+			odd_col = 0;
 			pin_row++;
 			if (pin_row == H) pin_row = 0;
 		  }
@@ -154,10 +165,10 @@ static void pool_cvt(int H, int W, int enable_pooling, hls::stream<pixel_out_t> 
 *
 *   If no enable is active then the module bypasses the first pixel of the incomming frame to the output stream
 */
-static void pool_pooling(int HO, int WO, int enable_maxpooling, int enable_avgpooling, hls::stream<frame_pool_t> &in, hls::stream<pixel_out_t> &out) {
+static void pool_pooling(int HO, int WO, int enable_maxpooling, int enable_avgpooling, hls::stream<frame_pool_t> &in, hls::stream<pool_st> &out) {
 	
 	frame_pool_t kernel;
-	pixel_out_t out_pix;
+	pool_st out_pix;
 	
 	int size_out = HO * WO;
 	int size_kernel = KH_POOLING * KW_POOLING;
@@ -191,14 +202,14 @@ static void pool_pooling(int HO, int WO, int enable_maxpooling, int enable_avgpo
 		for (int cpo=0; cpo < CPO; cpo++) {
           #pragma HLS UNROLL
 
-		  data_type maxpool_value = MIN_DATA_TYPE_VALUE;
-		  data_type avgpool_value = 0;
+		  pool_t maxpool_value = MIN_DATA_TYPE_VALUE;
+		  pool_t avgpool_value = 0;
 
 		  pooling_loop_kernel:
 		  for (int k=0; k < size_kernel; k++) {
 			DO_PRAGMA(HLS LOOP_TRIPCOUNT min=(KW_POOLING * KH_POOLING) max=(KW_POOLING * KH_POOLING))
 
-			data_type value = kernel.pixel[k].pixel[cpo];
+			pool_t value = kernel.pixel[k].pixel[cpo];
 
 			if (value > maxpool_value) maxpool_value = value;
 			avgpool_value += value;
@@ -222,7 +233,7 @@ static void pool_pooling(int HO, int WO, int enable_maxpooling, int enable_avgpo
     #endif
 }
 
-void pooling(int H, int W, int enable_maxpooling, int enable_avgpooling, hls::stream<pixel_out_t> &input, hls::stream<pixel_out_t> &output) {
+void pooling(int H, int W, int enable_maxpooling, int enable_avgpooling, hls::stream<stm_st> &input, hls::stream<pool_st> &output) {
 
 	static hls::stream<frame_pool_t> stream_pool;
     DO_PRAGMA(HLS STREAM variable=stream_pool depth=2)

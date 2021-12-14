@@ -1,6 +1,8 @@
 #include "../../src/k_conv2D.cpp"
 #include "../../src/add.cpp"
+#include "../../src/add_data.cpp"
 #include "../../src/cvt.cpp"
+#include "../../src/stm.cpp"
 #include "../../src/direct_convolution.cpp"
 #include "../../src/dws_convolution.cpp"
 #include "../../src/join_split.cpp"
@@ -12,4 +14,4 @@
 #include "../../src/serialization.cpp"
 #include "../../src/winograd_convolution.cpp"
 #include "../../src/write.cpp"
-
+#include "../../src/batch_normalization.cpp"

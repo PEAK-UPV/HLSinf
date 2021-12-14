@@ -7,7 +7,6 @@ open_project HLSinf
 set_top k_conv2D
 add_files ../src/add.cpp -cflags "-D [lindex $argv 2]"
 add_files ../src/add_data.cpp -cflags "-D [lindex $argv 2]"
-add_files ../src/stm.cpp -cflags "-D [lindex $argv 2]"
 add_files ../src/conv2D.h -cflags "-D [lindex $argv 2]"
 add_files ../src/cvt.cpp -cflags "-D [lindex $argv 2]"
 add_files ../src/direct_convolution.cpp -cflags "-D [lindex $argv 2]"
@@ -22,6 +21,7 @@ add_files ../src/relu.cpp -cflags "-D [lindex $argv 2]"
 add_files ../src/serialization.cpp -cflags "-D [lindex $argv 2]"
 add_files ../src/winograd_convolution.cpp -cflags "-D [lindex $argv 2]"
 add_files ../src/write.cpp -cflags "-D [lindex $argv 2]"
+add_files ../src/stm.cpp -cflags "-D [lindex $argv 2]"
 add_files ../src/batch_normalization.cpp -cflags "-D [lindex $argv 2]"
 add_files -tb ../src/data_test.cpp -cflags "-D [lindex $argv 2]"
 add_files -tb ../src/test_arguments.cpp -cflags "-D [lindex $argv 2]"
@@ -39,8 +39,8 @@ create_clock -period 3.33 -name default
 config_interface -default_slave_interface s_axilite -m_axi_alignment_byte_size 64 -m_axi_latency 64 -m_axi_max_widen_bitwidth 512 -m_axi_offset slave
 config_rtl -register_reset_num 3
 #source "./HLSinf/AlveoU200/directives.tcl"
-#csim_design
-csynth_design
+csim_design -O -setup
+#csynth_design
 #cosim_design
 #export_design -format ip_catalog
 exit

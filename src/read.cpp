@@ -1,3 +1,12 @@
+/*
+* HLSinf accelerator
+* Version: 1.0
+* copyright (c) 2020, Universidad Politécnica de Valencia (UPV), GAP research group
+* Date: December 2021
+* Author: GAP Research Group (UPV), contact: jflich@disca.upv.es
+* All rights reserved
+*/
+
 #include "conv2D.h"
 
 // ---------------------------------------------------------------------------------------
@@ -10,13 +19,13 @@
 //
 // All the bias are read and sent through the out stream
 //
-void read_bias(int offset_bias, pixel_out_t *b_ptr, hls::stream<pixel_out_t> &out) {
+void read_bias(int offset_bias, b_st *b_ptr, hls::stream<b_st> &out) {
 
   #ifdef DEBUG_READ_BIAS
   printf("READ_BIAS: start\n");
   #endif
 
-  pixel_out_t bias;
+  b_st bias;
   #pragma HLS ARRAY_PARTITION variable=bias complete dim=0
 
   bias = b_ptr[offset_bias];
@@ -34,6 +43,42 @@ void read_bias(int offset_bias, pixel_out_t *b_ptr, hls::stream<pixel_out_t> &ou
   #endif
 }
 
+
+// ---------------------------------------------------------------------------------------
+// read_batch_norm. Reading batch normalization values from memory and sending to batch
+// 					normalization module
+//
+// Arguments:
+//   b_ptr               : pointer to batch normalization values
+//   offset_batchnorm    : offset to batch normalization values
+//   b_out               : output stream
+//
+// All the bias are read and sent through the out stream
+//
+void read_batch_norm(int offset_batchnorm, bnp_st *b_ptr, hls::stream<bnp_st> &out) {
+  #ifdef DEBUG_READ_BATCH_NORM
+  printf("DEBUG_READ_BATCH_NORM: start\n");
+  #endif
+
+  bnp_st batch_norm;
+  #pragma HLS ARRAY_PARTITION variable=batch_norm complete dim=0
+
+  batch_norm = b_ptr[offset_batchnorm];
+  out << batch_norm;
+
+  #ifdef DEBUG_READ_BATCH_NORM
+  printf("DEBUG_READ_BATCH_NORM: value = ");
+  for (int c=0; c<CPO*4; c++) {
+	  printf(" %f ", float(batch_norm.values[c]));
+  }
+  printf("\n");
+  #endif
+
+  #ifdef DEBUG_READ_BATCH_NORM
+  printf("DEBUG_READ_BATCH_NORM: end\n");
+  #endif
+}
+
 // ---------------------------------------------------------------------------------------
 // read_kernel. Reads kernels and sends them through the stream
 //
@@ -48,13 +93,13 @@ void read_bias(int offset_bias, pixel_out_t *b_ptr, hls::stream<pixel_out_t> &ou
 // kernels in the same order they are read through the output stream.
 // kernels are sent in frame structures (3x3 grid)
 //
-void read_kernel(int I_ITER, int offset_kernel, data_type *k_ptr, hls::stream<kernel_t> &k_out){
+void read_kernel(int I_ITER, int offset_kernel, w_t *k_ptr, hls::stream<w_st> &k_out){
 
   #ifdef DEBUG_READ_KERNEL
   printf("READ_KERNEL: start\n");
   #endif
 
-  kernel_t k;
+  w_st k;
   int cnt = 0;
   #pragma HLS array_partition variable=k complete dim=0
 
@@ -88,226 +133,6 @@ void read_kernel(int I_ITER, int offset_kernel, data_type *k_ptr, hls::stream<ke
   #endif
 }
 
-#ifdef DWS_CONV
-// ---------------------------------------------------------------------------------------
-// dws_read_kernel. Reads kernels and sends them through the stream. This kernel is for
-// DWS convolution
-//
-// Arguments:
-//   I_ITER              : Number of input iterations (I / CPI)
-//   offset_kernel       : offset to kernels
-//   k_ptr               : pointer to kernels
-//   k_dw_out            : deepwise output stream
-//   k_pw_out			 : pointwise output stream
-//
-// kernels are stored in memory with the format GO x GI x CPO x CPI x KH x KW
-// This storage formats lets the module to read memory sequentially and send all the
-// kernels in the same order they are read through the output stream.
-// kernels are sent in frame structures (3x3 grid)
-//
-void dws_read_dw_kernel(int I_ITER, int o_iter, data_type *k_dw_ptr, hls::stream<kernel_dw_t> &k_dw_out){
-
-  #ifdef DEBUG_READ_KERNEL
-  printf("READ_DW_KERNEL: starts\n");
-  #endif
-
-  // Kernels buffer
-  static kernel_dw_t dw[MAX_KERNELS_DW];
-  DO_PRAGMA(HLS AGGREGATE variable=dw)
-  //DO_PRAGMA(HLS ARRAY_PARTITION variable=dw dim=1 complete)
-
-  kernel_dw_t kernel_dw;
-  DO_PRAGMA(HLS AGGREGATE variable=kernel_dw)
-  //DO_PRAGMA(HLS ARRAY_PARTITION variable=kernel_dw dim=0 complete)
-
-  if (o_iter == 0) {
-
-	int addr = 0;
-
-    dw_read_kernel_loop_i:
-    for (int i=0; i<I_ITER; i++) {
-      DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE)
-
-	  dw_read_kernel_loop_cpi:
-	  for (int cpi=0; cpi<CPI; cpi++) {
-
-		dw_read_kernel_loop_k:
-		for (int k=0; k<9; k++) {
-	      DO_PRAGMA(HLS pipeline)
-
-  		  kernel_dw.pixel[cpi][k] = k_dw_ptr[addr+k];
-		}
-		addr = addr+9;
-	  }
-	  dw[i] = kernel_dw;
-	  k_dw_out << kernel_dw;
-    }
-  } else {
-    // Now we send through the stream the kernels
-    dws_loop_dw:
-    for (int i=0; i<I_ITER; i++) {
-	  DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE/CPI)
-	  DO_PRAGMA(HLS PIPELINE)
-	  kernel_dw = dw[i];
-	  k_dw_out << kernel_dw;
-      #ifdef DEBUG_READ_KERNEL
-      #ifdef DEBUG_VERBOSE
-	  printf("READ_DW_KERNEL: dw sent:\n");
-	  for (int cpi=0; cpi<CPI; cpi++) {
-		  for (int k=0; k<9; k++) {
-			  printf("%4.2f ", float(dw[i].pixel[cpi][k]));
-		  }
-		  printf("\n");
-	  }
-      #endif
-      #endif
-    }
-  }
-
-  #ifdef DEBUG_READ_KERNEL
-  printf("READ_DW_KERNEL: ends\n");
-  #endif
-
-}
-
-void dws_read_pw_kernel(int I_ITER, int O, int o_iter, read_kernel_pw_t *k_pw_ptr, hls::stream<kernel_pw_t> &k_pw_out){
-
-  #ifdef DEBUG_READ_KERNEL
-  printf("READ_PW_KERNEL: starts\n");
-  #endif
-
-  read_kernel_pw_t read_kernel_pw;
-  kernel_pw_t kernel_pw;
-  DO_PRAGMA(HLS ARRAY_PARTITION variable=kernel_pw complete dim=0)
-
-  int addr = o_iter * CPO * I_ITER;
-
-  // point-wise
-  pw_read_kernel_loop_i_iter:
-  for (int i_iter=0; i_iter<I_ITER; i_iter++) {
-	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE/CPI)
-
-    pw_read_kernel_loop_o:
-    for (int cpo=0; cpo<CPO; cpo++) {
-      DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=O_REFERENCE)
-      DO_PRAGMA(HLS PIPELINE)
-
-      read_kernel_pw = k_pw_ptr[addr+cpo];
-
-      pw_read_kernel_loop_cpi:
-      for (int cpi=0; cpi<CPI; cpi++) {
-        DO_PRAGMA(HLS UNROLL)
-
-        int first = cpi * DATA_TYPE_WIDTH;
-        int last = first + DATA_TYPE_WIDTH - 1;
-	ap_int<DATA_TYPE_WIDTH> aux = read_kernel_pw.range(last, first);
-        *(ap_uint<DATA_TYPE_WIDTH>*)(&kernel_pw.pixel[cpo][cpi]) = (data_type)aux;
-      }
-    }
-    addr += CPO;
-
-    k_pw_out << kernel_pw;
-
-    #ifdef DEBUG_READ_KERNEL
-    #ifdef DEBUG_VERBOSE
-    printf("READ_PW_KERNEL (cpo/cpi table):\n");
-    for (int cpo=0; cpo<CPO; cpo++) {
-  	  for (int cpi=0; cpi<CPI; cpi++) {
-  		  printf(" %4.2f", float(kernel_pw.pixel[cpo][cpi]));
-  	  }
-  	  printf("\n");
-    }
-    #endif
-    #endif
-  }
-
-  #ifdef DEBUG_READ_KERNEL
-  printf("READ_PW_KERNEL: ends\n");
-  #endif
-}
-#endif
-
-
-#ifdef IHW_DATA_FORMAT
-// ---------------------------------------------------------------------------------------
-// read_data_channels. Reads all data channels and send it through the output streams
-//
-// Arguments:
-//   H, W                : Data channel height and width
-//   rows                : Number of rows of the frame to read
-//   num_extra_rows      : Number of extra rows to read
-//   I_ITER              : Number of input iterations (I / CPI)
-//   ptr                 : pointer to input data
-//   offset              : offsets within input data for each channel
-//   out                 : output streams for each channel
-//   enable_read_channel : enables for each channel. If not set the module produces just zeros and does not read memory
-//
-void read_data_channels(int H, int W, int rows, int I_ITER, read_block_t *ptr, int offset, int num_extra_rows, int channel_blocks, hls::stream<read_block_t> out[CPI], int I, int enable) {
-
-  #ifdef DEBUG_READ_DATA
-  printf("READ_DATA: starts\n");
-  #endif
-
-  int channel_size = H * W;							// channel size
-  read_block_t bx[CPI];								// buffer for block read from memory
-  int offset_[CPI];									// offset for the channel
-  int first_block_[CPI];							// first block address
-  int first_current_input_channel;    				// first current input channel being accessed
-
-  if (!enable) return;
-
-    read_data_channels_loop_I_ITER:
-    for (int i_iter = 0; i_iter < I_ITER; i_iter++) {
-      DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE/CPI)
-      DO_PRAGMA(HLS LOOP_FLATTEN off)
-
-      // each channel has its first block
-      read_data_channels_loop_CPI_init:
-      for(int cpi = 0; cpi<CPI; cpi++){
-        #pragma HLS pipeline
-        offset_[cpi] = offset + (channel_size * CPI * i_iter) + (channel_size * cpi);
-        first_block_[cpi] = offset_[cpi] / READ_BLOCK_SIZE;
-        #ifdef DEBUG_READ_DATA
-        printf("READ_DATA: cpi %d -> offset %d first_block %d\n", cpi, offset_[cpi], first_block_[cpi]);
-        #endif
-      }
-
-      first_current_input_channel = i_iter * CPI;
-
-      read_data_channels_loop_blocks:
-      for (int block = 0; block < channel_blocks; block=block+READ_BURST_SIZE) {
-    	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=(W_REFERENCE*H_REFERENCE/READ_BLOCK_SIZE) / READ_BURST_SIZE)
-
-    	read_data_channels_loop_CPI:
-        for(int i = 0; i < CPI; i++){
-          DO_PRAGMA(HLS pipeline II=READ_BURST_SIZE)
-
-          read_block_t data_read[READ_BURST_SIZE];
-       	  int addr = first_block_[i];
-       	  int channel = first_current_input_channel + i;
-       	  int enable = channel < I;
-       	  if (enable) {
-       	    read_data_channels_loop_burst:
-       	    for (int b = 0; b < READ_BURST_SIZE; b++) {
-    		  data_read[b] = ptr[addr + b];
-              if ((block + b) < channel_blocks) {
-        	    out[i] << data_read[b];
-                first_block_[i] = first_block_[i] + 1;
-              }
-       	    }
-          }
-        }
-      }
-    } //i_iter
-
-  #ifdef DEBUG_READ_DATA
-  printf("READ_DATA: ends\n");
-  #endif
-
-}
-#endif
-
-#ifdef GIHWCPI_DATA_FORMAT
 // ---------------------------------------------------------------------------------------
 // read_data_channels_gihwcpi. Reads all input data assuming GIxHxWxCPI input data format
 // Read pixels are sent out through the output stream
@@ -320,10 +145,69 @@ void read_data_channels(int H, int W, int rows, int I_ITER, read_block_t *ptr, i
 //   enable              : enable for the read operation
 //
 
-void read_data_channels_gihwcpi(int num_pixels, int offset, read_block_t *ptr, hls::stream<pixel_in_t> &out, int enable) {
+void read_data_channels_gihwcpi(int num_pixels, int offset, int I_ITER, int cpi_group_offset, read_block_t *ptr, hls::stream<din_st> &out, int enable) {
 
   #ifdef DEBUG_READ_DATA
   printf("READ_DATA: starts (gihwcpi format)\n");
+  printf("  num_pixels : %d\n", num_pixels);
+  printf("  offset     : %d\n", offset);
+  printf("  cpi_group_offset : %d\n", cpi_group_offset);
+  printf("  ptr        : %p\n", ptr);
+  #endif
+
+  if (!enable) return;
+
+  read_data_channels_loop_i_iter:
+  for (int iter = 0; iter < I_ITER; iter++) {
+    DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE / CPI)
+    int offset_global = offset + (cpi_group_offset * iter);
+#ifdef DEBUG_READ_DATA
+#ifdef DEBUG_VERBOSE
+    printf("offset global for iteration %d = %d\n", iter, offset_global);
+#endif
+#endif
+    read_data_channels_loop_pixels:
+    for (int i = 0; i < num_pixels; i++) {
+      DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max = H_REFERENCE * W_REFERENCE)
+      DO_PRAGMA(HLS pipeline)
+
+      din_st px;
+      px = ptr[offset_global+i];
+      out << px;
+      #ifdef DEBUG_READ_DATA
+      #ifdef DEBUG_VERBOSE
+      printf("data read : %d : ", i);
+      for (int x=0; x<CPI; x++) printf("%f ", float(px.pixel[x]));
+      printf("\n");
+      #endif
+      #endif
+    }
+  }
+
+  #ifdef DEBUG_READ_DATA
+  printf("READ_DATA: ends (gihwcpi format)\n");
+  #endif
+
+}
+
+// ---------------------------------------------------------------------------------------
+// read_input_add_gihwcpi. Reads all input data assuming GIxHxWxCPO input data format
+// Read pixels are sent out through the output stream
+//
+// Arguments:
+//   num_pixels          : Number of pixels to read in total (each pixel is CPI wide)
+//   offset              : offsets within input data to read (offset aligned to CPI wide pixels)
+//   ptr                 : pointer to input data
+//   out                 : output stream
+//   enable              : enable for the read operation
+//
+
+void read_input_add_gihwcpi(int num_pixels, int offset, write_block_t *ptr, hls::stream<dout_st> &out, int enable) {
+
+  #ifdef DEBUG_READ_DATA
+  printf("READ_DATA: starts (gihwcpi format)\n");
+  printf("  num_pixels : %d\n", num_pixels);
+  printf("  offset : %d\n", offset);
   #endif
 
   if (!enable) return;
@@ -333,13 +217,13 @@ void read_data_channels_gihwcpi(int num_pixels, int offset, read_block_t *ptr, h
     DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max = I_REFERENCE * H_REFERENCE * W_REFERENCE / CPI)
     DO_PRAGMA(HLS pipeline)
 
-    pixel_in_t px;
-	px = ptr[offset+i];
+    dout_st px;
+  	px = ptr[offset+i];
     out << px;
     #ifdef DEBUG_READ_DATA
     #ifdef DEBUG_VERBOSE
-    printf("data read: ");
-    for (int x=0; x<CPI; x++) printf("%f ", float(px.pixel[x]));
+    printf("data read : %d : ", i);
+    for (int x=0; x<CPO; x++) printf("%f ", float(px.pixel[x]));
     printf("\n");
     #endif
     #endif
@@ -350,4 +234,3 @@ void read_data_channels_gihwcpi(int num_pixels, int offset, read_block_t *ptr, h
   #endif
 
 }
-#endif

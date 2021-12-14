@@ -1,4 +1,15 @@
+/*
+* HLSinf accelerator
+* Version: 1.0
+* copyright (c) 2020, Universidad Politécnica de Valencia (UPV), GAP research group
+* Date: December 2021
+* Author: GAP Research Group (UPV), contact: jflich@disca.upv.es
+* All rights reserved
+*/
+
 #include "conv2D.h"
+
+#ifdef WINOGRAD_CONV
 
 // -----------------------------------------------------------------------------------------------------------
 // frames struct winograd
@@ -785,8 +796,6 @@ static void add_winograd(int H, int W, int I_ITER, hls::stream<pixel_out_t> &b_i
 //   H                    : Height of the input channel
 //   W                    : Width of the input channel
 //   I_ITER               : Number of input iterations (I / CPI)
-//   enable_upper_padding : Enables building the upper padding row
-//   enable_lower_padding : Enables building the lower padding row
 //   in                   : input data stream
 //   k_in                 : input kernel stream
 //   b_in                 : input bias stream
@@ -795,7 +804,7 @@ static void add_winograd(int H, int W, int I_ITER, hls::stream<pixel_out_t> &b_i
 // This module builds the winograd convolutional operation by instantiating streams and
 // building the dataflow model with the corresponding modules
 //
-void winograd_conv(int H, int W, int I_ITER, int enable_upper_padding, int enable_lower_padding, hls::stream<pixel_in_t> &in, hls::stream<kernel_t> &k_in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out) {
+void winograd_conv(int H, int W, int PT, int PB, int PL, int PR, int I_ITER, hls::stream<pixel_in_t> &in, hls::stream<kernel_t> &k_in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out) {
 
 	// streams
 	static hls::stream<pixel_in_t>      str_pad_cvt;  	 	// padding 	-> 	cvt
@@ -815,7 +824,7 @@ void winograd_conv(int H, int W, int I_ITER, int enable_upper_padding, int enabl
 
 	// topology
 	#pragma HLS dataflow
-	padding(H, W, I_ITER, enable_upper_padding, enable_lower_padding, in, str_pad_cvt); 
+	padding(H, W, PT, PB, PL, PR, I_ITER, in, str_pad_cvt); 
 	cvt_winograd(H, W, I_ITER, str_pad_cvt, cvt_frameConvert);		
 	frameConvert(H, W, I_ITER, cvt_frameConvert, str_cvt_mul_cTc);
 	mulKernels(I_ITER, k_in, kernels_multWise);
@@ -825,3 +834,4 @@ void winograd_conv(int H, int W, int I_ITER, int enable_upper_padding, int enabl
 	add_winograd(H, W, I_ITER, b_in, str_mul_add, out);         
 }
 
+#endif

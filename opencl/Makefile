@@ -77,7 +77,7 @@ CXXFLAGS += -I$(ABS_COMMON_REPO)/common/includes/xcl2 -D$(CONF)
 HOST_SRCS += $(ABS_COMMON_REPO)/common/includes/xcl2/xcl2.cpp ./src/test_conv2D.cpp ./src/test_print.cpp ./src/test_kernel.cpp ./src/test_file.cpp ./src/test_cpu.cpp ./src/test_check.cpp ./src/test_buffers.cpp ./src/test_arguments.cpp ./src/data_test.cpp ./src/opencl.cpp
 # Host compiler global settings
 CXXFLAGS += -fmessage-length=0
-LDFLAGS += -lrt -lstdc++
+LDFLAGS += -lrt -lstdc++ -lpthread
 
 ifneq ($(HOST_ARCH), x86)
 	LDFLAGS += --sysroot=$(SYSROOT)

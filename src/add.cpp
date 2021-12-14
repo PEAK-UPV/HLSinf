@@ -1,3 +1,12 @@
+/*
+* HLSinf accelerator
+* Version: 1.0
+* copyright (c) 2020, Universidad Politécnica de Valencia (UPV), GAP research group
+* Date: December 2021
+* Author: GAP Research Group (UPV), contact: jflich@disca.upv.es
+* All rights reserved
+*/
+
 #include "conv2D.h"
 
 // -------------------------------------------------------------------------------
@@ -12,20 +21,20 @@
 //   b_in  : input stream bias
 //   out   : output stream
 //
-void add(int H, int W, int I_ITER, hls::stream<pixel_out_t> &in, hls::stream<pixel_out_t> &b_in, hls::stream<pixel_out_t> &out) {
+void add(int num_pixels, int I_ITER, hls::stream<conv_mul_st> &in, hls::stream<b_st> &b_in, hls::stream<conv_st> &out) {
 
   #ifdef DEBUG_ADD
   printf("add: start\n");
   #endif
 
-  pixel_out_t bias;
+  b_st bias;
   DO_PRAGMA(HLS ARRAY_PARTITION variable=bias dim=0 complete)
 
   // number of iterations by CPI || CPO channels
-  int num_iterations = W * H;
+  int num_iterations = num_pixels;
 
   // Buffer for all data and CPO channels
-  static pixel_out_t buff_o_channels[WMAX*HMAX];
+  static conv_st buff_o_channels[WMAX*HMAX];
   DO_PRAGMA(HLS AGGREGATE variable=buffer_o_channels)
   #ifdef ALVEO_U200
   DO_PRAGMA(HLS bind_storage variable=buffer_o_channels type=ram_t2p impl=uram)
@@ -58,17 +67,17 @@ void add(int H, int W, int I_ITER, hls::stream<pixel_out_t> &in, hls::stream<pix
   add_i_iter_loop:
   for (int i_iter = 0; i_iter < I_ITER; i_iter++){
     DO_PRAGMA(HLS loop_tripcount  min=1 max=I_REFERENCE/CPI)
-    pixel_out_t data_out;
+    conv_st data_out;
     #pragma HLS loop_flatten off
     add_load_data_it_loop:
     for(int it = 0; it<num_iterations; it++){
       DO_PRAGMA(HLS loop_tripcount  min=1 max=W_REFERENCE*H_REFERENCE)
-      pixel_out_t px;
+      conv_mul_st px;
       px = in.read();
-      pixel_out_t data_in;
-      pixel_out_t data_out;
+      b_st data_in;
+      conv_st data_out;
 
-      if (i_iter == 0) data_in = bias; else data_in = buff_o_channels[it];
+      if (i_iter == 0) data_in = bias; else data_in = *(b_st *)&buff_o_channels[it];
 
       add_load_data_cpo_loop:
       for (int cpo=0; cpo<CPO; cpo++) {

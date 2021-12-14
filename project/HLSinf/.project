@@ -132,16 +132,6 @@
 			<location>/home/jflich/git/HLSinf/src/data_test.cpp</location>
 		</link>
 		<link>
-			<name>testbench/input.data</name>
-			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/input.data</location>
-		</link>
-		<link>
-			<name>testbench/opencl.cpp</name>
-			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/opencl.cpp</location>
-		</link>
-		<link>
 			<name>testbench/test_arguments.cpp</name>
 			<type>1</type>
 			<location>/home/jflich/git/HLSinf/src/test_arguments.cpp</location>
