@@ -2,12 +2,6 @@
     <checksum>
         <value string="false"/>
     </checksum>
-    <downStreamTool>
-        <DownStreamTool name="vivado"/>
-    </downStreamTool>
-    <clockList>
-        <clock name="default" period="3.33" uncertainty="12.5%"/>
-    </clockList>
     <config>
         <config_rtl encoding="onehot" kernel_profile="0" module_auto_prefix="0" mult_keep_attribute="0" reset="control" reset_async="0" reset_level="high" verbose="0"/>
         <config_interface clock_enable="0" expose_global="0" m_axi_addr64="1" m_axi_offset="off" register_io="off" trim_dangling_port="0"/>
@@ -17,6 +11,7 @@
     <UIConfigurations>
         <UIAutosynConf hideTrivialOp="true" isBasedOnBoard="false" isSolutionDirty="true" isStopAskAgain="false" showDetailDesignViewer="false">
             <Platform>xilinx/kintexu/kintexu</Platform>
+            <Platform>xilinx/kintexu/kintexu_fpv7</Platform>
             <customLibs/>
         </UIAutosynConf>
         <UIIPPackagerConf AskAgain="true" DescriptionButton="false" LibraryButton="false" RTLLanguage="verilog" UseNetList="none" VendorButton="false" VersionButton="false" evaluateRTL="false" setup="false">
@@ -46,7 +41,7 @@
         </UIAutoSimConf>
     </UIConfigurations>
     <ExportDesign askAgain="true" evaluate="false" flow="false" flowChoice="syn" formatName="ip_catalog" rtl="verilog" rtlButton="true" rtlCombo="verilog">
-        <Format description="DataAugmentation HLS IP core" display_name="k_data_augmentation_cu4_pe64" formatName="ip_catalog" library="gap-acc" taxonomy="/datamanip" vendor="upv-gap" ipname="" version="1.0" driver_input_dir=""/>
+        <Format description="DataAugmentation HLS IP core" display_name="k_data_augmentation_cu4_pe64" formatName="ip_catalog" library="gap-acc" taxonomy="/datamanip" vendor="upv-gap"/>
         <Format formatName="sysgen"/>
         <Format formatName="sysgen_ise"/>
         <Format formatName="syn_dcp"/>
@@ -70,7 +65,13 @@
     </targetInfo>
     <libraryList>
         <library name="DefaultPlatform" value="xilinx/kintexu/kintexu"/>
-        <library value="xilinx/kintexu/kintexu_fpv7" name="DefaultPlatform"/>
+        <library name="DefaultPlatform" value="xilinx/kintexu/kintexu_fpv7"/>
     </libraryList>
+    <downStreamTool>
+        <DownStreamTool name="vivado"/>
+    </downStreamTool>
+    <clockList>
+        <clock name="default" default="false" uncertainty="12.5%" period="3.33"/>
+    </clockList>
 </solution>
 

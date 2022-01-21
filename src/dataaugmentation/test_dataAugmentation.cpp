@@ -23,12 +23,12 @@ void allocate_buffers() {
   // First we allocate buffers in CPU
 
   // input data buffer
-  size_t size_data_in_bytes = I * W * H;
+  size_t size_data_in_bytes = I * W * H * sizeof(pixel_t);
   posix_memalign((void **)&data_in, 4096, size_data_in_bytes);
 
   // output buffer for fpga
   size_t size_output_in_bytes;
-  size_output_in_bytes = (I * W * H) * BATCH_SIZE;
+  size_output_in_bytes = size_data_in_bytes * BATCH_SIZE;
   posix_memalign((void **)&out_dev, 4096, size_output_in_bytes);
 
   // output buffer for cpu
@@ -81,7 +81,6 @@ void init_data() {
     	} else {
     	  data_in[addr] = 0;
     	}
-        addr++;
       }
     }
   }
@@ -106,7 +105,6 @@ void print_input() {
 	  for (int w=0; w<Wmax; w++) {
 		int addr = input_data_address(i, h, w);
 	    printf("%4.2f ", float(data_in[addr]));
-        addr++;
 	  }
 	  if (W != Wmax) printf(" ...");
 	  printf("\n");
@@ -167,8 +165,8 @@ int check_result(float *max_difference, int *num_elements_differ) {
 	*num_elements_differ = -1;
 	for (int i = 0; i < BATCH_SIZE; i++) {
 		int offset = i * (H*W*I);
-		printf("checking element %d/%d of batch offset=0x%08x...", i, BATCH_SIZE, offset);
-		if (memcmp(out_dev+offset, out_cpu+offset, H*W*I) != 0) {
+		printf("checking element %d/%d of batch offset=0x%08x...", i, BATCH_SIZE, offset*sizeof(pixel_t));
+		if (memcmp(out_dev+offset, out_cpu+offset, H*W*I*sizeof(pixel_t)) != 0) {
 			printf("wrong\n");
 			return 1;
 		}

@@ -51,6 +51,8 @@
                                 								
                                 <option id="gnu.cpp.compiler.option.include.paths.841641826" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
                                     									
+                                    <listOptionValue builtIn="false" value="/nfs2/ratorga/zworkspace/hlsinf-git/project/2019.1"/>
+                                    									
                                     <listOptionValue builtIn="false" value="/opt/Xilinx/Vivado/2019.1/include"/>
                                     									
                                     <listOptionValue builtIn="false" value="/opt/Xilinx/Vivado/2019.1/lnx64/tools/auto_cc/include"/>
@@ -84,6 +86,8 @@
                                 <option id="gnu.c.compiler.exe.debug.option.debugging.level.1316130852" name="Debug Level" superClass="gnu.c.compiler.exe.debug.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
                                 								
                                 <option id="gnu.c.compiler.option.include.paths.1992627815" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+                                    									
+                                    <listOptionValue builtIn="false" value="/nfs2/ratorga/zworkspace/hlsinf-git/project/2019.1"/>
                                     									
                                     <listOptionValue builtIn="false" value="/opt/Xilinx/Vivado/2019.1/include"/>
                                     									
@@ -249,6 +253,8 @@
                                 								
                                 <option id="gnu.cpp.compiler.option.include.paths.1586585649" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
                                     									
+                                    <listOptionValue builtIn="false" value="/nfs2/ratorga/zworkspace/hlsinf-git/project/2019.1"/>
+                                    									
                                     <listOptionValue builtIn="false" value="/opt/Xilinx/Vivado/2019.1/include"/>
                                     									
                                     <listOptionValue builtIn="false" value="/opt/Xilinx/Vivado/2019.1/lnx64/tools/auto_cc/include"/>
@@ -272,6 +278,8 @@
                                 <option id="gnu.c.compiler.exe.release.option.debugging.level.13004104" name="Debug Level" superClass="gnu.c.compiler.exe.release.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.none" valueType="enumerated"/>
                                 								
                                 <option id="gnu.c.compiler.option.include.paths.545281563" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+                                    									
+                                    <listOptionValue builtIn="false" value="/nfs2/ratorga/zworkspace/hlsinf-git/project/2019.1"/>
                                     									
                                     <listOptionValue builtIn="false" value="/opt/Xilinx/Vivado/2019.1/include"/>
                                     									
