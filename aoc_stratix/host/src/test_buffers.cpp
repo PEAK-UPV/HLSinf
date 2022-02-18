@@ -98,14 +98,13 @@ void allocate_buffers() {
   printf(" create buffer for data_in: %lu values - %lu bytes \n",size_data_num_values, size_data_in_bytes);
   #endif
   //buffer_i = clCreateBuffer(context, CL_MEM_READ_WRITE, size_data_in_bytes, NULL, &err); // not using host pointer
-  buffer_i = clCreateBuffer(context, CL_MEM_READ_ONLY, size_data_in_bytes, NULL, &err); // not using host pointer
-  CHECK(err);
+  OCL_CHECK(err, buffer_i = clCreateBuffer(context, CL_MEM_READ_ONLY, size_data_in_bytes, NULL, &err)); // not using host pointer
+
   #ifdef PRINT_LOG_BUFFERS 
   printf(" create buffer for data_out: %lu values - %lu bytes \n", size_output_num_values, size_output_in_bytes);
   #endif
   //buffer_o = clCreateBuffer(context, CL_MEM_WRITE_ONLY| CL_CHANNEL_2_INTELFPGA, size_output_in_bytes, NULL, &err);
-  buffer_o = clCreateBuffer(context, CL_MEM_WRITE_ONLY, size_output_in_bytes, NULL, &err);
-  CHECK(err);
+  OCL_CHECK(err, buffer_o = clCreateBuffer(context, CL_MEM_WRITE_ONLY, size_output_in_bytes, NULL, &err));
   
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
   #ifdef PRINT_LOG_BUFFERS 
@@ -137,18 +136,24 @@ void deallocate_buffers() {
   printf("Release host memory resources\n");
   #endif
 
+  #ifdef PRINT_LOG_BUFFERS
   printf("    buffer_i\n");fflush(stdout);
+  #endif
   if(buffer_i != NULL) {
     clReleaseMemObject(buffer_i);
     buffer_i = NULL;
   }
+  #ifdef PRINT_LOG_BUFFERS
   printf("    buffer_o\n");fflush(stdout);
+  #endif
   if (buffer_o != NULL) {
     clReleaseMemObject(buffer_o);
     buffer_o = NULL;
   }
   #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
+  #ifdef PRINT_LOG_BUFFERS
   printf("    buffer_k\n");fflush(stdout);
+  #endif
   if (buffer_k != NULL) {
     clReleaseMemObject(buffer_k);
     buffer_k = NULL;
@@ -166,12 +171,13 @@ void deallocate_buffers() {
   }
   #endif
 
+  #ifdef PRINT_LOG_BUFFERS
   printf("    buffer_bias\n");fflush(stdout);
+  #endif
   if(buffer_bias != NULL) {
     clReleaseMemObject(buffer_bias);
     buffer_bias = NULL;
   }
-  printf("    all done?\n");fflush(stdout);
 
 #ifdef DEBUG_VERBOSE
 printf("    function ends\n");fflush(stdout);

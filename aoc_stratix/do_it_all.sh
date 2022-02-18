@@ -1,6 +1,7 @@
 #!/bin/bash
 
-
+###############################################################################
+## nice colors for terminal messages
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 BRNORG='\033[0;33m'
@@ -9,6 +10,7 @@ CYAN='\033[0;36m'
 WHITE='\033[1;37m'
 NC='\033[0m'
 
+###############################################################################
 
 BASE_PATH="$PWD"
 
@@ -19,13 +21,15 @@ KERNEL_FILE="${KERNEL_NAME}.aocx"
 PROG_COMMAND="./${HOST_FILE} ${INPUT_FILE} ${KERNEL_FILE}"
 
 AOCL_COMPILE_OPTS=""
-AOCL_COMPILE_EXTRA="-fp-relaxed -fpc -board=s10mx_hbm"
-
+####AOCL_COMPILE_EXTRA="-fp-relaxed -fpc -board=s10mx_hbm"
+AOCL_COMPILE_EXTRA="-fpc -board=s10mx_hbm"
 
 
 EMULATION_MODE="no"
 EMULATION_MACRO_MAKE=(CXXFLAGS+="  ")
 
+###############################################################################
+## abort script execution function
 abort()
 {
     echo >&2 '
@@ -41,7 +45,8 @@ abort()
     exit 1
 }
 
-
+###############################################################################
+## check input optinons
 while getopts "e" opt
 do
   case "${opt}" in
@@ -55,52 +60,28 @@ do
   esac
 done
  
-
-
-## tricky JM10
-#printf "\n\n"
-#printf          " ---------------------------------------------\n"
-#printf "${BRNORG}       WARNING WARNING WARNING ${NC}\n"
-#printf          " ---------------------------------------------\n"
-#printf "\n"
-#printf "${GREEN}        JM10 is tricking this script ${NC}\n"
-#printf "\n"  
-#printf          " ---------------------------------------------\n"
-#EMULATION_MODE="yes"
-#AOCL_COMPILE_OPTS="-march=emulator"
-#PROG_COMMAND="${PROG_COMMAND} emulation"
-#
-
-printf "\n\n"
-printf          " ---------------------------------------------\n"
-printf "${BRNORG}       WARNING WARNING WARNING ${NC}\n"
-printf          " ---------------------------------------------\n"
-printf "\n"
-printf "${GREEN}        UNDER DEVELOPMENT ${NC}\n"
-printf "\n"  
-printf          " ---------------------------------------------\n"
-echo ""
-echo -e "${GREEN} emulation_mode = ${EMULATION_MODE} ${NC}"
-echo -e " BASE_PATH set to ${BASE_PATH} ${NC}"
-
-sleep 2
-printf "continue\n"
-
+###############################################################################
 now=$(date +"%d-%m-%y  %a  %T")
 echo ""
 echo "---------------------------------------------------------"
 echo "---------------------------------------------------------"
 echo -e "${BRNORG}$now${NC}                                    "
-echo -e "compile files to run test_conv2D                     "
-echo "    UNDER DEVEL                                          "
-echo "                work in progress                         "
+echo -e "compile files to run test_conv2D                      "
+echo "                                                         "
 echo "---------------------------------------------------------"
 echo "---------------------------------------------------------"
 echo ""
-echo ""
+echo " using INTELFPGAOCLSDKROOT = ${INTELFPGAOCLSDKROOT}"
+echo -e "${GREEN} emulation_mode = ${EMULATION_MODE} ${NC}"
+echo -e " BASE_PATH set to ${BASE_PATH} ${NC}"
 echo -e "${CYAN} Set current dir to ${BASE_PATH} ${NC}"
+echo ""
+
 cd ${BASE_PATH}
 
+
+###############################################################################
+## clean previous run files
 echo -e "${CYAN} Clean: Remove (if any) previous run files ${NC}"
 rm -f bin/${HOST_FILE}
 rm -f bin/${KERNEL_FILE}
@@ -114,16 +95,16 @@ rm -rf {$KERNEL_NAME}
 rm -rf ${KERNEL_NAME}.*.temp
 rm -rf .emu_models
 
-
-
+###############################################################################
+# compile aocl kernel
 echo ""
 now=$(date +"%d-%m-%y  %a  %T")
 echo -e "${BRNORG}$now${NC}"
 echo -e "${CYAN}Compile opencl kernel ${NC}"
-aoc -g ${AOCL_COMPILE_OPTS} -I $INTELFPGAOCLSDKROOT/include/kernel_headers -v -g device/src/k_conv2D.cl -o ${KERNEL_FILE} ${AOCL_COMPILE_EXTRA}
+aoc -g ${AOCL_COMPILE_OPTS} -I $INTELFPGAOCLSDKROOT/include/kernel_headers -v -g -high-effort device/src/k_conv2D.cl -o ${KERNEL_FILE} ${AOCL_COMPILE_EXTRA}
 cp ${KERNEL_FILE} bin/
 
-# check opencl kernel file
+# check intel kernel file
 echo ""
 now=$(date +"%d-%m-%y  %a  %T")
 echo -e "${BRNORG}$now${NC}"
@@ -137,6 +118,7 @@ else
     abort "file \"$FILE\" does not exist."
 fi
  
+###############################################################################
 # compile host executable
 echo ""
 now=$(date +"%d-%m-%y  %a  %T")
@@ -159,6 +141,7 @@ else
     abort "file \"$FILE\" does not exist."
 fi
 
+###############################################################################
 # all files seem to be in place, run test
 echo ""
 echo -e "${CYAN}Moving to executable folder: bin ${NC}"
@@ -177,6 +160,7 @@ echo "##############################################################"
 echo ""
 $PROG_COMMAND
 
+###############################################################################
 # all done (secceeded or not), returning
 echo ""
 echo "#####################"
@@ -194,3 +178,5 @@ echo -e "${BRNORG}${now} ${NC}"
 echo -e "${CYAN}      ...all done ${NC}"
 echo ""
 
+###############################################################################
+## end of file

@@ -326,6 +326,7 @@ void compute(int *enable, int *cpu, int *retval) {
         print_check(*retval, float(max_difference), num_differences);
 
       } else {
+        printf(KYEL "check results function disabled\n" KNRM);
         printf("\n");
       }
 
@@ -333,7 +334,8 @@ void compute(int *enable, int *cpu, int *retval) {
       print_output();
       #endif
 
-      //deallocate_buffers();
+      // calculations done, clean buffers
+      deallocate_buffers();
 
     }
   }
@@ -362,7 +364,47 @@ int main(int argc, char **argv) {
   printf("\n");
 #endif
 
-  printf ("JM10 - Size of data_type in this host is %lu bytes\n\n", sizeof(data_type));
+  string dtype = "unknown";
+  #ifdef FP16_DATA_TYPE 
+    dtype = "FP_16";
+  #endif
+  #ifdef FP32_DATA_TYPE  
+    dtype = "FP_32";
+  #endif
+  #ifdef APF8_DATA_TYPE 
+    dtype = "APF8";
+  #endif
+  #ifdef API8_DATA_TYPE 
+    dtype = "INT8";
+  #endif
+  #ifdef API16_DATA_TYPE 
+    dtype = "INT16";
+  #endif
+  #ifdef API8_S10MX_DATA_TYPE 
+    dtype = "int8_t";
+  #endif
+  #ifdef API16_S10MX_DATA_TYPE 
+    dtype = "int16_t";
+  #endif
+
+
+  printf ("Kernel configuration summary\n");
+  printf ("  FREQ: %6.2f MHz  (used for conversions from time to frequency only)\n", KERNEL_FREQUENCY_MHZ);
+  printf ("  data_type: %s\n", dtype.c_str());
+  printf ("  WMAX %3d    HMAX %3d\n", WMAX, HMAX);
+  printf ("  CPI  %2d    CPO  %2d\n", CPI, CPO);
+  printf ("  KW   %2d    KH   %2d\n", KW, KH);
+  printf ("  KW_P %2d    KH_P %2d    SW_P %2d    SH_P %2d\n", KW_POOLING, KH_POOLING, SW_POOLING, SH_POOLING);
+
+
+  if ( (KW_POOLING != 2) || (KH_POOLING != 2) || (SW_POOLING != 2) || (SH_POOLING != 2)) {
+    printf(KRED "ERROR: unsupported value detected for\n" KNRM);
+    printf ("  KW_P %2d    KH_P %2d    SW_P %2d    SH_P %2d\n", KW_POOLING, KH_POOLING, SW_POOLING, SH_POOLING);
+    printf (" currently only support value 2 for all four parameters due to hard coded configuration in kernel side\n");
+    
+    return -1;
+  }
+
 
   if (argc == 1) {
     printf("Co-simulation test...\n");
@@ -409,6 +451,16 @@ int main(int argc, char **argv) {
       printf("\n-------------------------\n");
       printf("Process test intput data file line #%2d\n", file_line + 1);
 
+      if (H > HMAX) {
+        printf(KYEL "WARNING: detected unsuported H %d greater than max value HMAX %d\n" KNRM, H, HMAX);
+        printf("  ...skipping line\n");
+        continue;
+      } else if (W > WMAX) {
+        printf(KYEL "WARNING: detected unsuported W %d greater than max value WMAX %d\n" KNRM, W, WMAX);
+        printf("  ...skipping line\n");
+        continue;
+      }
+
       // Launh kernel wiht configuration read from file (one line contains the configuration of a "computation")
       compute(&enable, &cpu, &retval);
       #ifdef DEBUG_VERBOSE
@@ -442,6 +494,7 @@ int main(int argc, char **argv) {
     close_test_file();
   }
 
+  printf("\n");
   printf("Finished reading input data file\n");
  
   #ifdef OPENCL_TEST

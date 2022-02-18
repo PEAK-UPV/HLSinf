@@ -41,6 +41,9 @@ void init_data() {
   #ifdef API16_S10MX_DATA_TYPE
   std::uniform_int_distribution<int> dist(-10, 10);
   #endif
+  #ifdef API32_S10MX_DATA_TYPE
+  std::uniform_int_distribution<int> dist(-10, 10);
+  #endif
 
   // input data
   #ifdef DEBUG_DATA_DIN

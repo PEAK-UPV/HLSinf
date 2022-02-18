@@ -30,7 +30,6 @@
 
 //#define CHECK(X) assert(CL_SUCCESS == (X))
 
-
 const char *getErrorString(cl_int error); //function in opencl.cpp
 // OCL_CHECK doesn't work if call has templatized function call
 #define OCL_CHECK(error, call)                                                          \
@@ -41,9 +40,7 @@ const char *getErrorString(cl_int error); //function in opencl.cpp
     exit(EXIT_FAILURE);                                                                 \
   }
 
-
 #define CHECK(X) OCL_CHECK(X, "not-specified")
-
 
 // The set of simultaneous kernels
 enum KERNELS {
@@ -157,7 +154,6 @@ extern cl_mem buffer_k;//[MAX_CONVS];              // Conv kernel buffers
 extern cl_mem buffer_bias;//[MAX_CONVS];           // Conv bias buffers
 extern cl_mem buffer_k_dw;//[MAX_CONVS];           // Conv kernel buffers (deepwise)
 extern cl_mem buffer_k_pw;//[MAX_CONVS];           // Conv kernel buffers (pointwise)
-
 
 extern cl_command_queue queues[K_NUM_KERNELS];
 extern cl_kernel kernels[K_NUM_KERNELS];

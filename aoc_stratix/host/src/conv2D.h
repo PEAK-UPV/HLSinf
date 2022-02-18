@@ -13,27 +13,7 @@
 
 #define OPENCL_TEST
 
-//#ifdef OPENCL_TEST
-//  #ifdef __INTELFPGA_COMPILER__
-//    #include "HLS/ac_fixed.h"
-//    #include "HLS/ac_int.h"
-//  #else
-//    #include "ref/ac_fixed.h"
-//    #include "ref/ac_int.h"
-//  #endif
-//#endif
-
-#ifdef OPENCL_TEST
-#define _USE_MATH_DEFINES
-#include <cstring>
-#include <CL/opencl.h>
-#include <CL/cl_ext_intelfpga.h>
-#include "AOCLUtils/aocl_utils.h"
-using namespace aocl_utils;
-#endif
-
 using namespace std;
-
 
 #ifdef OPENCL_TEST
   #include <linux/limits.h>
@@ -47,12 +27,14 @@ using namespace std;
   #define CL_USE_DEPRECATED_OPENCL_1_2_APIS
   #include <CL/cl.h>
 
-  //#include <CL/cl2.hpp>  // related to opencl in c++ 
-  //#include <CL/cl.hpp>   // related to opencl in c++
-  //#include "CL/cl_ext.h" // related to opencl in c++
-
-  //using std::vector;
+  #define _USE_MATH_DEFINES
+  #include <cstring>
+  #include <CL/opencl.h>
+  #include <CL/cl_ext_intelfpga.h>
+  #include "AOCLUtils/aocl_utils.h"
+  using namespace aocl_utils;
 #endif
+
   
 #include "conv2D_commons.h"
 

@@ -318,7 +318,9 @@ kernel void input_buffer (uint H, uint W, uint rows, uint i_iter, uint O_ITER, u
   printf ("INPUT_BUFFER: start\n");
   #endif
 
+  #ifdef DEBUG_INPUT_BUFFER
   printf ("INPUT_BUFFER: ALWAYS reading pixels from memory:  buffer not implemented yet\n");
+  #endif
 
   // under development
   // input data buffering is not currently supported
@@ -1122,3 +1124,4 @@ kernel void pool_pooling (uint H, uint W, uint enable_maxpooling, uint enable_av
 //*********************************************************************************************************************
 // end of file: k_conv2D.cl
 //*********************************************************************************************************************
+

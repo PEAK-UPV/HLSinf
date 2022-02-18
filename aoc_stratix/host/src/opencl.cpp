@@ -8,7 +8,7 @@
 
 void cleanup() {
 printf("\n\n");
-printf(KRED "CLEANUP function to be implemented" KRST);
+printf(KRED "CLEANUP function on error exit to be implemented" KRST);
 printf("\n");
 
 }

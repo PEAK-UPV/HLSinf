@@ -42,18 +42,21 @@
 // #define EMULATION_CONFIG_ENABLED
 
 #ifdef EMULATION_CONFIG_ENABLED
-  #define CONF_S10MX_4x4_DIRECT_FP32_EMULATION
-  
+  //#define CONF_S10MX_4x4_DIRECT_FP32_EMULATION
+
+  //#define CONF_S10MX_8x8_DIRECT_FP32_EMULATION
   //#define CONF_S10MX_8x8_DIRECT_API8_EMULATION
   //#define CONF_S10MX_8x8_DIRECT_API16_EMULATION
+  #define CONF_S10MX_8x8_DIRECT_API32_EMULATION
 #else
   // debo llevarlo a un include compartido entre el k_conv2D.cl y el lib_conv2D.cpp
-  #define CONF_ALVEO_U200_4x4_DIRECT_FP32    
-  //#define CONF_ALVEO_U200_8x8_DIRECT_FP32    
-  //#define CONF_ALVEO_U200_16x16_DIRECT_FP32
+  //#define CONF_S10MX_4x4_DIRECT_FP32    
+  //#define CONF_S10MX_8x8_DIRECT_FP32    
+  //#define CONF_S10MX_16x16_DIRECT_FP32
 
   //#define CONF_S10MX_8x8_DIRECT_API8
   //#define CONF_S10MX_8x8_DIRECT_API16
+  #define CONF_S10MX_8x8_DIRECT_API32
 #endif
 #define GIHWCPI_DATA_FORMAT
 
@@ -71,7 +74,6 @@
 
 
 #ifdef CONF_S10MX_4x4_DIRECT_FP32_EMULATION
-#define ALVEO_U200
 #define DIRECT_CONV
 #define FP32_DATA_TYPE
 #define USE_RELU
@@ -82,7 +84,7 @@
 #define WMAX                      32 // 32  for emulation 256 for impl
 #define HMAX                      32 // 32  for emulation 256 for impl
 #define READ_BURST_SIZE              4
-#define STREAMS_DEPTH             16 // 16  for emulation  64 for impl   //4 original from xilinx
+#define STREAMS_DEPTH               16 // 16  for emulation  64 for impl   //4 original from xilinx
 #define INPUT_BUFFER_SIZE        65536 //524288
 #define MAX_KERNELS_DW         512/CPI
 #define DW_KERNEL_STREAM_DEPTH       4      // 512 DW kernels
@@ -90,9 +92,28 @@
 #define DWS_STREAM_DEPTH            64
 #endif
 
+#ifdef CONF_S10MX_8x8_DIRECT_FP32_EMULATION
+#define DIRECT_CONV
+#define FP32_DATA_TYPE
+#define USE_RELU
+#define USE_POOLING
+#define CPI                          8
+#define CPO                          8
+#define LOG2_CPO                     3
+#define WMAX                        32
+#define HMAX                        32
+#define READ_BURST_SIZE              4 // 1 ?? JM10 encara que crec que no afecta, 
+#define STREAMS_DEPTH                4 //4
+#define INPUT_BUFFER_SIZE        65536 //524288
+#define MAX_KERNELS_DW         512/CPI
+#define DW_KERNEL_STREAM_DEPTH       4      // 512 DW kernels
+#define PW_KERNEL_STREAM_DEPTH       4      // 512 * 512 PW kernels
+#define DWS_STREAM_DEPTH            64
+#endif
+
+
 // API 8  CPI 8 CPO 8
 #ifdef CONF_S10MX_8x8_DIRECT_API8
-#define ALVEO_U200
 #define DIRECT_CONV
 #define API8_S10MX_DATA_TYPE
 #define USE_RELU
@@ -114,7 +135,6 @@
 #endif
 
 #ifdef CONF_S10MX_8x8_DIRECT_API8_EMULATION
-#define ALVEO_U200
 #define DIRECT_CONV
 #define API8_S10MX_DATA_TYPE
 #define USE_RELU
@@ -137,7 +157,6 @@
 
 // API 16  CPI 8 CPO 8
 #ifdef CONF_S10MX_8x8_DIRECT_API16
-#define ALVEO_U200
 #define DIRECT_CONV
 #define API16_S10MX_DATA_TYPE
 #define USE_RELU
@@ -159,7 +178,6 @@
 #endif
 
 #ifdef CONF_S10MX_8x8_DIRECT_API16_EMULATION
-#define ALVEO_U200
 #define DIRECT_CONV
 #define API16_S10MX_DATA_TYPE
 #define USE_RELU
@@ -182,7 +200,6 @@
 
 // API 16  CPI 16 CPO 16
 #ifdef CONF_S10MX_16x16_DIRECT_API16
-#define ALVEO_U200
 #define DIRECT_CONV
 #define API16_S10MX_DATA_TYPE
 #define USE_RELU
@@ -204,7 +221,6 @@
 #endif
 
 #ifdef CONF_S10MX_16x16_DIRECT_API16_EMULATION
-#define ALVEO_U200
 #define DIRECT_CONV
 #define API16_S10MX_DATA_TYPE
 #define USE_RELU
@@ -225,11 +241,54 @@
 #define DWS_STREAM_DEPTH            64
 #endif
 
+
+// API 16  CPI 8 CPO 8
+#ifdef CONF_S10MX_8x8_DIRECT_API32
+#define DIRECT_CONV
+#define API32_S10MX_DATA_TYPE
+#define USE_RELU
+//#define USE_CLIPPING
+//#define USE_SHIFT
+#define USE_POOLING
+#define CPI                          8
+#define CPO                          8
+#define LOG2_CPO                     3
+#define WMAX                       512
+#define HMAX                       256
+#define READ_BURST_SIZE              2
+#define STREAMS_DEPTH                2
+#define INPUT_BUFFER_SIZE        65536 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define MAX_KERNELS_DW         512/CPI
+#define DW_KERNEL_STREAM_DEPTH       4      // 512 DW kernels
+#define PW_KERNEL_STREAM_DEPTH       4      // 512 * 512 PW kernels
+#define DWS_STREAM_DEPTH            64
+#endif
+
+#ifdef CONF_S10MX_8x8_DIRECT_API32_EMULATION
+#define DIRECT_CONV
+#define API32_S10MX_DATA_TYPE
+#define USE_RELU
+//#define USE_CLIPPING
+//#define USE_SHIFT
+#define USE_POOLING
+#define CPI                          8
+#define CPO                          8
+#define LOG2_CPO                     3
+#define WMAX                        32
+#define HMAX                        32
+#define READ_BURST_SIZE              2
+#define STREAMS_DEPTH               16
+#define INPUT_BUFFER_SIZE        65536 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define MAX_KERNELS_DW         512/CPI
+#define DW_KERNEL_STREAM_DEPTH       4      // 512 DW kernels
+#define PW_KERNEL_STREAM_DEPTH       4      // 512 * 512 PW kernels
+#define DWS_STREAM_DEPTH            64
+#endif
+
 // -------------------------------------------
 
 
-#ifdef CONF_ALVEO_U200_4x4_DIRECT_FP32
-#define ALVEO_U200
+#ifdef CONF_S10MX_4x4_DIRECT_FP32
 #define DIRECT_CONV
 #define FP32_DATA_TYPE
 #define USE_RELU
@@ -237,10 +296,10 @@
 #define CPI                          4
 #define CPO                          4
 #define LOG2_CPO                     2
-#define WMAX                       128 // 32  for emulation 256 for impl
-#define HMAX                       128 // 32  for emulation 256 for impl
+#define WMAX                       256 // 32  for emulation 256 for impl
+#define HMAX                       256 // 32  for emulation 256 for impl
 #define READ_BURST_SIZE              4
-#define STREAMS_DEPTH                4 // 16  for emulation  64 for impl   //4 original from xilinx
+#define STREAMS_DEPTH               16 // 16  for emulation  64 for impl   //4 original from xilinx
 #define INPUT_BUFFER_SIZE        65536 //524288
 #define MAX_KERNELS_DW         512/CPI
 #define DW_KERNEL_STREAM_DEPTH       4      // 512 DW kernels
@@ -248,8 +307,7 @@
 #define DWS_STREAM_DEPTH            64
 #endif
 
-#ifdef CONF_ALVEO_U200_8x8_DIRECT_FP32
-#define ALVEO_U200
+#ifdef CONF_S10MX_8x8_DIRECT_FP32
 #define DIRECT_CONV
 #define FP32_DATA_TYPE
 #define USE_RELU
@@ -257,10 +315,10 @@
 #define CPI                          8
 #define CPO                          8
 #define LOG2_CPO                     3
-#define WMAX                       256
-#define HMAX                       256
+#define WMAX                       128
+#define HMAX                       128
 #define READ_BURST_SIZE              4 // 1 ?? JM10 encara que crec que no afecta, 
-#define STREAMS_DEPTH               64 //4
+#define STREAMS_DEPTH               16 //4
 #define INPUT_BUFFER_SIZE        65536 //524288
 #define MAX_KERNELS_DW         512/CPI
 #define DW_KERNEL_STREAM_DEPTH       4      // 512 DW kernels
@@ -268,8 +326,7 @@
 #define DWS_STREAM_DEPTH            64
 #endif
 
-#ifdef CONF_ALVEO_U200_16x16_DIRECT_FP32
-#define ALVEO_U200
+#ifdef CONF_S10MX_16x16_DIRECT_FP32
 #define DIRECT_CONV
 #define FP32_DATA_TYPE
 #define USE_RELU
@@ -288,8 +345,7 @@
 #define DWS_STREAM_DEPTH            64
 #endif
 
-#ifdef CONF_ALVEO_U200_8x8_DIRECT_API8
-#define ALVEO_U200
+#ifdef CONF_S10MX_8x8_DIRECT_API8
 #define DIRECT_CONV
 #define API8_DATA_TYPE
 #define USE_RELU
@@ -306,8 +362,7 @@
 #define INPUT_BUFFER_SIZE  65536 // 32 rows x 32 cols x (512/CPI) pixels_in
 #endif
 
-#ifdef CONF_ALVEO_U200_16x16_WINOGRAD_API8
-#define ALVEO_U200
+#ifdef CONF_S10MX_16x16_WINOGRAD_API8
 #define WINOGRAD_CONV
 #define API8_DATA_TYPE
 #define USE_RELU
@@ -324,8 +379,7 @@
 #define INPUT_BUFFER_SIZE  32768 // 32 rows x 32 cols x (512/CPI) pixels_in
 #endif
 
-#ifdef CONF_ALVEO_U200_32x32_DWS_API8
-#define ALVEO_U200
+#ifdef CONF_S10MX_32x32_DWS_API8
 #define DWS_CONV
 #define API8_DATA_TYPE
 #define USE_RELU
@@ -346,8 +400,7 @@
 #define DWS_STREAM_DEPTH            64
 #endif
 
-#ifdef CONF_ALVEO_U200_32x64_DWS_API8
-#define ALVEO_U200
+#ifdef CONF_S10MX_32x64_DWS_API8
 #define DWS_CONV
 #define API8_DATA_TYPE
 #define USE_RELU
@@ -364,8 +417,7 @@
 #define INPUT_BUFFER_SIZE  16384 // 32 rows x 32 cols x (512/CPI) pixels_in
 #endif
 
-#ifdef CONF_ALVEO_U200_64x64_DWS_API8
-#define ALVEO_U200
+#ifdef CONF_S10MX_64x64_DWS_API8
 #define DWS_CONV
 #define API8_DATA_TYPE
 #define USE_RELU
@@ -386,8 +438,7 @@
 #define DWS_STREAM_DEPTH            64
 #endif
 
-#ifdef CONF_ALVEO_U200_4x4_DWS_API8
-#define ALVEO_U200
+#ifdef CONF_S10MX_4x4_DWS_API8
 #define DWS_CONV
 #define API8_DATA_TYPE
 #define USE_RELU
@@ -508,10 +559,18 @@
 #define DATA_TYPE_WIDTH  16	  // data type width in bits
 #define READ_BLOCK_SIZE  64   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 #define WRITE_BLOCK_SIZE 64   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
-#define MIN_DATA_TYPE_VALUE  -127
+#define MIN_DATA_TYPE_VALUE  -127 // 32767
 #define EPSILON_VALUE 0
 #endif
 
+#ifdef API32_S10MX_DATA_TYPE
+#define data_type int32_t
+#define DATA_TYPE_WIDTH  16	  // data type width in bits
+#define READ_BLOCK_SIZE  64   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define WRITE_BLOCK_SIZE 64   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define MIN_DATA_TYPE_VALUE  -127 // 2147483647
+#define EPSILON_VALUE 0
+#endif
 
 // -----------------------------------------------------------------------------------------------------------
 // depth of pointers for co-simulation support
