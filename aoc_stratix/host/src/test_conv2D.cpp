@@ -60,49 +60,72 @@
 // 
 //*********************************************************************************************************************
 // Global variables
-int CONVS;                       // Number of convolutional layers
-int KERNELS;                     // Number of FPGA kernels to use
-int F;                           // Number of frames of the data
-int W = W_SIM;                   // Width of the data
-int H = H_SIM;                   // Height of the data
-int I = I_SIM;                   // Number of input channels
-int O = O_SIM;                   // Number of output channels
-int HO = H_SIM;       			 // Output height
-int WO = W_SIM;    				 // Output width
-int I_kernel = I_SIM;  			 // Number of input channels for the kernel (filter) - padding
-int O_kernel = O_SIM;			 // Number of output channels for the kernel (filter) - padding
-int I_input = I_SIM;             // Number of input channels for the input data - padding (needed in GIHWCPI data format)
-int O_output = O_SIM;            // Number of output channels for the output data - padding (needed in GIHWCPI data format)
-int rows = H_SIM;				 // number of rows to compute by the kernel
-int enable_upper_padding = 1;	 // enables the upper row of padding
-int enable_lower_padding = 1;	 // enables the lower row of padding
-int enable_relu = 1;			 // enables applying the relu activation functions
-int enable_shift = 0;			 // enables applying shift to the output
-int dir_shift = 0;     			 // shift direction (left or right)
-int pos_shift = 0;				 // positions to shift
-int enable_clipping = 0;		 // enables applying clipping to the output
-int enable_maxpooling = 0;		 // enables the maxpooling layer
-int enable_avgpooling = 0;		 // enables the avgpooling layer
-int min_clip = 0;   			 // minimum clip value
-int max_clip = 0;				 // maximum clip value
-int i_iter = I_SIM/CPI; 		 // number of input iterations
-int o_iter = O_SIM/CPO;			 // number of output iterations
-int global_offset = 0;			 // global offset for the output data for the kernel
-int GI = I_SIM/CPI;				 // number of groups for input channels
-int GO = O_SIM/CPO;				 // number of groups for output channels
-char *input_data_file;           // input data file with configurations to test
-int deterministic_input_values;  // whether input data is randomly generated or not (deterministic needed in co-simulation)
+int CONVS;           // Number of convolutional layers
+int KERNELS;         // Number of FPGA kernels to use
+int F;               // Number of frames of the data
+int W = W_SIM;       // Width of the data
+int H = H_SIM;       // Height of the data
+int I = I_SIM;       // Number of input channels
+int O = O_SIM;       // Number of output channels
+int HO = H_SIM;      // Output height
+int WO = W_SIM;      // Output width
+
+
+// ------
+//int PT = PT_SIM;     // Top padding
+//int PB = PB_SIM;     // Bottom padding
+//int PL = PL_SIM;     // Left padding
+//int PR = PR_SIM;     // Right padding
+//int SH = SH_SIM;     // Vertical stride
+//int SW = SW_SIM;     // Horizontal stride
+////int F;               // number of frames of the data
+//int HO_final = H_SIM;  // HO at the output of the kernel
+//int WO_final = W_SIM;  // WO at the output of the kernel
+//
+//enable_stm;
+int enable_batch_norm = 0;
+int enable_add        = 0;
+//-----------------------
+
+int I_kernel = I_SIM;      // Number of input channels for the kernel (filter) - padding
+int O_kernel = O_SIM;      // Number of output channels for the kernel (filter) - padding
+int I_input  = I_SIM;      // Number of input channels for the input data - padding (needed in GIHWCPI data format)
+int O_output = O_SIM;      // Number of output channels for the output data - padding (needed in GIHWCPI data format)
+int rows = H_SIM;          // number of rows to compute by the kernel
+int enable_upper_padding = 1;   // enables the upper row of padding
+int enable_lower_padding = 1;   // enables the lower row of padding
+int enable_relu = 1;       // enables applying the relu activation functions
+int enable_shift = 0;      // enables applying shift to the output
+int dir_shift = 0;         // shift direction (left or right)
+int pos_shift = 0;         // positions to shift
+int enable_clipping   = 0;   // enables applying clipping to the output
+int enable_maxpooling = 0;     // enables the maxpooling layer
+int enable_avgpooling = 0;     // enables the avgpooling layer
+int min_clip = 0;          // minimum clip value
+int max_clip = 0;          // maximum clip value
+int i_iter = I_SIM/CPI;    // number of input iterations
+int o_iter = O_SIM/CPO;    // number of output iterations
+int global_offset = 0;     // global offset for the output data for the kernel
+int GI = I_SIM/CPI;        // number of groups for input channels
+int GO = O_SIM/CPO;        // number of groups for output channels
+char *input_data_file;          // input data file with configurations to test
+int deterministic_input_values; // whether input data is randomly generated or not (deterministic needed in co-simulation)
 
 // buffers
-scoped_aligned_ptr<data_type> data_in ;               // Input data buffer (format I x W x H)
-scoped_aligned_ptr<data_type> out;                   // Output data buffer (format O x W x H)
-scoped_aligned_ptr<data_type> kernel;                // Conv kernel buffers (format GO x GI x CPO x CPI x KH x KW) - for DirectConv and WinogradConv
-scoped_aligned_ptr<data_type> dw_kernel;             // DW kernel (format I x KH x KW) - for DWS
-scoped_aligned_ptr<data_type> pw_kernel;             // PW kernel (format GO x GI x CPO x CPI) - for DWS
-scoped_aligned_ptr<data_type> bias;                  // Conv bias buffers (format O)
-scoped_aligned_ptr<data_type> out_conv_cpu;          // Output data buffer for cpu (format O x W x H)
-scoped_aligned_ptr<data_type> out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
-scoped_aligned_ptr<data_type> out_pool_cpu;		  // Output data fuffer for pool for cpu (format O x W/2 x H/2)
+scoped_aligned_ptr<data_type> data_in ;      // Input data buffer (format I x W x H)
+scoped_aligned_ptr<data_type> out;           // Output data buffer (format O x W x H)
+scoped_aligned_ptr<data_type> kernel;        // Conv kernel buffers (format GO x GI x CPO x CPI x KH x KW) - for DirectConv and WinogradConv
+scoped_aligned_ptr<data_type> dw_kernel;     // DW kernel (format I x KH x KW) - for DWS
+scoped_aligned_ptr<data_type> pw_kernel;     // PW kernel (format GO x GI x CPO x CPI) - for DWS
+scoped_aligned_ptr<data_type> bias;          // Conv bias buffers (format O)
+scoped_aligned_ptr<bn_t> batch_norm_values;  // Batch normalization values
+scoped_aligned_ptr<add_data_t> data_in_add;  // Input data buffer for add module(format I x W x H)
+scoped_aligned_ptr<data_type> out_conv_cpu;  // Output data buffer for cpu (format O x W x H)
+scoped_aligned_ptr<data_type> out_relu_cpu;  // Output data buffer for cpu (format O x W x H)
+scoped_aligned_ptr<data_type> out_pool_cpu;  // Output data fuffer for pool for cpu (format O x W/2 x H/2)
+scoped_aligned_ptr<data_type> out_batch_norm_cpu;  // Output data buffer for cpu (format O x W x H
+scoped_aligned_ptr<data_type> out_add_cpu;         // Output data buffer for ADD for cpu (format O x W x H)
+scoped_aligned_ptr<data_type> out_cpu;             // Output data buffer for for cpu. final output 
 
 FILE *fp;
 
@@ -110,6 +133,7 @@ int use_emulator = 0;
 
 // kernels execution time
 double kernels_execution_time = 0;
+double epsilon_dataset_tuned;
 
 #ifdef OPENCL_TEST
 
@@ -125,12 +149,14 @@ cl_command_queue queues[K_NUM_KERNELS];
 cl_kernel        kernels[K_NUM_KERNELS];
 cl_event         kernel_events[K_NUM_KERNELS];
 
-cl_mem buffer_i = NULL;                         // input buffer
-cl_mem buffer_o = NULL;//[MAX_CONVS];              // output buffers
-cl_mem buffer_k = NULL;//[MAX_CONVS];              // Conv kernel buffers
-cl_mem buffer_bias = NULL;//[MAX_CONVS];           // Conv bias buffers
-cl_mem buffer_k_dw = NULL;//[MAX_CONVS];           // Conv kernel buffers (deepwise)
-cl_mem buffer_k_pw = NULL;//[MAX_CONVS];           // Conv kernel buffers (pointwise)
+cl_mem buffer_i  = NULL;                         // input buffer
+cl_mem buffer_o  = NULL;//[MAX_CONVS];              // output buffers
+cl_mem buffer_k  = NULL;//[MAX_CONVS];              // Conv kernel buffers
+cl_mem buffer_bias   = NULL;//[MAX_CONVS];           // Conv bias buffers
+cl_mem buffer_batch_norm_val  = NULL;
+cl_mem buffer_i_add  = NULL;
+cl_mem buffer_k_dw  = NULL;//[MAX_CONVS];           // Conv kernel buffers (deepwise)
+cl_mem buffer_k_pw  = NULL;//[MAX_CONVS];           // Conv kernel buffers (pointwise)
 
 
 #endif

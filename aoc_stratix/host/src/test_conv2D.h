@@ -47,6 +47,8 @@ enum KERNELS {
   K_DATA_IN_READER,
   K_KERNEL_IN_READER,
   K_BIAS_IN_READER,
+  K_BATCH_NORM_READER,
+  K_ADD_DATA_READER,
   K_INPUT_BUFFER,
   K_PADDING,
   K_CVT,
@@ -55,6 +57,8 @@ enum KERNELS {
   K_RELU,
   K_POOL_CVT,
   K_POOL_POOLING,
+  K_BATCH_NORM,
+  K_ADD_DATA,
   K_WRITER,
   K_NUM_KERNELS
 };
@@ -63,6 +67,8 @@ static const char* kernel_names[K_NUM_KERNELS] =
   "data_in",
   "kernel_in",
   "bias_in",
+  "batch_norm_in",
+  "add_data_in",
   "input_buffer",
   "padding",
   "cvt",
@@ -71,20 +77,40 @@ static const char* kernel_names[K_NUM_KERNELS] =
   "relu",
   "pool_cvt",
   "pool_pooling",
+  "batch_norm",
+  "add_data",
   "data_out"
 };
 
 
 // Global variables
-extern int CONVS;       // Number of convolutional layers
-extern int KERNELS;     // Number of FPGA kernels to use
-extern int F;           // Number of frames of the data
-extern int W;           // Width of the data
-extern int H;           // Height of the data
-extern int I;           // Number of input channels
-extern int O;           // Number of output channels
-extern int HO;          // Output width
-extern int WO;          // Output height
+extern int CONVS;     // Number of convolutional layers
+extern int KERNELS;   // Number of FPGA kernels to use
+extern int F;         // Number of frames of the data
+extern int W;         // Width of the data
+extern int H;         // Height of the data
+extern int I;         // Number of input channels
+extern int O;         // Number of output channels
+extern int HO;        // Output width
+extern int WO;        // Output height
+
+
+//
+//extern int PT;     // Top padding
+//extern int PB;     // Bottom padding
+//extern int PL;     // Left padding
+//extern int PR;     // Right padding
+//extern int SH;     // Vertical stride
+//extern int SW;     // Horizontal stride
+//
+//extern int HO_final;   // HO at the output of the kernel
+//extern int WO_final;   // WO at the output of the kernel
+
+extern int enable_batch_norm;
+extern int enable_add;
+//
+
+
 extern int I_kernel;    // Number of input channels for the kernel (filter) - padding
 extern int O_kernel;    // Number of output channels for the kernel (filter) - padding
 extern int I_input;     // Number of input channels for the input data - padding (needed in GIHWCPI data format)
@@ -110,21 +136,29 @@ extern int GO;							 // number of groups for output channels
 //extern data_type *data_in;   // Input data buffer (format I x W x H)
 //extern data_type *out;       // Output data buffer (format O x W x H)
 //extern data_type *kernel;    // Conv kernel buffers (format GO x GI x CPO x CPI x KW x KH) - for DirectConv and WinogradConv
-//extern data_type *dw_kernel;             // DW kernel (format I x KH x KW) - for DWS
-//extern data_type *pw_kernel;             // PW kernel (format GO x GI x CPO x CPI) - for DWS
-//extern data_type *bias;                  // Conv bias buffers (format O)
-//extern data_type *out_conv_cpu;          // Output data buffer for cpu (format O x W x H)
-//extern data_type *out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
-//extern data_type *out_pool_cpu;		     // Output data fuffer for pool for cpu (format O x W/2 x H/2)
+//extern data_type *dw_kernel;       // DW kernel (format I x KH x KW) - for DWS
+//extern data_type *pw_kernel;       // PW kernel (format GO x GI x CPO x CPI) - for DWS
+//extern data_type *bias;            // Conv bias buffers (format O)
+//extern data_type *out_conv_cpu;    // Output data buffer for cpu (format O x W x H)
+//extern data_type *out_relu_cpu;    // Output data buffer for cpu (format O x W x H)
+//extern data_type *out_pool_cpu;		 // Output data fuffer for pool for cpu (format O x W/2 x H/2)
 extern scoped_aligned_ptr<data_type> data_in;   // Input data buffer (format I x W x H)
 extern scoped_aligned_ptr<data_type> out;       // Output data buffer (format O x W x H)
 extern scoped_aligned_ptr<data_type> kernel;    // Conv kernel buffers (format GO x GI x CPO x CPI x KW x KH) - for DirectConv and WinogradConv
-extern scoped_aligned_ptr<data_type> dw_kernel;             // DW kernel (format I x KH x KW) - for DWS
-extern scoped_aligned_ptr<data_type> pw_kernel;             // PW kernel (format GO x GI x CPO x CPI) - for DWS
-extern scoped_aligned_ptr<data_type> bias;                  // Conv bias buffers (format O)
-extern scoped_aligned_ptr<data_type> out_conv_cpu;          // Output data buffer for cpu (format O x W x H)
-extern scoped_aligned_ptr<data_type> out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
-extern scoped_aligned_ptr<data_type> out_pool_cpu;		     // Output data fuffer for pool for cpu (format O x W/2 x H/2)
+extern scoped_aligned_ptr<data_type> dw_kernel;     // DW kernel (format I x KH x KW) - for DWS
+extern scoped_aligned_ptr<data_type> pw_kernel;     // PW kernel (format GO x GI x CPO x CPI) - for DWS
+extern scoped_aligned_ptr<data_type> bias;          // Conv bias buffers (format O)
+
+extern scoped_aligned_ptr<bn_t> batch_norm_values;  // Batch normalization values
+extern scoped_aligned_ptr<add_data_t> data_in_add;  // Input data buffer for add module(format I x W x H)
+
+extern scoped_aligned_ptr<data_type> out_conv_cpu;  // Output data buffer for cpu (format O x W x H)
+extern scoped_aligned_ptr<data_type> out_relu_cpu;  // Output data buffer for cpu (format O x W x H)
+extern scoped_aligned_ptr<data_type> out_pool_cpu;	// Output data fuffer for pool for cpu (format O x W/2 x H/2)
+
+extern scoped_aligned_ptr<data_type> out_batch_norm_cpu;  // Output data buffer for cpu (format O x W x H
+extern scoped_aligned_ptr<data_type> out_add_cpu;         // Output data buffer for ADD for cpu (format O x W x H)
+extern scoped_aligned_ptr<data_type> out_cpu;             // Output data buffer for for cpu. final output
 
 extern char *input_data_file;            // file with input parameters
 
@@ -136,6 +170,7 @@ extern FILE *fp;
 //extern double kernels_start_time;
 //extern double kernels_end_time;
 extern double kernels_execution_time; // kernels execution time in miliseconds
+extern double epsilon_dataset_tuned;  //
 
 #ifdef OPENCL_TEST
 
@@ -152,6 +187,8 @@ extern cl_mem buffer_i;                         // input buffer
 extern cl_mem buffer_o;//[MAX_CONVS];              // output buffers
 extern cl_mem buffer_k;//[MAX_CONVS];              // Conv kernel buffers
 extern cl_mem buffer_bias;//[MAX_CONVS];           // Conv bias buffers
+extern cl_mem buffer_batch_norm_val;
+extern cl_mem buffer_i_add;
 extern cl_mem buffer_k_dw;//[MAX_CONVS];           // Conv kernel buffers (deepwise)
 extern cl_mem buffer_k_pw;//[MAX_CONVS];           // Conv kernel buffers (pointwise)
 

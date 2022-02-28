@@ -51,6 +51,27 @@ void allocate_buffers() {
   //bias = (data_type *)alignedMalloc(size_bias_in_bytes);
   //if (bias == NULL) checkError(999, "Error allocating memory for bias, null pointer");
   for(size_t i = 0; i < size_bias_num_values; i++) bias[i] = (data_type)0;
+  
+  // batch_normalization buffer
+  // batch_norm buffer size is 
+  size_t size_bn_num_values = (O_output * 4);
+  size_t size_bn_in_bytes = size_bn_num_values * sizeof(bn_t);
+  batch_norm_values.reset(size_bn_num_values);
+  for(size_t i = 0; i < size_bn_num_values; i++) batch_norm_values[i] = (bn_t)0;
+
+  // i_add buffer
+  // i_add buffer size equals out(put) buffer size
+  size_t size_i_add_num_values;
+  size_t size_i_add_in_bytes;
+  if ((enable_maxpooling) || (enable_avgpooling)) {
+    size_i_add_num_values = O_output * (W/2) * (H/2);
+    size_i_add_in_bytes   = size_i_add_num_values * sizeof(data_type);
+  } else {
+    size_i_add_num_values = O_output * W * H;
+    size_i_add_in_bytes   = size_i_add_num_values * sizeof(data_type);
+  }
+  data_in_add.reset(size_i_add_num_values);
+  for(size_t i = 0; i < size_i_add_num_values; i++) data_in_add[i] = (data_type)0;
 
   //printf("5\n");
   // output buffer for fpga
@@ -64,7 +85,6 @@ void allocate_buffers() {
     size_output_in_bytes   = size_output_num_values * sizeof(data_type);
   }
   //printf("6\n");
-
   out.reset(size_output_num_values);
   //out = (data_type *)alignedMalloc(size_output_in_bytes);
   //if (kernel == NULL) checkError(999, "Error allocating memory for output, null pointer");
@@ -87,8 +107,20 @@ void allocate_buffers() {
   // output for pool function
   if ((enable_maxpooling) || (enable_avgpooling)) {
     out_pool_cpu.reset(O_output * (W/2) * (H/2));
-
   }
+
+  if ((enable_batch_norm)) {
+    out_batch_norm_cpu.reset(O_output * W * H);
+    for(size_t i = 0; i < (O_output * W * H); i++) out_batch_norm_cpu[i] = (data_type)0;
+  }
+  if ((enable_add)) {
+    out_add_cpu.reset(O_output * W * H);
+    for(size_t i = 0; i < (O_output * W * H); i++) out_add_cpu[i] = (data_type)0;
+  }
+
+  out_cpu.reset(O_output * W * H);
+  for(size_t i = 0; i < (O_output * W * H); i++) out_cpu[i] = (data_type)0;
+
 
   // CREATE memroy buffers and link them with the host memory pointer
 #ifdef OPENCL_TEST
@@ -110,21 +142,28 @@ void allocate_buffers() {
   #ifdef PRINT_LOG_BUFFERS 
   printf(" create buffer for kernel: %lu values - %lu bytes \n",size_kernel_num_values, size_kernel_in_bytes);
   #endif
-  buffer_k = clCreateBuffer(context, CL_MEM_READ_ONLY, size_kernel_in_bytes, NULL, &err);
-  CHECK(err);
+  OCL_CHECK(err, buffer_k = clCreateBuffer(context, CL_MEM_READ_ONLY, size_kernel_in_bytes, NULL, &err));
 #endif
 #ifdef DWS_CONV
-  buffer_k_dw = clCreateBuffer(context, CL_MEM_READ_ONLY, size_kernel_dw_in_bytes, NULL, &err);
-  CHECK(err);
-  buffer_k_pw[0] = clCreateBuffer(context, CL_MEM_READ_ONLY, size_kernel_pw_in_bytes, NULL, &err);
-  CHECK(err);
+  OCL_CHECK(err, buffer_k_dw = clCreateBuffer(context, CL_MEM_READ_ONLY, size_kernel_dw_in_bytes, NULL, &err));
+  OCL_CHECK(err, buffer_k_pw[0] = clCreateBuffer(context, CL_MEM_READ_ONLY, size_kernel_pw_in_bytes, NULL, &err));
 #endif
   #ifdef PRINT_LOG_BUFFERS 
   printf(" create buffer for bias: %lu values - %lu bytes \n", size_bias_num_values, size_bias_in_bytes);
   #endif
+  OCL_CHECK(err, buffer_bias=clCreateBuffer(context, CL_MEM_READ_ONLY, size_bias_in_bytes, NULL, &err));
 
-  buffer_bias=clCreateBuffer(context, CL_MEM_READ_ONLY, size_bias_in_bytes, NULL, &err);
-  CHECK(err);
+  #ifdef PRINT_LOG_BUFFERS 
+  printf(" create buffer for batch normalization: %lu values - %lu bytes \n", size_bn_num_values, size_bn_in_bytes);
+  #endif
+  OCL_CHECK(err, buffer_batch_norm_val = clCreateBuffer(context, CL_MEM_READ_ONLY, size_bn_in_bytes, NULL, &err));
+
+  #ifdef PRINT_LOG_BUFFERS 
+  printf(" create buffer for add_data: %lu values - %lu bytes \n", size_i_add_num_values, size_i_add_in_bytes);
+  #endif
+  OCL_CHECK(err, buffer_i_add = clCreateBuffer(context, CL_MEM_READ_ONLY, size_i_add_in_bytes, NULL, &err));
+
+
 #endif
 }
 
@@ -179,6 +218,21 @@ void deallocate_buffers() {
     buffer_bias = NULL;
   }
 
+ #ifdef PRINT_LOG_BUFFERS
+  printf("    buffer_batch_norm_val\n");fflush(stdout);
+  #endif
+  if(buffer_batch_norm_val != NULL) {
+    clReleaseMemObject(buffer_batch_norm_val);
+    buffer_batch_norm_val = NULL;
+  }
+ #ifdef PRINT_LOG_BUFFERS
+  printf("    buffer_i_add\n");fflush(stdout);
+  #endif
+  if(buffer_i_add != NULL) {
+    clReleaseMemObject(buffer_i_add);
+    buffer_i_add = NULL;
+  }
+
 #ifdef DEBUG_VERBOSE
 printf("    function ends\n");fflush(stdout);
 #endif
@@ -190,7 +244,7 @@ printf("    function ends\n");fflush(stdout);
 // copy buffers to FPGA
 //-----------------------------------------------------------------------------
 void copy_to_fpga() {
-  cl_event  write_events[4];            // Write events
+  cl_event  write_events[6];            // Write events
   cl_int    err;
   int       num_write_events_before_kernel_execution = 0;
   
@@ -201,9 +255,9 @@ void copy_to_fpga() {
   printf("enqueue buffer-din migrate operation\n");
   #endif
   size_t size_data_in_bytes = I_input * W * H * sizeof(data_type);
-  err = clEnqueueWriteBuffer(queues[K_DATA_IN_READER], buffer_i, CL_FALSE, 0, size_data_in_bytes, data_in, 0, NULL, &write_events[0]);
+  OCL_CHECK(err, err = clEnqueueWriteBuffer(queues[K_DATA_IN_READER], buffer_i, CL_FALSE, 0, size_data_in_bytes, data_in, 0, NULL, &write_events[0]));
   num_write_events_before_kernel_execution++;
-  CHECK(err);
+  
   //err = clEnqueueWriteBuffer(queues[K_DATA_IN_READER], buffer_i, CL_TRUE, 0, size_data_in_bytes, data_in, 0, NULL, NULL);
   //CHECK(err);
   //#ifdef PRINT_LOG_BUFFERS
@@ -214,14 +268,39 @@ void copy_to_fpga() {
   printf("enqueue buffer-bias migrate operation\n");
   #endif
   size_t size_bias_in_bytes = O_output * sizeof(data_type);
-  err = clEnqueueWriteBuffer(queues[K_BIAS_IN_READER], buffer_bias, CL_FALSE, 0, size_bias_in_bytes, bias, 0, NULL, &write_events[1]);
+  OCL_CHECK(err, err = clEnqueueWriteBuffer(queues[K_BIAS_IN_READER], buffer_bias, CL_FALSE, 0, size_bias_in_bytes, bias, 0, NULL, &write_events[1]));
   num_write_events_before_kernel_execution++;
-  CHECK(err);
   //err = clEnqueueWriteBuffer(queues[K_BIAS_IN_READER], buffer_bias, CL_TRUE, 0, size_bias_in_bytes, bias, 0, NULL, NULL);
   //CHECK(err);
   //#ifdef PRINT_LOG_BUFFERS
   //printf("....data moved\n");
   //#endif
+
+  //batch normalization 
+  #ifdef PRINT_LOG_BUFFERS 
+  printf(" enqueue buffer for batch normalization migrate operation\n");
+  #endif
+  size_t size_bn_num_values = (O_output * 4);
+  size_t size_bn_in_bytes = size_bn_num_values * sizeof(bn_t);
+  OCL_CHECK(err, err = clEnqueueWriteBuffer(queues[K_BATCH_NORM_READER], buffer_batch_norm_val, CL_FALSE, 0, size_bn_in_bytes, batch_norm_values, 0, NULL, &write_events[2]));
+  num_write_events_before_kernel_execution++;
+
+  // in_add
+  #ifdef PRINT_LOG_BUFFERS 
+  printf(" enqueue buffer for add-data migrate operation\n");
+  #endif
+  size_t size_i_add_num_values;
+  size_t size_i_add_in_bytes;
+  if ((enable_maxpooling) || (enable_avgpooling)) {
+    size_i_add_num_values = O_output * (W/2) * (H/2);
+    size_i_add_in_bytes   = size_i_add_num_values * sizeof(data_type);
+  } else {
+    size_i_add_num_values = O_output * W * H;
+    size_i_add_in_bytes   = size_i_add_num_values * sizeof(data_type);
+  }
+  OCL_CHECK(err, err = clEnqueueWriteBuffer(queues[K_ADD_DATA_READER], buffer_i_add, CL_FALSE, 0, size_i_add_in_bytes, data_in_add, 0, NULL, &write_events[3]));
+  num_write_events_before_kernel_execution++;
+
 
 
   #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
@@ -229,9 +308,9 @@ void copy_to_fpga() {
   printf("enqueue buffer-kernel migrate operation\n");
   #endif
   size_t size_kernel_in_bytes = I_kernel * O_kernel * KW * KH * sizeof(data_type);
-  err = clEnqueueWriteBuffer(queues[K_KERNEL_IN_READER], buffer_k, CL_FALSE, 0, size_kernel_in_bytes, kernel, 0, NULL, &write_events[2]);
+  OCL_CHECK(err, err = clEnqueueWriteBuffer(queues[K_KERNEL_IN_READER], buffer_k, CL_FALSE, 0, size_kernel_in_bytes, kernel, 0, NULL, &write_events[4]));
   num_write_events_before_kernel_execution++;
-  CHECK(err);
+
   //err = clEnqueueWriteBuffer(queues[K_KERNEL_IN_READER], buffer_k, CL_TRUE, 0, size_kernel_in_bytes, kernel, 0, NULL, NULL);
   //CHECK(err);
   //#ifdef PRINT_LOG_BUFFERS
@@ -241,19 +320,17 @@ void copy_to_fpga() {
   #ifdef DWS_CONV
   size_t size_kernel_dw_in_bytes = (I_kernel * KW * KH) * sizeof(data_type);
   size_t size_kernel_pw_in_bytes = (I_kernel * O_kernel) * sizeof(data_type);
-  err = clEnqueueWriteBuffer(q, buffer_k_dw, CL_FALSE, 0, size_kernel_dw_in_bytes, dw_kernel, 0, NULL, &write_events[2]);
+  OCL_CHECK(err, err = clEnqueueWriteBuffer(q, buffer_k_dw, CL_FALSE, 0, size_kernel_dw_in_bytes, dw_kernel, 0, NULL, &write_events[4]));
   num_write_events_before_kernel_execution++;
-  CHECK(err);
-  err = clEnqueueWriteBuffer(q, buffer_k_pw, CL_FALSE, 0, size_kernel_pw_in_bytes, pw_kernel, 0, NULL, &write_events[3]);
+  OCL_CHECK(err, err = clEnqueueWriteBuffer(q, buffer_k_pw, CL_FALSE, 0, size_kernel_pw_in_bytes, pw_kernel, 0, NULL, &write_events[5]));
   num_write_events_before_kernel_execution++;
-  CHECK(err);
   #endif
 
   #ifdef PRINT_LOG_BUFFERS
   printf("copy to fpga: triggered write operation for %d buffers\n", num_write_events_before_kernel_execution);
   #endif
-  err = clWaitForEvents(num_write_events_before_kernel_execution, write_events);
-  CHECK(err);
+  OCL_CHECK(err, err = clWaitForEvents(num_write_events_before_kernel_execution, write_events));
+
   #ifdef PRINT_LOG_BUFFERS
   printf("write buffers to fpga completed\n" );
   #endif

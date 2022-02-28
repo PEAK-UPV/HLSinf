@@ -16,11 +16,12 @@ int open_test_file() {
 }
 
 int read_test_file(int *enable, int *cpu) {
- int n = fscanf(fp, "ENABLE %d CPU %d %dx%dx%dx%d EUP %d ELP %d RELU %d MAXPOOL %d AVGPOOL %d SHIFT %d DIRECTION_SHIFT %d POS_SHIFT %d CLIP %d MINCLIP %d MAXCLIP %d\n",
-            enable, cpu, &H, &W, &I, &O, &enable_upper_padding, &enable_lower_padding, &enable_relu, &enable_maxpooling, &enable_avgpooling, &enable_shift, &dir_shift, &pos_shift,
+ int n = fscanf(fp, "ENABLE %d CPU %d %dx%dx%dx%d EUP %d ELP %d RELU %d MAXPOOL %d AVGPOOL %d BN %d ADD %d SHIFT %d DIRECTION_SHIFT %d POS_SHIFT %d CLIP %d MINCLIP %d MAXCLIP %d\n",
+            enable, cpu, &H, &W, &I, &O, &enable_upper_padding, &enable_lower_padding, &enable_relu, &enable_maxpooling, &enable_avgpooling, &enable_batch_norm, &enable_add, &enable_shift, &dir_shift, &pos_shift,
 	    &enable_clipping, &min_clip, &max_clip);
 
- if (n != 17) return 1;
+ printf("hello, this is jm10, num values equals %d\n", n);
+ if (n != 19) return 1;
 
  // derived arguments
  rows = H;

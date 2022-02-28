@@ -24,26 +24,43 @@ void init_data() {
   float my_flt_bias = 0;
   float my_flt_krnl = 0;
 
+ // // random number generators
+ // #if defined(FP32_DATA_TYPE) || defined(APF8_DATA_TYPE)
+ // std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
+ // #endif
+ // #ifdef API8_DATA_TYPE
+ // std::uniform_int_distribution<int> dist(-10, 10);
+ // #endif
+ // #ifdef API16_DATA_TYPE
+ // std::uniform_int_distribution<int> dist(-10, 10);
+ // #endif
+
+ // #ifdef API8_S10MX_DATA_TYPE
+ // std::uniform_int_distribution<int> dist(-10, 10);
+ // #endif
+ // #ifdef API16_S10MX_DATA_TYPE
+ // std::uniform_int_distribution<int> dist(-10, 10);
+ // #endif
+ // #ifdef API32_S10MX_DATA_TYPE
+ // std::uniform_int_distribution<int> dist(-10, 10);
+ // #endif
+
+
   // random number generators
   #if defined(FP32_DATA_TYPE) || defined(APF8_DATA_TYPE)
   std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
-  #endif
-  #ifdef API8_DATA_TYPE
-  std::uniform_int_distribution<int> dist(-10, 10);
-  #endif
-  #ifdef API16_DATA_TYPE
-  std::uniform_int_distribution<int> dist(-10, 10);
+  std::uniform_real_distribution<float> dist_filters(-2.0f, 2.0f);
+  std::uniform_real_distribution<float> dist_bias(-1000.0f, 1000.0f);
+  #else
+  std::uniform_int_distribution<int> dist(0, 255);
+  std::uniform_int_distribution<int> dist_filters(-125, 127);
+  std::uniform_int_distribution<int> dist_bias(-32700, 32700);
   #endif
 
-  #ifdef API8_S10MX_DATA_TYPE
-  std::uniform_int_distribution<int> dist(-10, 10);
-  #endif
-  #ifdef API16_S10MX_DATA_TYPE
-  std::uniform_int_distribution<int> dist(-10, 10);
-  #endif
-  #ifdef API32_S10MX_DATA_TYPE
-  std::uniform_int_distribution<int> dist(-10, 10);
-  #endif
+
+  // ----------------- 
+  //    DATA IN
+  // ----------------
 
   // input data
   #ifdef DEBUG_DATA_DIN
@@ -77,7 +94,6 @@ void init_data() {
       }
     }
   }
-
   #ifdef DEBUG_DATA_DIN
   printf(KCYN "data in matrix\n" KNRM);
   for (int i=0; i<I_input; i++) {
@@ -98,9 +114,10 @@ void init_data() {
 
   #endif
   
-
-
-#if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
+  // ----------------- 
+  //    KERNEL
+  // ----------------
+  #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
   int kernel_id = 1;
   for (int i=0; i<I_kernel; i++) {
     for (int o=0; o<O_kernel; o++) {
@@ -127,8 +144,7 @@ void init_data() {
     }
   }
 
-
-#ifdef DEBUG_DATA_KERNEL
+  #ifdef DEBUG_DATA_KERNEL
   // for this case number of kernels is 1, and input and output channels are one, so
   printf("I_kernel = %d   O_kernel = %d   KH = %d   KW = %d\n", I_kernel, O_kernel, KH, KW);
   printf(KCYN "kernel matrix\n" KNRM);
@@ -154,18 +170,21 @@ void init_data() {
       }
     }
   }
-#endif
+  #endif // DEBUG
 
+  #endif // direct_conv winograd
 
-#endif
-
-#ifdef DWS_CONV
+  // ----------------- 
+  //    KERNEL dw-pw
+  // ----------------
+  #ifdef DWS_CONV
   int kernel_id = 1;
   for (int i=0; i<I_kernel; i++) {
     for (int kh=0; kh<KH; kh++) {
       for (int kw=0; kw<KW; kw++) {
     	  int addr_k = (i * KW * KH) + (kh * KW) + kw;
-    	  if (i < I) dw_kernel[addr_k] = deterministic_input_values?(kernel_id%20)-10:dist(gen); else dw_kernel[addr_k] = 0;
+    	  if (i < I) dw_kernel[addr_k] = deterministic_input_values ? (kernel_id%20)-10 : dist_filters(gen);
+        else       dw_kernel[addr_k] = 0;
       }
     }
     kernel_id++;
@@ -178,27 +197,87 @@ void init_data() {
 		  int go = o / CPO;
 		  int ko = o % CPO;
 		  int addr_k = (go * GI * CPO * CPI) + (gi * CPO * CPI) + (ko * CPI) + ki;
-		  if ((i < I) && (o < O)) pw_kernel[addr_k] = deterministic_input_values?(kernel_id%20)-10:dist(gen); else pw_kernel[addr_k] = 0;
+		  if ((i < I) && (o < O)) pw_kernel[addr_k] = deterministic_input_values?(kernel_id%20)-10:dist_filters(gen); else pw_kernel[addr_k] = 0;
 	  }
 	  kernel_id++;
   }
-#endif
+  #endif
 
+  // ----------------- 
+  //    BIAS
+  // ----------------
   for (int cout=0; cout<O; cout++) 
     bias[cout] = deterministic_input_values?(cout%20)-10:dist(gen);
 
   #ifdef DEBUG_DATA_BIAS
   // for bias
   printf(KCYN "bias matrix ( %d output channels )\n" KNRM, O);
-
   for (int cout=0; cout<O; cout++){
-    my_flt_bias = my_flt_bias + bias[cout];
     printf("  bias [%2d] = %6.2f\n", cout, bias[cout]);
   }
-
   printf("\n");
-  //printf(" -- This is JM10 at host side  my_flt_bias = %f   my_flt_krnl = %f   my_flt_din = %f\n\n", my_flt_bias, my_flt_krnl, my_flt_din);
-
   #endif
+
+  // ----------------- 
+  //    ADD DATA IN
+  // -----------------
+  // IF enable_add ???
+  //input add data
+  if(enable_add) {
+	  addr = 0;
+    uint enable_pooling = enable_maxpooling || enable_avgpooling;
+    uint WO_final = enable_pooling ? ((W - KW_POOLING)/SW_POOLING + 1) : W;
+    uint HO_final = enable_pooling ? ((H - KH_POOLING)/SH_POOLING + 1) : H;
+
+	  for (int o=0; o<O_output; o++) {
+		  for (int h=0; h<HO_final; h++) {
+			  for (int w=0; w<WO_final; w++) {
+				  //addr = output_data_address(o, h, w, HO_final, WO_final);
+          addr = output_data_address(o, h, w);
+
+				  if (o<O) {
+					  data_in_add[addr] = deterministic_input_values?o:dist(gen);
+				  } else {
+					  data_in_add[addr] = 0;
+				  }
+				  addr++;
+			  }
+		  }
+	  }
+  }
+
+  // ----------------- 
+  //    BATCH NORM
+  // -----------------
+  //#ifdef USE_BATCH_NORM
+  // Generating values for batch normalization layer
+  for (int cout=0; cout<O_output; cout++) {
+	  if (cout < O) {
+      batch_norm_values[cout*4+0] = 0;
+      batch_norm_values[cout*4+1] = 1;
+      batch_norm_values[cout*4+2] = 0;
+      batch_norm_values[cout*4+3] = 1;
+		  //batch_norm_values[cout] = deterministic_input_values?(cout%20)-10:dist(gen);
+	  } else {
+		  batch_norm_values[cout*4+0] = 0;
+		  batch_norm_values[cout*4+1] = 0;
+		  batch_norm_values[cout*4+2] = 0;
+		  batch_norm_values[cout*4+3] = 0;
+	  }
+  }
+  //#endif
+
+  #ifdef DEBUG_BATCH_NORM
+  printf(KCYN "batch_norm_values ( %d output channels )\n" KNRM, O_output);
+  for (int cout=0; cout<O; cout++){
+    printf("  bn_value [%2d][0:3] = %6.2f  %6.2f  %6.2f  %6.2f \n", 
+        cout,
+        batch_norm_values[cout*4+0], batch_norm_values[cout*4+1],
+        batch_norm_values[cout*4+2], batch_norm_values[cout*4+3]
+        );
+  }
+  printf("\n");
+  #endif
+
 
 }

@@ -45,9 +45,58 @@ void run_aoc_kernels() {
   cl_uint k_M = k_H * k_W * k_I;
   cl_uint k_N = k_H * k_W * k_O;
 
-
   cl_uint k_enable_pooling = (k_enable_maxpooling != 0) || (k_enable_avgpooling != 0);
+
+
+
+
+
+
+  ///////////////////////////////////////////////////////////////////
+  // modificacion de la convolucion para anyadir nuevos kernels, pero resulta que ha habido redefinicion de tipos, .....
+  //
+  // estoy muy intranquilo con los cambios ya que ha habido cambios en la convolucion de hls de forma que al copiar
+  //  los nuevos cambios  podrían colisionar con mis nombres variables y tipos, ya que ahora utiliza nombres tipos/variables que yo habia creado y antes no existia, y ahora puede que si
+  //  con  lo que tendre que ir con cuidado y buscar bien 
+
+//  int PT, int PB, int PL, int PR, int SH, int SW,
+//
+//  int HO_conv                  = (rows + PT + PB - KH + SH) / SH; // HO = ceil(H + padding - (KH-1) / SH)
+//  int WO_conv                  = (W + PL + PR - KW + SW) / SW; // WO = ceil(H + padding - (KW-1) / SW)
+//  int read_pixels_add  = enable_pooling ? (HO_conv / 2) * (WO_conv / 2) : HO_conv * WO_conv; 
+//
+//  cl_uint k_PT = (cl_uint)PT;
+//  cl_uint k_PB = (cl_uint)PB;
+//  cl_uint k_PL = (cl_uint)PL;
+//  cl_uint k_PR = (cl_uint)PR;
+//  cl_uint k_SH = (cl_uint)SH;
+//  cl_uint k_SW = (cl_uint)SW;
+//  cl_uint k_HO_conv = (cl_uint)HO_conv;
+//  cl_uint k_WO_conv = (cl_uint)WO_conv;
+//  cl_uint k_read_pixels_add = (cl_uint)read_pixels_add ;
+
+
+
+  // batch normalization
+  //cl_uint k_num_pixels_bn = (cl_uint)read_pixels_add;
+  cl_uint k_enable_batch_norm = (cl_uint)enable_batch_norm;
+  // -- batch normalization end
+
+  // add data
+  //cl_uint k_num_pixels_add = (cl_uint)read_pixels_add;
+  cl_uint k_enable_add = (cl_uint)enable_add;
+  // -- add data end
   //----------------------------------------------------------
+
+
+
+
+  // fin de cambios 
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
 
   //cl_uint k_offset_factor = ((I_input + CPI - 1) / CPI) * CPI * CPO * 9;
   //cl_uint k_offset_factor = ((I_input + CPI - 1) / CPI) * CPI * CPO;  // since we are reading kernel_t data type on the other side, we do not multiply *9 (kH*kW)
@@ -75,36 +124,16 @@ void run_aoc_kernels() {
   #ifdef DEBUG_HOST_KERNELS
   printf("run_aoc_kernels: set kernel %s arguments\n", "K_DATA_IN_READER");
   #endif
-  status = clSetKernelArg(kernels[K_DATA_IN_READER], arg_ind, sizeof(cl_mem), (void*)&buffer_i);
-  checkError(status, "Failed to set data read arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_DATA_IN_READER], arg_ind, sizeof(cl_uint), (void*)&k_M);
-  checkError(status, "Failed to set data read arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_DATA_IN_READER], arg_ind, sizeof(cl_uint), (void*)&k_H);
-  checkError(status, "Failed to set data read arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_DATA_IN_READER], arg_ind, sizeof(cl_uint), (void*)&k_W);
-  checkError(status, "Failed to set data read arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_DATA_IN_READER], arg_ind, sizeof(cl_uint), (void*)&k_rows);
-  checkError(status, "Failed to set data read arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_DATA_IN_READER], arg_ind, sizeof(cl_uint), (void*)&k_O_ITER);
-  checkError(status, "Failed to set data read arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_DATA_IN_READER], arg_ind, sizeof(cl_uint), (void*)&k_global_offset);
-  checkError(status, "Failed to set data read arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_DATA_IN_READER], arg_ind, sizeof(cl_uint), (void*)&k_enable_lower_padding);
-  checkError(status, "Failed to set data read arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_DATA_IN_READER], arg_ind, sizeof(cl_uint), (void*)&k_enable_upper_padding);
-  checkError(status, "Failed to set data read arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_DATA_IN_READER], arg_ind, sizeof(cl_uint), (void*)&i_iter);
-  checkError(status, "Failed to set data read arg %u\n", arg_ind);
-  arg_ind++;
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_DATA_IN_READER], arg_ind++, sizeof(cl_mem), (void*)&buffer_i));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_DATA_IN_READER], arg_ind++, sizeof(cl_uint), (void*)&k_M));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_DATA_IN_READER], arg_ind++, sizeof(cl_uint), (void*)&k_H));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_DATA_IN_READER], arg_ind++, sizeof(cl_uint), (void*)&k_W));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_DATA_IN_READER], arg_ind++, sizeof(cl_uint), (void*)&k_rows));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_DATA_IN_READER], arg_ind++, sizeof(cl_uint), (void*)&k_O_ITER));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_DATA_IN_READER], arg_ind++, sizeof(cl_uint), (void*)&k_global_offset));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_DATA_IN_READER], arg_ind++, sizeof(cl_uint), (void*)&k_enable_lower_padding));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_DATA_IN_READER], arg_ind++, sizeof(cl_uint), (void*)&k_enable_upper_padding));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_DATA_IN_READER], arg_ind++, sizeof(cl_uint), (void*)&i_iter));
 
   // KERNEL_IN
   #ifdef DEBUG_HOST_KERNELS
@@ -112,63 +141,58 @@ void run_aoc_kernels() {
   #endif
   arg_ind = 0;
   //kernel void kernel_in(global kernel_t * kernel, uint offset_factor, uint I_ITER, uint o_iter_first, uint O_ITER){...}
-  status = clSetKernelArg(kernels[K_KERNEL_IN_READER], arg_ind, sizeof(cl_mem), (void*)& buffer_k);
-  checkError(status, "Failed to set kernel_read arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_KERNEL_IN_READER], arg_ind, sizeof(cl_uint), (void*)&k_offset_factor);
-  checkError(status, "Failed to set kernel_read arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_KERNEL_IN_READER], arg_ind, sizeof(cl_uint), (void*)&k_i_iter);
-  checkError(status, "Failed to set kernel_read arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_KERNEL_IN_READER], arg_ind, sizeof(cl_uint), (void*)&k_o_iter_first);
-  checkError(status, "Failed to set kernel_read arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_KERNEL_IN_READER], arg_ind, sizeof(cl_uint), (void*)&k_O_ITER);
-  checkError(status, "Failed to set kernel_read arg %u\n", arg_ind);
-  arg_ind++;
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_KERNEL_IN_READER], arg_ind++, sizeof(cl_mem), (void*)& buffer_k));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_KERNEL_IN_READER], arg_ind++, sizeof(cl_uint), (void*)&k_offset_factor));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_KERNEL_IN_READER], arg_ind++, sizeof(cl_uint), (void*)&k_i_iter));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_KERNEL_IN_READER], arg_ind++, sizeof(cl_uint), (void*)&k_o_iter_first));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_KERNEL_IN_READER], arg_ind++, sizeof(cl_uint), (void*)&k_O_ITER));
 
   // BIAS_IN
   #ifdef DEBUG_HOST_KERNELS
   printf("run_aoc_kernels: set kernel %s arguments\n", "K_BIAS_IN_READER");
   #endif
   arg_ind = 0;
-  status = clSetKernelArg(kernels[K_BIAS_IN_READER], arg_ind, sizeof(cl_mem), (void*)&buffer_bias);
-  checkError(status, "Failed to set bias in kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_BIAS_IN_READER], arg_ind, sizeof(cl_uint), (void*)&k_o_iter_first);
-  checkError(status, "Failed to set bias in kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_BIAS_IN_READER], arg_ind, sizeof(cl_uint), (void*)&k_O_ITER);
-  checkError(status, "Failed to set bias in kernel arg %u\n", arg_ind);
-  arg_ind++;
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_BIAS_IN_READER], arg_ind++, sizeof(cl_mem), (void*)&buffer_bias));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_BIAS_IN_READER], arg_ind++, sizeof(cl_uint), (void*)&k_o_iter_first));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_BIAS_IN_READER], arg_ind++, sizeof(cl_uint), (void*)&k_O_ITER));
+
+  // BATCH_NORM_IN
+  #ifdef DEBUG_HOST_KERNELS
+  printf("run_aoc_kernels: set kernel %s arguments\n", "K_BATCH_NORM_READER");
+  #endif
+  //kernel void batch_norm_in(global bnp_st_t *restrict b_ptr, uint o_iter_first, uint O_ITER, uint enable_bn)
+  arg_ind = 0;
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_BATCH_NORM_READER], arg_ind++, sizeof(cl_mem), (void*)&buffer_batch_norm_val));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_BATCH_NORM_READER], arg_ind++, sizeof(cl_uint), (void*)&k_o_iter_first));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_BATCH_NORM_READER], arg_ind++, sizeof(cl_uint), (void*)&k_O_ITER));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_BATCH_NORM_READER], arg_ind++, sizeof(cl_uint), (void*)&k_enable_batch_norm));
+
+  // ADD_DATA_IN
+  #ifdef DEBUG_HOST_KERNELS
+  printf("run_aoc_kernels: set kernel %s arguments\n", "K_ADD_DATA_READER");
+  #endif
+  arg_ind = 0;
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_ADD_DATA_READER], arg_ind++, sizeof(cl_mem), (void*)&buffer_i_add));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_ADD_DATA_READER], arg_ind++, sizeof(cl_uint), (void*)&k_H));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_ADD_DATA_READER], arg_ind++, sizeof(cl_uint), (void*)&k_W));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_ADD_DATA_READER], arg_ind++, sizeof(cl_uint), (void*)&k_rows));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_ADD_DATA_READER], arg_ind++, sizeof(cl_uint), (void*)&k_o_iter_first));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_ADD_DATA_READER], arg_ind++, sizeof(cl_uint), (void*)&k_O_ITER));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_ADD_DATA_READER], arg_ind++, sizeof(cl_uint), (void*)&k_enable_pooling));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_ADD_DATA_READER], arg_ind++, sizeof(cl_uint), (void*)&k_enable_add));
 
   // WRITE
   #ifdef DEBUG_HOST_KERNELS
   printf("run_aoc_kernels: set kernel %s arguments\n", "K_WRITER");
   #endif
   arg_ind = 0;
-  status = clSetKernelArg(kernels[K_WRITER], arg_ind, sizeof(cl_mem), (void*)&buffer_o);
-  checkError(status, "Failed to set kernel_write arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_WRITER], arg_ind, sizeof(cl_uint), (void*)&k_H);
-  checkError(status, "Failed to set kernel_write arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_WRITER], arg_ind, sizeof(cl_uint), (void*)&k_W);
-  checkError(status, "Failed to set kernel_write arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_WRITER], arg_ind, sizeof(cl_uint), (void*)&k_rows);
-  checkError(status, "Failed to set kernel_write arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_WRITER], arg_ind, sizeof(cl_uint), (void*)&k_o_iter_first);
-  checkError(status, "Failed to set kernel_write arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_WRITER], arg_ind, sizeof(cl_uint), (void*)&k_O_ITER);
-  checkError(status, "Failed to set kernel_write arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_WRITER], arg_ind, sizeof(cl_uint), (void*)&k_enable_pooling);
-  checkError(status, "Failed to set kernel_write arg %u\n", arg_ind);
-  arg_ind++;
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_WRITER], arg_ind++, sizeof(cl_mem), (void*)&buffer_o));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_WRITER], arg_ind++, sizeof(cl_uint), (void*)&k_H));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_WRITER], arg_ind++, sizeof(cl_uint), (void*)&k_W));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_WRITER], arg_ind++, sizeof(cl_uint), (void*)&k_rows));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_WRITER], arg_ind++, sizeof(cl_uint), (void*)&k_o_iter_first));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_WRITER], arg_ind++, sizeof(cl_uint), (void*)&k_O_ITER));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_WRITER], arg_ind++, sizeof(cl_uint), (void*)&k_enable_pooling));
 
 
   // IB - (INPUT BUFFER)
@@ -176,165 +200,112 @@ void run_aoc_kernels() {
   printf("run_aoc_kernels: set kernel %s arguments\n", "K_INPUT_BUFFER");
   #endif
   arg_ind = 0;
-  status = clSetKernelArg(kernels[K_INPUT_BUFFER], arg_ind, sizeof(cl_uint), (void*)&k_H);
-  checkError(status, "Failed to set input buffer kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_INPUT_BUFFER], arg_ind, sizeof(cl_uint), (void*)&k_W);
-  checkError(status, "Failed to set input buffer kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_INPUT_BUFFER], arg_ind, sizeof(cl_uint), (void*)&k_rows);
-  checkError(status, "Failed to set input buffer kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_INPUT_BUFFER], arg_ind, sizeof(cl_uint), (void*)&k_i_iter);
-  checkError(status, "Failed to set input buffer kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_INPUT_BUFFER], arg_ind, sizeof(cl_uint), (void*)&k_O_ITER);
-  checkError(status, "Failed to set input buffer kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_INPUT_BUFFER], arg_ind, sizeof(cl_uint), (void*)&k_enable_lower_padding);
-  checkError(status, "Failed to set input buffer kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_INPUT_BUFFER], arg_ind, sizeof(cl_uint), (void*)&k_enable_upper_padding);
-  checkError(status, "Failed to set input buffer kernel arg %u\n", arg_ind);
-  arg_ind++;
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_INPUT_BUFFER], arg_ind++, sizeof(cl_uint), (void*)&k_H));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_INPUT_BUFFER], arg_ind++, sizeof(cl_uint), (void*)&k_W));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_INPUT_BUFFER], arg_ind++, sizeof(cl_uint), (void*)&k_rows));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_INPUT_BUFFER], arg_ind++, sizeof(cl_uint), (void*)&k_i_iter));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_INPUT_BUFFER], arg_ind++, sizeof(cl_uint), (void*)&k_O_ITER));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_INPUT_BUFFER], arg_ind++, sizeof(cl_uint), (void*)&k_enable_lower_padding));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_INPUT_BUFFER], arg_ind++, sizeof(cl_uint), (void*)&k_enable_upper_padding));
 
   // PAD - PADDING
   #ifdef DEBUG_HOST_KERNELS
   printf("run_aoc_kernels: set kernel %s arguments\n", "K_PADDING");
   #endif
   arg_ind = 0;
-  status = clSetKernelArg(kernels[K_PADDING], arg_ind, sizeof(cl_uint), (void*)&k_H);
-  checkError(status, "Failed to set padding kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_PADDING], arg_ind, sizeof(cl_uint), (void*)&k_W);
-  checkError(status, "Failed to set padding kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_PADDING], arg_ind, sizeof(cl_uint), (void*)&k_i_iter);
-  checkError(status, "Failed to set padding kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_PADDING], arg_ind, sizeof(cl_uint), (void*)&k_O_ITER);
-  checkError(status, "Failed to set padding kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_PADDING], arg_ind, sizeof(cl_uint), (void*)&k_enable_lower_padding);
-  checkError(status, "Failed to set padding kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_PADDING], arg_ind, sizeof(cl_uint), (void*)&k_enable_upper_padding);
-  checkError(status, "Failed to set padding kernel arg %u\n", arg_ind);
-  arg_ind++;
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_PADDING], arg_ind++, sizeof(cl_uint), (void*)&k_H));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_PADDING], arg_ind++, sizeof(cl_uint), (void*)&k_W));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_PADDING], arg_ind++, sizeof(cl_uint), (void*)&k_i_iter));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_PADDING], arg_ind++, sizeof(cl_uint), (void*)&k_O_ITER));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_PADDING], arg_ind++, sizeof(cl_uint), (void*)&k_enable_lower_padding));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_PADDING], arg_ind++, sizeof(cl_uint), (void*)&k_enable_upper_padding));
 
   // CVT
   #ifdef DEBUG_HOST_KERNELS
   printf("run_aoc_kernels: set kernel %s arguments\n", "K_CVT");
   #endif
   arg_ind = 0;
-  status = clSetKernelArg(kernels[K_CVT], arg_ind, sizeof(cl_uint), (void*)&k_rows);
-  checkError(status, "Failed to set cvt kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_CVT], arg_ind, sizeof(cl_uint), (void*)&k_W);
-  checkError(status, "Failed to set cvt kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_CVT], arg_ind, sizeof(cl_uint), (void*)&k_i_iter);
-  checkError(status, "Failed to set cvt kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_CVT], arg_ind, sizeof(cl_uint), (void*)&k_O_ITER);
-  checkError(status, "Failed to set cvt kernel arg %u\n", arg_ind);
-  arg_ind++;
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_CVT], arg_ind++, sizeof(cl_uint), (void*)&k_rows));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_CVT], arg_ind++, sizeof(cl_uint), (void*)&k_W));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_CVT], arg_ind++, sizeof(cl_uint), (void*)&k_i_iter));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_CVT], arg_ind++, sizeof(cl_uint), (void*)&k_O_ITER));
 
   // MUL - MULTIPLIER
   #ifdef DEBUG_HOST_KERNELS
   printf("run_aoc_kernels: set kernel %s arguments\n", "K_MULTIPLIER");
   #endif
   arg_ind = 0;
-  status = clSetKernelArg(kernels[K_MULTIPLIER], arg_ind, sizeof(cl_uint), (void*)&k_rows);
-  checkError(status, "Failed to set mult kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_MULTIPLIER], arg_ind, sizeof(cl_uint), (void*)&k_W);
-  checkError(status, "Failed to set mult kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_MULTIPLIER], arg_ind, sizeof(cl_uint), (void*)&k_i_iter);
-  checkError(status, "Failed to set mult kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_MULTIPLIER], arg_ind, sizeof(cl_uint), (void*)&k_O_ITER);
-  checkError(status, "Failed to set mult kernel arg %u\n", arg_ind);
-  arg_ind++;
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_MULTIPLIER], arg_ind++, sizeof(cl_uint), (void*)&k_rows));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_MULTIPLIER], arg_ind++, sizeof(cl_uint), (void*)&k_W));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_MULTIPLIER], arg_ind++, sizeof(cl_uint), (void*)&k_i_iter));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_MULTIPLIER], arg_ind++, sizeof(cl_uint), (void*)&k_O_ITER));
 
   // ADD - ADDER
   #ifdef DEBUG_HOST_KERNELS
   printf("run_aoc_kernels: set kernel %s arguments\n", "K_ADDER");
   #endif
   arg_ind = 0;
-  status = clSetKernelArg(kernels[K_ADDER], arg_ind, sizeof(cl_uint), (void*)&k_rows);
-  checkError(status, "Failed to set add kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_ADDER], arg_ind, sizeof(cl_uint), (void*)&k_W);
-  checkError(status, "Failed to set add kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_ADDER], arg_ind, sizeof(cl_uint), (void*)&k_i_iter);
-  checkError(status, "Failed to set add kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_ADDER], arg_ind, sizeof(cl_uint), (void*)&k_O_ITER);
-  checkError(status, "Failed to set add kernel arg %u\n", arg_ind);
-  arg_ind++;
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_ADDER], arg_ind++, sizeof(cl_uint), (void*)&k_rows));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_ADDER], arg_ind++, sizeof(cl_uint), (void*)&k_W));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_ADDER], arg_ind++, sizeof(cl_uint), (void*)&k_i_iter));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_ADDER], arg_ind++, sizeof(cl_uint), (void*)&k_O_ITER));
  
   // RELU
   #ifdef DEBUG_HOST_KERNELS
   printf("run_aoc_kernels: set kernel %s arguments\n", "K_RELU");
   #endif
   arg_ind = 0;
-  status = clSetKernelArg(kernels[K_RELU], arg_ind, sizeof(cl_uint), (void*)&k_H);
-  checkError(status, "Failed to set relu kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_RELU], arg_ind, sizeof(cl_uint), (void*)&k_W);
-  checkError(status, "Failed to set relu kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_RELU], arg_ind, sizeof(cl_uint), (void*)&k_O_ITER);
-  checkError(status, "Failed to set relu kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_RELU], arg_ind, sizeof(cl_uint), (void*)&k_enable_relu);
-  checkError(status, "Failed to set relu kernel arg %u\n", arg_ind);
-  arg_ind++;
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_RELU], arg_ind++, sizeof(cl_uint), (void*)&k_H));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_RELU], arg_ind++, sizeof(cl_uint), (void*)&k_W));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_RELU], arg_ind++, sizeof(cl_uint), (void*)&k_O_ITER));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_RELU], arg_ind++, sizeof(cl_uint), (void*)&k_enable_relu));
 
   // POOL CVT
   #ifdef DEBUG_HOST_KERNELS
   printf("run_aoc_kernels: set kernel %s arguments\n", "K_POOL_CVT");
   #endif
   arg_ind = 0;
-  status = clSetKernelArg(kernels[K_POOL_CVT], arg_ind, sizeof(cl_uint), (void*)&k_H);
-  checkError(status, "Failed to set relu kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_POOL_CVT], arg_ind, sizeof(cl_uint), (void*)&k_W);
-  checkError(status, "Failed to set relu kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_POOL_CVT], arg_ind, sizeof(cl_uint), (void*)&k_enable_maxpooling);
-  checkError(status, "Failed to set relu kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_POOL_CVT], arg_ind, sizeof(cl_uint), (void*)&k_enable_avgpooling);
-  checkError(status, "Failed to set relu kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_POOL_CVT], arg_ind, sizeof(cl_uint), (void*)&k_O_ITER);
-  checkError(status, "Failed to set relu kernel arg %u\n", arg_ind);
-  arg_ind++;
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_POOL_CVT], arg_ind++, sizeof(cl_uint), (void*)&k_H));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_POOL_CVT], arg_ind++, sizeof(cl_uint), (void*)&k_W));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_POOL_CVT], arg_ind++, sizeof(cl_uint), (void*)&k_enable_maxpooling));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_POOL_CVT], arg_ind++, sizeof(cl_uint), (void*)&k_enable_avgpooling));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_POOL_CVT], arg_ind++, sizeof(cl_uint), (void*)&k_O_ITER));
 
   // POOL POOLING
   #ifdef DEBUG_HOST_KERNELS
   printf("run_aoc_kernels: set kernel %s arguments\n", "K_POOL_POOLING");
   #endif
   arg_ind = 0;
-  status = clSetKernelArg(kernels[K_POOL_POOLING], arg_ind, sizeof(cl_uint), (void*)&k_H);
-  checkError(status, "Failed to set relu kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_POOL_POOLING], arg_ind, sizeof(cl_uint), (void*)&k_W);
-  checkError(status, "Failed to set relu kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_POOL_POOLING], arg_ind, sizeof(cl_uint), (void*)&k_enable_maxpooling);
-  checkError(status, "Failed to set relu kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_POOL_POOLING], arg_ind, sizeof(cl_uint), (void*)&k_enable_avgpooling);
-  checkError(status, "Failed to set relu kernel arg %u\n", arg_ind);
-  arg_ind++;
-  status = clSetKernelArg(kernels[K_POOL_POOLING], arg_ind, sizeof(cl_uint), (void*)&k_O_ITER);
-  checkError(status, "Failed to set relu kernel arg %u\n", arg_ind);
-  arg_ind++;
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_POOL_POOLING], arg_ind++, sizeof(cl_uint), (void*)&k_H));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_POOL_POOLING], arg_ind++, sizeof(cl_uint), (void*)&k_W));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_POOL_POOLING], arg_ind++, sizeof(cl_uint), (void*)&k_enable_maxpooling));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_POOL_POOLING], arg_ind++, sizeof(cl_uint), (void*)&k_enable_avgpooling));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_POOL_POOLING], arg_ind++, sizeof(cl_uint), (void*)&k_O_ITER));
+
+  // BATCH_NORM_IN
+  #ifdef DEBUG_HOST_KERNELS
+  printf("run_aoc_kernels: set kernel %s arguments\n", "K_BATCH_NORM");
+  #endif
+  arg_ind = 0;
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_BATCH_NORM], arg_ind++, sizeof(cl_uint), (void*)&k_H));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_BATCH_NORM], arg_ind++, sizeof(cl_uint), (void*)&k_W));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_BATCH_NORM], arg_ind++, sizeof(cl_uint), (void*)&k_enable_batch_norm));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_BATCH_NORM], arg_ind++, sizeof(cl_uint), (void*)&k_enable_maxpooling));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_BATCH_NORM], arg_ind++, sizeof(cl_uint), (void*)&k_enable_avgpooling));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_BATCH_NORM], arg_ind++, sizeof(cl_uint), (void*)&k_O_ITER));
+
+  // ADD_DATA_IN
+  #ifdef DEBUG_HOST_KERNELS
+  printf("run_aoc_kernels: set kernel %s arguments\n", "K_ADD_DATA");
+  #endif
+  arg_ind = 0;
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_ADD_DATA], arg_ind++, sizeof(cl_uint), (void*)&k_H));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_ADD_DATA], arg_ind++, sizeof(cl_uint), (void*)&k_W));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_ADD_DATA], arg_ind++, sizeof(cl_uint), (void*)&k_enable_add));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_ADD_DATA], arg_ind++, sizeof(cl_uint), (void*)&k_enable_maxpooling));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_ADD_DATA], arg_ind++, sizeof(cl_uint), (void*)&k_enable_avgpooling));
+  OCL_CHECK(status, status = clSetKernelArg(kernels[K_ADD_DATA], arg_ind++, sizeof(cl_uint), (void*)&k_O_ITER));
+
 
 //
 
@@ -386,6 +357,7 @@ void run_aoc_kernels() {
   checkError(status, "Failed to launch data_in kernel");
   // read kernel_in
   //status = clEnqueueNDRangeKernel(queues[K_KERNEL_IN_READER], kernels[K_KERNEL_IN_READER], 1, NULL, &sample_kernel_in_size, NULL, 0, NULL, NULL);
+ 
   #ifdef DEBUG_HOST_KERNELS
   printf("                 %s\n", kernel_names[K_KERNEL_IN_READER]);
   #endif
@@ -393,11 +365,26 @@ void run_aoc_kernels() {
   checkError(status, "Failed to launch kernel_in kernel");
   // read bias_in
   //status = clEnqueueNDRangeKernel(queues[K_BIAS_IN_READER], kernels[K_KERNEL_IN_READER], 1, NULL, &sample_bias_in_size, NULL, 0, NULL, NULL);
+  
   #ifdef DEBUG_HOST_KERNELS
   printf("                 %s\n", kernel_names[K_BIAS_IN_READER]);
   #endif
   status = clEnqueueNDRangeKernel(queues[K_BIAS_IN_READER], kernels[K_BIAS_IN_READER], 1, NULL, &ws, &ls, 0, NULL, &kernel_events[K_BIAS_IN_READER]);// NULL);
   checkError(status, "Failed to launch bias_in kernel");
+
+  // batch_norm_in
+  #ifdef DEBUG_HOST_KERNELS
+  printf("                 %s\n", kernel_names[K_BATCH_NORM_READER]);
+  #endif
+  status = clEnqueueNDRangeKernel(queues[K_BATCH_NORM_READER], kernels[K_BATCH_NORM_READER], 1, NULL, &ws, &ls, 0, NULL, &kernel_events[K_BATCH_NORM_READER]);// NULL);
+  checkError(status, "Failed to launch batch_norm_in kernel");
+
+  // add_data_in
+  #ifdef DEBUG_HOST_KERNELS
+  printf("                 %s\n", kernel_names[K_ADD_DATA_READER]);
+  #endif
+  status = clEnqueueNDRangeKernel(queues[K_ADD_DATA_READER], kernels[K_ADD_DATA_READER], 1, NULL, &ws, &ls, 0, NULL, &kernel_events[K_ADD_DATA_READER]);// NULL);
+  checkError(status, "Failed to launch add_data_in kernel");
 
   // ib - input buffer
   #ifdef DEBUG_HOST_KERNELS
@@ -421,7 +408,7 @@ void run_aoc_kernels() {
   checkError(status, "Failed to launch cvt task");
 
   // mul
-  #ifdef DEBUG_HOSkernel_eventsT_KERNELS
+  #ifdef DEBUG_HOST_KERNELS
   printf("                 %s\n", kernel_names[K_MULTIPLIER]);
   #endif
   status = clEnqueueTask(queues[K_MULTIPLIER], kernels[K_MULTIPLIER], 0, NULL, &kernel_events[K_MULTIPLIER]);// NULL);
@@ -454,6 +441,21 @@ void run_aoc_kernels() {
   #endif
   status = clEnqueueTask(queues[K_POOL_POOLING], kernels[K_POOL_POOLING], 0, NULL, &kernel_events[K_POOL_POOLING]);// NULL);
   checkError(status, "Failed to launch pool_pooling task");
+
+
+  // pool_cvt
+  #ifdef DEBUG_HOST_KERNELS
+  printf("                 %s\n", kernel_names[K_BATCH_NORM]);
+  #endif
+  status = clEnqueueTask(queues[K_BATCH_NORM], kernels[K_BATCH_NORM], 0, NULL, &kernel_events[K_BATCH_NORM]);// NULL);
+  checkError(status, "Failed to launch batch normalization task");
+
+  // pool_pooling 
+  #ifdef DEBUG_HOST_KERNELS
+  printf("                 %s\n", kernel_names[K_ADD_DATA]);
+  #endif
+  status = clEnqueueTask(queues[K_ADD_DATA], kernels[K_ADD_DATA], 0, NULL, &kernel_events[K_ADD_DATA]);// NULL);
+  checkError(status, "Failed to launch add_data task");
 
   // write
   //status = clEnqueueNDRangeKernel(queues[K_WRITER], kernels[K_WRITER], 1, NULL,  &sample_data_out_size, NULL, 0, NULL, NULL);

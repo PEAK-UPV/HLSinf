@@ -289,5 +289,74 @@ void cpu_conv2D() {
     }
   }
 
+
+  // apply batch normalization
+  if (enable_batch_norm) {
+	  for (int cout=0; cout<O_output; cout++) {
+      for (int h=0; h<H; h++) {
+        for (int w=0; w<W; w++) {
+  	      int addr_o = output_data_address(cout, h, w);
+				  int index = cout/CPO * CPO + (addr_o % CPO); // mal ([0,3])
+				  bn_t std, xn;
+				  std = sqrtf((float)batch_norm_values[(index*4)+3] + 1e-5);
+          if(enable_maxpooling || enable_avgpooling) {
+            xn = (out_pool_cpu[addr_o] - batch_norm_values[(index*4)+2]) / std;
+          //} else if(enable_stm) {
+          //  xn = (out_stm_cpu[addr_o] - batch_norm_values[(index*4)+2]) / std;
+          } else if (enable_relu) {
+				    xn = (out_relu_cpu[addr_o] - batch_norm_values[(index*4)+2]) / std;
+          } else {
+				    xn = (out_conv_cpu[addr_o] - batch_norm_values[(index*4)+2]) / std;
+          }
+				  out_batch_norm_cpu[addr_o] = batch_norm_values[(index*4)+1] * xn + batch_norm_values[index*4];
+          //printf("cpu: o %d h_in %d w_in %d out %f (%f,%f,%f) index %d\n", cout, h, w, out_batch_norm_cpu[addr_o],batch_norm_values[(index*4)+3],batch_norm_values[(index*4)+2],batch_norm_values[(index*4)+1], index);
+			  }
+		  }
+	  }
+  }
+
+  if (enable_add) {
+    for (int cout=0; cout<O_output; cout++) {
+      for (int h=0; h<H; h++) {
+        for (int w=0; w<W; w++) {
+      	  int addr_o = output_data_address(cout, h, w);
+          if(enable_batch_norm) 
+            out_add_cpu[addr_o] = data_in_add[addr_o] + out_batch_norm_cpu[addr_o];
+  	      else if (enable_avgpooling || enable_maxpooling) 
+            out_add_cpu[addr_o] = data_in_add[addr_o] + out_pool_cpu[addr_o];
+  	      //else if (enable_stm)
+	        //  out_add_cpu[addr_o] = data_in_add[addr_o] + out_stm_cpu[addr_o];
+	        else if (enable_relu)
+  	        out_add_cpu[addr_o] = data_in_add[addr_o] + out_relu_cpu[addr_o];
+  	      else
+  	        out_add_cpu[addr_o] = data_in_add[addr_o] +  out_conv_cpu[addr_o];
+	      }
+      }
+    }
+  }
+
+
+  // We now copy the output to the final output for the cpu, taking the different enables
+  for (int cout = 0; cout < O_output; cout++) {
+    for (int h = 0; h < H; h++) {
+      for (int w = 0; w < W; w++) {
+        int addr_out = output_data_address(cout, h, w);
+        data_type v;
+        if (enable_add) v = out_add_cpu[addr_out];
+        else if (enable_batch_norm) v = out_batch_norm_cpu[addr_out];
+        else if (enable_avgpooling | enable_maxpooling) v = out_pool_cpu[addr_out];
+        //else if (enable_stm) v = out_stm_cpu[addr_out];
+        else if (enable_relu) v = out_relu_cpu[addr_out];
+        else v = out_conv_cpu[addr_out];
+
+        //int addr_out = output_data_address(cout, h, w, HO_final, WO_final);
+        out_cpu[addr_out] = v;
+
+      }
+    }
+  }
+
+
+
 }
 

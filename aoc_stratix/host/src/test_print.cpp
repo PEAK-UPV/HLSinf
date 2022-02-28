@@ -94,7 +94,8 @@ void print_input() {
 
 
 void print_output() {
-  float epsilon = EPSILON_VALUE;
+  //float epsilon = EPSILON_VALUE;
+  float epsilon = epsilon_dataset_tuned;
 
   if ((enable_maxpooling) || (enable_avgpooling)) {
     printf("Output:\n");
@@ -148,14 +149,17 @@ void print_output() {
 }
 
 void print_configuration() {
+  // enable, cpu, &H, &W, &I, &O, &enable_upper_padding, &enable_lower_padding, &enable_relu, &enable_maxpooling, &enable_avgpooling, &enable_batch_norm, &enable_add, &enable_shift, &dir_shift, &pos_shift,
   printf("\n");
   printf("====================================================================================================================\n");
   printf("| Input: %3d x %3d x %3d x %3d      |  Kernel: %3d x %3d   |    Padding: %3d x %3d     |     Stride: %3d x %3d     |\n", H, W, I, O, KH, KW, 1, 1, 1, 1);
   printf("|------------------------------------------------------------------------------------------------------------------|\n");
   printf("| CPI: %2d     |  CPO: %2d     | log2_CPO: %2d     |  WMAX: %2d     | HMAX: %2d                                      |\n", CPI, CPO, LOG2_CPO, WMAX, HMAX);
   printf("|------------------------------------------------------------------------------------------------------------------|\n");
+  printf("| EUP: %s    |    ELP: %s         |   Enable BN:  %s    |  Enable ADD: %s                                          |\n",  
+               enable_upper_padding?"yes":"no",enable_lower_padding?"yes":"no", enable_batch_norm?"yes":"no", enable_add?"yes":"no");
   printf("| ReLU: %s   |   MaxPooling: %s   |   AvgPooling: %s    |  Clipping: %s (%2d:%2d)    |  Shift: %s (%s,%2d)    |\n", enable_relu?"Yes":"No ",
-		    enable_maxpooling?"Yes":"No ", enable_avgpooling?"Yes":"No ", enable_clipping?"Yes":"No ", min_clip, max_clip, enable_shift?"Yes":"No ", dir_shift==LEFT_DIRECTION?"LEFT ":"RIGHT", pos_shift);
+		           enable_maxpooling?"Yes":"No ", enable_avgpooling?"Yes":"No ", enable_clipping?"Yes":"No ", min_clip, max_clip, enable_shift?"Yes":"No ", dir_shift==LEFT_DIRECTION?"LEFT ":"RIGHT", pos_shift);
   printf("====================================================================================================================\n");
 }
 

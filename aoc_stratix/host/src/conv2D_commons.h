@@ -4,37 +4,43 @@
 
 #define RANDOM_GEN_SEED_FIXED 1
 
-//#define DEBUG_VERBOSE
+#define DEBUG_VERBOSE
 // host side debug 
-//#define DEBUG_LOG_INIT
-//#define PRINT_LOG_BUFFERS
-//#define DEBUG_DATA_DIN
-//#define DEBUG_DATA_KERNEL
-//#define DEBUG_DATA_DOUT
-//#define DEBUG_DATA_BIAS
+#define DEBUG_LOG_INIT
+#define PRINT_LOG_BUFFERS
+#define DEBUG_DATA_DIN
+#define DEBUG_DATA_KERNEL
+#define DEBUG_DATA_DOUT
+#define DEBUG_DATA_BIAS
 //
 // Kernel side
-//#define DEBUG_READ_BIAS
-//#define DEBUG_READ_KERNEL
-//#define DEBUG_READ_DATA
-//#define DEBUG_HOST_KERNELS
-////#define DEBUG_SERIALIZE
-////#define DEBUG_JOIN
-//#define DEBUG_INPUT_BUFFER
-//#define DEBUG_PADDING
-//#define DEBUG_CVT
-//#define DEBUG_MUL
-//#define DEBUG_ADD
-////#define DEBUG_SPLIT
-////#define DEBUG_BLOCK
-//#define DEBUG_WRITE_DATA
-////#define DEBUG_RELU
-//#define DEBUG_POOL
-//
+#define DEBUG_READ_BIAS
+#define DEBUG_READ_KERNEL
+#define DEBUG_READ_DATA
+#define DEBUG_HOST_KERNELS
+//#define DEBUG_SERIALIZE
+//#define DEBUG_JOIN
+#define DEBUG_INPUT_BUFFER
+#define DEBUG_PADDING
+#define DEBUG_CVT
+#define DEBUG_MUL
+#define DEBUG_ADD
+//#define DEBUG_SPLIT
+//#define DEBUG_BLOCK
+//#define DEBUG_RELU
+#define DEBUG_POOL
+//#define DEBUG_ADD_DATA
+#define DEBUG_BATCH_NORM
+#define DEBUG_WRITE_DATA
+
 // host side (again)
-//#define DEBUG_CPU
+#define DEBUG_CPU
 //#define DEBUG_CPU_MUL
-//#define DEBUG_CHECK
+#define DEBUG_CHECK
+
+
+
+
 
 
 #define FPGA_STRATIX_10MX
@@ -42,21 +48,19 @@
 // #define EMULATION_CONFIG_ENABLED
 
 #ifdef EMULATION_CONFIG_ENABLED
-  //#define CONF_S10MX_4x4_DIRECT_FP32_EMULATION
-
+  #define CONF_S10MX_4x4_DIRECT_FP32_EMULATION
   //#define CONF_S10MX_8x8_DIRECT_FP32_EMULATION
   //#define CONF_S10MX_8x8_DIRECT_API8_EMULATION
   //#define CONF_S10MX_8x8_DIRECT_API16_EMULATION
-  #define CONF_S10MX_8x8_DIRECT_API32_EMULATION
+  //#define CONF_S10MX_8x8_DIRECT_API32_EMULATION
 #else
   // debo llevarlo a un include compartido entre el k_conv2D.cl y el lib_conv2D.cpp
-  //#define CONF_S10MX_4x4_DIRECT_FP32    
+  #define CONF_S10MX_4x4_DIRECT_FP32    
   //#define CONF_S10MX_8x8_DIRECT_FP32    
   //#define CONF_S10MX_16x16_DIRECT_FP32
-
   //#define CONF_S10MX_8x8_DIRECT_API8
   //#define CONF_S10MX_8x8_DIRECT_API16
-  #define CONF_S10MX_8x8_DIRECT_API32
+  //#define CONF_S10MX_8x8_DIRECT_API32
 #endif
 #define GIHWCPI_DATA_FORMAT
 
@@ -696,6 +700,30 @@ typedef struct kernel_pw_t_st kernel_pw_t;
 
 #define read_kernel_pw_t ac_int<CPI*DATA_TYPE_WIDTH>
 // typedef ac_int<CPI*DATA_TYPE_WIDTH> read_kernel_pw_t;
+
+
+// -----------------------------------------------------------------------------------------------------------
+// batch normalization 
+
+typedef data_type add_data_t;
+typedef data_type       bn_t;  // JM10 this define (and others) will later depend on the architecture
+
+struct add_data_t_st {
+  add_data_t      pixel[CPO];
+}__attribute__((packed));
+typedef struct add_data_t_st add_data_st_t;
+
+struct bn_t_st {
+  bn_t    pixel[CPO];
+}__attribute__((packed));
+typedef struct bn_t_st bn_st_t;
+
+
+struct bnp_t_st {
+  bn_t    values[CPO*4];
+}__attribute__((packed));
+typedef struct bnp_t_st bnp_st_t;
+
 
 
 // -----------------------------------------------------------------------------------------------------------
