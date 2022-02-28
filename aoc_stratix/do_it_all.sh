@@ -14,15 +14,20 @@ NC='\033[0m'
 
 BASE_PATH="$PWD"
 
+TARGET_FPGA_BOARD="s10mx_hbm"
+
+
 HOST_FILE="host"
-INPUT_FILE="input.data"
+
+INPUT_FILE="inext.data"
+
 KERNEL_NAME="k_conv2D"
 KERNEL_FILE="${KERNEL_NAME}.aocx"
 PROG_COMMAND="./${HOST_FILE} ${INPUT_FILE} ${KERNEL_FILE}"
 
 AOCL_COMPILE_OPTS=""
 ####AOCL_COMPILE_EXTRA="-fp-relaxed -fpc -board=s10mx_hbm"
-AOCL_COMPILE_EXTRA="-fpc -board=s10mx_hbm"
+AOCL_COMPILE_EXTRA="-fpc -board=${TARGET_FPGA_BOARD}"
 
 
 EMULATION_MODE="no"
@@ -65,16 +70,19 @@ now=$(date +"%d-%m-%y  %a  %T")
 echo ""
 echo "---------------------------------------------------------"
 echo "---------------------------------------------------------"
+echo "                                                         "
 echo -e "${BRNORG}$now${NC}                                    "
-echo -e "compile files to run test_conv2D                      "
+echo -e "compile conv2D kernel file                            "
+echo -e "compile host executable binary                        "
 echo "                                                         "
 echo "---------------------------------------------------------"
 echo "---------------------------------------------------------"
 echo ""
-echo " using INTELFPGAOCLSDKROOT = ${INTELFPGAOCLSDKROOT}"
-echo -e "${GREEN} emulation_mode = ${EMULATION_MODE} ${NC}"
-echo -e " BASE_PATH set to ${BASE_PATH} ${NC}"
-echo -e "${CYAN} Set current dir to ${BASE_PATH} ${NC}"
+echo -e " target fpga board  = ${TARGET_FPGA_BOARD} "
+echo -e " using INTELFPGAOCLSDKROOT = ${INTELFPGAOCLSDKROOT}"
+echo -e " emulation_mode = ${EMULATION_MODE} "
+echo -e " BASE_PATH set to ${BASE_PATH}"
+echo -e "   Set current dir to ${BASE_PATH}"
 echo ""
 
 cd ${BASE_PATH}
@@ -102,9 +110,8 @@ now=$(date +"%d-%m-%y  %a  %T")
 echo -e "${BRNORG}$now${NC}"
 echo -e "${CYAN}Compile opencl kernel ${NC}"
 aoc -g ${AOCL_COMPILE_OPTS} -I $INTELFPGAOCLSDKROOT/include/kernel_headers -v -g -high-effort device/src/k_conv2D.cl -o ${KERNEL_FILE} ${AOCL_COMPILE_EXTRA}
-cp ${KERNEL_FILE} bin/
 
-# check intel kernel file
+# check opencl kernel file
 echo ""
 now=$(date +"%d-%m-%y  %a  %T")
 echo -e "${BRNORG}$now${NC}"
@@ -118,6 +125,10 @@ else
     abort "file \"$FILE\" does not exist."
 fi
  
+echo "move kernel file: ${KERNEL_FILE} to executable folder"
+cp ${KERNEL_FILE} bin/
+echo "done"
+
 ###############################################################################
 # compile host executable
 echo ""
@@ -140,6 +151,7 @@ else
     echo ""
     abort "file \"$FILE\" does not exist."
 fi
+echo "done"
 
 ###############################################################################
 # all files seem to be in place, run test
