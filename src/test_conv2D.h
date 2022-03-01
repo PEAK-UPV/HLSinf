@@ -76,20 +76,20 @@ extern int global_offset;				 // global offset for the output data for the kerne
 extern int GI;							 // number of groups for input channels
 extern int GO;							 // number of groups for output channels
 
-extern din_t *data_in;               // Input data buffer (format I x W x H)
-extern din_t *data_in_add;           // Input data buffer for add module(format I x W x H)
-extern dout_t *out;                   // Output data buffer (format O x W x H)
-extern w_t *kernel;                // Conv kernel buffers (format GO x GI x CPO x CPI x KW x KH) - for DirectConv and WinogradConv
-extern b_t *bias;                  // Conv bias buffers (format O)
-extern conv_t *out_conv_cpu;          // Output data buffer for cpu (format O x W x H)
-extern relu_t *out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
-extern stm_t *out_stm_cpu;		     // Output data buffer for STM for cpu (format O x O x W x H)
-extern pool_t *out_pool_cpu;		     // Output data fuffer for pool for cpu (format O x W/2 x H/2)
-extern bn_t *out_batch_norm_cpu;	  // Output data buffer for cpu (format O x W x H)
-extern bn_t *batch_norm_values;	  // Batch normalization values
-extern add_t *out_add_cpu;		     // Output data buffer for ADD for cpu 
+extern din_t  *data_in;                 // Input data buffer (format I x W x H)
+extern din_t  *data_in_add;             // Input data buffer for add module(format I x W x H)
+extern dout_t *out;                     // Output data buffer (format O x W x H)
+extern w_t    *kernel;                  // Conv kernel buffers (format GO x GI x CPO x CPI x KW x KH) - for DirectConv and WinogradConv
+extern b_t    *bias;                    // Conv bias buffers (format O)
+extern conv_t *out_conv_cpu;            // Output data buffer for cpu (format O x W x H)
+extern relu_t *out_relu_cpu;            // Output data buffer for cpu (format O x W x H)
+extern stm_t  *out_stm_cpu;		        // Output data buffer for STM for cpu (format O x O x W x H)
+extern pool_t *out_pool_cpu;		    // Output data fuffer for pool for cpu (format O x W/2 x H/2)
+extern bn_t   *out_batch_norm_cpu;	    // Output data buffer for cpu (format O x W x H)
+extern bn_t   *batch_norm_values;	    // Batch normalization values
+extern add_t  *out_add_cpu;		        // Output data buffer for ADD for cpu 
 extern dout_t *cpu_out;
-extern char *input_data_file;            // file with input parameters
+extern char   *input_data_file;          // file with input parameters
 extern int deterministic_input_values;   // whether input data is randomly generated or not (deterministic needed in co-simulation)
 
 extern FILE *fp;
@@ -148,9 +148,18 @@ void print_configuration();
 void print_timings(unsigned long long time, unsigned long long time_per_iteration, unsigned long long expected_time, float efficiency);
 void print_check(int result, float max_difference, int num_differences);
 void print_message(const char *str);
+void print_input_buffer_stats(din_t *p, int size);
+void print_weight_buffer_stats(w_t *p, int size);
+void print_bias_buffer_stats(b_t *p, int size);
+void print_data_in_buffer_stats(dout_t *p, int size);
+void print_batchnorm_buffer_stats(dout_t *p, int size);
+void print_output_buffer_stats(dout_t *p, int size);
+
 int input_data_address(int i, int h, int w);
 int output_data_address(int o, int h, int w, int height, int width);
 int output_data_address_div(int o, int h, int w);
+
+
 
 #ifdef OPENCL_TEST
 void parse_arguments(int argc, char **argv);

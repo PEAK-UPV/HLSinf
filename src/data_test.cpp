@@ -26,10 +26,19 @@ void init_data(int from_file) {
 
   if (from_file) {
     read_from_file("input.bin", I_input * H * W, sizeof(din_t), (void *)data_in);
-    if (enable_add) read_from_file("add.bin", O_output * HO_final * WO_final, sizeof(din_t), (void *)data_in_add);
+    if (enable_add) read_from_file("add.bin", O_output * HO_final * WO_final, sizeof(dout_t), (void *)data_in_add);
     read_from_file("weights.bin", I_kernel * O_kernel * KH * KW, sizeof(w_t), (void *)kernel);
     read_from_file("bias.bin", O, sizeof(b_t), bias);
     read_from_file("output.bin", O_output * HO_final * WO_final, sizeof(dout_t), (void *)cpu_out);
+    if (enable_batch_norm) read_from_file("batchnorm.bin", O_output * 4, sizeof(dout_t), (void *)batch_norm_values);
+
+    // statistics for each buffer
+    printf("input (file)  : "); print_input_buffer_stats(data_in, I_input * H * W);
+    printf("filter (file) : "); print_weight_buffer_stats(kernel, I_kernel * O_kernel * KH * KW);
+    printf("bias (file)   : "); print_bias_buffer_stats(bias, O);
+    if (enable_add) {printf("add    : "); print_data_in_buffer_stats(data_in_add, O_output * HO_final * WO_final);}
+    if (enable_batch_norm) {printf("bn_v (file)   : "); print_batchnorm_buffer_stats(batch_norm_values, O_output * 4);}
+    printf("output (file) : "); print_output_buffer_stats(cpu_out, O_output * HO_final * WO_final);
     return;
   }
 

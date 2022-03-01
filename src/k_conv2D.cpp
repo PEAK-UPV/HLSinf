@@ -226,7 +226,6 @@ void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W,
 
     // -------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // variables to manage the input buffer
-    int corrected_offset         = 0;
     int num_extra_rows           = 0;
     int read_pixels              = W * (rows + num_extra_rows);
     int read_pixels_total        = read_pixels * I_ITER;
@@ -246,7 +245,7 @@ void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W,
     int enable_write[CPO];
     int offset_read_data_channel_i[CPI];
     int num_channel_write_blocks[CPO];
-    int offset_read_data_channel = read_offset - corrected_offset;
+    int offset_read_data_channel = read_offset;
     int channel_size             = H * W;
 
     int read_channel_offset      = (W * H);
@@ -296,6 +295,8 @@ void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W,
     batch_norm(enable_batch_norm, num_bn_pixels, out_pooling, out_read_batch_norm, out_batch_norm);
     add_data(enable_add, num_add_pixels, out_read_data_add, out_batch_norm, out_add); 
     upsize(enable_upsize, write_rows, write_cols, out_add, out_write);
+
+    printf("write_pixels %d, offset %d\n", write_pixels, o_iter_write_offset);
 
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // write to memory

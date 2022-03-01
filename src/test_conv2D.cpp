@@ -250,12 +250,17 @@ void compute(int *enable, int *from_file, int *cpu, int *retval) {
          std::cout<< "TIME KERNEL = " << (diff/1000000)<<" ms \n"<<std::endl;
          #endif
 
+         #ifdef OPENCL_TEST
+         copy_from_fpga();
+         #endif
+
+		 printf("output fpga : "); print_output_buffer_stats(out, O_output * HO_final * WO_final);
+
 	     if (*cpu) cpu_conv2D();
 
+		 printf("output cpu : "); print_output_buffer_stats(cpu_out, O_output * HO_final * WO_final);
+
 	     if (*cpu || *from_file) {
-           #ifdef OPENCL_TEST
-           copy_from_fpga();
-           #endif
            int num_differences;
 	       dout_t max_difference;
 	       *retval = check_result(&max_difference, &num_differences);

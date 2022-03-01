@@ -24,16 +24,21 @@ int check_result(dout_t *max_difference, int *num_elements_differ) {
 
 
   for (int cout = 0; cout < O_output; cout++) {
+    int found_channel_diff = 0;
     for (int h = 0; h < rows; h++) {
+      int found_row_diff = 0;
       for (int w = 0; w < cols; w++) {
 	      int addr_out = output_data_address(cout, h, w, rows, cols);
         dout_t diff = dout_t(fabs(float(cpu_out[addr_out]) - float(out[addr_out])));
         if (float(diff) > float(epsilon)) {
+          found_row_diff = 1;
+          found_channel_diff = 1;
           (*num_elements_differ)++;
-//	  printf("difference at cout %d h %d w %d %6.4f cpu %6.4f fpga\n", cout, h, w, float(cpu_out[addr_out]), float(out[addr_out]));
+	        if (w==0) printf("difference at cout %d h %d w %d %6.4f cpu %6.4f fpga\n", cout, h, w, float(cpu_out[addr_out]), float(out[addr_out]));
           if (*max_difference < diff) *max_difference = diff;
         }
       }
+      if (found_row_diff) printf("found diff at channel %d, row %d\n", cout, h);
     }
   }
   return (*num_elements_differ != 0);

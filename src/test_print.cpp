@@ -14,6 +14,96 @@
 
 #include "test_conv2D.h"
 
+void print_input_buffer_stats(din_t *p, int size) {
+  float min =  999999;
+  float max = -999999;
+  double sum = 0.f;
+
+  for (int x = 0; x < size; x++) {
+    float v = float(p[x]);
+    if (min > v) min = v;
+    if (max < v) max = v;
+    sum += v;
+  }
+  float avg = sum / (float)size;
+  printf("Min %8.4f Max %8.4f Avg %8.4f\n", min, max, avg);
+}
+
+void print_weight_buffer_stats(w_t *p, int size) {
+   float min =  999999;
+  float max = -999999;
+  double sum = 0.f;
+
+  for (int x = 0; x < size; x++) {
+    float v = float(p[x]);
+    if (min > v) min = v;
+    if (max < v) max = v;
+    sum += v;
+  }
+  float avg = sum / (float)size;
+  printf("Min %8.4f Max %8.4f Avg %8.4f\n", min, max, avg);
+}
+
+void print_bias_buffer_stats(b_t *p, int size) {
+  float min =  999999;
+  float max = -999999;
+  double sum = 0.f;
+
+  for (int x = 0; x < size; x++) {
+    float v = float(p[x]);
+    if (min > v) min = v;
+    if (max < v) max = v;
+    sum += v;
+  }
+  float avg = sum / (float)size;
+  printf("Min %8.4f Max %8.4f Avg %8.4f\n", min, max, avg);
+}
+
+void print_data_in_buffer_stats(dout_t *p, int size) {
+  float min =  999999;
+  float max = -999999;
+  double sum = 0.f;
+
+  for (int x = 0; x < size; x++) {
+    float v = float(p[x]);
+    if (min > v) min = v;
+    if (max < v) max = v;
+    sum += v;
+  }
+  float avg = sum / (float)size;
+  printf("Min %8.4f Max %8.4f Avg %8.4f\n", min, max, avg);
+}
+
+void print_batchnorm_buffer_stats(dout_t *p, int size) {
+   float min =  999999;
+  float max = -999999;
+  double sum = 0.f;
+
+  for (int x = 0; x < size; x++) {
+    float v = float(p[x]);
+    if (min > v) min = v;
+    if (max < v) max = v;
+    sum += v;
+  }
+  float avg = sum / (float)size;
+  printf("Min %8.4f Max %8.4f Avg %8.4f\n", min, max, avg);
+}
+
+void print_output_buffer_stats(dout_t *p, int size) {
+  float min =  999999;
+  float max = -999999;
+  double sum = 0.f;
+
+  for (int x = 0; x < size; x++) {
+    float v = float(p[x]);
+    if (min > v) min = v;
+    if (max < v) max = v;
+    sum += v;
+  }
+  float avg = sum / (float)size;
+  printf("Min %8.4f Max %8.4f Avg %8.4f\n", min, max, avg);
+}
+
 void print_bias() {
   printf("Bias: ");
   for (int o=0; o<O_output; o++) printf("%6.4f ", float(bias[o]));
@@ -139,8 +229,8 @@ void print_output(int only_cpu) {
     printf("channel %d:\n", o);
     int rows = enable_upsize ? HO_final * 2 : HO_final;
     int cols = enable_upsize ? WO_final * 2 : WO_final;
-    //if (rows > 5) rows = 5;
-    //if (cols > 5) cols = 5;
+    if (rows > 5) rows = 5;
+    if (cols > 5) cols = 5;
     for (int h=0; h<rows; h++) {
       for (int w=0; w<cols; w++) {
         int addr_o = output_data_address(o, h, w, rows, cols);
