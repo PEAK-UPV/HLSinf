@@ -33,6 +33,7 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
 
     int o_iter_first = o_iter_per_kernel * k;
     int o_iter_last  = o_iter_first + o_iter_per_kernel - 1;
+    if (k == num_kernels-1) o_iter_last = o_iter-1;
 
     char str[50];
     sprintf(str, "launching kernel %d (output iterations %d to %d)", k, o_iter_first, o_iter_last);
@@ -43,7 +44,9 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
     cl_int err;
     int arg = 0;
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_i));
+    #ifdef USE_ADD
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_i_add));
+    #endif
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, H));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, W));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, HO_final));
@@ -63,7 +66,9 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_relu));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_stm));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, relu_factor));
+    #ifdef USE_BATCH_NORM
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_batch_norm));
+    #endif
     #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_k[0]));
     #endif
@@ -72,7 +77,9 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_k_pw[0]));
     #endif
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_bias[0]));
+    #ifdef USE_BATCH_NORM
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_batch_norm_val[0]));
+    #endif
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_o[0]));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, read_offset_p));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, write_offset_p));
@@ -80,7 +87,9 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_avgpooling));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_clipping));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_shift));
+    #ifdef USE_ADD
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_add));
+    #endif
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, min_clip));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, max_clip));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, dir_shift));
@@ -89,15 +98,34 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
     OCL_CHECK(err, err = q.enqueueNDRangeKernel(kernel_conv2d[k], 0, 1, 1, NULL, &kernel_events[k]));
     set_callback(kernel_events[k], "ooo_queue");
     #else
-    k_conv2D((read_block_t *)data_in, (write_block_t *)data_in_add, 
+    k_conv2D((read_block_t *)data_in, 
+        #ifdef USE_ADD
+        (write_block_t *)data_in_add, 
+        #endif
 		    H, W, HO_final, WO_final, rows_p, PT_p, PB_p, PL_p, PR_p, SH, SW, I_input, O_output, i_iter, 
 		    o_iter_first, o_iter_last, 
-		    enable_relu, enable_stm, relu_factor, enable_batch_norm,
-		  kernel,
-		   (b_st *)bias, (bnp_st *)batch_norm_values, (write_block_t *)out, 
-		   read_offset_p, write_offset_p,
-		   enable_maxpooling, enable_avgpooling,
-		   enable_clipping, enable_shift, enable_add, min_clip, max_clip, dir_shift, pos_shift, enable_upsize);
+		    enable_relu, enable_stm, relu_factor, 
+        #ifdef USE_BATCH_NORM
+        enable_batch_norm,
+        #endif
+        #ifdef DIRECT_CONV
+		    kernel, 
+        #endif
+        #ifdef DWS_CONV
+        dw_kernel, (w_pw_t *)pw_kernel,
+        #endif
+        (b_st *)bias, 
+        #ifdef USE_BATCH_NORM
+        (bnp_st *)batch_norm_values, 
+        #endif
+        (write_block_t *)out, 
+		    read_offset_p, write_offset_p,
+		    enable_maxpooling, enable_avgpooling,
+		    enable_clipping, enable_shift, 
+        #ifdef USE_ADD
+        enable_add, 
+        #endif
+        min_clip, max_clip, dir_shift, pos_shift, enable_upsize);
     #endif
   }
 

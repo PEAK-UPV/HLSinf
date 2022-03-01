@@ -1,1 +1,8 @@
 .vscode
+*.log
+*.out
+*.bin
+*.swp
+opencl/.run
+opencl/run?
+project/

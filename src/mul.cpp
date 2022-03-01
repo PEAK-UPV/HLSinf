@@ -9,6 +9,23 @@
 
 #include "conv2D.h"
 
+#ifdef DIRECT_CONV
+
+#ifdef PRUEBA_MUL_2
+conv_mul_t conv_op(conv_mul_t x0, conv_mul_t x1, conv_mul_t x2, conv_mul_t x3, conv_mul_t x4, conv_mul_t x5, conv_mul_t x6, conv_mul_t x7, conv_mul_t x8,
+                   w_t w0, w_t w1, w_t w2, w_t w3, w_t w4, w_t w5, w_t w6, w_t w7, w_t w8) 
+{
+  conv_mul_t r1;
+  conv_mul_t r2;
+
+  #pragma HLS BIND_op variable=r1 op=mul impl=fabric
+  r1 = (x0 * w0) + (x1 * w1) + (x2 * w2);
+  #pragma HLS BIND_op variable=r2 op=mul impl=dsp
+  r2 = (x3 * w3) + (x4 * w4) + (x5 * w5) + (x6 * w6) + (x7 * w7) + (x8 * w8);
+  return r1 + r2;
+}
+#endif
+
 // ----------------------------------------------------------------------------------------
 // mul: This function performs the multiplication of an input frame with the stored kernels
 // and sends the produced pixels. Before normal operation it receives its kernels
@@ -52,7 +69,7 @@ void mul(int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::str
     if (load_kernel){
       kernel = k_in.read();
       #ifdef DEBUG_MUL
-      #ifdef DEBUG_VERBOSE
+      //#ifdef DEBUG_VERBOSE
       printf("MUL: kernel read\n");
       for(int i=0; i<CPI; i++){
         for(int o=0; o<CPO; o++){
@@ -64,7 +81,7 @@ void mul(int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::str
           printf("\n");
         }
       }
-      #endif
+      //#endif
       #endif
     }
 
@@ -77,11 +94,69 @@ void mul(int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::str
 
     data_in = in.read();
     #ifdef DEBUG_MUL
-    printf("mult: frame received:");
-    for (int x=0; x<KW*KH; x++) for (int xx=0; xx<CPI; xx++) printf("%f ", float(data_in.pixel[x].pixel[xx]));
+    printf("mult: frame received:\n");
+    for (int xx=0; xx<CPI; xx++) {
+      printf("CPI %d : ", xx);
+      for (int x=0; x<KW*KH; x++) printf("%f ", float(data_in.pixel[x].pixel[xx]));
+      printf("\n");
+    }
     printf("\n");
     #endif
 
+#ifdef PRUEBA_MUL_2
+    for (int cpi = 0; cpi < CPI; cpi++) {
+      #pragma HLS UNROLL
+      for (int cpo=0; cpo<CPO; cpo++) {
+        #pragma HLS UNROLL
+        sum[cpo] += conv_op(data_in.pixel[0].pixel[cpi], data_in.pixel[1].pixel[cpi], data_in.pixel[2].pixel[cpi],
+                            data_in.pixel[3].pixel[cpi], data_in.pixel[4].pixel[cpi], data_in.pixel[5].pixel[cpi],
+                            data_in.pixel[6].pixel[cpi], data_in.pixel[7].pixel[cpi], data_in.pixel[8].pixel[cpi],
+                            kernel.pixel[cpo][cpi][0], kernel.pixel[cpo][cpi][1], kernel.pixel[cpo][cpi][2], 
+                            kernel.pixel[cpo][cpi][3], kernel.pixel[cpo][cpi][4], kernel.pixel[cpo][cpi][5], 
+                            kernel.pixel[cpo][cpi][6], kernel.pixel[cpo][cpi][7], kernel.pixel[cpo][cpi][8]);
+      }
+    }
+#else
+    
+
+#ifdef PRUEBA_MUL
+    struct conv_mul_st2 {conv_mul_t pixel[CPO][CPI][9]};
+    struct conv_mul_st3 {conv_mul_t pixel[CPO][CPI];};
+    conv_mul_st2 x;
+    DO_PRAGMA(HLS ARRAY_PARTITION variable=x dim=0 complete)
+    conv_mul_st3 xx;
+    DO_PRAGMA(HLS ARRAY_PARTITION variable=xx dim=0 complete)
+    loop_mul_cpo:
+    for (int cpo=0; cpo<CPO; cpo = cpo + 1) {
+      #pragma HLS UNROLL
+      for (int cpi = 0; cpi < CPI; cpi++) {
+        #pragma HLS UNROLL
+        for (int j = 0; j < KH*KW; j++) {
+          #pragma HLS UNROLL
+          x.pixel[cpo][cpi][j] = data_in.pixel[j].pixel[cpi] * kernel.pixel[cpo][cpi][j];
+        }
+      }
+    }
+    for (int cpo=0; cpo<CPO; cpo = cpo + 1) {
+      #pragma HLS UNROLL
+      for (int cpi = 0; cpi < CPI; cpi++) {
+        #pragma HLS UNROLL
+        for (int j = 0; j < KH*KW; j++) {
+          #pragma HLS UNROLL
+          xx.pixel[cpo][cpi] += x.pixel[cpo][cpi][j];
+        }
+      }
+    }
+    for (int cpo=0; cpo<CPO; cpo = cpo + 1) {
+      #pragma HLS UNROLL
+      for (int cpi = 0; cpi < CPI; cpi++) {
+        #pragma HLS UNROLL
+        sum[cpo] += xx.pixel[cpo][cpi];
+      }
+    }
+
+
+#else
     loop_mul_cpi:
     for (int cpi=0; cpi<CPI; cpi++) {
       DO_PRAGMA(HLS loop_tripcount  min=1 max=CPI)
@@ -93,28 +168,36 @@ void mul(int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::str
 #ifdef DSP_OPTIMIZATION
         loop_mul_cpo:
         for (int cpo=0; cpo<CPO; cpo = cpo + 2) {
-	  DO_PRAGMA(HLS loop_tripcount min=1 max=CPO/2)
+	        DO_PRAGMA(HLS loop_tripcount min=1 max=CPO/2)
           #pragma HLS UNROLL
-	  ap_int<27> op1;
+	        ap_int<27> op1;
           op1.range(26, 18) = kernel.pixel[cpo][cpi][j];
           op1.range(17, 0) = 0;
-	  ap_uint<27> op2;
-	  op2 = kernel.pixel[cpo+1][cpi][j];
-	  ap_int<45> result;
-	  result = (op1 + op2) * data_in.pixel[j].pixel[cpi];
-	  sum[cpo] += result.range(33, 18);
-	  sum[cpo+1] += result.range(15, 0);
+	        ap_uint<27> op2;
+	        op2 = kernel.pixel[cpo+1][cpi][j];
+	        ap_int<45> result;
+          #pragma HLS BIND_op variable=result op=mul impl=dsp
+	        result = (op1 + op2) * data_in.pixel[j].pixel[cpi];
+	        sum[cpo] += result.range(33, 18);
+	        sum[cpo+1] += result.range(15, 0);
 	}
 #else
 	loop_mul_cpo:
         for (int cpo=0; cpo<CPO; cpo++) {
           DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO)
           #pragma HLS UNROLL
-          sum[cpo] += data_in.pixel[j].pixel[cpi] * kernel.pixel[cpo][cpi][j];
+	        conv_mul_t x;
+	        #pragma HLS BIND_op variable = x op=mul impl=dsp
+	        x = data_in.pixel[j].pixel[cpi] * kernel.pixel[cpo][cpi][j];
+	        sum[cpo] += x;
+          //sum[cpo] += data_in.pixel[j].pixel[cpi] * kernel.pixel[cpo][cpi][j];
         }
 #endif
       }
     }
+
+#endif
+#endif
 
     for(int i=0; i<CPO; i++){
       DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO)
@@ -122,12 +205,12 @@ void mul(int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::str
       p_out.pixel[i] = sum[i];
     }
     #ifdef DEBUG_MUL
-    #ifdef DEBUG_VERBOSE
+    //#ifdef DEBUG_VERBOSE
     for(int i = 0;i<CPO;i++) {
-      printf("mult: p_out.pixel[%d] = %6.2f  ", i, float(p_out.pixel[i]));
+      printf("mult result: p_out.pixel[%d] = %6.2f  ", i, float(p_out.pixel[i]));
     }
     printf("\n");
-    #endif
+    //#endif
     #endif
     out << p_out;
     iter_load_kernel++;
@@ -138,6 +221,7 @@ void mul(int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::str
   printf("mul: end\n");
   #endif
 }
+#endif
 
 #ifdef DWS_CONV
 // ----------------------------------------------------------------------------------------
@@ -155,19 +239,19 @@ void mul(int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::str
 //
 // This module is used in the DWS Convolution method
 //
-void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<kernel_dw_t> &k_dw_in, hls::stream<kernel_pw_t> &k_pw_in, hls::stream<pixel_out_t> &out) {
+void dws_mul(int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::stream<w_dw_st> &k_dw_in, hls::stream<w_pw_st> &k_pw_in, hls::stream<conv_mul_st> &out) {
 	  
   #ifdef DEBUG_MUL
   printf("mul: start (I_ITER %d)\n", I_ITER);
   #endif
 
-  kernel_dw_t kernel_dw;
-  kernel_pw_t kernel_pw;
-  frame_t data_in;
-  frame_t data_mul;
-  data_type data_sum[CPI];
-  data_type pixel_out[CPO];
-  pixel_out_t p_out;
+  w_dw_st     kernel_dw;
+  w_pw_st     kernel_pw;
+  conv_cvt_st data_in;
+  conv_cvt_st data_mul;
+  conv_mul_st data_sum;
+  conv_mul_st pixel_out;
+  conv_mul_st p_out;
   DO_PRAGMA(HLS ARRAY_PARTITION variable=kernel_dw complete dim=0)
   DO_PRAGMA(HLS ARRAY_PARTITION variable=kernel_pw complete dim=0)
   DO_PRAGMA(HLS ARRAY_PARTITION variable=data_in dim=0 complete)
@@ -175,13 +259,13 @@ void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<ker
   DO_PRAGMA(HLS ARRAY_PARTITION variable=data_sum dim=0 complete)
   DO_PRAGMA(HLS ARRAY_PARTITION variable=pixel_out dim=0 complete)
 
-  int load_kernel = 0;
-  int num_iter = I_ITER * H * W;
+  int load_kernel      = 0;
+  int num_iter         = I_ITER * num_data_frames;
   int iter_load_kernel = 0;
 
   dws_mul_loop_iter:
   for(int i = 0; i < num_iter; i++) {
-	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=(I_REFERENCE / CPI) * W_REFERENCE * H_REFERENCE)
+	  DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=(I_REFERENCE / CPI) * W_REFERENCE * H_REFERENCE)
     #pragma HLS PIPELINE II=1
 
     load_kernel = (iter_load_kernel == 0);
@@ -255,18 +339,18 @@ void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<ker
 	dws_mul_loop_dw_reduce_cpi:
 	for (int cpi=0; cpi<CPI; cpi++) {
 	  DO_PRAGMA(HLS UNROLL)
-	  data_sum[cpi] = 0;
+	  data_sum.pixel[cpi] = 0;
 	  dws_mul_loop_dw_reduce_p:
       for (int p=0; p<9; p++) {
 	    DO_PRAGMA(HLS UNROLL)
-	    data_sum[cpi] += data_mul.pixel[p].pixel[cpi];
+	    data_sum.pixel[cpi] += data_mul.pixel[p].pixel[cpi];
 	  }
 	}
     #ifdef DEBUG_MUL
     #ifdef DEBUG_VERBOSE
     printf("MUL: DW_REDUCE\n");
     for (int cpi=0; cpi<CPI; cpi++) {
-  	  printf("%f ", float(data_sum[cpi]));
+  	  printf("%f ", float(data_sum.pixel[cpi]));
 	}
 	printf("\n");
     #endif
@@ -276,18 +360,18 @@ void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<ker
 	dws_mul_loop_pd_reduce_cpo:
 	for (int cpo=0; cpo<CPO; cpo++) {
 	  DO_PRAGMA(HLS UNROLL)
-  	  pixel_out[cpo] = 0;
+  	  pixel_out.pixel[cpo] = 0;
   	  dws_mul_loop_pd_reduce_cpi:
 	  for (int cpi=0; cpi<CPI; cpi++) {
 		DO_PRAGMA(HLS UNROLL)
-		pixel_out[cpo] += data_sum[cpi] * kernel_pw.pixel[cpo][cpi];
+		pixel_out.pixel[cpo] += data_sum.pixel[cpi] * kernel_pw.pixel[cpo][cpi];
 	  }
  	}
     #ifdef DEBUG_MUL
     #ifdef DEBUG_VERBOSE
     printf("MUL: PW_REDUCE\n");
     for (int cpo=0; cpo<CPO; cpo++) {
-	  printf(" %f ", float(pixel_out[cpo]));
+	  printf(" %f ", float(pixel_out.pixel[cpo]));
     }
     printf("\n");
     #endif
@@ -296,7 +380,7 @@ void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<ker
 	// now we send the frame out
 	dws_mul_loop_send_cpo:
 	for (int cpo=0; cpo<CPO; cpo++) {
-		p_out.pixel[cpo] = pixel_out[cpo];
+		p_out.pixel[cpo] = pixel_out.pixel[cpo];
 	}
     out << p_out;
 
@@ -310,7 +394,7 @@ void dws_mul(int H, int W, int I_ITER, hls::stream<frame_t> &in, hls::stream<ker
     #endif
 
     iter_load_kernel++;
-    if (iter_load_kernel == W*H) iter_load_kernel = 0;
+    if (iter_load_kernel == num_data_frames) iter_load_kernel = 0;
   }
 
   #ifdef DEBUG_MUL

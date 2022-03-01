@@ -151,7 +151,7 @@ void cpu_conv2D() {
       for (int h=0; h<HO; h++) {
         for (int w=0; w<WO; w++) {
           int addr_o = output_data_address(cout, h, w, HO, WO);
-          if (float(out_conv_cpu[addr_o]) < float(0)) out_relu_cpu[addr_o] = out_conv_cpu[addr_o] * relu_factor; else out_relu_cpu[addr_o] = out_conv_cpu[addr_o];
+          if (float(out_conv_cpu[addr_o]) < float(0)) out_relu_cpu[addr_o] = out_conv_cpu[addr_o] * (relu_t)relu_factor; else out_relu_cpu[addr_o] = out_conv_cpu[addr_o];
           //printf("cpu_relu: c %d h %d w %d out_conv %f out_relu %f\n", cout, h, w, float(out_conv_cpu[addr_o]), float(out_relu_cpu[addr_o]));
         }
       }

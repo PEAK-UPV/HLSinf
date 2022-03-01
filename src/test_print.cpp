@@ -225,7 +225,7 @@ void print_input_add() {
 
 void print_output(int only_cpu) {
   printf("Output:\n");
-  for (int o=0; o<O_output; o++) {
+  for (int o=0; o<O; o++) {
     printf("channel %d:\n", o);
     int rows = enable_upsize ? HO_final * 2 : HO_final;
     int cols = enable_upsize ? WO_final * 2 : WO_final;
