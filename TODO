@@ -1,1 +1,4 @@
 
+4x8 FP32 U200, SLR0 + SLR2 fails (DSPs do not fit)
+6x6 FP32 U200, SLR0 + SLR2 fails (DSPs do not fit)
+Testing 8x8 FP32 U200 (TEST) entire device, 1 kernel (run0, cmts1), slurm 1904

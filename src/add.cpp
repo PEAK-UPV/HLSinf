@@ -48,7 +48,7 @@ void add(int num_pixels, int I_ITER, hls::stream<conv_mul_st> &in, hls::stream<b
   bias = b_in.read();
 
   #ifdef DEBUG_ADD
-  #ifdef DEBUG_VERBOSE
+  //#ifdef DEBUG_VERBOSE
   for (int b=0; b<CPO; b++) {
     printf("Bias[%d] = %6.4f \n", b, float(bias.pixel[b]));
   }
@@ -60,7 +60,7 @@ void add(int num_pixels, int I_ITER, hls::stream<conv_mul_st> &in, hls::stream<b
     }
     printf("\n");
   }
-  #endif
+  //#endif
   #endif
 
   // All input data have effect into output add
@@ -78,6 +78,14 @@ void add(int num_pixels, int I_ITER, hls::stream<conv_mul_st> &in, hls::stream<b
       conv_st data_out;
 
       if (i_iter == 0) data_in = bias; else data_in = *(b_st *)&buff_o_channels[it];
+      #ifdef DEBUG_ADD
+      printf("ADD: data read from stream: ");
+      for (int x=0; x<CPO; x++) printf("%f ", float(px.pixel[x]));
+      printf("\n");
+      printf("      data_in: ");
+      for (int x=0; x<CPO; x++) printf("%f ", float(data_in.pixel[x]));
+      printf("\n");
+      #endif
 
       add_load_data_cpo_loop:
       for (int cpo=0; cpo<CPO; cpo++) {
@@ -95,7 +103,7 @@ void add(int num_pixels, int I_ITER, hls::stream<conv_mul_st> &in, hls::stream<b
   } //i_iter
 
   #ifdef DEBUG_ADD
-  #ifdef DEBUG_VERBOSE
+  //#ifdef DEBUG_VERBOSE
   for (int it=0; it<num_iterations; it++) {
     printf("ADD: ");
     for (int cpo=0; cpo<CPO; cpo++) {
@@ -103,7 +111,7 @@ void add(int num_pixels, int I_ITER, hls::stream<conv_mul_st> &in, hls::stream<b
     }
     printf("\n");
   }
-  #endif
+  //#endif
   #endif
 
   #ifdef DEBUG_ADD

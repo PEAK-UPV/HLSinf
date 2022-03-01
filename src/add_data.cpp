@@ -20,16 +20,16 @@
 //   in_stm: input stream data from stm module
 //   out   : output stream
 //
-void add_data(int enable_add, int num_pixels, hls::stream<dout_st> &in_r, hls::stream<dout_st> &in_stm, hls::stream<dout_st> &out) {
+template <class in1_st, class in2_st, class out_st> void add_data(int enable_add, int num_pixels, hls::stream<in1_st> &in_r, hls::stream<in2_st> &in_stm, hls::stream<out_st> &out) {
 
   #ifdef DEBUG_ADD_DATA
   printf("add_data: start\n");
   printf("  num_pixels : %d\n", num_pixels);
   #endif
 
-  dout_st data_in_r;
-  dout_st data_in_stm;
-  dout_st data_out;
+  in1_st data_in_r;
+  in2_st data_in_stm;
+  out_st data_out;
   int data_size = num_pixels;
   DO_PRAGMA(HLS ARRAY_PARTITION variable=data_in_r complete dim=0)
   DO_PRAGMA(HLS ARRAY_PARTITION variable=data_in_stm complete dim=0)
@@ -59,15 +59,18 @@ void add_data(int enable_add, int num_pixels, hls::stream<dout_st> &in_r, hls::s
 			    data_out.pixel[cpo] = v_out;
 		    }
 	    } else {
-		    data_out = data_in_stm;
+        for (int cpo=0; cpo<CPO; cpo++) {
+          DO_PRAGMA(HLS UNROLL)
+		      data_out.pixel[cpo] = data_in_stm.pixel[cpo];
+        }
 	    }
 
-	  #ifdef DEBUG_ADD_DATA
+	   #ifdef DEBUG_ADD_DATA
      printf("ADD_DATA (pixel %d):\n", i);
      for (int x=0; x<CPI; x++) {
       	printf("  cpi %d : in_a %f in_b %f out %f\n", x, float(data_in_r.pixel[x]),float(data_in_stm.pixel[x]), float(data_out.pixel[x]));
      }
-	#endif
+	   #endif
 
       out << data_out;
 

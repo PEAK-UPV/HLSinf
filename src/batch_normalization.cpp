@@ -12,6 +12,8 @@
 // -----------------------------------------------------------------------------------------------------------
 // Batch normalization layer
 
+#ifdef USE_BATCH_NORM
+
 #define EPS		1e-5
 
 void batch_norm(int enable_batch_norm, int num_pixels, hls::stream<pool_st> &in, hls::stream<bnp_st> &bn_values, hls::stream<dout_st> &out) {
@@ -78,3 +80,5 @@ void batch_norm(int enable_batch_norm, int num_pixels, hls::stream<pool_st> &in,
 	printf("Batch Norm: end\n");
 	#endif
 }
+
+#endif

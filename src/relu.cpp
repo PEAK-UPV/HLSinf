@@ -78,6 +78,7 @@ void relu(int enable_relu, int enable_clipping, int enable_shift, float relu_fac
 //      #endif
       #endif
       // clipping
+#ifdef USE_CLIPPING
       v_clipping = v_shift;
       if (enable_clipping) {
     	  if (v_shift < min_clip) {
@@ -86,6 +87,9 @@ void relu(int enable_relu, int enable_clipping, int enable_shift, float relu_fac
     		  v_clipping = max_clip;
     	  }
       }
+#else
+      v_clipping = v_shift;
+#endif
 
       #ifdef DEBUG_RELU
   //    #ifdef DEBUG_VERBOSE
@@ -97,7 +101,7 @@ void relu(int enable_relu, int enable_clipping, int enable_shift, float relu_fac
 #ifdef USE_RELU
       v_relu = v_clipping;
       #ifdef FLOAT_DATA_TYPE
-        if(enable_relu && (v_relu < 0)) v_relu = relu_factor * v_clipping;
+        if(enable_relu && (v_relu < 0)) v_relu = (relu_t)relu_factor * v_clipping;
       #else 
         if(enable_relu && (v_relu < 0)) v_relu = v_clipping;
       #endif

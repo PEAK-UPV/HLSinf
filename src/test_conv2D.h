@@ -76,11 +76,14 @@ extern int global_offset;				 // global offset for the output data for the kerne
 extern int GI;							 // number of groups for input channels
 extern int GO;							 // number of groups for output channels
 
-extern din_t *data_in;               // Input data buffer (format I x W x H)
-extern din_t *data_in_add;           // Input data buffer for add module(format I x W x H)
+extern din_t *data_in;                // Input data buffer (format I x W x H)
+extern din_t *data_in_add;            // Input data buffer for add module(format I x W x H)
 extern dout_t *out;                   // Output data buffer (format O x W x H)
-extern w_t *kernel;                // Conv kernel buffers (format GO x GI x CPO x CPI x KW x KH) - for DirectConv and WinogradConv
-extern b_t *bias;                  // Conv bias buffers (format O)
+extern w_t *kernel;                   // Conv kernel buffers (format GO x GI x CPO x CPI x KW x KH) - for DirectConv and WinogradConv
+extern w_t *dw_kernel;                // DW kernel (format I x KH x KW) - for DWS
+extern w_t *pw_kernel;                // PW kernel (format GO x GI x CPO x CPI) - for DWS
+
+extern b_t *bias;                     // Conv bias buffers (format O)
 extern conv_t *out_conv_cpu;          // Output data buffer for cpu (format O x W x H)
 extern relu_t *out_relu_cpu;          // Output data buffer for cpu (format O x W x H)
 extern stm_t *out_stm_cpu;		     // Output data buffer for STM for cpu (format O x O x W x H)
