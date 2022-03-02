@@ -124,7 +124,8 @@ void k_conv2D(read_block_t *ptr_data,
             #ifdef USE_ADD
             int enable_add, 
             #endif
-            int min_clip, int max_clip, int dir_shift, int pos_shift, int enable_upsize){
+            int min_clip, int max_clip, int dir_shift, int pos_shift, int enable_upsize,
+            int write_to_weight_buffer, int read_from_weight_buffer, int first_row_weight_buffer) {
 
 	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_data         depth=DATA_IN_PORT_DEPTH    offset=slave bundle=gmem)
   #ifdef DIRECT_CONV    
@@ -207,10 +208,10 @@ void k_conv2D(read_block_t *ptr_data,
  
   o_iter_loop:
   for (int o_iter = 0; o_iter<O_ITER; o_iter++) {
-	DO_PRAGMA(HLS loop_tripcount min=1 max=O_REFERENCE/CPO)
-	#pragma HLS dataflow
+	  DO_PRAGMA(HLS loop_tripcount min=1 max=O_REFERENCE/CPO)
+	  #pragma HLS dataflow
 
-	int o_channel = (o_iter + o_iter_first) * CPO; //<< LOG2_CPO;  // current output channel (first one in this iteration)
+	  int o_channel = (o_iter + o_iter_first) * CPO; //<< LOG2_CPO;  // current output channel (first one in this iteration)
 
     // input and output streams
     static hls::stream<din_st>   out_read_data;
@@ -227,6 +228,8 @@ void k_conv2D(read_block_t *ptr_data,
     #ifdef DIRECT_CONV
     static hls::stream<w_st>     out_read_kernel;
     DO_PRAGMA(HLS STREAM variable=out_read_kernel depth=STREAMS_DEPTH)
+    static hls::stream<w_st>     out_read_kernel_2;
+    DO_PRAGMA(HLS STREAM variable=out_read_kernel_2 depth=STREAMS_DEPTH)
     #endif
     #ifdef DWS_CONV
     static hls::stream<w_dw_st>     out_read_kernel_dw;
@@ -289,6 +292,8 @@ void k_conv2D(read_block_t *ptr_data,
     int enable_read              = (o_iter == 0) || !enable_buffer;
     //printf("enable_buffer %d write_to_input_buffer %d read_from_input_buffer %d enable_read %d\n", enable_buffer, write_to_input_buffer, read_from_input_buffer, enable_read);
 
+    int enable_read_kernel = !read_from_weight_buffer;
+
     // variables
     int enable_write[CPO];
     int offset_read_data_channel_i[CPI];
@@ -316,14 +321,18 @@ void k_conv2D(read_block_t *ptr_data,
     // channel offsets for reading
     set_reading_channel_offsets(offset_read_data_channel_i, offset_read_data_channel, read_channel_offset);
 
-    // channel write blocksz
+    // channel write blocks
     set_channel_write_blocks(num_channel_write_blocks, H, W);
+
+    // offset weight buffer
+    int offset_weight_buffer = first_row_weight_buffer + (o_iter * I_ITER);
 
     // -------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // read bias and kernel (filters)
     read_bias(offset_bias, ptr_bias, out_read_bias);
     #ifdef DIRECT_CONV
-    read_kernel(I_ITER, offset_kernel, ptr_kernel, out_read_kernel);
+    read_kernel(enable_read_kernel, I_ITER, offset_kernel, ptr_kernel, out_read_kernel);
+    weight_buffer(I_ITER, write_to_weight_buffer, read_from_weight_buffer, offset_weight_buffer, out_read_kernel, out_read_kernel_2);
     #endif
     #ifdef DWS_CONV
     dws_read_dw_kernel(I_ITER, o_iter, ptr_dw_kernel, out_read_kernel_dw);  // o_iter as argument to load all kernels in the first iteration (o_iter==0)
@@ -344,7 +353,7 @@ void k_conv2D(read_block_t *ptr_data,
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // direct convolution
     #ifdef DIRECT_CONV
-    direct_conv(rows, W, PT, PB, PL, PR, SH, SW, num_output_conv_pixels, I_ITER, out_read_data_1, out_read_kernel, out_read_bias, out_conv);
+    direct_conv(rows, W, PT, PB, PL, PR, SH, SW, num_output_conv_pixels, I_ITER, out_read_data_1, out_read_kernel_2, out_read_bias, out_conv);
     #endif
     #ifdef DWS_CONV
     dws_conv(rows, W, PT, PB, PL, PR, SH, SW, num_output_conv_pixels, I_ITER, out_read_data_1, out_read_kernel_dw, out_read_kernel_pw, out_read_bias, out_conv);

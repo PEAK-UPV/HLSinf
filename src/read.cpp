@@ -94,11 +94,13 @@ void read_batch_norm(int offset_batchnorm, bnp_st *b_ptr, hls::stream<bnp_st> &o
 // kernels in the same order they are read through the output stream.
 // kernels are sent in frame structures (3x3 grid)
 //
-void read_kernel(int I_ITER, int offset_kernel, w_t *k_ptr, hls::stream<w_st> &k_out){
+void read_kernel(int enable, int I_ITER, int offset_kernel, w_t *k_ptr, hls::stream<w_st> &k_out){
 
   #ifdef DEBUG_READ_KERNEL
   printf("READ_KERNEL: start\n");
   #endif
+
+  if (!enable) return;
 
   w_st k;
   int cnt = 0;

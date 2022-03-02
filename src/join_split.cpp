@@ -69,3 +69,44 @@ void input_buffer(int read_pixels_total, int write_to_buff, int read_from_buff, 
   #endif
 }
 
+void weight_buffer(int I_ITER, int write_to_buff, int read_from_buff, int offset_buff, hls::stream<w_st> &in, hls::stream<w_st> &out) {
+
+  w_st px_input;
+  w_st px_buff;
+  DO_PRAGMA(HLS AGGREGATE variable=px_input)
+  DO_PRAGMA(HLS AGGREGATE variable=px_buff)
+
+  static w_st buffer[WEIGHT_BUFFER_SIZE];
+  DO_PRAGMA(HLS aggregate variable=buffer)
+  #ifdef ALVEO_U200
+  DO_PRAGMA(HLS bind_storage variable=buffer type=ram_t2p impl=uram)
+  #endif
+  #ifdef ALVEO_U280
+  DO_PRAGMA(HLS bind_storage variable=buffer type=ram_t2p impl=uram)
+  #endif
+
+  #ifdef DEBUG_WEIGHT_BUFFER
+  printf("WEIGHT_BUFFER: starts (%d iters; write_to_buff %d; read_from_buff %d. weight buffer size %d)\n", read_pixels_total, write_to_buff, read_from_buff, WEIGHT_BUFFER_SIZE);
+  printf("WEIGHT_BUFFER: sizeof %d\n", sizeof(buffer));
+  #endif
+
+  weight_buffer_loop_pixels:
+  for (int p=0; p<I_ITER; p++) {
+	  DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE / CPI)
+    DO_PRAGMA(HLS pipeline)
+
+	  if (!read_from_buff) px_input = in.read();
+	  if (read_from_buff)  px_buff = buffer[p+offset_buff];
+
+	  if (write_to_buff)  {
+      buffer[p+offset_buff] = px_input;
+    }
+
+  	if (read_from_buff)  {
+      out << px_buff;
+    }	else out << px_input;
+  }
+  #ifdef DEBUG_WEIGHT_BUFFER
+  printf("WEIGHT_BUFFER: ends\n");
+  #endif
+}

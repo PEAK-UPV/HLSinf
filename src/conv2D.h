@@ -41,7 +41,7 @@
 // -----------------------------------------------------------------------------------------------------------
 // defines for debug (DEBUG_ALL activates all debug defines)
 // -----------------------------------------------------------------------------------------------------------
-#define DEBUG_ALL
+//#define DEBUG_ALL
 //#define DEBUG_VERBOSE
 //#define DEBUG_READ_BIAS
 //#define DEBUG_READ_KERNEL
@@ -62,7 +62,7 @@
 //#define DEBUG_POOL
 //#define DEBUG_BATCH_NORM
 //#define DEBUG_ADD_DATA
-#define DEBUG_CPU
+//#define DEBUG_CPU
 
 // -----------------------------------------------------------------------------------------------------------
 // Automatic defines (do not change; add new ones if needed)
@@ -227,6 +227,7 @@
 
 // Configuration 1.4: U200, 8x8, FP32: DIRECT_CONV, RELU, POOLING, UPSIZE
 #ifdef HLSINF_1_4
+#define PRUEBA_MUL_2
 #define ALVEO_U200
 #define DIRECT_CONV
 #define USE_RELU
@@ -235,7 +236,7 @@
 //#define USE_SHIFT
 //#define USE_BATCH_NORM
 //#define USE_STM
-//#define USE_ADD
+#define USE_ADD
 #define USE_UPSIZE
 #define FLOAT_DATA_TYPE               // we use float numbers as input data
 #define CPI                          8
@@ -668,6 +669,48 @@
 #define w_pw_t                   ap_fixed<8,4,AP_RND_ZERO,AP_SAT>
 #endif
 
+// Configuration 1.15: U200, 4x4, FP32: DIRECT_CONV, RELU, CLIPPING, POOLING, ADD, PRUEBA_MUL2, weight buffer
+#ifdef HLSINF_1_15
+#define PRUEBA_MUL_2
+#define ALVEO_U200
+#define DIRECT_CONV
+#define USE_RELU
+#define USE_CLIPPING
+//#define USE_SHIFT
+#define USE_POOLING
+#define USE_ADD
+//#define USE_BATCH_NORM
+//#define USE_STM
+#define USE_UPSIZE
+#define FLOAT_DATA_TYPE               // we use float numbers as input data
+#define CPI                          4
+#define CPO                          4
+#define WMAX                      1024
+#define HMAX                       256
+#define READ_BURST_SIZE             16
+#define STREAMS_DEPTH               16
+#define INPUT_BUFFER_SIZE         8192 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define WEIGHT_BUFFER_SIZE        5000
+#define EPSILON_VALUE          0.00001
+#define MIN_DATA_TYPE_VALUE  -99999999
+#define READ_BLOCK_SIZE             16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define WRITE_BLOCK_SIZE            16   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define din_t                    float
+#define conv_cvt_t               float
+#define conv_mul_t               float
+#define relu_t                   float
+#define stm_t                    float
+#define pool_cvt_t               float
+#define pool_t                   float
+#define bn_t                     float
+#define add_t                    float
+#define w_t                      float
+#define b_t                      float
+#define conv_t                   float
+#define dout_t                   float
+#define w_pw_t                   float
+#endif
+
 // Configuration TEST: U200, 4x4, FP32: DWS_CONV, RELU, POOLING, UPSIZE
 #ifdef HLSINF_TEST2
 #define ALVEO_U200
@@ -1010,11 +1053,13 @@ extern "C" void k_conv2D(read_block_t *ptr_data,
                          int enable_add, 
                          #endif
                          int min_clip, int max_clip, 
-                         int dir_shift, int pos_shift, int enable_upsize);
+                         int dir_shift, int pos_shift, int enable_upsize,
+                         int write_to_weight_buffer, int read_from_weight_buffer, int first_row_weight_buffer);
 
 void read_bias                    (int offset_bias, b_st *b_ptr, hls::stream<b_st> &out);
 void read_batch_norm              (int offset_batchnorm, bnp_st *b_ptr, hls::stream<bnp_st> &out);
-void read_kernel                  (int I_ITER, int offset_kernel, w_t *k_ptr, hls::stream<w_st> &k_out);
+void read_kernel                  (int enable, int I_ITER, int offset_kernel, w_t *k_ptr, hls::stream<w_st> &k_out);
+void weight_buffer                (int I_ITER, int write_to_buff, int read_from_buff, int offset_buff, hls::stream<w_st> &in, hls::stream<w_st> &out);
 void read_data_channels_gihwcpi   (int num_pixels, int offset, int I_ITER, int cpi_group_offset, read_block_t *ptr, hls::stream<din_st> &out, int enable);
 void read_input_add_gihwcpi       (int num_pixels, int offset, write_block_t *ptr, hls::stream<dout_st> &out, int enable);
 void write_data_channels_gihwcpi  (int num_pixels, int offset, write_block_t *ptr, hls::stream<dout_st> &in);
