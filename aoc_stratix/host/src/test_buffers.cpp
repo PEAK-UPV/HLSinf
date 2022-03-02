@@ -12,21 +12,30 @@ void allocate_buffers() {
   // First we allocate buffers in CPU
 
   #ifdef PRINT_LOG_BUFFERS
-  printf("allocate buffers\n");
+  printf("allocate host side vectors and cl_memory buffers\n");
   #endif
 
   // NOTE that scoped_aligned_ptr vector reset function sets the number of of elements in array of type "template"
-  //printf("1\n");
   // input data buffer
+  #ifdef PRINT_LOG_BUFFERS  
+  #ifdef DEBUG_VERBOSE
+  printf("  data_in vector reset\n");
+  #endif
+  #endif
   size_t size_data_num_values = I_input * W * H;
   size_t size_data_in_bytes   = size_data_num_values * sizeof(data_type);
   //data_in = (data_type *)alignedMalloc(size_data_in_bytes);
   //if (data_in == NULL) checkError(999, "Error allocating memory for bias, null pointer");
   data_in.reset(size_data_num_values);
 
-  //printf("2\n");
+
   // weights buffer (kernel), depending on the type of convolution
   #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
+  #ifdef PRINT_LOG_BUFFERS  
+  #ifdef DEBUG_VERBOSE
+  printf("  kernel vector reset\n");
+  #endif
+  #endif
   size_t size_kernel_num_values = I_kernel * O_kernel * KW * KH;
   size_t size_kernel_in_bytes   = size_kernel_num_values * sizeof(data_type);
   //kernel = (data_type *)alignedMalloc(size_kernel_in_bytes);
@@ -35,6 +44,11 @@ void allocate_buffers() {
   #endif
   //printf("3\n");
   #ifdef DWS_CONV
+  #ifdef PRINT_LOG_BUFFERS  
+  #ifdef DEBUG_VERBOSE
+  printf("  dw pw kernels vectors reset\n");
+  #endif
+  #endif
   size_t size_kernel_dw_num_values = (I_kernel * KW * KH);
   size_t size_kernel_dw_in_bytes   = size_kernel_dw_num_values * sizeof(data_type);
   size_t size_kernel_pw_num_values = (I_kernel * O_kernel);
@@ -45,6 +59,11 @@ void allocate_buffers() {
 
   //printf("4\n");
   // bias buffer
+  #ifdef PRINT_LOG_BUFFERS  
+  #ifdef DEBUG_VERBOSE
+  printf("  bias vector reset\n");
+  #endif
+  #endif
   size_t size_bias_num_values = O_output;
   size_t size_bias_in_bytes   = size_bias_num_values * sizeof(data_type);
   bias.reset(size_bias_num_values);
@@ -52,29 +71,13 @@ void allocate_buffers() {
   //if (bias == NULL) checkError(999, "Error allocating memory for bias, null pointer");
   for(size_t i = 0; i < size_bias_num_values; i++) bias[i] = (data_type)0;
   
-  // batch_normalization buffer
-  // batch_norm buffer size is 
-  size_t size_bn_num_values = (O_output * 4);
-  size_t size_bn_in_bytes = size_bn_num_values * sizeof(bn_t);
-  batch_norm_values.reset(size_bn_num_values);
-  for(size_t i = 0; i < size_bn_num_values; i++) batch_norm_values[i] = (bn_t)0;
-
-  // i_add buffer
-  // i_add buffer size equals out(put) buffer size
-  size_t size_i_add_num_values;
-  size_t size_i_add_in_bytes;
-  if ((enable_maxpooling) || (enable_avgpooling)) {
-    size_i_add_num_values = O_output * (W/2) * (H/2);
-    size_i_add_in_bytes   = size_i_add_num_values * sizeof(data_type);
-  } else {
-    size_i_add_num_values = O_output * W * H;
-    size_i_add_in_bytes   = size_i_add_num_values * sizeof(data_type);
-  }
-  data_in_add.reset(size_i_add_num_values);
-  for(size_t i = 0; i < size_i_add_num_values; i++) data_in_add[i] = (data_type)0;
-
   //printf("5\n");
   // output buffer for fpga
+  #ifdef PRINT_LOG_BUFFERS  
+  #ifdef DEBUG_VERBOSE
+  printf("  output vector reset\n");
+  #endif
+  #endif
   size_t size_output_num_values;
   size_t size_output_in_bytes;
   if ((enable_maxpooling) || (enable_avgpooling)) {
@@ -91,35 +94,111 @@ void allocate_buffers() {
 
   for(size_t i = 0; i < size_output_num_values; i++) out[i] = (data_type)0;
 
-  //printf("7\n");
+  // batch_normalization buffer
+  // batch_norm buffer size is 
+  #ifdef PRINT_LOG_BUFFERS  
+  #ifdef DEBUG_VERBOSE
+  printf("  batch_norm vector  reset\n");
+  #endif
+  #endif
+
+  size_t size_bn_num_values = (O_output * 4);
+  size_t size_bn_in_bytes = size_bn_num_values * sizeof(bn_t);
+  batch_norm_values.reset(size_bn_num_values);
+  for(size_t i = 0; i < size_bn_num_values; i++) batch_norm_values[i] = (bn_t)0;
+
+  // i_add buffer
+  // i_add buffer size equals out(put) buffer size
+  #ifdef PRINT_LOG_BUFFERS  
+  #ifdef DEBUG_VERBOSE
+  printf("  add_data vector reset\n");
+  #endif
+  #endif
+  size_t size_i_add_num_values;
+  size_t size_i_add_in_bytes;
+//  if ((enable_maxpooling) || (enable_avgpooling)) {
+//    size_i_add_num_values = O_output * (W/2) * (H/2);
+//    size_i_add_in_bytes   = size_i_add_num_values * sizeof(data_type);
+//  } else {
+//    size_i_add_num_values = O_output * W * H;
+//    size_i_add_in_bytes   = size_i_add_num_values * sizeof(data_type);
+//  }
+
+  size_i_add_num_values = O_output * W * H;
+  size_i_add_in_bytes   = size_i_add_num_values * sizeof(data_type);
+
+  data_in_add.reset(size_i_add_num_values);
+  for(size_t i = 0; i < size_i_add_num_values; i++) data_in_add[i] = (data_type)0;
+
+
+
+
+  #ifdef PRINT_LOG_BUFFERS  
+  printf("  host side vectors for output data validation\n");
+  #endif
+
+  #ifdef PRINT_LOG_BUFFERS  
+  #ifdef DEBUG_VERBOSE
+  printf("  out_conv_cpu vector reset\n");
+  #endif
+  #endif
   out_conv_cpu.reset(O_output * W * H);
   for(size_t i = 0; i < (O_output * W * H); i++) out_conv_cpu[i] = (data_type)0;
+  //out_conv_cpu.reset(size_output_num_values);
+  //for(size_t i = 0; i < size_output_num_values; i++) out_conv_cpu[i] = (data_type)0;
 
-
-  // printf("8\n");
   // output for relu function
+  #ifdef PRINT_LOG_BUFFERS  
+  #ifdef DEBUG_VERBOSE
+  printf("  out_relu_cpu vector reset\n");
+  #endif
+  #endif
+  int size_relu_num_values = O_output * W * H;
   if (enable_relu) {
-    out_relu_cpu.reset(O_output * W * H );
-    for(size_t i = 0; i < (O_output * W * H); i++) out_relu_cpu[i] = (data_type)0;
+    out_relu_cpu.reset(size_relu_num_values );
+    for(size_t i = 0; i < (size_relu_num_values); i++) out_relu_cpu[i] = (data_type)0;
   }
 
-  //printf("9\n");
   // output for pool function
-  if ((enable_maxpooling) || (enable_avgpooling)) {
-    out_pool_cpu.reset(O_output * (W/2) * (H/2));
-  }
+  //if ((enable_maxpooling) || (enable_avgpooling)) {
+  //  out_pool_cpu.reset(O_output * (W/2) * (H/2));
+  //}
+  #ifdef PRINT_LOG_BUFFERS  
+  #ifdef DEBUG_VERBOSE
+  printf("  out_pool_cpu vector reset\n");
+  #endif
+  #endif
+  out_pool_cpu.reset(O_output * W * H);
 
-  if ((enable_batch_norm)) {
+
+
+  #ifdef PRINT_LOG_BUFFERS  
+  #ifdef DEBUG_VERBOSE
+  printf("  out_batch_norm_cpu vector reset\n");
+  #endif
+  #endif
+  //if (enable_batch_norm) {
     out_batch_norm_cpu.reset(O_output * W * H);
-    for(size_t i = 0; i < (O_output * W * H); i++) out_batch_norm_cpu[i] = (data_type)0;
-  }
-  if ((enable_add)) {
-    out_add_cpu.reset(O_output * W * H);
-    for(size_t i = 0; i < (O_output * W * H); i++) out_add_cpu[i] = (data_type)0;
-  }
+    for(size_t i = 0; i < O_output * W * H; i++) out_batch_norm_cpu[i] = (data_type)0;
+  //}
 
+  #ifdef PRINT_LOG_BUFFERS  
+  #ifdef DEBUG_VERBOSE
+  printf("  out_add_cpu vector reset\n");
+  #endif
+  #endif
+  //if ((enable_add)) {
+    out_add_cpu.reset(O_output * W * H);
+    for(size_t i = 0; i < O_output * W * H; i++) out_add_cpu[i] = (data_type)0;
+  //}
+
+  #ifdef PRINT_LOG_BUFFERS  
+  #ifdef DEBUG_VERBOSE
+  printf("  out_cpu vector reset\n");
+  #endif
+  #endif
   out_cpu.reset(O_output * W * H);
-  for(size_t i = 0; i < (O_output * W * H); i++) out_cpu[i] = (data_type)0;
+  for(size_t i = 0; i < O_output * W * H; i++) out_cpu[i] = (data_type)0;
 
 
   // CREATE memroy buffers and link them with the host memory pointer
@@ -129,8 +208,9 @@ void allocate_buffers() {
   #ifdef PRINT_LOG_BUFFERS 
   printf(" create buffer for data_in: %lu values - %lu bytes \n",size_data_num_values, size_data_in_bytes);
   #endif
-  //buffer_i = clCreateBuffer(context, CL_MEM_READ_WRITE, size_data_in_bytes, NULL, &err); // not using host pointer
-  OCL_CHECK(err, buffer_i = clCreateBuffer(context, CL_MEM_READ_ONLY, size_data_in_bytes, NULL, &err)); // not using host pointer
+  buffer_i = clCreateBuffer(context, CL_MEM_READ_WRITE, size_data_in_bytes, NULL, &err); // not using host pointer
+  checkError(err, "buffer_i");
+  //OCL_CHECK(err, buffer_i = clCreateBuffer(context, CL_MEM_READ_ONLY, size_data_in_bytes, NULL, &err)); // not using host pointer
 
   #ifdef PRINT_LOG_BUFFERS 
   printf(" create buffer for data_out: %lu values - %lu bytes \n", size_output_num_values, size_output_in_bytes);
@@ -278,7 +358,7 @@ void copy_to_fpga() {
 
   //batch normalization 
   #ifdef PRINT_LOG_BUFFERS 
-  printf(" enqueue buffer for batch normalization migrate operation\n");
+  printf("enqueue buffer for batch normalization migrate operation\n");
   #endif
   size_t size_bn_num_values = (O_output * 4);
   size_t size_bn_in_bytes = size_bn_num_values * sizeof(bn_t);
@@ -287,7 +367,7 @@ void copy_to_fpga() {
 
   // in_add
   #ifdef PRINT_LOG_BUFFERS 
-  printf(" enqueue buffer for add-data migrate operation\n");
+  printf("enqueue buffer for add-data migrate operation\n");
   #endif
   size_t size_i_add_num_values;
   size_t size_i_add_in_bytes;

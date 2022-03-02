@@ -229,22 +229,47 @@ void init_data() {
     uint WO_final = enable_pooling ? ((W - KW_POOLING)/SW_POOLING + 1) : W;
     uint HO_final = enable_pooling ? ((H - KH_POOLING)/SH_POOLING + 1) : H;
 
+
+
+//  #ifdef DEBUG_ADD_DATA
+  printf("enable_add ->>>  add_data: O_OUTPUT %d  enable_pooling %s  H = %d   W = %d   HO = %d   WO = %d\n", O_output, enable_pooling?"yes":" no", H, W, HO_final, WO_final);
+//  #endif
+
+
+    #ifdef DEBUG_READ_ADD_DATA
+    printf(KCYN "initializing add_data deterministic_values -> %s\n" KNRM,  deterministic_input_values?"yes":" no");
+    printf("add data in matrix for %d output channels channels\n", O);
+    #endif
+    
+
 	  for (int o=0; o<O_output; o++) {
 		  for (int h=0; h<HO_final; h++) {
 			  for (int w=0; w<WO_final; w++) {
 				  //addr = output_data_address(o, h, w, HO_final, WO_final);
           addr = output_data_address(o, h, w);
-
 				  if (o<O) {
 					  data_in_add[addr] = deterministic_input_values?o:dist(gen);
 				  } else {
 					  data_in_add[addr] = 0;
 				  }
+          #ifdef DEBUG_READ_ADD_DATA
+          #ifdef DEBUG_VERBOSE
+          if (o < O)printf("  o = %2d   h = %2d   w = %2d   addr = %2d   add_data_in[%2d] = %2.2f \n", o, h, w, addr, addr, (float)data_in_add[addr]);
+          #endif
+          #endif
 				  addr++;
 			  }
 		  }
 	  }
+    printf("enable_add finalizes\n\n");
   }
+  else {
+    #ifdef DEBUG_READ_ADD_DATA
+    printf(KCYN "add_data kernel dissabled\n" KNRM);
+    #endif
+  }
+  
+
 
   // ----------------- 
   //    BATCH NORM
@@ -266,6 +291,9 @@ void init_data() {
 	  }
   }
   //#endif
+  printf("batch_norm data initialization finalizes\n\n");
+
+
 
   #ifdef DEBUG_BATCH_NORM
   printf(KCYN "batch_norm_values ( %d output channels )\n" KNRM, O_output);
@@ -278,6 +306,9 @@ void init_data() {
   }
   printf("\n");
   #endif
+
+
+  printf("data initialization finalizes\n\n");
 
 
 }

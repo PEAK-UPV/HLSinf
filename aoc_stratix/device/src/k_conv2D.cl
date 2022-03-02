@@ -528,7 +528,7 @@ kernel void padding(uint H, uint W, uint i_iter, uint O_ITER, uint enable_lower_
 
   #ifdef DEBUG_PADDING
     #ifdef DEBUG_VERBOSE
-      printf("PADDING:  O_ITER %2u   i_iter %2u    pixels per i_iter %4u \n", O_ITER, i_iter, (H + 2) * (W + 2));
+      printf("PADDING:  O_ITER %2u   i_iter %2u    pixels per i_iter %4u \n", O_ITER, i_iter, (unsigned)((H + 2) * (W + 2)));
     #endif
   #endif
 
@@ -559,12 +559,12 @@ kernel void padding(uint H, uint W, uint i_iter, uint O_ITER, uint enable_lower_
     
           #ifdef DEBUG_PADDING
             #ifdef DEBUG_VERBOSE
-              uint i_it = i / ((HH) * (WW));
-              uint px   = i % ((HH) * (WW));
-              uint ch_low = i_it * CPI;
-              uint ch_hi  = (i_it + 1) * CPI - 1;
+              uint i_it = (unsigned)(i / ((HH) * (WW)));
+              uint px   = (unsigned)(i % ((HH) * (WW)));
+              uint ch_low = (unsigned)(i_it * CPI);
+              uint ch_hi  = (unsigned)((i_it + 1) * CPI - 1);
               printf("PADDING: o_it: %2u   i_it: %2u   px %2u [%2u, %2u]: ", o_iter, i_it, px, ch_low, ch_hi);
-              for (uint p = 0; p < CPI; p++) printf("  %8.2f", px_data.pixel[p]);
+              for (uint p = 0; p < CPI; p++) printf("  %8.2f",(float)px_data.pixel[p]);
               printf("\n");
             #endif
           #endif
@@ -851,7 +851,7 @@ kernel void add (uint H, uint W, uint i_iter, uint O_ITER) {
   
       #ifdef DEBUG_VERBOSE
       for(uint cpo = 0; cpo<CPO; cpo++){
-        printf("Channel cpo = %d: ", cpo + (CPO* o_iter));
+        printf("Channel cpo = %u: ", (unsigned)(cpo + (CPO* o_iter)));
         for(uint it = 0; it<num_iterations; it++){
           printf("%6.2f ", (float)buff_o_channels[it].pixel[cpo]);
         }
@@ -885,7 +885,7 @@ kernel void add (uint H, uint W, uint i_iter, uint O_ITER) {
         // px       = datos del mmul
         #ifdef DEBUG_ADD
           #ifdef DEBUG_VERBOSE
-            printf("ADD:  o_iter %2u  i_iter %2u  it %2u [0, HxW[\n", o_iter, i_it, it );
+            printf("ADD:  o_iter %2u  i_iter %2u  it %2u [0, HxW[\n", (unsigned)o_iter, (unsigned)i_it, (unsigned)it );
             printf("ADD:  px (from mul stage) :  ");
             for (uint c = 0; c < CPO; c++) printf ("  %8.2f", (float)px.pixel[c]);
             printf("\n");
@@ -903,7 +903,7 @@ kernel void add (uint H, uint W, uint i_iter, uint O_ITER) {
         if(i_it ==(i_iter-1)){
           #ifdef DEBUG_ADD
           #ifdef DEBUG_VERBOSE
-          printf("ADD:  writting adder out channel for it %2u - channels %2u to %2u",it,  (o_iter*CPO), (o_iter*CPO) + CPO - 1 );
+          printf("ADD:  writting adder out channel for it %2u - channels %2u to %2u",(unsigned)it,  (unsigned)(o_iter*CPO), (unsigned)((o_iter*CPO) + CPO - 1 ));
           for(uint c = 0; c < CPO; c++) printf("  %8.2f", data_out.pixel[c]);
           printf ("\n");
           #endif
@@ -1277,13 +1277,19 @@ kernel void batch_norm (uint H, uint W, uint enable_batch_norm, uint enable_maxp
 
   uint size_out = HO * WO;
   uint iterations = size_out; //num iteratios per o_iter pass
+
+   #ifdef DEBUG_ADD_DATA
+  printf("add_data: O_ITER %u  enable_pooling %s   H0= %u  W0= %u   iterations %u\n", O_ITER, enable_pooling?"yes":" no", HO, WO, iterations);
+  #endif
+
+
   // ----------------------------------------------------------------------------------------------------
 
   for (uint o_iter = 0; o_iter < O_ITER; o_iter++){
-    pixel_out_t  data_in;
+    pixel_out_t  data_in; // data from previous convolution stage, currently previous stage is pooling
     pixel_out_t  data_out;
     uint data_size = iterations;
-    bnp_st_t     bn_values_in;
+    bnp_st_t     bn_values_in; // batch normalaziton values, to perform bn stage
     
     if (enable_batch_norm) {
       bn_values_in = read_channel_intel(CH_BATCHNORM_BN_IN);
@@ -1342,8 +1348,8 @@ kernel void batch_norm (uint H, uint W, uint enable_batch_norm, uint enable_maxp
       #ifdef DEBUG_BATCH_NORM
       #ifdef DEBUG_VERBOSE
       printf("Batch Norm (pixel %d): \n", i);
-      for (int x = 0; x < CPI; x++) {
-        printf("   cpi %d : in %f out %f\n", x, float(data_in.pixel[x]), float(data_out.pixel[x]));
+      for (int x = 0; x < CPO; x++) {
+        printf("   cpi %d : in (from pooling): %6.2f   out (to data_add):  %6.2f\n", x, (float)data_in.pixel[x], (float)data_out.pixel[x]);
       }
       #endif
       #endif
@@ -1369,11 +1375,10 @@ kernel void add_data(uint H, uint W, uint enable_add_data, uint enable_maxpoolin
 
   #ifdef DEBUG_ADD_DATA
   printf("add_data: start\n");
-  printf("  num_pixels : %d\n", num_pixels);
   #endif
 
   pixel_out_t data_in_r;
-  pixel_out_t data_in_pool;
+  pixel_out_t data_in_prev;
   pixel_out_t data_out;
   pixel_out_t px_o_zero;
 
@@ -1385,8 +1390,12 @@ kernel void add_data(uint H, uint W, uint enable_add_data, uint enable_maxpoolin
   uint iterations = HO * WO; //num iteratios per o_iter pass
   // ----------------------------------------------------------------------------------------------------
 
+//  #ifdef DEBUG_ADD_DATA
+  printf("add_data: O_ITER %u  enable_pooling %s   H0= %u  W0= %u   iterations %u\n", O_ITER, enable_pooling?"yes":" no", HO, WO, iterations);
+//  #endif
+
   px_o_zero_init_loop:
-  #pragma unroll CPI
+  #pragma unroll
   for (uint o=0; o<CPO; o++){
     px_o_zero.pixel[o] = (data_type)0.f;
   }
@@ -1401,7 +1410,7 @@ kernel void add_data(uint H, uint W, uint enable_add_data, uint enable_maxpoolin
     for (int i=0; i < iterations; i++) {
       // Let's read the input data
       
-      data_in_pool = read_channel_intel(CH_ADDDATA_IN); // Data from previous stage, pool_pooling
+      data_in_prev = read_channel_intel(CH_ADDDATA_IN); // Data from previous stage, pool_pooling
 
       if(enable_add_data) {
         data_in_r  = read_channel_intel(CH_ADDDATA_ADD_IN); //data from memory to add
@@ -1416,15 +1425,15 @@ kernel void add_data(uint H, uint W, uint enable_add_data, uint enable_maxpoolin
         bn_t        v_in_b;
         add_data_t  v_out;
         v_in_a = (data_type)data_in_r.pixel[cpo];
-        v_in_b = (data_type)data_in_pool.pixel[cpo];
+        v_in_b = (data_type)data_in_prev.pixel[cpo];
         v_out = v_in_a + v_in_b;
         data_out.pixel[cpo] = v_out;
       }
       
       #ifdef DEBUG_ADD_DATA
        printf("ADD_DATA (pixel %d):\n", i);
-       for (int x=0; x<CPI; x++) {
-          printf("  cpi %d : in_a %f in_b %f out %f\n", x, float(data_in_r.pixel[x]),float(data_in_stm.pixel[x]), float(data_out.pixel[x]));
+       for (int x=0; x<CPO; x++) {
+          printf("  cpi %d : in_a %f in_b %f out %f\n", x, (float)data_in_r.pixel[x],(float)data_in_prev.pixel[x], (float)data_out.pixel[x]);
        }
       #endif
       write_channel_intel(CH_ADDDATA_OUT,data_out);

@@ -29,7 +29,8 @@ QRT_REF = /opt/intelFPGA_pro/19.3
 QRT_DIR = ${IQ_BASE_DIR}
 CMN_DIR = ${IQ_BASE_DIR}/hld/examples_aoc/common
 
-DEBUG = 1
+DEBUG=1
+VERBOSE=0
 
 ifeq ($(VERBOSE),1)
 ECHO := 
@@ -83,9 +84,9 @@ endif
 CXXFLAGS += -fstack-protector
 CXXFLAGS += -D_FORTIFY_SOURCE=2
 CXXFLAGS += -Wformat -Wformat-security
+CXXFLAGS += -Werror=return-type
 CXXFLAGS += -fPIE
 CXXFLAGS += -std=c++11 -O3
-
 # We must force GCC to never assume that it can shove in its own
 # sse2/sse3 versions of strlen and strcmp because they will CRASH.
 # Very hard to debug!

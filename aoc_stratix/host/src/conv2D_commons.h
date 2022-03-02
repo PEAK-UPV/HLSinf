@@ -3,40 +3,42 @@
 
 
 #define RANDOM_GEN_SEED_FIXED 1
-
-#define DEBUG_VERBOSE
-// host side debug 
-#define DEBUG_LOG_INIT
-#define PRINT_LOG_BUFFERS
-#define DEBUG_DATA_DIN
-#define DEBUG_DATA_KERNEL
-#define DEBUG_DATA_DOUT
-#define DEBUG_DATA_BIAS
 //
-// Kernel side
-#define DEBUG_READ_BIAS
-#define DEBUG_READ_KERNEL
-#define DEBUG_READ_DATA
-#define DEBUG_HOST_KERNELS
-//#define DEBUG_SERIALIZE
-//#define DEBUG_JOIN
-#define DEBUG_INPUT_BUFFER
-#define DEBUG_PADDING
-#define DEBUG_CVT
-#define DEBUG_MUL
-#define DEBUG_ADD
-//#define DEBUG_SPLIT
-//#define DEBUG_BLOCK
-//#define DEBUG_RELU
-#define DEBUG_POOL
+//#define DEBUG_VERBOSE
+//// host side debug 
+//#define DEBUG_LOG_INIT
+//#define PRINT_LOG_BUFFERS
+//#define DEBUG_DATA_DIN
+//#define DEBUG_DATA_KERNEL
+//#define DEBUG_DATA_DOUT
+//#define DEBUG_DATA_BIAS
+////
+//// Kernel side
+//#define DEBUG_READ_BIAS
+//#define DEBUG_READ_KERNEL
+//#define DEBUG_READ_DATA
+////#define DEBUG_READ_BATCH_NORM
+//#define DEBUG_READ_ADD_DATA
+//#define DEBUG_HOST_KERNELS
+////#define DEBUG_SERIALIZE
+////#define DEBUG_JOIN
+//#define DEBUG_INPUT_BUFFER
+//#define DEBUG_PADDING
+//#define DEBUG_CVT
+//#define DEBUG_MUL
+//#define DEBUG_ADD
+////#define DEBUG_SPLIT
+////#define DEBUG_BLOCK
+////#define DEBUG_RELU
+//#define DEBUG_POOL
 //#define DEBUG_ADD_DATA
-#define DEBUG_BATCH_NORM
-#define DEBUG_WRITE_DATA
-
-// host side (again)
-#define DEBUG_CPU
-//#define DEBUG_CPU_MUL
-#define DEBUG_CHECK
+//#define DEBUG_BATCH_NORM
+//#define DEBUG_WRITE_DATA
+//
+//// host side (again)
+//#define DEBUG_CPU
+////#define DEBUG_CPU_MUL
+//#define DEBUG_CHECK
 
 
 

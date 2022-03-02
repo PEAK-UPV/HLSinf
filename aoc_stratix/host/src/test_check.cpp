@@ -61,7 +61,7 @@ int check_result(data_type *max_difference, int *num_elements_differ) {
           diff = data_type(fabs(float(out_cpu[addr_o]) - float(out[addr_o])));
           #ifdef DEBUG_CHECK
           #ifdef DEBUG_VERBOSE
-          if(diff > epsilon) printf("o %2d  h %2d  w %2d  addr %3d  epsilon %2.2f   diff %2.2f   cpu %2.2f   mem %2.2f\n", cout, h, w, addr_o, epsilon, diff, out_conv_cpu[addr_o], out[addr_o]);
+          if(diff > epsilon) printf("o %2d  h %2d  w %2d  addr %3d  epsilon %2.2f   diff %2.2f   cpu %2.2f   mem %2.2f\n", cout, h, w, addr_o, epsilon, diff, out_cpu[addr_o], out[addr_o]);
           #endif
           #endif
           if (float(diff) > float(epsilon)) {
@@ -84,15 +84,14 @@ int check_result(data_type *max_difference, int *num_elements_differ) {
         printf ("H %2d ", h);
         for (int w=0; w<W; w++) {
           // data_out pixel position
-          int addr_o = output_data_address(cout, h, w);
-          data_type diff;
-          if (enable_relu) diff = data_type(fabs(float(out_relu_cpu[addr_o]) - float(out[addr_o])));
-          else diff = fabs(float(out_cpu[addr_o]) - float(out[addr_o]));
+          int       addr_o = output_data_address(cout, h, w);
+          data_type diff   = fabs(float(out_cpu[addr_o]) - float(out[addr_o]));
+
           if(diff > epsilon) {
-            printf(KRED "  %10.2f (%10.2f) " KNRM, out[addr_o], out_conv_cpu[addr_o]);
+            printf(KRED "  %10.2f (%10.2f) " KNRM, out[addr_o], out_cpu[addr_o]);
           }
           else {
-            printf("  %10.2f (%10.2f) ", out[addr_o], out_conv_cpu[addr_o]);
+            printf("  %10.2f (%10.2f) ", out[addr_o], out_cpu[addr_o]);
           }
         }
         printf("\n");
@@ -105,77 +104,3 @@ int check_result(data_type *max_difference, int *num_elements_differ) {
   }
 }
 
-
-
-/*
-// this is a jm10 custom implementation for the  aoc migration process early stages
-int check_result(data_type *max_difference, int *num_elements_differ) {
-  *num_elements_differ = 0;
-  *max_difference = data_type(0);
-  float epsilon = EPSILON_VALUE;
-
-  printf(KYEL "WARNING\n" KNRM);
-  printf(" @check_result, custom implementation for the  aoc migration process early stages\n");
-
-  printf("\n");
-  printf(KCYN "DATA in - data matrix sent from HOST to FPGA\n" KNRM);
-
-  for (int i=0; i<I_input; i++) {
-    printf ("I channel  #%d\n", i);
-    printf("W  ");
-    for (int w=0; w<W; w++) printf(" %5d ", w);
-    printf("\n");
-
-    for (int h=0; h<H; h++) {
-      printf ("H %2d ", h);
-      for (int w=0; w<W; w++) {       
-        int addr = input_data_address(i, h, w);
-        printf("  %2.2f ", data_in[addr]);
-      }
-      printf("\n");
-    }
-  }
-  printf("\n");
-  printf(KCYN "DATA out - data matrix sent from FPGA to HOST\n" KNRM);
-
-  for (int i=0; i<O_output; i++) {
-    printf ("O channel  #%d\n", i);
-    printf("W  ");
-    for (int w=0; w<W; w++) printf(" %5d ", w);
-    printf("\n");
-
-    for (int h=0; h<H; h++) {
-      printf ("H %2d ", h);
-      for (int w=0; w<W; w++) {       
-        int addr = input_data_address(i, h, w);
-        printf("  %2.2f ", data_in[addr]);
-      }
-      printf("\n");
-    }
-  }
-
-
-
-	for (int cout=0; cout < O_output; cout++) {
-      for (int h=0; h<H; h++) {
-        for (int w=0; w<W; w++) {
-          // data_out pixel position
-          int addr_o = output_data_address(cout, h, w);
-          data_type diff;
-          float expected_value = (data_in[addr_o] * AOC_VALUE_MUL) + AOC_VALUE_ADD; 
-          diff = fabs(float(expected_value ) - float(out[addr_o]));
-          #ifdef DEBUG_CHECK
-          printf("o %2d  h %2d  w %2d  addr %3d  epsilon %2.2f   diff %2.2f   cpu %2.2f   mem %2.2f\n", cout, h, w, addr_o, epsilon, diff, expected_value, out[addr_o]);
-          #endif
-          if (float(diff) > float(epsilon)) {
-            (*num_elements_differ)++;
-            if (*max_difference < diff) *max_difference = diff;
-          }
-        }
-      }
-    }
-
-
-  return (*num_elements_differ != 0);
-}
-*/
