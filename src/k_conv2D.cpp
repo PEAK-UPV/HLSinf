@@ -125,7 +125,7 @@ void k_conv2D(read_block_t *ptr_data,
             int enable_add, 
             #endif
             int min_clip, int max_clip, int dir_shift, int pos_shift, int enable_upsize,
-            int write_to_weight_buffer, int read_from_weight_buffer, int first_row_weight_buffer) {
+            int write_to_weight_buffer, int read_from_weight_buffer, int first_row_weight_buffer, int read_from_obuf, int write_to_obuf) {
 
 	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_data         depth=DATA_IN_PORT_DEPTH    offset=slave bundle=gmem)
   #ifdef DIRECT_CONV    
@@ -266,6 +266,12 @@ void k_conv2D(read_block_t *ptr_data,
     DO_PRAGMA(HLS STREAM variable=out_write depth=STREAMS_DEPTH)
     #endif
 
+    static hls::stream<dout_st> out_write_to_obuf;
+    DO_PRAGMA(HLS STREAM variable=out_write_to_obuf depth=STREAMS_DEPTH)
+
+    static hls::stream<din_st> out_buffer;
+    DO_PRAGMA(HLS STREAM variable=out_buffer depth=STREAMS_DEPTH)
+
     // BATCH NORM support
 	  #ifdef USE_BATCH_NORM
     static hls::stream<dout_st>  out_batch_norm;
@@ -287,9 +293,10 @@ void k_conv2D(read_block_t *ptr_data,
 
     //printf("I_ITER %d W %d rows %d num_extra_rows %d read_pixels %d read_pixels_total %d\n", I_ITER, W, rows, num_extra_rows, read_pixels, read_pixels_total);
     int enable_buffer            = (read_pixels_total <= INPUT_BUFFER_SIZE);
-    int write_to_input_buffer    = enable_buffer && (o_iter == 0) && (O_ITER>1);
+    int write_to_input_buffer    = enable_buffer && (o_iter == 0);
     int read_from_input_buffer   = enable_buffer && (o_iter != 0);
-    int enable_read              = (o_iter == 0) || !enable_buffer;
+    int copy_obuf_to_ibuf        = read_from_obuf && (o_iter == 0);
+    int enable_read              = !read_from_obuf && ((o_iter == 0) || !enable_buffer);
     //printf("enable_buffer %d write_to_input_buffer %d read_from_input_buffer %d enable_read %d\n", enable_buffer, write_to_input_buffer, read_from_input_buffer, enable_read);
 
     int enable_read_kernel = !read_from_weight_buffer;
@@ -342,7 +349,7 @@ void k_conv2D(read_block_t *ptr_data,
     // -------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // Read data and batch normalization vectors
     read_data_channels_gihwcpi(read_pixels, offset_read_data_channel, I_ITER, offset_data_in_group_cpi, ptr_data, out_read_data, enable_read);
-    input_buffer(read_pixels_total, write_to_input_buffer, read_from_input_buffer, out_read_data, out_read_data_1);
+    input_buffer(read_pixels_total, write_to_input_buffer, read_from_input_buffer, copy_obuf_to_ibuf, out_read_data, out_buffer, out_read_data_1);
     #ifdef USE_ADD
     read_input_add_gihwcpi(read_pixels_add, o_iter_read_add_offset, ptr_data_add, out_read_data_add, enable_add);
     #endif
@@ -384,8 +391,11 @@ void k_conv2D(read_block_t *ptr_data,
     #endif
     
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    // write to memory
-	  write_data_channels_gihwcpi(write_pixels, o_iter_write_offset, ptr_out, out_write);
+    // write to memory and output buffer
+	  write_data_channels_gihwcpi(write_pixels, o_iter_write_offset, ptr_out, out_write, write_to_obuf, out_write_to_obuf);
+
+    int read_obuf = (o_iter == 0) && read_from_obuf; // only first iteration we completely read from obuf (the obuf is stored in ibuf in the first o_iter iteration)
+	  output_buffer(write_pixels, read_pixels_total, write_to_obuf, read_obuf, out_write_to_obuf, out_buffer); 
 
  } // end o_iter
 

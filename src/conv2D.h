@@ -41,7 +41,7 @@
 // -----------------------------------------------------------------------------------------------------------
 // defines for debug (DEBUG_ALL activates all debug defines)
 // -----------------------------------------------------------------------------------------------------------
-//#define DEBUG_ALL
+#define DEBUG_ALL
 //#define DEBUG_VERBOSE
 //#define DEBUG_READ_BIAS
 //#define DEBUG_READ_KERNEL
@@ -62,6 +62,8 @@
 //#define DEBUG_POOL
 //#define DEBUG_BATCH_NORM
 //#define DEBUG_ADD_DATA
+//#define DEBUG_WEIGHT_BUFFER
+//#define DEBUG_OUTPUT_BUFFER
 //#define DEBUG_CPU
 
 // -----------------------------------------------------------------------------------------------------------
@@ -689,9 +691,9 @@
 #define HMAX                       256
 #define READ_BURST_SIZE             16
 #define STREAMS_DEPTH               16
-#define INPUT_BUFFER_SIZE         8192 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define INPUT_BUFFER_SIZE         8192
 #define WEIGHT_BUFFER_SIZE        5000
-#define EPSILON_VALUE          0.00001
+#define EPSILON_VALUE            0.001
 #define MIN_DATA_TYPE_VALUE  -99999999
 #define READ_BLOCK_SIZE             16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 #define WRITE_BLOCK_SIZE            16   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
@@ -988,6 +990,8 @@
 #define DEBUG_BATCH_NORM
 #define DEBUG_ADD_DATA
 #define DEBUG_UPSIZE
+#define DEBUG_WEIGHT_BUFFER
+#define DEBUG_OUTPUT_BUFFER
 #define DEBUG_CPU
 #endif
 
@@ -1054,7 +1058,8 @@ extern "C" void k_conv2D(read_block_t *ptr_data,
                          #endif
                          int min_clip, int max_clip, 
                          int dir_shift, int pos_shift, int enable_upsize,
-                         int write_to_weight_buffer, int read_from_weight_buffer, int first_row_weight_buffer);
+                         int write_to_weight_buffer, int read_from_weight_buffer, int first_row_weight_buffer,
+			 int read_from_obuf, int write_to_obuf);
 
 void read_bias                    (int offset_bias, b_st *b_ptr, hls::stream<b_st> &out);
 void read_batch_norm              (int offset_batchnorm, bnp_st *b_ptr, hls::stream<bnp_st> &out);
@@ -1062,8 +1067,9 @@ void read_kernel                  (int enable, int I_ITER, int offset_kernel, w_
 void weight_buffer                (int I_ITER, int write_to_buff, int read_from_buff, int offset_buff, hls::stream<w_st> &in, hls::stream<w_st> &out);
 void read_data_channels_gihwcpi   (int num_pixels, int offset, int I_ITER, int cpi_group_offset, read_block_t *ptr, hls::stream<din_st> &out, int enable);
 void read_input_add_gihwcpi       (int num_pixels, int offset, write_block_t *ptr, hls::stream<dout_st> &out, int enable);
-void write_data_channels_gihwcpi  (int num_pixels, int offset, write_block_t *ptr, hls::stream<dout_st> &in);
-void input_buffer                 (int num_pixels, int write_to_buff, int read_from_buff, hls::stream<din_st> &in, hls::stream<din_st> &out);
+void write_data_channels_gihwcpi  (int num_pixels, int offset, write_block_t *ptr, hls::stream<dout_st> &in, int write_to_obuf, hls::stream<dout_st> &out);
+void input_buffer                 (int num_pixels, int write_to_buff, int read_from_buff, int copy_from_obuf, hls::stream<din_st> &in, hls::stream<din_st> &in_obuf, hls::stream<din_st> &out);
+void output_buffer                (int num_writes, int num_reads, int write, int read, hls::stream<dout_st> &in, hls::stream<din_st> &out);
 void relu                         (int enable_relu, int enable_clipping, int enable_shift, float relu_factor, int min_clip, int max_clip, int direction_shift, int pos_shift, int num_pixels, hls::stream<conv_st> &in, hls::stream<relu_st> &out);
 void stm                          (int enable_stm, int num_pixels, hls::stream<relu_st> &in, hls::stream<stm_st> &out);
 void pooling                      (int H, int W, int enable_maxpooling, int enable_avgpooling, hls::stream<stm_st> &input, hls::stream<pool_st> &output);

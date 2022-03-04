@@ -153,7 +153,17 @@ Main dataflow
 
 Next figure shows the global dataflow. Since HLSinf supports multiple data types along the dataflow it instantiates, in the figue we can see 
 the different data types defined. Data types are indicated as *_t whereas structs are indicated as *_st.
- 
+
+                      --------
+                      |      |
+                      |      |
+                      | obuf |<------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                      |      |                                                                                                                                                                                                |
+                      |      |                                                                                                                                                                                                |
+                      --------                                                                                                                                                                                                |
+                         | din_t                                                                                                                                                                                              |
+                         | din_st                                                                                                                                                                                             | dout_t
+                         v                                                                                                                                                                                                    | dout_st
 --------------        --------        -------------------------------------------------------         ---------         -------        ----------------------         ------        -------         -----------          ------------
 |            |        |      |        |                                                     |         |       |         |     |        |                    |         |    |        |     |         |         |          |          |
 |            | din_t  |      | din_t  |     din_t        conv_cvt_t        conv_mul_t       | conv_t  |       | relu_t  |     | stm_t  |     pool_cvt_t     | pool_t  |    | dout_t |     | dout_t  |         | dout_t   |          |

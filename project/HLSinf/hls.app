@@ -16,7 +16,6 @@
         <file name="../../../src/test_arguments.cpp" sc="0" tb="1" cflags=" -DHLSINF_1_15 -Wno-unknown-pragmas" csimflags=" -Wno-unknown-pragmas" blackbox="false"/>
         <file name="../../../src/data_test.cpp" sc="0" tb="1" cflags=" -DHLSINF_1_15 -Wno-unknown-pragmas" csimflags=" -Wno-unknown-pragmas" blackbox="false"/>
         <file name="../src/batch_normalization.cpp" sc="0" tb="false" cflags="-DHLSINF_1_15" csimflags="" blackbox="false"/>
-        <file name="../src/stm.cpp" sc="0" tb="false" cflags="-DHLSINF_1_15" csimflags="" blackbox="false"/>
         <file name="../src/write.cpp" sc="0" tb="false" cflags="-DHLSINF_1_15" csimflags="" blackbox="false"/>
         <file name="../src/winograd_convolution.cpp" sc="0" tb="false" cflags="-DHLSINF_1_15" csimflags="" blackbox="false"/>
         <file name="../src/serialization.cpp" sc="0" tb="false" cflags="-DHLSINF_1_15" csimflags="" blackbox="false"/>
@@ -31,6 +30,7 @@
         <file name="../src/direct_convolution.cpp" sc="0" tb="false" cflags="-DHLSINF_1_15" csimflags="" blackbox="false"/>
         <file name="../src/cvt.cpp" sc="0" tb="false" cflags="-DHLSINF_1_15" csimflags="" blackbox="false"/>
         <file name="../src/conv2D.h" sc="0" tb="false" cflags="-DHLSINF_1_15" csimflags="" blackbox="false"/>
+        <file name="../src/stm.cpp" sc="0" tb="false" cflags="-DHLSINF_1_15" csimflags="" blackbox="false"/>
         <file name="../src/add_data.cpp" sc="0" tb="false" cflags="-DHLSINF_1_15" csimflags="" blackbox="false"/>
         <file name="../src/add.cpp" sc="0" tb="false" cflags="-DHLSINF_1_15" csimflags="" blackbox="false"/>
     </files>
