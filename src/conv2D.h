@@ -28,6 +28,7 @@
 // Each configuration is optimized for the specific targeted board
 // -----------------------------------------------------------------------------------------------------------
 
+#define HLSINF_1_0
 //#define HLSINF_1_0  // U200, 4x4,  FP32:             DIRECT_CONV, RELU, STM, CLIPPING,        POOLING, BN, ADD, UPSIZE
 //#define HLSINF_1_1  // U200, 8x8,  MIXED PRECISSION: DIRECT_CONV, RELU,      CLIPPING, SHIFT, POOLING, BN, ADD, UPSIZE
 //#define HLSINF_1_2  // U200, 16x8, MIXED PRECISSION: DIRECT_CONV, RELU,      CLIPPING, SHIFT, POOLING, BN, ADD, UPSIZE
@@ -41,7 +42,7 @@
 // -----------------------------------------------------------------------------------------------------------
 // defines for debug (DEBUG_ALL activates all debug defines)
 // -----------------------------------------------------------------------------------------------------------
-#define DEBUG_ALL
+//#define DEBUG_ALL
 //#define DEBUG_VERBOSE
 //#define DEBUG_READ_BIAS
 //#define DEBUG_READ_KERNEL
@@ -91,6 +92,7 @@
 #define READ_BURST_SIZE             16
 #define STREAMS_DEPTH               16
 #define INPUT_BUFFER_SIZE        16384 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define WEIGHT_BUFFER_SIZE        5000
 #define EPSILON_VALUE          0.00001
 #define MIN_DATA_TYPE_VALUE   -9999999
 #define READ_BLOCK_SIZE             16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
@@ -923,8 +925,8 @@
 // -----------------------------------------------------------------------------------------------------------
 // defines for C simulation and C/RTL co-simulation
 // -----------------------------------------------------------------------------------------------------------
-#define W_SIM         256 //WMAX
-#define H_SIM         256 //HMAX
+#define W_SIM         64 //WMAX
+#define H_SIM         64 //HMAX
 #define I_SIM         CPI //I_REFERENCE
 #define O_SIM         CPO //O_REFERENCE
 #define PT_SIM        1   
@@ -950,7 +952,7 @@
 #define DW_KERNEL_PORT_DEPTH I_SIM * 9
 #define PW_KERNEL_PORT_DEPTH O_SIM * (I_SIM / CPI)
 #define BIAS_PORT_DEPTH      O_SIM / CPO
-#define BATCH_MORM_VAL_DEPTH O_SIM * 4
+#define BATCH_MORM_VAL_DEPTH O_SIM * 4 / CPI
 
 // -----------------------------------------------------------------------------------------------------------
 // Defines for the CONV layer

@@ -105,8 +105,8 @@ void output_buffer(int num_writes, int num_reads, int write, int read, hls::stre
 
     din_st px = buffer[read_ptr];
 
-    if (remaining_reads) successful_write = !out.full();
-    if (remaining_writes) successful_read = !in.empty();
+    if (remaining_reads) successful_write = !out.full(); else successful_write = 0;
+    if (remaining_writes) successful_read = !in.empty(); else successful_read = 0;
     //
     if (successful_read) pxx = in.read();
     if (successful_read) { px2 = *(din_st *)&pxx; buffer[write_ptr] = px2; }
@@ -117,7 +117,10 @@ void output_buffer(int num_writes, int num_reads, int write, int read, hls::stre
       #endif
     }
     //
-    if (successful_write) out.write(px);
+    if (successful_write) {
+      out.write(px);
+    }
+
     if (successful_write) {
       #ifdef DEBUG_OUTPUT_BUFFER
       printf("read performed (remaining %d)\n", remaining_reads);
