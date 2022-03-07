@@ -20,7 +20,7 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
   int write_to_weight_buffer = 0;
   int read_from_weight_buffer = 0;
   int first_row_weight_buffer = 0;
-  int read_from_obuf = 1;
+  int read_from_obuf = 0;
   int write_to_obuf =  0;
 
   // each kernel processes a group of output iterations

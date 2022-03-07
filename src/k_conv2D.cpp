@@ -11,7 +11,7 @@
 
 #include <hls_stream.h>
 
-//#include "add_data.cpp"
+#include "add_data.cpp"
 
 void set_write_enables(int enable_write[CPO], int o_channel, int O) {
   set_write_enables_loop:

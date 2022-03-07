@@ -133,6 +133,7 @@
 #define READ_BURST_SIZE                  16
 #define STREAMS_DEPTH                    16
 #define INPUT_BUFFER_SIZE             32768 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define WEIGHT_BUFFER_SIZE             5000
 #define EPSILON_VALUE               0.00001
 #define MIN_DATA_TYPE_VALUE               0
 #define READ_BLOCK_SIZE                  64   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
