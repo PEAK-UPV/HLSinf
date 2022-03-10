@@ -20,8 +20,12 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
   int write_to_weight_buffer = 0;
   int read_from_weight_buffer = 0;
   int first_row_weight_buffer = 0;
-  int read_from_obuf = 0;
-  int write_to_obuf =  0;
+  int read_from_mem = 1;
+  int read_from_b0 = 0;
+  int read_from_b1 = 0;
+  int write_to_mem = 1;
+  int write_to_b0 = 0;
+  int write_to_b1 = 0;
 
   // each kernel processes a group of output iterations
   // there must be at least one iteration per kernel, if not then
@@ -104,8 +108,12 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, write_to_weight_buffer));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, read_from_weight_buffer));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, first_row_weight_buffer));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, read_from_obuf));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, write_to_obuf));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, read_from_mem));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, read_from_b0));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, read_from_b1));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, write_to_mem));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, write_to_b0));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, write_to_b1));
     OCL_CHECK(err, err = q.enqueueNDRangeKernel(kernel_conv2d[k], 0, 1, 1, NULL, &kernel_events[k]));
     set_callback(kernel_events[k], "ooo_queue");
     #else
@@ -136,7 +144,7 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
         #ifdef USE_ADD
         enable_add, 
         #endif
-        min_clip, max_clip, dir_shift, pos_shift, enable_upsize, write_to_weight_buffer, read_from_weight_buffer, first_row_weight_buffer, read_from_obuf, write_to_obuf);
+        min_clip, max_clip, dir_shift, pos_shift, enable_upsize, write_to_weight_buffer, read_from_weight_buffer, first_row_weight_buffer, read_from_mem, read_from_b0, read_from_b1, write_to_mem, write_to_b0, write_to_b1);
     #endif
   }
 

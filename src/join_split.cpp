@@ -11,241 +11,121 @@
 
 #include <hls_stream.h>
 
-void input_buffer(int read_pixels_total, int write_to_buff, int read_from_buff, int copy_from_obuf, hls::stream<din_st> &in, hls::stream<din_st> &in_obuf, hls::stream<din_st> &out) {
 
-  din_st px_input;
-  din_st px_buff;
-  DO_PRAGMA(HLS AGGREGATE variable=px_input)
-  DO_PRAGMA(HLS AGGREGATE variable=px_buff)
+void buffer1(int num_accesses, int read, int write, int first_write_address, hls::stream<dout_st> &in, hls::stream<din_st> &out) {
 
-  static din_st buffer[INPUT_BUFFER_SIZE];
-  DO_PRAGMA(HLS aggregate variable=buffer)
+  static din_st buff1[DATA_BUFFER_SIZE];
+  DO_PRAGMA(HLS aggregate    variable=buff1)
   #ifdef ALVEO_U200
-  DO_PRAGMA(HLS bind_storage variable=buffer type=ram_t2p impl=uram)
+  DO_PRAGMA(HLS bind_storage variable=buff1 type=ram_s2p impl=uram)
   #endif
   #ifdef ALVEO_U280
-  DO_PRAGMA(HLS bind_storage variable=buffer type=ram_t2p impl=uram)
+  DO_PRAGMA(HLS bind_storage variable=buff1 type=ram_s2p impl=uram)
   #endif
 
-  #ifdef DEBUG_INPUT_BUFFER
-  printf("INPUT_BUFFER: starts (%d pixels; write_to_buff %d; read_from_buff %d. Input buffer size %d)\n", read_pixels_total, write_to_buff, read_from_buff, INPUT_BUFFER_SIZE);
-  printf("INPUT_BUFFER: copy from obuf %d\n", copy_from_obuf);
-  printf("INPUT_BUFFER: sizeof %d\n", sizeof(buffer));
-  #endif
+#ifdef DEBUG_BUFFER
+  printf("BUFFER1: [START]\n");
+  printf("BUFFER1: num_accesses: %d, read %d\n", num_accesses, read);
+#endif
 
-  input_buffer_loop_pixels:
-  for (int p=0; p<read_pixels_total; p++) {
-	DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE * W_REFERENCE * H_REFERENCE / CPI)
-    DO_PRAGMA(HLS pipeline)
+  if (read) {
+	  int read_ptr = 0;
+	  for (int I=0; I<num_accesses; I++) {
+        #pragma HLS PIPELINE II=1
+		din_st PX = buff1[read_ptr];
+		out << PX;
+		read_ptr++;
+	  }
+  }
 
-	if (!read_from_buff) {
-		if (!copy_from_obuf) {
-			px_input = in.read();
-		} else {
-			px_input = in_obuf.read();
-		}
-	} else {
-		px_buff = buffer[p];
+  if (write) {
+	  int write_ptr = first_write_address;
+	  for (int I=0; I<num_accesses; I++) {
+        #pragma HLS PIPELINE II=1
+		dout_st PX = in.read();
+		din_st PX2 = *(din_st *)&PX;
+		buff1[write_ptr] = PX2;
+		write_ptr++;
+	  }
+  }
+
+#ifdef DEBUG_BUFFER
+  printf("BUFFER1: [END]\n");
+#endif
+
+}
+
+void mux(int num_accesses, int SEL, hls::stream<din_st> &in0, hls::stream<din_st> &in1, hls::stream<din_st> &out) {
+	for (int I = 0; I < num_accesses; I++) {
+        #pragma HLS PIPELINE II=1
+		din_st PX;
+		if (SEL == 0) PX = in0.read(); else PX = in1.read();
+		out << PX;
 	}
-
-	if (write_to_buff)  {
-    buffer[p] = px_input;
-
-    #ifdef DEBUG_INPUT_BUFFER
-    printf("BUFFER: write to buff p=%d ", p);
-    for (int x=0; x<CPI; x++) printf("%f ", float(px_input.pixel[x]));
-    printf(" FROM BUFF: ");
-    for (int x=0; x<CPI; x++) printf("%f ", float(buffer[p].pixel[x]));
-    printf("\n");
-    #endif
-  }
-
-
-	if (read_from_buff)  {
-    out << px_buff;
-
-    #ifdef DEBUG_INPUT_BUFFER
-    printf("BUFFER: read from buff p=%d ", p);
-    for (int x=0; x<CPI; x++) printf("%f ", float(px_buff.pixel[x]));
-    printf("\n");
-    #endif
-  }
-	else out << px_input;
-  }
-  #ifdef DEBUG_INPUT_BUFFER
-  printf("INPUT_BUFFER: ends\n");
-  #endif
 }
 
-void output_buffer3(int num_writes, int num_reads, int write, int read, hls::stream<dout_st> &in, hls::stream<din_st> &out) {
+void demux(int ENABLE, int num_accesses, int SEL, hls::stream<dout_st> &IN, hls::stream<dout_st> &out0, hls::stream<dout_st> &out1) {
 
-  // buffer
-  static din_st buffer[INPUT_BUFFER_SIZE];
-  DO_PRAGMA(HLS aggregate    variable=buffer)
-  DO_PRAGMA(HLS bind_storage variable=buffer type=ram_s2p impl=uram)
+	if (!ENABLE) return;
 
-  // control variables
-  int remaining_writes     = write ? num_writes : 0;
-  int remaining_reads      = read  ? num_reads  : 0;
-  int write_ptr            = 0;
-  int read_ptr             = 0;
-  din_st  px;
-  din_st  px2;
-  dout_st pxx;
-  DO_PRAGMA(HLS AGGREGATE variable=px );
-  DO_PRAGMA(HLS AGGREGATE variable=px2);
-  DO_PRAGMA(HLS AGGREGATE variable=pxx);
-
-  while (remaining_writes || remaining_reads) {
-    #pragma HLS pipeline   II=1
-    #pragma HLS latency    min=5 max=5
-    #pragma HLS dependence variable=buffer inter false
-    #pragma HLS dependence variable=px     inter false
-
-    if (!in.empty() && remaining_writes!=0) {
-      pxx = in.read();
-      px2 = *(din_st *)&pxx;
-      buffer[write_ptr] = px2;
-      remaining_writes--;
-      write_ptr++;
-    }
-
-    px = buffer[read_ptr];
-    if (!out.full() && remaining_reads != 0) {
-      out << px;
-      read_ptr++;
-      remaining_reads--;
-    }
-  }
-
+	for (int I = 0; I < num_accesses; I++) {
+        #pragma HLS PIPELINE II=1
+		dout_st PX = IN.read();
+		if (SEL == 0) out0 << PX; else out1 << PX;
+	}
 }
 
-void output_buffer(int num_writes, int num_reads, int write, int read, hls::stream<dout_st> &in, hls::stream<din_st> &out) {
+void buffer0(int num_accesses, int read, int read_from_input, int write, int first_write_address, hls::stream<din_st> &input, hls::stream<dout_st> &in, hls::stream<din_st> &out) {
 
   // buffer
-  static din_st buffer[INPUT_BUFFER_SIZE];
-  DO_PRAGMA(HLS aggregate variable=buffer)
+  static din_st buff0[DATA_BUFFER_SIZE];
+  DO_PRAGMA(HLS aggregate    variable=buff0)
   #ifdef ALVEO_U200
-  DO_PRAGMA(HLS bind_storage variable=buffer type=ram_s2p impl=uram)
+  DO_PRAGMA(HLS bind_storage variable=buff0 type=ram_s2p impl=uram)
   #endif
   #ifdef ALVEO_U280
-  DO_PRAGMA(HLS bind_storage variable=buffer type=ram_s2p impl=uram)
+  DO_PRAGMA(HLS bind_storage variable=buff0 type=ram_s2p impl=uram)
   #endif
 
+#ifdef DEBUG_BUFFER
+  printf("BUFFER0: [start]\n");
+  printf("BUFFER0: num_accesses: %d, write %d, read %d, read_from_input %d\n", num_accesses, write, read, read_from_input);
+#endif
 
-  // control variables
-  int remaining_writes     = write ? num_writes : 0;
-  int remaining_reads      = read  ? num_reads  : 0;
-  int write_ptr            = -1;
-  int read_ptr             = 1;
-  int delayed_buffer_write = 0;
-  din_st  px;
-  dout_st pxx;
-  din_st  px2;
-  DO_PRAGMA(HLS AGGREGATE variable=px);
-  DO_PRAGMA(HLS AGGREGATE variable=px2);
-  DO_PRAGMA(HLS AGGREGATE variable=pxx);
-
-  px = buffer[0]; // for first out-stream write
-
-  while (remaining_writes || remaining_reads) {
-    #pragma HLS pipeline II=1
-    #pragma HLS dependence variable=buffer inter false
-    #pragma HLS dependence variable=px inter false
-
-	if (delayed_buffer_write) buffer[write_ptr] = px2;
-
-    if (!in.empty() && remaining_writes!=0) {
-      pxx = in.read();
-      px2 = *(din_st *)&pxx;
-      delayed_buffer_write = 1;
-      remaining_writes--;
-      write_ptr++;
-    } else {
-      delayed_buffer_write = 0;
-    }
-
-    if (!out.full() && remaining_reads != 0) {
-      out << px;
-      px = buffer[read_ptr]; // for next-out stream write
-      read_ptr++;
-      remaining_reads--;
+  if (read_from_input) {
+	  int write_ptr = 0;
+	  for (int i=0; i<num_accesses; i++) {
+        #pragma HLS pipeline II=1
+		din_st px = input.read();
+		out << px;
+		if (write) {buff0[write_ptr] = px; write_ptr++;}
+	  }
+  } else {
+    if (write) {
+	  int write_ptr = first_write_address;
+	  for (int i=0; i<num_accesses; i++) {
+        #pragma HLS pipeline II=1
+        dout_st px2 = in.read();
+		din_st px = *(din_st *)&px2;
+		buff0[write_ptr] = px;
+		write_ptr++;
+	  }
     }
   }
 
-  if (delayed_buffer_write) buffer[write_ptr] = px2;
-
-}
-
-
-void output_buffer2(int num_writes, int num_reads, int write, int read, hls::stream<dout_st> &in, hls::stream<din_st> &out) {
-
-  // buffer
-  static din_st buffer[INPUT_BUFFER_SIZE];
-  DO_PRAGMA(HLS aggregate variable=buffer)
-  #ifdef ALVEO_U200
-  DO_PRAGMA(HLS bind_storage variable=buffer type=ram_t2p impl=uram)
-  #endif
-  #ifdef ALVEO_U280
-  DO_PRAGMA(HLS bind_storage variable=buffer type=ram_t2p impl=uram)
-  #endif
-
-  #ifdef DEBUG_OUTPUT_BUFFER
-  printf("OUTPUT_BUFFER: starts (%d num_writes; %d num_reads, write %d, read %d\n", num_writes, num_reads, write, read);
-  #endif
-
-  // control variables
-  int remaining_reads  = read  ? num_reads  : 0;
-  int remaining_writes = write ? num_writes : 0;
-  int read_ptr  = 0;
-  int write_ptr = 0;
-  int write_out_stream_available = 0;
-  int read_in_stream_available   = 0;
-  dout_st pxx;
-  DO_PRAGMA(HLS AGGREGATE variable=pxx);
-  din_st  px2;
-  DO_PRAGMA(HLS AGGREGATE variable=px2);
-
-  // read is performed one iteration before it is needed in order to break a timing
-  // violation between read from buffer and write into output stream. By doing this we
-  // enforce in the loop write_to_stream(i)->read_from_buff(i+1) order
-  din_st px = buffer[read_ptr]; // fist pixel to send (if proven)
-
-  while (remaining_reads || remaining_writes) {
-    #pragma HLS pipeline II=1
-    #pragma HLS dependence variable=buffer inter false
-
-    // This line applies write into buffer from previous iteration. This is performed in order
-    // to remove a timing violation. By doing this we enforce in the loop 
-    // write_into_buff(i-1)->read_from_stream order
-    //if (read_in_stream_available) { px2 = *(din_st *)&pxx; buffer[write_ptr-1] = px2; }
-
-    if (remaining_reads) write_out_stream_available = !out.full(); else write_out_stream_available = 0;
-    if (remaining_writes) read_in_stream_available = !in.empty(); else read_in_stream_available = 0;
-    //
-    if (read_in_stream_available) {
-      pxx = in.read();
-      px2 = *(din_st *)&pxx; 
-      buffer[write_ptr] = px2;
-      remaining_writes--; 
-      write_ptr++;
-      #ifdef DEBUG_OUTPUT_BUFFER
-      printf("write performed (remaining %d)\n", remaining_writes);
-      #endif
-    }
-    //
-    if (write_out_stream_available) {
-      out.write(px);
-      #ifdef DEBUG_OUTPUT_BUFFER
-      printf("read performed (remaining %d)\n", remaining_reads);
-      #endif
-      remaining_reads--; read_ptr++;
-      px = buffer[read_ptr]; // next item to send out (performed here to break a timing violation between buffer read and write into output stream)
-    }
+  if (read) {
+	  int read_ptr = 0;
+	  for (int i=0; i<num_accesses; i++) {
+        #pragma HLS pipeline II=1
+		din_st px = buff0[read_ptr];
+		out << px;
+		read_ptr++;
+	  }
   }
 
-  // this if line is from last iteration (to break a timing violation between read from input stream and write into buffer
-  //if (read_in_stream_available) { px2 = *(din_st *)&pxx; buffer[write_ptr-1] = px2; }
+#ifdef DEBUG_BUFFER
+  printf("BUFFER0: [end]\n");
+#endif
 
 }
 
@@ -267,7 +147,7 @@ void weight_buffer(int I_ITER, int write_to_buff, int read_from_buff, int offset
 
   #ifdef DEBUG_WEIGHT_BUFFER
   printf("WEIGHT_BUFFER: starts (%d iters; write_to_buff %d; read_from_buff %d. weight buffer size %d)\n", I_ITER, write_to_buff, read_from_buff, WEIGHT_BUFFER_SIZE);
-  printf("WEIGHT_BUFFER: sizeof %d\n", sizeof(buffer));
+  //printf("WEIGHT_BUFFER: sizeof %l\n", sizeof(buffer));
   #endif
 
   weight_buffer_loop_pixels:
