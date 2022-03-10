@@ -66,7 +66,7 @@ extern int pos_shift;					 // positions to shift
 extern int enable_clipping;			     // enables applying clipping to the output
 extern int enable_maxpooling;			 // enables the maxpooling layer
 extern int enable_avgpooling;			 // enables the avgpooling layer
-extern int enable_batch_norm;		 // enables applying batch normalization
+extern int enable_batch_norm;		     // enables applying batch normalization
 extern int enable_upsize;                // enables upsize (resize)
 extern int min_clip;				 	 // minimum clip value
 extern int max_clip;				 	 // maximum clip value
@@ -76,11 +76,11 @@ extern int global_offset;				 // global offset for the output data for the kerne
 extern int GI;							 // number of groups for input channels
 extern int GO;							 // number of groups for output channels
 
-extern din_t  *data_in;                 // Input data buffer (format I x W x H)
-extern din_t  *data_in_add;             // Input data buffer for add module(format I x W x H)
-extern dout_t *out;                     // Output data buffer (format O x W x H)
-extern w_t    *kernel;                  // Conv kernel buffers (format GO x GI x CPO x CPI x KW x KH) - for DirectConv and WinogradConv
-extern b_t    *bias;                    // Conv bias buffers (format O)
+extern read_data_t   *data_in;          // Input data buffer (format I x W x H)
+extern din_t         *data_in_add;      // Input data buffer for add module(format I x W x H)
+extern write_data_t  *out;              // Output data buffer (format O x W x H)
+extern read_filter_t *kernel;           // Conv kernel buffers (format GO x GI x CPO x CPI x KW x KH) - for DirectConv and WinogradConv
+extern read_bias_t   *bias;             // Conv bias buffers (format O)
 extern conv_t *out_conv_cpu;            // Output data buffer for cpu (format O x W x H)
 extern relu_t *out_relu_cpu;            // Output data buffer for cpu (format O x W x H)
 extern stm_t  *out_stm_cpu;		        // Output data buffer for STM for cpu (format O x O x W x H)
@@ -88,7 +88,7 @@ extern pool_t *out_pool_cpu;		    // Output data fuffer for pool for cpu (format
 extern bn_t   *out_batch_norm_cpu;	    // Output data buffer for cpu (format O x W x H)
 extern bn_t   *batch_norm_values;	    // Batch normalization values
 extern add_t  *out_add_cpu;		        // Output data buffer for ADD for cpu 
-extern dout_t *cpu_out;
+extern write_data_t *cpu_out;
 extern char   *input_data_file;          // file with input parameters
 extern int deterministic_input_values;   // whether input data is randomly generated or not (deterministic needed in co-simulation)
 
@@ -126,7 +126,7 @@ extern cl_mem_ext_ptr_t bias_ddr[MAX_CONVS];          // Conv bias buffers
 // function prototypes
 void allocate_buffers();
 void deallocate_buffers();
-int filter_address_direct_conv(int i, int o, int kh, int kw);
+int  filter_address_direct_conv(int i, int o, int kh, int kw);
 void cpu_conv2D();
 void print_bias();
 #ifdef USE_BATCH_NORM
@@ -136,11 +136,11 @@ void print_input();
 void print_input_add();
 void print_output(int only_cpu);
 void print_kernel();
-int check_result(dout_t *max_difference, int *num_elements_differ);
+int  check_result(dout_t *max_difference, int *num_elements_differ);
 void init_data(int from_file);
-int open_test_file();
-int read_test_file(int *enable, int *from_file, int *cpu);
-int close_test_file();
+int  open_test_file();
+int  read_test_file(int *enable, int *from_file, int *cpu);
+int  close_test_file();
 void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_offset_p, int write_offset_p);
 void compute();
 void parse_arguments(int argc, char **argv);
@@ -148,12 +148,12 @@ void print_configuration();
 void print_timings(unsigned long long time, unsigned long long time_per_iteration, unsigned long long expected_time, float efficiency);
 void print_check(int result, float max_difference, int num_differences);
 void print_message(const char *str);
-void print_input_buffer_stats(din_t *p, int size);
-void print_weight_buffer_stats(w_t *p, int size);
-void print_bias_buffer_stats(b_t *p, int size);
+void print_input_buffer_stats(read_data_t *p, int size);
+void print_weight_buffer_stats(read_filter_t *p, int size);
+void print_bias_buffer_stats(read_bias_t *p, int size);
 void print_data_in_buffer_stats(dout_t *p, int size);
 void print_batchnorm_buffer_stats(dout_t *p, int size);
-void print_output_buffer_stats(dout_t *p, int size);
+void print_output_buffer_stats(write_data_t *p, int size);
 
 int input_data_address(int i, int h, int w);
 int output_data_address(int o, int h, int w, int height, int width);

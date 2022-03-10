@@ -90,13 +90,13 @@ char *input_data_file;           // input data file with configurations to test
 int deterministic_input_values;  // whether input data is randomly generated or not (deterministic needed in co-simulation)
 
 // buffers
-din_t *data_in;                  // Input data buffer (format I x W x H)
+read_data_t *data_in;                  // Input data buffer (format I x W x H)
 din_t *data_in_add;              // Input data buffer for add module(format I x W x H)
-dout_t *out;                     // Output data buffer (format O x W x H)
-w_t *kernel;                     // Conv kernel buffers (format GO x GI x CPO x CPI x KH x KW) - for DirectConv and WinogradConv
+write_data_t *out;                     // Output data buffer (format O x W x H)
+read_filter_t *kernel;                     // Conv kernel buffers (format GO x GI x CPO x CPI x KH x KW) - for DirectConv and WinogradConv
 w_t *dw_kernel;                  // DW kernel (format I x KH x KW) - for DWS
 w_t *pw_kernel;                  // PW kernel (format GO x GI x CPO x CPI) - for DWS
-b_t *bias;                       // Conv bias buffers (format O)
+read_bias_t *bias;                       // Conv bias buffers (format O)
 bn_t *batch_norm_values;	     // Batch normalization values
 conv_t *out_conv_cpu;            // Output data buffer for cpu (format O x W x H)
 relu_t *out_relu_cpu;            // Output data buffer for cpu (format O x W x H)
@@ -104,7 +104,7 @@ stm_t *out_stm_cpu; 		     // Output data buffer for STM for cpu (format O x W x
 pool_t *out_pool_cpu;		     // Output data fuffer for pool for cpu (format O x W/2 x H/2)
 bn_t *out_batch_norm_cpu;	     // Output data buffer for cpu (format O x W x H)
 add_t *out_add_cpu;              // Output data buffer for ADD for cpu (format O x W x H)
-dout_t *cpu_out;                 // final output
+write_data_t *cpu_out;                 // final output
 FILE *fp;
 
 #ifdef OPENCL_TEST

@@ -90,8 +90,8 @@ void cpu_conv2D() {
               int addr_p = input_data_address(c, data_h, data_w);
 
               // operation
-              din_t din = padding? din_t(0) : data_in[addr_p];
-              if (!padding) out_conv_cpu[addr_o] += din * kernel[addr_k];
+              din_t din = padding? din_t(0) : din_t(data_in[addr_p]);
+              if (!padding) out_conv_cpu[addr_o] += din_t(din) * w_t(kernel[addr_k]);
               //if ((h==0) && (w==0) && (cout==0)) printf("CONV: data %f kernel %f, pixel out %f\n", float(din), float(kernel[addr_k]), float(out_conv_cpu[addr_o]));
             }
           }
@@ -108,7 +108,7 @@ void cpu_conv2D() {
         // data_out pixel position
         int addr_o = output_data_address(cout, h, w, HO, WO);
         // bias operation
-        out_conv_cpu[addr_o] += bias[cout];
+        out_conv_cpu[addr_o] += b_t(bias[cout]);
 	//printf("cpu_bias: c %d h %d w %d out_conv %f\n", cout, h, w, float(out_conv_cpu[addr_o]));
       }
     }

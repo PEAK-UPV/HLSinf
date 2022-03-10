@@ -19,7 +19,7 @@ void allocate_buffers() {
   // First we allocate buffers in CPU
 
   // input data buffer
-  size_t size_data_in_bytes = I_input * W * H * sizeof(din_t);
+  size_t size_data_in_bytes = I_input * W * H * sizeof(read_data_t);
   posix_memalign((void **)&data_in, 4096, size_data_in_bytes);
 
   // input data add buffer
@@ -34,18 +34,18 @@ void allocate_buffers() {
 
   // weights buffer (kernel), depending on the type of convolution
   #ifdef DIRECT_CONV
-  size_t size_kernel_in_bytes = I_kernel * O_kernel * KW * KH * sizeof(w_t);
+  size_t size_kernel_in_bytes = I_kernel * O_kernel * KW * KH * sizeof(read_filter_t);
   posix_memalign((void **)&kernel, 4096, size_kernel_in_bytes);
   #endif
   #ifdef DWS_CONV
-  size_t size_kernel_dw_in_bytes = (I_kernel * KW * KH) * sizeof(w_t);
-  size_t size_kernel_pw_in_bytes = (I_kernel * O_kernel) * sizeof(w_t);
+  size_t size_kernel_dw_in_bytes = (I_kernel * KW * KH) * sizeof(read_filter_t);
+  size_t size_kernel_pw_in_bytes = (I_kernel * O_kernel) * sizeof(read_filter_t);
   posix_memalign((void **)&dw_kernel, 4096, size_kernel_dw_in_bytes);
   posix_memalign((void **)&pw_kernel, 4096, size_kernel_pw_in_bytes);
   #endif  
 
   // bias buffer
-  size_t size_bias_in_bytes = O_output * sizeof(b_t);
+  size_t size_bias_in_bytes = O_output * sizeof(read_bias_t);
   posix_memalign((void **)&bias, 4096, size_bias_in_bytes);
 
   // batch norm values buffer
@@ -57,7 +57,7 @@ void allocate_buffers() {
 
   // output buffer for fpga
   size_t size_output_in_bytes;
-  size_output_in_bytes = O_output * WO_final * HO_final * sizeof(dout_t);
+  size_output_in_bytes = O_output * WO_final * HO_final * sizeof(write_data_t);
   if (enable_upsize) size_output_in_bytes *= 4;
   posix_memalign((void **)&out, 4096, size_output_in_bytes);
 

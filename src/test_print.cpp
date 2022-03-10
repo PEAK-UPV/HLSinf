@@ -14,7 +14,7 @@
 
 #include "test_conv2D.h"
 
-void print_input_buffer_stats(din_t *p, int size) {
+void print_input_buffer_stats(read_data_t *p, int size) {
   float min =  999999;
   float max = -999999;
   double sum = 0.f;
@@ -29,7 +29,7 @@ void print_input_buffer_stats(din_t *p, int size) {
   printf("Min %8.4f Max %8.4f Avg %8.4f\n", min, max, avg);
 }
 
-void print_weight_buffer_stats(w_t *p, int size) {
+void print_weight_buffer_stats(read_filter_t *p, int size) {
    float min =  999999;
   float max = -999999;
   double sum = 0.f;
@@ -44,7 +44,7 @@ void print_weight_buffer_stats(w_t *p, int size) {
   printf("Min %8.4f Max %8.4f Avg %8.4f\n", min, max, avg);
 }
 
-void print_bias_buffer_stats(b_t *p, int size) {
+void print_bias_buffer_stats(read_bias_t *p, int size) {
   float min =  999999;
   float max = -999999;
   double sum = 0.f;
@@ -89,7 +89,7 @@ void print_batchnorm_buffer_stats(dout_t *p, int size) {
   printf("Min %8.4f Max %8.4f Avg %8.4f\n", min, max, avg);
 }
 
-void print_output_buffer_stats(dout_t *p, int size) {
+void print_output_buffer_stats(write_data_t *p, int size) {
   float min =  999999;
   float max = -999999;
   double sum = 0.f;

@@ -48,7 +48,12 @@ void write_data_channels_gihwcpi(int num_pixels, int offset, write_block_t *ptr,
 	  DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=W_REFERENCE*H_REFERENCE)
       #pragma HLS pipeline
 	  dout_st bx = in.read();
-      ptr[offset+i] = bx;
+	  write_block_t bx_out;
+	  for (int cpo=0; cpo<CPO; cpo++) {
+        #pragma HLS unroll
+		bx_out.pixel[cpo] = write_data_t(bx.pixel[cpo]);
+	  }
+      ptr[offset+i] = bx_out;
     }
   }
 }

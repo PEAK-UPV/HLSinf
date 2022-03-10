@@ -25,11 +25,11 @@ void init_data(int from_file) {
   std::mt19937 gen(rd());
 
   if (from_file) {
-    read_from_file("input.bin", I_input * H * W, sizeof(din_t), (void *)data_in);
-    if (enable_add) read_from_file("add.bin", O_output * HO_final * WO_final, sizeof(dout_t), (void *)data_in_add);
-    read_from_file("weights.bin", I_kernel * O_kernel * KH * KW, sizeof(w_t), (void *)kernel);
-    read_from_file("bias.bin", O, sizeof(b_t), bias);
-    read_from_file("output.bin", O_output * HO_final * WO_final, sizeof(dout_t), (void *)cpu_out);
+    read_from_file("input.bin", I_input * H * W, sizeof(read_data_t), (void *)data_in);
+    if (enable_add) read_from_file("add.bin", O_output * HO_final * WO_final, sizeof(write_data_t), (void *)data_in_add);
+    read_from_file("weights.bin", I_kernel * O_kernel * KH * KW, sizeof(read_filter_t), (void *)kernel);
+    read_from_file("bias.bin", O, sizeof(read_bias_t), bias);
+    read_from_file("output.bin", O_output * HO_final * WO_final, sizeof(write_data_t), (void *)cpu_out);
     if (enable_batch_norm) read_from_file("batchnorm.bin", O_output * 4, sizeof(dout_t), (void *)batch_norm_values);
 
     // statistics for each buffer

@@ -85,24 +85,21 @@ void k_conv2D(read_block_t *ptr_data,
             int enable_batch_norm,
             #endif
             #ifdef DIRECT_CONV
-            w_t *ptr_kernel, 
+            read_filter_t *ptr_kernel,
             #endif
             #ifdef DWS_CONV
   					w_t *ptr_dw_kernel, w_pw_t *ptr_pw_kernel,
             #endif
-            b_st *ptr_bias, 
+            read_bias_st *ptr_bias,
             #ifdef USE_BATCH_NORM
             bnp_st *b_ptr, 
             #endif
-            write_block_t *ptr_out, int read_offset, int write_offset, int enable_maxpooling, int enable_avgpooling,
-						int enable_clipping, int enable_shift, 
+            write_block_t *ptr_out, int read_offset, int write_offset, int enable_maxpooling, int enable_avgpooling, int enable_clipping, int enable_shift,
             #ifdef USE_ADD
             int enable_add, 
             #endif
-            int min_clip, int max_clip, int dir_shift, int pos_shift, int enable_upsize,
-            int write_to_weight_buffer, int read_from_weight_buffer, int first_row_weight_buffer,
+            int min_clip, int max_clip, int dir_shift, int pos_shift, int enable_upsize, int write_to_weight_buffer, int read_from_weight_buffer, int first_row_weight_buffer,
 			int read_from_mem, int read_from_b0, int read_from_b1, int write_to_mem, int write_to_b0, int write_to_b1) {
-
 
 	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_data         depth=DATA_IN_PORT_DEPTH    offset=slave bundle=gmem)
     #ifdef DIRECT_CONV
@@ -149,6 +146,7 @@ void k_conv2D(read_block_t *ptr_data,
   printf("kernel starts...\n");
   #endif
 
+  // non dataflow variables
   int O_ITER = o_iter_last - o_iter_first + 1;                                                                           // number of output iterations to perform
                                                                                                                          // output convolution geometry:
   int HO_conv                  = (rows + PT + PB - KH + SH) / SH;                                                        // height: HO = ceil(H + padding - (KH-1) / SH)
@@ -270,7 +268,7 @@ void k_conv2D(read_block_t *ptr_data,
 	#endif
 
     // -------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    // variables
+    // variables (loop dependent)
 	int o_channel                  = (o_iter + o_iter_first) * CPO; //<< LOG2_CPO;  // current output channel (first one in this iteration)
     int o_iter_read_add_offset     = write_offset + (offset_read_add_group_cpo * (o_iter + o_iter_first));
     int o_iter_write_offset        = write_offset + (offset_data_out_group_cpo * (o_iter + o_iter_first));

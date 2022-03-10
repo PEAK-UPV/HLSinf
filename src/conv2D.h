@@ -700,20 +700,38 @@
 #define MIN_DATA_TYPE_VALUE  -99999999
 #define READ_BLOCK_SIZE             16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 #define WRITE_BLOCK_SIZE            16   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
-#define din_t                    float
-#define conv_cvt_t               float
-#define conv_mul_t               float
-#define relu_t                   float
-#define stm_t                    float
-#define pool_cvt_t               float
-#define pool_t                   float
-#define bn_t                     float
-#define add_t                    float
-#define w_t                      float
-#define b_t                      float
-#define conv_t                   float
-#define dout_t                   float
-#define w_pw_t                   float
+//#define din_t                    float
+//#define conv_cvt_t               float
+//#define conv_mul_t               float
+//#define relu_t                   float
+//#define stm_t                    float
+//#define pool_cvt_t               float
+//#define pool_t                   float
+//#define bn_t                     float
+//#define add_t                    float
+//#define w_t                      float
+//#define b_t                      float
+//#define conv_t                   float
+//#define dout_t                   float
+//#define w_pw_t                   float
+#define din_t                    ap_fixed<8,4,AP_RND_ZERO,AP_SAT>
+#define conv_cvt_t               ap_fixed<8,4,AP_RND_ZERO,AP_SAT>
+#define conv_mul_t               ap_fixed<16,8,AP_RND_ZERO,AP_SAT>
+#define relu_t                   ap_fixed<8,4,AP_RND_ZERO,AP_SAT>
+#define stm_t                    ap_fixed<8,4,AP_RND_ZERO,AP_SAT>
+#define pool_cvt_t               ap_fixed<8,4,AP_RND_ZERO,AP_SAT>
+#define pool_t                   ap_fixed<8,4,AP_RND_ZERO,AP_SAT>
+#define bn_t                     ap_fixed<8,4,AP_RND_ZERO,AP_SAT>
+#define add_t                    ap_fixed<8,4,AP_RND_ZERO,AP_SAT>
+#define w_t                      ap_fixed<8,4,AP_RND_ZERO,AP_SAT>
+#define b_t                      ap_fixed<16,8,AP_RND_ZERO,AP_SAT>
+#define conv_t                   ap_fixed<16,8,AP_RND_ZERO,AP_SAT>
+#define dout_t                   ap_fixed<8,4,AP_RND_ZERO,AP_SAT>
+#define w_pw_t                   ap_fixed<8,4,AP_RND_ZERO,AP_SAT>
+#define read_bias_t              float
+#define read_data_t              float
+#define read_filter_t            float
+#define write_data_t             float
 #endif
 
 // Configuration TEST: U200, 4x4, FP32: DWS_CONV, RELU, POOLING, UPSIZE
@@ -1019,12 +1037,15 @@ struct bnp_st      {bn_t       values[CPO*4];};
 struct w_dw_st     {w_t        pixel[CPI][9];};
 struct w_pw_st     {w_pw_t     pixel[CPI];};
 #endif
-
+struct read_bias_st {read_bias_t     pixel[CPO];};
+struct read_data_st {read_data_t     pixel[CPI];};
+struct read_filter_st {read_filter_t pixel[CPO][CPI][9];};
+struct write_data_st  {write_data_t  pixel[CPO];};
 
 // -----------------------------------------------------------------------------------------------------------
 // Read and write block struct
-#define read_block_t  din_st
-#define write_block_t dout_st
+#define read_block_t  read_data_st
+#define write_block_t write_data_st
 
 // What follows is the function prototypes
 
@@ -1044,12 +1065,12 @@ extern "C" void k_conv2D(read_block_t *ptr_data,
                          int enable_batch_norm,
                          #endif
                          #ifdef DIRECT_CONV
-                         w_t *ptr_kernel, 
+                         read_filter_t *ptr_kernel,
                          #endif
                          #ifdef DWS_CONV
 						 w_t *ptr_dw_kernel, w_pw_t *ptr_pw_kernel,
                          #endif
-                         b_st *ptr_bias, 
+                         read_bias_st *ptr_bias,
                          #ifdef USE_BATCH_NORM
                          bnp_st *b_ptr, 
                          #endif
@@ -1064,9 +1085,9 @@ extern "C" void k_conv2D(read_block_t *ptr_data,
                          int write_to_weight_buffer, int read_from_weight_buffer, int first_row_weight_buffer,
  						 int read_from_mem, int read_from_b0, int read_from_b1, int write_to_mem, int write_to_b0, int write_to_b1);
 
-void read_bias                    (int offset_bias, b_st *b_ptr, hls::stream<b_st> &out);
+void read_bias                    (int offset_bias, read_bias_st *b_ptr, hls::stream<b_st> &out);
 void read_batch_norm              (int offset_batchnorm, bnp_st *b_ptr, hls::stream<bnp_st> &out);
-void read_kernel                  (int enable, int I_ITER, int offset_kernel, w_t *k_ptr, hls::stream<w_st> &k_out);
+void read_kernel                  (int enable, int I_ITER, int offset_kernel, read_filter_t *k_ptr, hls::stream<w_st> &k_out);
 void weight_buffer                (int I_ITER, int write_to_buff, int read_from_buff, int offset_buff, hls::stream<w_st> &in, hls::stream<w_st> &out);
 void read_data_channels_gihwcpi   (int num_pixels, int offset, int I_ITER, int cpi_group_offset, read_block_t *ptr, hls::stream<din_st> &out, int enable);
 void read_input_add_gihwcpi       (int num_pixels, int offset, write_block_t *ptr, hls::stream<dout_st> &out, int enable);

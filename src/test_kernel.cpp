@@ -133,7 +133,7 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
         #ifdef DWS_CONV
         dw_kernel, (w_pw_t *)pw_kernel,
         #endif
-        (b_st *)bias, 
+        (read_bias_st *)bias,
         #ifdef USE_BATCH_NORM
         (bnp_st *)batch_norm_values, 
         #endif
