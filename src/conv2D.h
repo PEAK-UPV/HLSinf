@@ -693,7 +693,7 @@
 #define WMAX                      1024
 #define HMAX                       256
 #define READ_BURST_SIZE             16
-#define STREAMS_DEPTH               16
+#define STREAMS_DEPTH               2
 #define DATA_BUFFER_SIZE          8192
 #define WEIGHT_BUFFER_SIZE        5000
 #define EPSILON_VALUE            0.001

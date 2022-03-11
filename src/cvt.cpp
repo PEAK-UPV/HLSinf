@@ -49,6 +49,16 @@ void cvt(int H, int W, int I_ITER, int SH, int SW, hls::stream<din_st> &in, hls:
   DO_PRAGMA(HLS AGGREGATE variable=buffer0)
   DO_PRAGMA(HLS AGGREGATE variable=buffer1)
   DO_PRAGMA(HLS AGGREGATE variable=buffer2)
+  #ifdef ALVEO_U200
+  DO_PRAGMA(HLS bind_storage variable=buffer0 type=ram_s2p impl=bram)
+  DO_PRAGMA(HLS bind_storage variable=buffer1 type=ram_s2p impl=bram)
+  DO_PRAGMA(HLS bind_storage variable=buffer2 type=ram_s2p impl=bram)
+  #endif
+  #ifdef ALVEO_U280
+  DO_PRAGMA(HLS bind_storage variable=buffer0 type=ram_s2p impl=bram)
+  DO_PRAGMA(HLS bind_storage variable=buffer1 type=ram_s2p impl=bram)
+  DO_PRAGMA(HLS bind_storage variable=buffer2 type=ram_s2p impl=bram)
+  #endif
 
   // manually flattened loop (for the purposes of getting the expected pipelined design)
   int p = 0;

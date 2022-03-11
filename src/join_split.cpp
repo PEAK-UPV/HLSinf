@@ -31,7 +31,8 @@ void buffer1(int num_accesses, int read, int write, int first_write_address, hls
   if (read) {
 	  int read_ptr = 0;
 	  for (int I=0; I<num_accesses; I++) {
-        #pragma HLS PIPELINE II=1
+		DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE*W_REFERENCE)
+		#pragma HLS PIPELINE II=1
 		din_st PX = buff1[read_ptr];
 		out << PX;
 		read_ptr++;
@@ -41,7 +42,8 @@ void buffer1(int num_accesses, int read, int write, int first_write_address, hls
   if (write) {
 	  int write_ptr = first_write_address;
 	  for (int I=0; I<num_accesses; I++) {
-        #pragma HLS PIPELINE II=1
+		DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE*W_REFERENCE)
+		#pragma HLS PIPELINE II=1
 		dout_st PX = in.read();
 		din_st PX2 = *(din_st *)&PX;
 		buff1[write_ptr] = PX2;
@@ -57,7 +59,8 @@ void buffer1(int num_accesses, int read, int write, int first_write_address, hls
 
 void mux(int num_accesses, int SEL, hls::stream<din_st> &in0, hls::stream<din_st> &in1, hls::stream<din_st> &out) {
 	for (int I = 0; I < num_accesses; I++) {
-        #pragma HLS PIPELINE II=1
+		DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE*W_REFERENCE)
+		#pragma HLS PIPELINE II=1
 		din_st PX;
 		if (SEL == 0) PX = in0.read(); else PX = in1.read();
 		out << PX;
@@ -69,7 +72,8 @@ void demux(int ENABLE, int num_accesses, int SEL, hls::stream<dout_st> &IN, hls:
 	if (!ENABLE) return;
 
 	for (int I = 0; I < num_accesses; I++) {
-        #pragma HLS PIPELINE II=1
+		DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE*W_REFERENCE)
+		#pragma HLS PIPELINE II=1
 		dout_st PX = IN.read();
 		if (SEL == 0) out0 << PX; else out1 << PX;
 	}
@@ -95,7 +99,8 @@ void buffer0(int num_accesses, int read, int read_from_input, int write, int fir
   if (read_from_input) {
 	  int write_ptr = 0;
 	  for (int i=0; i<num_accesses; i++) {
-        #pragma HLS pipeline II=1
+		DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE*W_REFERENCE)
+		#pragma HLS pipeline II=1
 		din_st px = input.read();
 		out << px;
 		if (write) {buff0[write_ptr] = px; write_ptr++;}
@@ -104,7 +109,8 @@ void buffer0(int num_accesses, int read, int read_from_input, int write, int fir
     if (write) {
 	  int write_ptr = first_write_address;
 	  for (int i=0; i<num_accesses; i++) {
-        #pragma HLS pipeline II=1
+		DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE*W_REFERENCE)
+		#pragma HLS pipeline II=1
         dout_st px2 = in.read();
 		din_st px = *(din_st *)&px2;
 		buff0[write_ptr] = px;
@@ -116,7 +122,8 @@ void buffer0(int num_accesses, int read, int read_from_input, int write, int fir
   if (read) {
 	  int read_ptr = 0;
 	  for (int i=0; i<num_accesses; i++) {
-        #pragma HLS pipeline II=1
+		DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE*W_REFERENCE)
+		#pragma HLS pipeline II=1
 		din_st px = buff0[read_ptr];
 		out << px;
 		read_ptr++;
@@ -152,7 +159,7 @@ void weight_buffer(int I_ITER, int write_to_buff, int read_from_buff, int offset
 
   weight_buffer_loop_pixels:
   for (int p=0; p<I_ITER; p++) {
-	  DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE / CPI)
+	DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE / CPI)
     DO_PRAGMA(HLS pipeline)
     #pragma HLS dependence variable=buffer inter false
 
