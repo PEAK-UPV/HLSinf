@@ -42,7 +42,7 @@
 // -----------------------------------------------------------------------------------------------------------
 // defines for debug (DEBUG_ALL activates all debug defines)
 // -----------------------------------------------------------------------------------------------------------
-#define DEBUG_ALL
+//#define DEBUG_ALL
 //#define DEBUG_VERBOSE
 //#define DEBUG_READ_BIAS
 //#define DEBUG_READ_KERNEL
@@ -674,7 +674,7 @@
 #define w_pw_t                   ap_fixed<8,4,AP_RND_ZERO,AP_SAT>
 #endif
 
-// Configuration 1.15: U200, 4x4, FP32: DIRECT_CONV, RELU, POOLING, PRUEBA_MUL2, weight buffer
+// Configuration 1.15: U200, 4x4, FP32: DIRECT_CONV, RELU, POOLING, ADD, PRUEBA_MUL2, weight buffer, data buffer
 #ifdef HLSINF_1_15
 #define PRUEBA_MUL_2
 #define ALVEO_U200
@@ -683,7 +683,7 @@
 //#define USE_CLIPPING
 //#define USE_SHIFT
 #define USE_POOLING
-//#define USE_ADD
+#define USE_ADD
 //#define USE_BATCH_NORM
 //#define USE_STM
 #define USE_UPSIZE
@@ -700,20 +700,52 @@
 #define MIN_DATA_TYPE_VALUE  -99999999
 #define READ_BLOCK_SIZE             16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 #define WRITE_BLOCK_SIZE            16   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
-//#define din_t                    float
-//#define conv_cvt_t               float
-//#define conv_mul_t               float
-//#define relu_t                   float
-//#define stm_t                    float
-//#define pool_cvt_t               float
-//#define pool_t                   float
-//#define bn_t                     float
-//#define add_t                    float
-//#define w_t                      float
-//#define b_t                      float
-//#define conv_t                   float
-//#define dout_t                   float
-//#define w_pw_t                   float
+#define din_t                    float
+#define conv_cvt_t               float
+#define conv_mul_t               float
+#define relu_t                   float
+#define stm_t                    float
+#define pool_cvt_t               float
+#define pool_t                   float
+#define bn_t                     float
+#define add_t                    float
+#define w_t                      float
+#define b_t                      float
+#define conv_t                   float
+#define dout_t                   float
+#define w_pw_t                   float
+#define read_bias_t              float
+#define read_data_t              float
+#define read_filter_t            float
+#define write_data_t             float
+#endif
+
+// Configuration 1.16: U200, 16x16, APF<8,4> weight multiplication, bias <16,8>: DIRECT_CONV, RELU, CLIPPING, POOLING, ADD, PRUEBA_MUL2, weight buffer, data buffers, precission conversion
+#ifdef HLSINF_1_16
+#define PRUEBA_MUL_2
+#define ALVEO_U200
+#define DIRECT_CONV
+#define USE_RELU
+#define USE_CLIPPING
+//#define USE_SHIFT
+#define USE_POOLING
+#define USE_ADD
+//#define USE_BATCH_NORM
+//#define USE_STM
+#define USE_UPSIZE
+#define FLOAT_DATA_TYPE               // we use float numbers as input data
+#define CPI                         16
+#define CPO                         16
+#define WMAX                      1024
+#define HMAX                       256
+#define READ_BURST_SIZE             16
+#define STREAMS_DEPTH               16
+#define DATA_BUFFER_SIZE          8192 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define WEIGHT_BUFFER_SIZE        5000
+#define EPSILON_VALUE          0.00001
+#define MIN_DATA_TYPE_VALUE        -16
+#define READ_BLOCK_SIZE             16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define WRITE_BLOCK_SIZE            16   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
 #define din_t                    ap_fixed<8,4,AP_RND_ZERO,AP_SAT>
 #define conv_cvt_t               ap_fixed<8,4,AP_RND_ZERO,AP_SAT>
 #define conv_mul_t               ap_fixed<16,8,AP_RND_ZERO,AP_SAT>
@@ -733,6 +765,7 @@
 #define read_filter_t            float
 #define write_data_t             float
 #endif
+
 
 // Configuration TEST: U200, 4x4, FP32: DWS_CONV, RELU, POOLING, UPSIZE
 #ifdef HLSINF_TEST2

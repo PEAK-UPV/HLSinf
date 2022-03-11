@@ -15,7 +15,7 @@
 
 void read_from_file(char *file, int size, int data_size, void *buf) {
   FILE *fd = fopen(file, "r");
-  if (fd == NULL) {printf("Error, file not found\n"); exit(1);}
+  if (fd == NULL) {printf("Error, file %s not found\n", file); exit(1);}
   fread(buf, data_size, size, fd); 
   fclose(fd);
 }

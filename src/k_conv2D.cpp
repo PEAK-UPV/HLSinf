@@ -15,6 +15,10 @@ int fn_get_read_b0(int read_from_b0, int read_from_mem, int input_fits_in_b0, in
 	return read_from_b0 || (read_from_mem && input_fits_in_b0 && (o_iter != 0));
 }
 
+int fn_get_write_b0(int write_to_b0, int read_from_mem, int input_fits_in_b0, int o_iter) {
+	return write_to_b0 || (read_from_mem && input_fits_in_b0 && (o_iter == 0));
+}
+
 #ifdef USE_UPSIZE
 template <class in_st, class out_st> void upsize(int enable, int H, int W, hls::stream<in_st> &in, hls::stream<out_st> &out) {
 
@@ -182,7 +186,6 @@ void k_conv2D(read_block_t *ptr_data,
                                                                                                                          // DATA BUFFER 0 and DATA BUFFER 1
   int input_fits_in_b0         = (read_pixels_total <= DATA_BUFFER_SIZE);                                                // whether input buffer has enough capacity for the input
   int num_accesses_b0          = (read_from_mem || read_from_b0) ? read_pixels_total : write_pixels;                     // number of accesses (reads or writes) to buffer0
-  int write_b0                 = write_to_b0;                                                                            // write to buffer 0 enable signal
   int num_accesses_b1          = (read_from_b1) ? read_pixels_total : write_pixels;                                      // number of accesses (reads or writes) to buffer1
   int read_b1                  = read_from_b1;                                                                           // read enable for buffer 1
   int write_b1                 = write_to_b1;                                                                            // write to buffer 1 enable signal
@@ -276,6 +279,7 @@ void k_conv2D(read_block_t *ptr_data,
     int offset_kernel              = (o_iter + o_iter_first) * ((I + CPI - 1) / CPI) * CPI * CPO * 9;
     int offset_weight_buffer       = first_row_weight_buffer + (o_iter * I_ITER);     // offset weight buffer
     int read_b0                    = fn_get_read_b0(read_from_b0, read_from_mem, input_fits_in_b0, o_iter);
+    int write_b0                   = fn_get_write_b0(write_to_b0, read_from_mem, input_fits_in_b0, o_iter);
     int read_from_input            = read_from_mem && !read_b0;
     int enable_read                = read_from_input;
     int first_buffer_write_address = write_pixels * o_iter;
