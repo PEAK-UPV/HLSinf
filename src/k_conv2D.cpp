@@ -208,8 +208,9 @@ void k_conv2D(read_block_t *ptr_data,
     static hls::stream<din_st>   out_read_data;                                                                          // read data stream from READ module
     static hls::stream<dout_st>  out_read_data_add;                                                                      // read data stream from READ_ADD module
     #ifdef DIRECT_CONV
-    static hls::stream<w_st>     out_read_kernel;                                                                        // read filters stream from READ_KERNEL module (direct conv)
-    static hls::stream<w_st>     out_read_kernel_2;                                                                      // read filters stream from WEIGHT_BUFFER module (direct conv)
+    static hls::stream<w_t>      out_read_kernel;                                                                        // read filters stream from READ_KERNEL module (direct conv)
+    static hls::stream<w2_st>    out_read_kernel_2;                                                                      // read filters stream from WEIGHT_BUFFER module (direct conv)
+    static hls::stream<w_st>     out_read_kernel_3;                                                                      // read filters stream from PREPARE_WEIGHT_FILTERS module (direct conv)
     #endif
     #ifdef DWS_CONV
     static hls::stream<w_dw_st>  out_read_kernel_dw;                                                                     // read filters stream for depth wise conv (DWS conv)
@@ -243,6 +244,7 @@ void k_conv2D(read_block_t *ptr_data,
     #ifdef DIRECT_CONV
     DO_PRAGMA(HLS STREAM variable=out_read_kernel    depth=STREAMS_DEPTH)
     DO_PRAGMA(HLS STREAM variable=out_read_kernel_2  depth=STREAMS_DEPTH)
+    DO_PRAGMA(HLS STREAM variable=out_read_kernel_3  depth=STREAMS_DEPTH)
     #endif
     #ifdef DWS_CONV
     DO_PRAGMA(HLS STREAM variable=out_read_kernel_dw depth=STREAMS_DEPTH)
@@ -290,6 +292,7 @@ void k_conv2D(read_block_t *ptr_data,
     #ifdef DIRECT_CONV
     read_kernel(enable_read_kernel, I_ITER, offset_kernel, ptr_kernel, out_read_kernel);
     weight_buffer(I_ITER, write_to_weight_buffer, read_from_weight_buffer, offset_weight_buffer, out_read_kernel, out_read_kernel_2);
+    prepare_weight_filters(I_ITER, out_read_kernel_2, out_read_kernel_3);
     #endif
     #ifdef DWS_CONV
     dws_read_dw_kernel(I_ITER, o_iter, ptr_dw_kernel, out_read_kernel_dw);  // o_iter as argument to load all kernels in the first iteration (o_iter==0)
@@ -306,7 +309,7 @@ void k_conv2D(read_block_t *ptr_data,
     read_batch_norm(offset_bias, b_ptr, out_read_batch_norm);
     #endif
     #ifdef DIRECT_CONV
-    direct_conv(rows, W, PT, PB, PL, PR, SH, SW, num_output_conv_pixels, I_ITER, out_mux, out_read_kernel_2, out_read_bias, out_conv);
+    direct_conv(rows, W, PT, PB, PL, PR, SH, SW, num_output_conv_pixels, I_ITER, out_mux, out_read_kernel_3, out_read_bias, out_conv);
     #endif
     #ifdef DWS_CONV
     dws_conv(rows, W, PT, PB, PL, PR, SH, SW, num_output_conv_pixels, I_ITER, out_mux, out_read_kernel_dw, out_read_kernel_pw, out_read_bias, out_conv);

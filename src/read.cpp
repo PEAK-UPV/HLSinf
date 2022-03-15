@@ -100,7 +100,7 @@ void read_batch_norm(int offset_batchnorm, bnp_st *b_ptr, hls::stream<bnp_st> &o
 // kernels in the same order they are read through the output stream.
 // kernels are sent in frame structures (3x3 grid)
 //
-void read_kernel(int enable, int I_ITER, int offset_kernel, read_filter_t *k_ptr, hls::stream<w_st> &k_out){
+void read_kernel(int enable, int I_ITER, int offset_kernel, read_filter_t *k_ptr, hls::stream<w_t> &k_out){
 
   #ifdef DEBUG_READ_KERNEL
   printf("READ_KERNEL: start\n");
@@ -109,7 +109,7 @@ void read_kernel(int enable, int I_ITER, int offset_kernel, read_filter_t *k_ptr
   if (!enable) return;
 
   read_filter_t k;
-  w_st kk;
+  w_t kk;
   int cnt = 0;
   #pragma HLS array_partition variable=k complete dim=0
 
@@ -122,22 +122,16 @@ void read_kernel(int enable, int I_ITER, int offset_kernel, read_filter_t *k_ptr
 			  for (int p=0; p<9; p++) {
 				  #pragma HLS pipeline II=1
 				  k = k_ptr[offset_kernel+cnt];
-			      kk.pixel[cpo][cpi][p] = w_t(k);
+			      kk = w_t(k);
+			      k_out << kk;
+                  #ifdef DEBUG_READ_KERNEL
+    	          printf("READ_KERNEL: Kernel read for cpi=%d cpo=%d p %d: %6.4f\n", cpi, cpo, p, float(kk));
+                  #endif
 				  cnt = cnt + 1;
 			  }
 		  }
 	  }
 
-	  k_out << kk;
-	  #ifdef DEBUG_READ_KERNEL
-	  for (int cpo=0; cpo<CPO; cpo++) {
-		  for (int cpi=0; cpi<CPI; cpi++) {
-		      printf("READ_KERNEL: Kernel read for cpi=%d cpo=%d : ", cpi, cpo);
-		      for (int p=0;p<9; p++) printf(" %6.4f ", float(kk.pixel[cpo][cpi][p]));
-		      printf("\n");
-		  }
-	  }
-	  #endif
   }
 
   #ifdef DEBUG_READ_KERNEL

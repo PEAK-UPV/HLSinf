@@ -136,14 +136,14 @@ void buffer0(int num_accesses, int read, int read_from_input, int write, int fir
 
 }
 
-void weight_buffer(int I_ITER, int write_to_buff, int read_from_buff, int offset_buff, hls::stream<w_st> &in, hls::stream<w_st> &out) {
+void weight_buffer(int I_ITER, int write_to_buff, int read_from_buff, int offset_buff, hls::stream<w_t> &in, hls::stream<w2_st> &out) {
 
-  w_st px_input;
-  w_st px_buff;
+  w2_st px_input;
+  w2_st px_buff;
   DO_PRAGMA(HLS AGGREGATE variable=px_input)
   DO_PRAGMA(HLS AGGREGATE variable=px_buff)
 
-  static w_st buffer[WEIGHT_BUFFER_SIZE];
+  static w2_st buffer[WEIGHT_BUFFER_SIZE];
   DO_PRAGMA(HLS aggregate variable=buffer)
   #ifdef ALVEO_U200
   DO_PRAGMA(HLS bind_storage variable=buffer type=ram_t2p impl=uram)
@@ -154,26 +154,78 @@ void weight_buffer(int I_ITER, int write_to_buff, int read_from_buff, int offset
 
   #ifdef DEBUG_WEIGHT_BUFFER
   printf("WEIGHT_BUFFER: starts (%d iters; write_to_buff %d; read_from_buff %d. weight buffer size %d)\n", I_ITER, write_to_buff, read_from_buff, WEIGHT_BUFFER_SIZE);
-  //printf("WEIGHT_BUFFER: sizeof %l\n", sizeof(buffer));
   #endif
 
-  weight_buffer_loop_pixels:
+  if (!read_from_buff) {
+	for (int p=0; p<I_ITER; p++) {
+      DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE / CPI)
+	  for (int cpo=0; cpo < CPO; cpo++) {
+        for (int cpi=0; cpi < CPI; cpi++) {
+          for (int x=0; x<9; x++) {
+            #pragma HLS pipeline II=1
+        	w_t px = in.read();
+        	px_buff.pixel[cpi][x] = px;
+          }
+        }
+        if (write_to_buff) {
+        	int index = offset_buff + (p * CPO) + cpo;
+        	buffer[index] = px_buff;
+        }
+        out << px_buff;
+	  }
+    }
+  } else {
+    for (int p=0; p<I_ITER; p++) {
+      DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE / CPI)
+	  for (int cpo=0; cpo < CPO; cpo++) {
+        #pragma HLS pipeline II=1
+		int index = offset_buff + (p * CPO) + cpo;
+       	px_buff = buffer[index];
+        out << px_buff;
+	  }
+    }
+  }
+
+/*  weight_buffer_loop_pixels:
   for (int p=0; p<I_ITER; p++) {
 	DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE / CPI)
     DO_PRAGMA(HLS pipeline)
     #pragma HLS dependence variable=buffer inter false
 
-    int index = p+offset_buff;
+	for (int cpo = 0; cpo < CPO; cpo++) {
+
+      int index = (p * CPO) + cpo + offset_buff;
 
 	  if (!read_from_buff) px_input = in.read();
 	  px_buff = buffer[index];
 
-  	if (read_from_buff) out << px_buff;	else out << px_input;
+  	  if (read_from_buff) out << px_buff;	else out << px_input;
 
  	  if (write_to_buff) buffer[index] = px_input;
+	}
 
-  }
+  }*/
   #ifdef DEBUG_WEIGHT_BUFFER
   printf("WEIGHT_BUFFER: ends\n");
   #endif
+}
+
+void prepare_weight_filters(int I_ITER, hls::stream<w2_st> &in, hls::stream<w_st> &out) {
+	for (int p=0; p<I_ITER; p++) {
+	  DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE / CPI)
+	  w_st px_out;
+	  for (int cpo=0; cpo<CPO; cpo++) {
+        #pragma HLS pipeline II=1
+	    w2_st px_in;
+	    px_in = in.read();
+	    for (int cpi=0; cpi<CPI; cpi++) {
+          #pragma HLS unroll
+		  for (int x=0; x<9; x++) {
+            #pragma HLS unroll
+		    px_out.pixel[cpo][cpi][x] = px_in.pixel[cpi][x];
+		  }
+		}
+	  }
+	  out << px_out;
+	}
 }

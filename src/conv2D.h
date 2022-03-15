@@ -10,7 +10,8 @@
 #ifndef _CONV2D_H_
 #define _CONV2D_H_
 
-#define AP_INT_MAX_W 4096 // Must be defined before includes
+#define AP_INT_MAX_W 8192 // Must be defined before includes
+#define AP_UINT_MAX_W 8192 // Must be defined before includes
 
 #include <stdio.h>
 #include <ap_fixed.h>
@@ -690,12 +691,12 @@
 #define FLOAT_DATA_TYPE               // we use float numbers as input data
 #define CPI                          4
 #define CPO                          4
-#define WMAX                      1024
-#define HMAX                       256
+#define WMAX                      1024  // add-module buffer is of size WMAX x HMAX rows of CPO x sizeof(float) word bits = 131072 x 128. Mapped on URAMs of 4096 x 72 bits = 64 URAMs (32 x 2 URAMs)
+#define HMAX                       128
 #define READ_BURST_SIZE             16
 #define STREAMS_DEPTH               2
-#define DATA_BUFFER_SIZE          8192
-#define WEIGHT_BUFFER_SIZE        5000
+#define DATA_BUFFER_SIZE          8192  // input buffers are of size 8192 x CPI x sizeof(float) = 8192 x 128. Mapped on URAms of 4096 x 72 bits = 4 URAMs (2 x 2 URAMs)
+#define WEIGHT_BUFFER_SIZE        4096
 #define EPSILON_VALUE            0.001
 #define MIN_DATA_TYPE_VALUE  -99999999
 #define READ_BLOCK_SIZE             16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
@@ -727,7 +728,7 @@
 #define DIRECT_CONV
 #define USE_RELU
 #define USE_CLIPPING
-//#define USE_SHIFT
+#define USE_SHIFT
 #define USE_POOLING
 #define USE_ADD
 //#define USE_BATCH_NORM
@@ -740,8 +741,8 @@
 #define HMAX                       256
 #define READ_BURST_SIZE             16
 #define STREAMS_DEPTH               16
-#define DATA_BUFFER_SIZE          8192 // 32 rows x 32 cols x (512/CPI) pixels_in
-#define WEIGHT_BUFFER_SIZE        5000
+#define DATA_BUFFER_SIZE          4096
+#define WEIGHT_BUFFER_SIZE        4096
 #define EPSILON_VALUE          0.00001
 #define MIN_DATA_TYPE_VALUE        -16
 #define READ_BLOCK_SIZE             16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
@@ -1062,6 +1063,7 @@ struct pool_st     {pool_t     pixel[CPO];};
 struct bn_st       {bn_t       pixel[CPO];};
 struct add_st      {add_t      pixel[CPO];};
 struct dout_st     {dout_t     pixel[CPO];};
+struct w2_st       {w_t        pixel[CPI][9];};
 struct w_st        {w_t        pixel[CPO][CPI][9];};
 struct w_in_st     {w_t        pixel[9];};
 struct b_st        {b_t        pixel[CPO];};
@@ -1120,14 +1122,13 @@ extern "C" void k_conv2D(read_block_t *ptr_data,
 
 void read_bias                    (int offset_bias, read_bias_st *b_ptr, hls::stream<b_st> &out);
 void read_batch_norm              (int offset_batchnorm, bnp_st *b_ptr, hls::stream<bnp_st> &out);
-void read_kernel                  (int enable, int I_ITER, int offset_kernel, read_filter_t *k_ptr, hls::stream<w_st> &k_out);
-void weight_buffer                (int I_ITER, int write_to_buff, int read_from_buff, int offset_buff, hls::stream<w_st> &in, hls::stream<w_st> &out);
+void read_kernel                  (int enable, int I_ITER, int offset_kernel, read_filter_t *k_ptr, hls::stream<w_t> &k_out);
+void weight_buffer                (int I_ITER, int write_to_buff, int read_from_buff, int offset_buff, hls::stream<w_t> &in, hls::stream<w2_st> &out);
+void prepare_weight_filters(int I_ITER, hls::stream<w2_st> &in, hls::stream<w_st> &out);
 void read_data_channels_gihwcpi   (int num_pixels, int offset, int I_ITER, int cpi_group_offset, read_block_t *ptr, hls::stream<din_st> &out, int enable);
+
 void read_input_add_gihwcpi       (int num_pixels, int offset, write_block_t *ptr, hls::stream<dout_st> &out, int enable);
 void write_data_channels_gihwcpi  (int num_pixels, int offset, write_block_t *ptr, hls::stream<dout_st> &in, int write_to_obuf, hls::stream<dout_st> &out);
-//void input_buffer                 (int num_pixels, int write_to_buff, int read_from_buff, int copy_from_obuf, hls::stream<din_st> &in, hls::stream<din_st> &in_obuf, hls::stream<din_st> &out);
-//void output_buffer                (int num_writes, int num_reads, int write, int read, hls::stream<dout_st> &in, hls::stream<din_st> &out);
-
 void buffer0                      (int num_accesses, int read, int read_from_input, int write, int first_write_address, hls::stream<din_st> &input, hls::stream<dout_st> &in, hls::stream<din_st> &out);
 void buffer1                      (int num_accesses, int read, int write, int first_write_address, hls::stream<dout_st> &in, hls::stream<din_st> &out);
 void mux                          (int num_accesses, int sel, hls::stream<din_st> &in0, hls::stream<din_st> &in1, hls::stream<din_st> &out);

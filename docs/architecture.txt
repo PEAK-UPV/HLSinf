@@ -309,4 +309,33 @@ DWS Convolution
  
 Pooling
 =======
+
+
+URAM use
+========
+
+Xilinx devices come with URAM memories. Each URAM memory has a size of 288Kb organized as 4096 x 72 bits. As the HLSinf accelerator has built-in buffers it is recommended to use URAM memories to implement such buffers. However, careful
+buffer dimensioning needs to be performed in order to properly use URAM modules. Next we describe the buffers used in HLSinf and how they should be dimensioned:
+
+  Buff0 and Buff1: These two buffers store input and output data. The buffer geometry is DATA_BUFFER_SIZE rows each of CPI x sizeof(din_t) bits. For an efficient mapping or URAM devices we must guarantee:
+  
+      DATA_BUFFER_SIZE is multiple of 4096
+      CPI x sizeof(din_t) should be as close as possible to a multiple of 72
+      For instance, DATA_BUFFER_SIZE = 4096, CPI = 4, and FP32 as din_t, we would end up with 2 URAMs, one of it not fully utilized
+      
+  WeightBuffer: This buffer stores weights. The WeightBuffer geometry is WEIGHT_BUFFER_SIZE rows each of CPI x CPO x 9 x sizeof(w_t). For an efficient mapping on URAM devices we must guarantee:
+  
+      WEIGHT_BUFFER_SIZE is multiple of 4096
+      CPI x CPO x 9 x sizeof(w_t) should be as close as possible to a multiple of 72
+      For instance, WEIGHT_BUFFER_SIZE = 8192, CPI = 4, CPO = 4, and FP32 as din_t, we would end up with  128 URAM modules, all of them fully utilized.
  
+  AddBuffer. The add module includes a buffer of HMAX x WMAX rows, each of CPO x sizeof(conv_t) bits. In order to get an efficient mapping on URAM devices we must guarantee:
+  
+      HMAX x WMAX must be as close as possible to a multiple of 4096
+      CPO x sizeof(conv_t) must be as close as possible to a multiple of 72
+      For instance, HMAX = 128, WMAX=1024, CPO = 4, and FP32 as conv_t, we would end up with 64 URAMs, 32 of them not fully utilized
+      
+      
+  
+  
+  
