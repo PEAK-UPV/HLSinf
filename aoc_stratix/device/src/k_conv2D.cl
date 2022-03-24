@@ -1222,7 +1222,6 @@ kernel void pool_pooling (uint H, uint W, uint enable_maxpooling, uint enable_av
 // new layer between pool_pooling and output,
 //  During training the layer returns    gamma * (batch - mean(batch)     ) / sqrt(var(batch)      + epsilon) + beta
 //  During inference the layer returns   gamma * (batch - self.moving_mean) / sqrt(self.moving_var + epsilon) + beta
-#define EPS    (bn_t)1e-5
 kernel void batch_norm (uint H, uint W, uint enable_batch_norm, uint enable_maxpooling, uint enable_avgpooling, uint O_ITER) {
   
   uint enable_bn = enable_batch_norm;
@@ -1289,7 +1288,7 @@ kernel void batch_norm (uint H, uint W, uint enable_batch_norm, uint enable_maxp
         // std = sqrt(run_var + eps)
         uint   ind_rv      = (cpo*4)+3;
         bn_t   run_var     = bn_values_in.values[ind_rv];
-        bn_t   run_var_eps = run_var + EPS;
+        bn_t   run_var_eps = run_var + BN_EPS;
         //std                = sqrt(run_var_eps);
 
         data_type rveps = (data_type)run_var_eps;

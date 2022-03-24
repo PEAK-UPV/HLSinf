@@ -1,6 +1,7 @@
 #ifndef _LIB_CONV2D_COMMONS_H_
 #define _LIB_CONV2D_COMMONS_H_
 
+#define BN_EPS    (bn_t)1e-3
 
 #define RANDOM_GEN_SEED_FIXED 1
 //
