@@ -44,7 +44,7 @@ void direct_conv(int H, int W, int PT, int PB, int PL, int PR, int SH, int SW, i
 
   padding(H, W, PT, PB, PL, PR, I_ITER, in, str_pad_cvt);   // padding
   cvt(h, w, I_ITER, SH, SW, str_pad_cvt, str_cvt_mul);       									        // cvt
-  mul(num_output_conv_pixels, I_ITER, str_cvt_mul, k_in, str_mul_add); 									// mul
+  mul(num_output_conv_pixels, I_ITER, str_cvt_mul, k_in, str_mul_add); 									// mul  // replace this my vector processer, data convertion mnay required inside the AIE
   add(num_output_conv_pixels, I_ITER, str_mul_add, b_in, out);         									// add
 }
 #endif
