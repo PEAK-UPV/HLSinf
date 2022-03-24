@@ -1,0 +1,10 @@
+#include<ap_int.h>
+
+ap_uint<16> 
+
+
+void top(ap_uint<8> a, ap_uint<8> b) {
+
+
+
+}
