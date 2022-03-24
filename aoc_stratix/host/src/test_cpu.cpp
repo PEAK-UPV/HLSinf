@@ -337,6 +337,8 @@ void cpu_conv2D() {
 
 
   // We now copy the output to the final output for the cpu, taking the different enables
+  printf("\n\n");
+  printf(" test_cpu: calculate out_cpu value\n");
   for (int cout = 0; cout < O_output; cout++) {
     for (int h = 0; h < H; h++) {
       for (int w = 0; w < W; w++) {
@@ -351,7 +353,7 @@ void cpu_conv2D() {
 
         //int addr_out = output_data_address(cout, h, w, HO_final, WO_final);
         out_cpu[addr_out] = v;
-
+       printf("          out_cpu[%d] = %f\n", addr_out,v);
       }
     }
   }

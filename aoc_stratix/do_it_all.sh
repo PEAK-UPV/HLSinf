@@ -19,7 +19,7 @@ TARGET_FPGA_BOARD="s10mx_hbm"
 
 HOST_FILE="host"
 
-INPUT_FILE="inext.data"
+INPUT_FILE="input.data"
 
 KERNEL_NAME="k_conv2D"
 KERNEL_FILE="${KERNEL_NAME}.aocx"
@@ -126,7 +126,7 @@ else
 fi
  
 echo "move kernel file: ${KERNEL_FILE} to executable folder"
-cp ${KERNEL_FILE} bin/
+mv ${KERNEL_FILE} bin/
 echo "done"
 
 ###############################################################################

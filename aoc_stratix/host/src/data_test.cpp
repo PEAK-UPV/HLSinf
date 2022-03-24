@@ -5,7 +5,22 @@
 #include "test_conv2D.h"
 
 
-void init_data() {
+// Functions
+
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+void read_from_file(const char *file, int size, int data_size, void *buf) {
+  FILE *fd = fopen(file, "r");
+  if (fd == NULL) {printf("Error, file %s not found\n", file); exit(1);}
+  int rv = fread(buf, data_size, size, fd); 
+  fclose(fd);
+}
+
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+void init_data(int from_file) {
 
   #ifdef DEBUG_DATA_DIN
   printf("initialize data\n");
@@ -20,6 +35,35 @@ void init_data() {
   #endif
 
 
+  if (from_file) {
+    printf("\n");
+    printf(KYEL "INIT_DATA from files\n" KNRM);
+
+    int HO_final = (enable_maxpooling | enable_avgpooling)? (HO / 2) : HO;
+    int WO_final = (enable_maxpooling | enable_avgpooling)? (WO / 2) : WO;
+
+    read_from_file("input.bin", I_input * H * W, sizeof(data_type), (void *)data_in);
+    if (enable_add) read_from_file("add.bin", O_output * HO_final * WO_final, sizeof(data_type), (void *)data_in_add);
+    read_from_file("weights.bin", I_kernel * O_kernel * KH * KW, sizeof(data_type), (void *)kernel);
+    read_from_file("bias.bin", O, sizeof(data_type), bias);
+    read_from_file("output.bin", O_output * HO_final * WO_final, sizeof(data_type), (void *)out_cpu_from_file);
+    if (enable_batch_norm) read_from_file("batchnorm.bin", O_output * 4, sizeof(data_type), (void *)batch_norm_values);
+
+    // statistics for each buffer
+    printf("input (file)  : "); print_input_buffer_stats(data_in, I_input * H * W);
+    printf("filter (file) : "); print_weight_buffer_stats(kernel, I_kernel * O_kernel * KH * KW);
+    printf("bias (file)   : "); print_bias_buffer_stats(bias, O);
+    if (enable_add) {printf("add    : "); print_data_in_buffer_stats(data_in_add, O_output * HO_final * WO_final);}
+    if (enable_batch_norm) {printf("bn_v (file)   : "); print_batchnorm_buffer_stats(batch_norm_values, O_output * 4);}
+    printf("output (file) : "); print_output_buffer_stats(out_cpu_from_file, O_output * HO_final * WO_final);
+   
+
+    printf("data initialization (read from files) finalizes\n\n");
+    return;
+  }
+
+
+  // if not read from file
   float my_flt_din  = 0;
   float my_flt_bias = 0;
   float my_flt_krnl = 0;
@@ -231,9 +275,9 @@ void init_data() {
 
 
 
-//  #ifdef DEBUG_ADD_DATA
+  #ifdef DEBUG_ADD_DATA
   printf("enable_add ->>>  add_data: O_OUTPUT %d  enable_pooling %s  H = %d   W = %d   HO = %d   WO = %d\n", O_output, enable_pooling?"yes":" no", H, W, HO_final, WO_final);
-//  #endif
+  #endif
 
 
     #ifdef DEBUG_READ_ADD_DATA
@@ -261,7 +305,9 @@ void init_data() {
 			  }
 		  }
 	  }
+    #ifdef DEBUG_READ_ADD_DATA
     printf("enable_add finalizes\n\n");
+    #endif
   }
   else {
     #ifdef DEBUG_READ_ADD_DATA
@@ -291,7 +337,9 @@ void init_data() {
 	  }
   }
   //#endif
+  #ifdef DEBUG_BATCH_NORM
   printf("batch_norm data initialization finalizes\n\n");
+  #endif
 
 
 
@@ -309,6 +357,9 @@ void init_data() {
 
 
   printf("data initialization finalizes\n\n");
-
-
 }
+
+//*********************************************************************************************************************
+// end of file data_test.cpp
+//*********************************************************************************************************************
+

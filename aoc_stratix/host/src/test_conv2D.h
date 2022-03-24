@@ -158,7 +158,9 @@ extern scoped_aligned_ptr<data_type> out_pool_cpu;	// Output data fuffer for poo
 
 extern scoped_aligned_ptr<data_type> out_batch_norm_cpu;  // Output data buffer for cpu (format O x W x H
 extern scoped_aligned_ptr<data_type> out_add_cpu;         // Output data buffer for ADD for cpu (format O x W x H)
-extern scoped_aligned_ptr<data_type> out_cpu;             // Output data buffer for for cpu. final output
+extern scoped_aligned_ptr<data_type> out_cpu;             // Output data buffer for cpu. final output
+
+extern scoped_aligned_ptr<data_type> out_cpu_from_file;        // Output data buffer for EDDL final output
 
 extern char *input_data_file;            // file with input parameters
 
@@ -203,15 +205,25 @@ extern cl_event  kernel_events[K_NUM_KERNELS];
 void allocate_buffers();
 void deallocate_buffers();
 int filter_address_direct_conv(int i, int o, int kh, int kw);
+
 void cpu_conv2D();
+
 void print_bias();
 void print_input();
-void print_output();
+void print_output(int only_cpu);
 void print_kernel();
-int check_result(data_type *max_difference, int *num_elements_differ);
-void init_data();
+
+void print_input_buffer_stats(data_type *p, int size);
+void print_weight_buffer_stats(data_type *p, int size);
+void print_bias_buffer_stats(data_type *p, int size);
+void print_data_in_buffer_stats(data_type *p, int size);
+void print_batchnorm_buffer_stats(data_type *p, int size);
+void print_output_buffer_stats(data_type *p, int size);
+
+int check_result(data_type *max_difference, int *num_elements_differ, int from_file);
+void init_data(int from_file);
 int open_test_file();
-int read_test_file(int *enable, int *cpu);
+int read_test_file(int *enable, int *from_file, int *cpu);
 int close_test_file();
 //void run_kernel();
 void run_aoc_kernels();

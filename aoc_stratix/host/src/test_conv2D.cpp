@@ -127,6 +127,8 @@ scoped_aligned_ptr<data_type> out_batch_norm_cpu;  // Output data buffer for cpu
 scoped_aligned_ptr<data_type> out_add_cpu;         // Output data buffer for ADD for cpu (format O x W x H)
 scoped_aligned_ptr<data_type> out_cpu;             // Output data buffer for for cpu. final output 
 
+scoped_aligned_ptr<data_type> out_cpu_from_file;        // Output data buffer for EDDL final output
+
 FILE *fp;
 
 int use_emulator = 0;
@@ -183,7 +185,7 @@ void abort (const char * msg){
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-void compute(int *enable, int *cpu, int *retval) {
+void compute(int *enable, int *from_file, int *cpu, int *retval) {
 
   if (*enable) {
     print_configuration();
@@ -233,7 +235,7 @@ void compute(int *enable, int *cpu, int *retval) {
       allocate_buffers();
 
       // generates input data in host depending on configuration "macros" and parameters at "input_data" file
-      init_data();
+      init_data(*from_file);
       // at this point, generated data is stored in "data_in"
 
       #ifdef OPENCL_TEST
@@ -245,6 +247,10 @@ void compute(int *enable, int *cpu, int *retval) {
       print_input();
       print_bias();
       print_kernel();
+      //#ifdef USE_BATCH_NORM
+	    print_batch_norm(); // shouuld be protected by if(enable_batch_norm)
+      //#endif
+	    if (from_file) print_output(1);
       #endif
 
       // timing stats
@@ -340,14 +346,14 @@ void compute(int *enable, int *cpu, int *retval) {
       efficiency = ((float)expected_time / (float)time);
       print_timings(time, time_per_iteration, expected_time, efficiency);
 
-      if (*cpu) {
+      if (*cpu || *from_file) {
         cpu_conv2D();
         #ifdef OPENCL_TEST
         copy_from_fpga();
         #endif
         int num_differences;
         data_type max_difference;
-        *retval = check_result(&max_difference, &num_differences);
+        *retval = check_result(&max_difference, &num_differences, *from_file);
 
         print_check(*retval, float(max_difference), num_differences);
 
@@ -376,6 +382,7 @@ int main(int argc, char **argv) {
   int retval = 0;
   int global_retval = 0;
   int cpu = 0;
+  int from_file;
   int enable = 0 ;
   int total_processed_lines= 0 ;
   int total_errors = 0;
@@ -435,11 +442,12 @@ int main(int argc, char **argv) {
   if (argc == 1) {
     printf("Co-simulation test...\n");
     enable = 1;
+    from_file = 0;
     cpu = 1;
     deterministic_input_values = 1;
     for (int i=0; i<INSTANCES_SIM; i++)
     {
-      compute(&enable, &cpu, &retval);
+      compute(&enable, &from_file, &cpu, &retval);
     }
     global_retval = retval;
   } else {
@@ -472,7 +480,7 @@ int main(int argc, char **argv) {
     printf("Process test intput data file \n");
     #endif
     int file_line = 0;
-    while (!read_test_file(&enable, &cpu)) {
+    while (!read_test_file(&enable, &from_file, &cpu)) {
     //while (!read_test_file(&enable, &cpu) && (file_line < 1)) {
       printf("\n-------------------------\n");
       printf("Process test intput data file line #%2d\n", file_line + 1);
@@ -488,7 +496,7 @@ int main(int argc, char **argv) {
       }
 
       // Launh kernel wiht configuration read from file (one line contains the configuration of a "computation")
-      compute(&enable, &cpu, &retval);
+      compute(&enable, &from_file, &cpu, &retval);
       #ifdef DEBUG_VERBOSE
       printf("Test check results returned\n");
       #endif

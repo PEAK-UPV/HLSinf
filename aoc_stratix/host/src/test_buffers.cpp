@@ -200,6 +200,15 @@ void allocate_buffers() {
   out_cpu.reset(O_output * W * H);
   for(size_t i = 0; i < O_output * W * H; i++) out_cpu[i] = (data_type)0;
 
+  #ifdef PRINT_LOG_BUFFERS  
+  #ifdef DEBUG_VERBOSE
+  printf("  out_cpu_from_file vector reset\n");
+  #endif
+  #endif
+  out_cpu_from_file.reset(O_output * W * H);
+  for(size_t i = 0; i < O_output * W * H; i++) out_cpu_from_file[i] = (data_type)0;
+
+
 
   // CREATE memroy buffers and link them with the host memory pointer
 #ifdef OPENCL_TEST

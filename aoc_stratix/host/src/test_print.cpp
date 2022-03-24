@@ -5,12 +5,134 @@
 
 #include "test_conv2D.h"
 
+
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+void print_input_buffer_stats(data_type *p, int size) {
+  float min =  999999;
+  float max = -999999;
+  double sum = 0.f;
+
+  for (int x = 0; x < size; x++) {
+    float v = float(p[x]);
+    if (min > v) min = v;
+    if (max < v) max = v;
+    sum += v;
+  }
+  float avg = sum / (float)size;
+  printf("Min %8.4f Max %8.4f Avg %8.4f\n", min, max, avg);
+}
+
+
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+void print_weight_buffer_stats(data_type *p, int size) {
+   float min =  999999;
+  float max = -999999;
+  double sum = 0.f;
+
+  for (int x = 0; x < size; x++) {
+    float v = float(p[x]);
+    if (min > v) min = v;
+    if (max < v) max = v;
+    sum += v;
+  }
+  float avg = sum / (float)size;
+  printf("Min %8.4f Max %8.4f Avg %8.4f\n", min, max, avg);
+}
+
+
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+void print_bias_buffer_stats(data_type *p, int size) {
+  float min =  999999;
+  float max = -999999;
+  double sum = 0.f;
+
+  for (int x = 0; x < size; x++) {
+    float v = float(p[x]);
+    if (min > v) min = v;
+    if (max < v) max = v;
+    sum += v;
+  }
+  float avg = sum / (float)size;
+  printf("Min %8.4f Max %8.4f Avg %8.4f\n", min, max, avg);
+}
+
+
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+void print_data_in_buffer_stats(data_type *p, int size) {
+  float min =  999999;
+  float max = -999999;
+  double sum = 0.f;
+
+  for (int x = 0; x < size; x++) {
+    float v = float(p[x]);
+    if (min > v) min = v;
+    if (max < v) max = v;
+    sum += v;
+  }
+  float avg = sum / (float)size;
+  printf("Min %8.4f Max %8.4f Avg %8.4f\n", min, max, avg);
+}
+
+
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+void print_batchnorm_buffer_stats(data_type *p, int size) {
+   float min =  999999;
+  float max = -999999;
+  double sum = 0.f;
+
+  for (int x = 0; x < size; x++) {
+    float v = float(p[x]);
+    if (min > v) min = v;
+    if (max < v) max = v;
+    sum += v;
+  }
+  float avg = sum / (float)size;
+  printf("Min %8.4f Max %8.4f Avg %8.4f\n", min, max, avg);
+}
+
+
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+void print_output_buffer_stats(data_type *p, int size) {
+  float min =  999999;
+  float max = -999999;
+  double sum = 0.f;
+
+  for (int x = 0; x < size; x++) {
+    float v = float(p[x]);
+    if (min > v) min = v;
+    if (max < v) max = v;
+    sum += v;
+  }
+  float avg = sum / (float)size;
+  printf("Min %8.4f Max %8.4f Avg %8.4f\n", min, max, avg);
+}
+
+
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
 void print_bias() {
   printf("Bias: \n");
   for (int o=0; o<O_output; o++) printf("%6.4f ", float(bias[o]));
   printf("\n");
 }
 
+
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
 #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
 void print_kernel() {
   printf("Kernels: \n");
@@ -39,6 +161,10 @@ void print_kernel() {
 }
 #endif
 
+
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
 #ifdef DWS_CONV
 void print_kernel() {
   printf("Kernels (dw): \n");
@@ -68,7 +194,9 @@ void print_kernel() {
 }
 #endif
 
-
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
 void print_input() {
   int Hmax = H;
   int Wmax = W;
@@ -93,7 +221,10 @@ void print_input() {
 }
 
 
-void print_output() {
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+void print_output(int only_cpu) {
   //float epsilon = EPSILON_VALUE;
   float epsilon = epsilon_dataset_tuned;
 
@@ -109,7 +240,7 @@ void print_output() {
           if (float(diff) > float(epsilon)) {
             printf( KRED );
           }
-          printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_cpu[addr_o]));
+          if (only_cpu) printf("%6.4f ", float(out_cpu[addr_o])); else printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_cpu[addr_o]));
           printf( KNRM );
         }
         printf("\n");
@@ -129,14 +260,14 @@ void print_output() {
             if (float(diff) > float(epsilon)) {
               printf( KRED );
             }
-            printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_relu_cpu[addr_o]));
+            if (only_cpu) printf("%6.4f ", float(out_cpu[addr_o])); else printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_relu_cpu[addr_o]));
             printf( KNRM );
           } else { 
             data_type diff = data_type(fabs(float(out[addr_o]) - float(out_cpu[addr_o])));
             if  (float(diff) > float(epsilon)) {
               printf( KRED );
             }
-            printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_cpu[addr_o]));
+            if (only_cpu) printf("%6.4f ", float(out_cpu[addr_o])); else printf("%6.4f (%6.4f) ", float(out[addr_o]), float(out_cpu[addr_o]));
             printf( KNRM );
           }
         }
@@ -145,9 +276,11 @@ void print_output() {
     }
 
   }
-
 }
 
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
 void print_configuration() {
   // enable, cpu, &H, &W, &I, &O, &enable_upper_padding, &enable_lower_padding, &enable_relu, &enable_maxpooling, &enable_avgpooling, &enable_batch_norm, &enable_add, &enable_shift, &dir_shift, &pos_shift,
   printf("\n");
@@ -163,12 +296,20 @@ void print_configuration() {
   printf("====================================================================================================================\n");
 }
 
+
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
 void print_timings(unsigned long long time, unsigned long long time_per_iteration, unsigned long long expected_time, float efficiency) {
 
   printf("| Time %8lld usec  |  Time per iteration %8lld usec  |  Expected time %8lld usec  |   Efficiency %6.4f   |\n", time, time_per_iteration, expected_time, efficiency);
   printf("====================================================================================================================\n");
 }
 
+
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
 void print_check(int result, float max_difference, int num_differences) {
     if (result) {
       float epsilon = EPSILON_VALUE;
@@ -191,7 +332,16 @@ void print_check(int result, float max_difference, int num_differences) {
     }
 }
 
+
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
 void print_message(const char *str) {
     printf("| %-112s |\n", str);
     printf("====================================================================================================================\n");
 }
+
+//*********************************************************************************************************************
+// end of file test_print.cpp
+//*********************************************************************************************************************
+

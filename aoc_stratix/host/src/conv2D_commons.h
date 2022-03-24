@@ -4,7 +4,7 @@
 
 #define RANDOM_GEN_SEED_FIXED 1
 //
-//#define DEBUG_VERBOSE
+#define DEBUG_VERBOSE
 //// host side debug 
 //#define DEBUG_LOG_INIT
 //#define PRINT_LOG_BUFFERS
@@ -14,11 +14,11 @@
 //#define DEBUG_DATA_BIAS
 ////
 //// Kernel side
-//#define DEBUG_READ_BIAS
-//#define DEBUG_READ_KERNEL
-//#define DEBUG_READ_DATA
-////#define DEBUG_READ_BATCH_NORM
-//#define DEBUG_READ_ADD_DATA
+#define DEBUG_READ_BIAS
+#define DEBUG_READ_KERNEL
+#define DEBUG_READ_DATA
+#define DEBUG_READ_BATCH_NORM
+#define DEBUG_READ_ADD_DATA
 //#define DEBUG_HOST_KERNELS
 ////#define DEBUG_SERIALIZE
 ////#define DEBUG_JOIN
@@ -31,14 +31,14 @@
 ////#define DEBUG_BLOCK
 ////#define DEBUG_RELU
 //#define DEBUG_POOL
-//#define DEBUG_ADD_DATA
-//#define DEBUG_BATCH_NORM
+#define DEBUG_ADD_DATA
+#define DEBUG_BATCH_NORM
 //#define DEBUG_WRITE_DATA
 //
 //// host side (again)
 //#define DEBUG_CPU
 ////#define DEBUG_CPU_MUL
-//#define DEBUG_CHECK
+#define DEBUG_CHECK
 
 
 
@@ -305,7 +305,7 @@
 #define WMAX                       256 // 32  for emulation 256 for impl
 #define HMAX                       256 // 32  for emulation 256 for impl
 #define READ_BURST_SIZE              4
-#define STREAMS_DEPTH               16 // 16  for emulation  64 for impl   //4 original from xilinx
+#define STREAMS_DEPTH               2 // 16  for emulation  64 for impl   //4 original from xilinx
 #define INPUT_BUFFER_SIZE        65536 //524288
 #define MAX_KERNELS_DW         512/CPI
 #define DW_KERNEL_STREAM_DEPTH       4      // 512 DW kernels
@@ -324,7 +324,7 @@
 #define WMAX                       128
 #define HMAX                       128
 #define READ_BURST_SIZE              4 // 1 ?? JM10 encara que crec que no afecta, 
-#define STREAMS_DEPTH               16 //4
+#define STREAMS_DEPTH               2 //4
 #define INPUT_BUFFER_SIZE        65536 //524288
 #define MAX_KERNELS_DW         512/CPI
 #define DW_KERNEL_STREAM_DEPTH       4      // 512 DW kernels
