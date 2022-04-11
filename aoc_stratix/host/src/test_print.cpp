@@ -220,6 +220,31 @@ void print_input() {
   }
 }
 
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+void print_input_add() {
+
+  int Hmax = HO_final;
+  int Wmax = WO_final;
+  if (H > 5) Hmax = 5;
+  if (W > 5) Wmax = 5;
+
+  printf("Input ADD:\n");
+  for (int i=0; i<I_input; i++) {
+    printf("channel %d:\n", i);
+	for (int h=0; h<Hmax; h++) {
+	  for (int w=0; w<Wmax; w++) {
+		int addr = input_data_address(i, h, w);
+	    printf("%4.2f ", float(data_in_add[addr]));
+        addr++;
+	  }
+	  if (W != Wmax) printf(" ...");
+	  printf("\n");
+	}
+	if (H != Hmax) printf("...\n");
+  }
+}
 
 //-----------------------------------------------------------------------------
 //
@@ -251,10 +276,15 @@ void print_output(int only_cpu) {
     printf("Output:\n");
     //for (int o=0; o<O_output; o++) {
     for (int o=0; o<O; o++) {
+      //int rows = enable_upsize ? HO_final * 2 : HO_final;
+      //int cols = enable_upsize ? WO_final * 2 : WO_final;
+      int rows = HO_final;
+      int cols = WO_final;
+
       printf("channel %d:\n", o);
-      for (int h=0; h<H; h++) {
-        for (int w=0; w<W; w++) {
-          int addr_o = output_data_address(o, h, w);
+      for (int h=0; h<rows; h++) {
+        for (int w=0; w<cols; w++) {
+          int addr_o = output_data_address(o, h, w, rows, cols);
           if (enable_relu) {
             data_type diff = data_type(fabs(float(out[addr_o]) - float(out_relu_cpu[addr_o])));
             if (float(diff) > float(epsilon)) {
@@ -289,8 +319,10 @@ void print_configuration() {
   printf("|------------------------------------------------------------------------------------------------------------------|\n");
   printf("| CPI: %2d     |  CPO: %2d     | log2_CPO: %2d     |  WMAX: %2d     | HMAX: %2d                                         |\n", CPI, CPO, LOG2_CPO, WMAX, HMAX);
   printf("|------------------------------------------------------------------------------------------------------------------|\n");
-  printf("| EUP: %s    |    ELP: %s         |   Enable BN:  %s     |  Enable ADD: %s                                       |\n",  
-               enable_upper_padding?"yes":" no",enable_lower_padding?"yes":" no", enable_batch_norm?"yes":" no", enable_add?"yes":" no");
+  printf("| EUP: %s    |    ELP: %s         |   Enable BN:  %s     |  Enable ADD: %s                                     |\n",  
+               "---", "---", enable_batch_norm?"yes":" no", enable_add?"yes":" no");
+  printf("| PT: %s     |    PB: %s          |   PL:  %s           |  PR: %s                  |  SH: %d        |  SW: %d    |\n", 
+      PT?"yes":" no", PB?"yes":" no", PL?"yes":" no", PR?"yes":" no", SH, SW);
   printf("| ReLU: %s   |   MaxPooling: %s   |   AvgPooling: %s    |  Clipping: %s (%2d:%2d)    |  Shift: %s (%s,%2d)    |\n", enable_relu?"Yes":"No ",
 		           enable_maxpooling?"Yes":"No ", enable_avgpooling?"Yes":"No ", enable_clipping?"Yes":"No ", min_clip, max_clip, enable_shift?"Yes":"No ", dir_shift==LEFT_DIRECTION?"LEFT ":"RIGHT", pos_shift);
   printf("====================================================================================================================\n");

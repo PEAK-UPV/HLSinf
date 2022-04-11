@@ -59,6 +59,12 @@
 //  Public Global variables
 // 
 //*********************************************************************************************************************
+
+//JM10_TO_DELETE
+//int enable_upper_padding = 1;   // enables the upper row of padding
+//int enable_lower_padding = 1;   // enables the lower row of padding
+
+
 // Global variables
 int CONVS;           // Number of convolutional layers
 int KERNELS;         // Number of FPGA kernels to use
@@ -72,15 +78,18 @@ int WO = W_SIM;      // Output width
 
 
 // ------
-//int PT = PT_SIM;     // Top padding
-//int PB = PB_SIM;     // Bottom padding
-//int PL = PL_SIM;     // Left padding
-//int PR = PR_SIM;     // Right padding
-//int SH = SH_SIM;     // Vertical stride
-//int SW = SW_SIM;     // Horizontal stride
+int PT = PT_SIM;          // enables the upper row of padding
+int PB = PB_SIM;          // enables the lower row of padding
+int PL = PL_SIM;          // enables the left  column of padding
+int PR = PR_SIM;          // enables the right column of padding
+
+int SH = SH_SIM;          // vertical stride
+int SW = SW_SIM;          // horizontal stride
+
+
 ////int F;               // number of frames of the data
-//int HO_final = H_SIM;  // HO at the output of the kernel
-//int WO_final = W_SIM;  // WO at the output of the kernel
+int HO_final = H_SIM;  // HO at the output of the kernel
+int WO_final = W_SIM;  // WO at the output of the kernel
 //
 //enable_stm;
 int enable_batch_norm = 0;
@@ -92,8 +101,6 @@ int O_kernel = O_SIM;      // Number of output channels for the kernel (filter) 
 int I_input  = I_SIM;      // Number of input channels for the input data - padding (needed in GIHWCPI data format)
 int O_output = O_SIM;      // Number of output channels for the output data - padding (needed in GIHWCPI data format)
 int rows = H_SIM;          // number of rows to compute by the kernel
-int enable_upper_padding = 1;   // enables the upper row of padding
-int enable_lower_padding = 1;   // enables the lower row of padding
 int enable_relu = 1;       // enables applying the relu activation functions
 int enable_shift = 0;      // enables applying shift to the output
 int dir_shift = 0;         // shift direction (left or right)
@@ -105,7 +112,7 @@ int min_clip = 0;          // minimum clip value
 int max_clip = 0;          // maximum clip value
 int i_iter = I_SIM/CPI;    // number of input iterations
 int o_iter = O_SIM/CPO;    // number of output iterations
-int global_offset = 0;     // global offset for the output data for the kernel
+//int global_offset = 0;     // global offset for the output data for the kernel
 int GI = I_SIM/CPI;        // number of groups for input channels
 int GO = O_SIM/CPO;        // number of groups for output channels
 char *input_data_file;          // input data file with configurations to test
@@ -201,6 +208,10 @@ void compute(int *enable, int *from_file, int *cpu, int *retval) {
       print_message("MaxPooling and AvgPooling cannot be active at the same time (skipped)");
       *enable = 0;
     }
+    if ((enable_maxpooling || enable_avgpooling) && ((HO % 2) || (WO % 2))) {
+      print_message("Pooling not allowed with outut convolution with no even rows and columns (skipped)");
+      *enable = 0;
+    }
 
     #ifndef API8_DATA_TYPE
     if (enable_clipping || enable_shift) {
@@ -228,6 +239,11 @@ void compute(int *enable, int *from_file, int *cpu, int *retval) {
     }
     #endif
 
+    if (WO_final > WMAX) {
+	    print_message("Width of output data is too large, consider increasing WMAX");
+	    *enable = 0;
+	  }
+
     //*enable = 0;
     //printf(KYEL " under devel, not allocating buffers, initializing data nor running kernel yet \n" KRST);
 
@@ -245,6 +261,7 @@ void compute(int *enable, int *from_file, int *cpu, int *retval) {
 
       #ifdef DEBUG_CPU
       print_input();
+      if (enable_add) print_input_add();
       print_bias();
       print_kernel();
       //#ifdef USE_BATCH_NORM
@@ -260,7 +277,8 @@ void compute(int *enable, int *from_file, int *cpu, int *retval) {
 
       // run kernel
       //run_kernel();
-      run_aoc_kernels();
+      //run_aoc_kernels();
+      compute();
        
       // compute execution timing
       unsigned long long time;
@@ -425,9 +443,9 @@ int main(int argc, char **argv) {
   printf ("  FREQ: %6.2f MHz  (used for conversions from time to frequency only)\n", KERNEL_FREQUENCY_MHZ);
   printf ("  data_type: %s\n", dtype.c_str());
   printf ("  WMAX %3d    HMAX %3d\n", WMAX, HMAX);
-  printf ("  CPI  %2d    CPO  %2d\n", CPI, CPO);
-  printf ("  KW   %2d    KH   %2d\n", KW, KH);
-  printf ("  KW_P %2d    KH_P %2d    SW_P %2d    SH_P %2d\n", KW_POOLING, KH_POOLING, SW_POOLING, SH_POOLING);
+  printf ("  CPI  %3d    CPO  %3d\n", CPI, CPO);
+  printf ("  KW   %3d    KH   %3d\n", KW, KH);
+  printf ("  KW_P %3d    KH_P %3d    SW_P %3d    SH_P %3d\n", KW_POOLING, KH_POOLING, SW_POOLING, SH_POOLING);
 
 
   if ( (KW_POOLING != 2) || (KH_POOLING != 2) || (SW_POOLING != 2) || (SH_POOLING != 2)) {
@@ -485,11 +503,12 @@ int main(int argc, char **argv) {
       printf("\n-------------------------\n");
       printf("Process test intput data file line #%2d\n", file_line + 1);
 
-      if (H > HMAX) {
-        printf(KYEL "WARNING: detected unsuported H %d greater than max value HMAX %d\n" KNRM, H, HMAX);
-        printf("  ...skipping line\n");
-        continue;
-      } else if (W > WMAX) {
+      //if (H > HMAX) {
+      //  printf(KYEL "WARNING: detected  H %d greater than max value HMAX %d\n" KNRM, H, HMAX);
+      //  printf("  ...Under development\n");
+      //  //continue;
+      //} else
+      if (W > WMAX) {
         printf(KYEL "WARNING: detected unsuported W %d greater than max value WMAX %d\n" KNRM, W, WMAX);
         printf("  ...skipping line\n");
         continue;

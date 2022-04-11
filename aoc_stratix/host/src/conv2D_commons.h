@@ -1,28 +1,33 @@
 #ifndef _LIB_CONV2D_COMMONS_H_
 #define _LIB_CONV2D_COMMONS_H_
 
+// EPSILON value for batch normalization value
+// this value must match the one set in the EDDL library
 #define BN_EPS    (bn_t)1e-3
 
 #define RANDOM_GEN_SEED_FIXED 1
-//
-#define DEBUG_VERBOSE
-//// host side debug 
+
+// debug verbosity options
+//#define DEBUG_VERBOSE
+//#define DEBUG_VERY_VERBOSE
+
+// host side debug 
 //#define DEBUG_LOG_INIT
 //#define PRINT_LOG_BUFFERS
 //#define DEBUG_DATA_DIN
 //#define DEBUG_DATA_KERNEL
 //#define DEBUG_DATA_DOUT
 //#define DEBUG_DATA_BIAS
-////
-//// Kernel side
-#define DEBUG_READ_BIAS
-#define DEBUG_READ_KERNEL
-#define DEBUG_READ_DATA
-#define DEBUG_READ_BATCH_NORM
-#define DEBUG_READ_ADD_DATA
+
+// Kernel side
+//#define DEBUG_READ_BIAS
+//#define DEBUG_READ_KERNEL
+//#define DEBUG_READ_DATA
+//#define DEBUG_READ_BATCH_NORM
+//#define DEBUG_READ_ADD_DATA
 //#define DEBUG_HOST_KERNELS
-////#define DEBUG_SERIALIZE
-////#define DEBUG_JOIN
+//#define DEBUG_SERIALIZE
+//#define DEBUG_JOIN
 //#define DEBUG_INPUT_BUFFER
 //#define DEBUG_PADDING
 //#define DEBUG_CVT
@@ -30,16 +35,16 @@
 //#define DEBUG_ADD
 ////#define DEBUG_SPLIT
 ////#define DEBUG_BLOCK
-////#define DEBUG_RELU
+//#define DEBUG_RELU
 //#define DEBUG_POOL
-#define DEBUG_ADD_DATA
-#define DEBUG_BATCH_NORM
+//#define DEBUG_ADD_DATA
+//#define DEBUG_BATCH_NORM
 //#define DEBUG_WRITE_DATA
 //
 //// host side (again)
 //#define DEBUG_CPU
 ////#define DEBUG_CPU_MUL
-#define DEBUG_CHECK
+//#define DEBUG_CHECK
 
 
 
@@ -88,8 +93,8 @@
 #define CPI                          4
 #define CPO                          4
 #define LOG2_CPO                     2
-#define WMAX                      32 // 32  for emulation 256 for impl
-#define HMAX                      32 // 32  for emulation 256 for impl
+#define WMAX                        32 // 32  for emulation 256 for impl
+#define HMAX                        32 // 32  for emulation 256 for impl
 #define READ_BURST_SIZE              4
 #define STREAMS_DEPTH               16 // 16  for emulation  64 for impl   //4 original from xilinx
 #define INPUT_BUFFER_SIZE        65536 //524288
@@ -491,10 +496,16 @@
 // -----------------------------------------------------------------------------------------------------------
 // defines for C simulation and C/RTL co-simulation
 // -----------------------------------------------------------------------------------------------------------
-#define W_SIM         256 //WMAX
-#define H_SIM         256 //HMAX
-#define I_SIM         64  //I_REFERENCE
-#define O_SIM         64  //O_REFERENCE
+#define W_SIM         64 //WMAX
+#define H_SIM         64 //HMAX
+#define I_SIM         CPI  //I_REFERENCE
+#define O_SIM         CPO  //O_REFERENCE
+#define PT_SIM        1   
+#define PB_SIM        1
+#define PL_SIM        1
+#define PR_SIM        1
+#define SH_SIM        1
+#define SW_SIM        1
 #define INSTANCES_SIM 1   //2
 
 // -----------------------------------------------------------------------------------------------------------

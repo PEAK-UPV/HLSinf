@@ -71,7 +71,7 @@ channel bnp_st_t      CH_BN_IN            __attribute__((depth(STREAMS_DEPTH)));
 //channel add_data_st_t CH_ADD_DATA_IN      __attribute__((depth(STREAMS_DEPTH)));
 channel pixel_out_t   CH_ADD_DATA_IN      __attribute__((depth(STREAMS_DEPTH)));
 
-channel pixel_in_t   CH_IB_TO_PAD        __attribute__((depth(STREAMS_DEPTH)));
+//channel pixel_in_t   CH_IB_TO_PAD        __attribute__((depth(STREAMS_DEPTH)));
 channel pixel_in_t   CH_PAD_TO_CVT       __attribute__((depth(STREAMS_DEPTH)));
 channel frame_t      CH_CVT_TO_MUL       __attribute__((depth(STREAMS_DEPTH)));
 channel pixel_out_t  CH_MUL_TO_ADD       __attribute__((depth(STREAMS_DEPTH)));
@@ -92,10 +92,11 @@ channel pixel_out_t  CH_DATA_OUT          __attribute__((depth(STREAMS_DEPTH)));
 // ----------------------------------------------------------------------------
 // Macros
 // ----------------------------------------------------------------------------
-#define CH_IB_IN         CH_DATA_IN
-#define CH_IB_OUT        CH_IB_TO_PAD
+//#define CH_IB_IN         CH_DATA_IN
+//#define CH_IB_OUT        CH_IB_TO_PAD
 
-#define CH_PADD_IN       CH_IB_TO_PAD
+//#define CH_PADD_IN       CH_IB_TO_PAD
+#define CH_PADD_IN       CH_DATA_IN
 #define CH_PADD_OUT      CH_PAD_TO_CVT
 
 #define CH_CVT_IN        CH_PAD_TO_CVT
@@ -144,64 +145,59 @@ channel pixel_out_t  CH_DATA_OUT          __attribute__((depth(STREAMS_DEPTH)));
 // Data IN kernel
 //  read data from memory and write it to input stream
 // ----------------------------------------------------------------------------
-kernel void data_in(global pixel_in_t* restrict data_in, uint M, uint H, uint W, uint rows, uint O_ITER, uint global_offset, uint enable_lower_padding, uint enable_upper_padding, uint I_ITER) {
+kernel void data_in(global pixel_in_t* restrict data_in, uint num_pixels_in, uint I_ITER_in, uint O_ITER_in, uint offset_in, uint cpi_group_offset_in) {
 
-  //uint num_pixels_in       = H * W;
-  //uint read_channel_offset = H * W;
-  uint corrected_offset         = (enable_upper_padding==0)? W : 0;
-  uint offset_read_data_channel = global_offset - corrected_offset;
-
-  //uint8_t unused = read_channel_offset;
-  //local uint offset_read_data_channel_i[CPI];
+  uint num_pixels  = num_pixels_in;
+  uint I_ITER      = I_ITER_in;
+  uint O_ITER      = O_ITER_in;
+  uint offset      = offset_in;
+  uint cpi_group_offset  = cpi_group_offset_in;
 
   #ifdef DEBUG_READ_DATA
-    printf("READ_DATA_IN gihwcpi format: start   M %u   H %u   W %u   o_iter %u   global_offset %u   ena_upper_padding %u   ena_lower_padding %u   i_iter %u\n",
-        M, H, W, O_ITER, global_offset, enable_upper_padding, enable_lower_padding, I_ITER);
+  printf("READ_DATA_IN: gihwcpi format: start num_pixels(per_iter) %2u  i_iter %2u   o_iter %2u   offset %6u\n", num_pixels, I_ITER, O_ITER, offset);  
   #endif 
-
-  // we compute the enable_write signals
-  // currently disabled since it always reads from memory
-  //    set_write_enables(enable_write, o_channel, O);
-  // channel offsets for reading
-  //set_reading_channel_offsets(offset_read_data_channel_i, offset_read_data_channel, read_channel_offset);
-  // the variables involved in this operation do not change withing the kernel call, are constant
-//  set_reading_channel_offsets_loop:
-//  #pragma unroll
-//  for(int i=0; i<CPI; i++){
-//    offset_read_data_channel_i[i] = (offset_read_data_channel + i * channel_offset) % READ_BLOCK_SIZE;
-//  }
-
-  uint num_extra_rows    = (enable_lower_padding == 0) + (enable_upper_padding == 0);
-  uint read_pixels       = W * (rows + num_extra_rows);
-  uint read_pixels_total = read_pixels * I_ITER;
-
-  for (uint o_iter = 0; o_iter < O_ITER; o_iter++)
-  {
-    //uint offset =  set_reading_channel_offsets(...);
-    uint offset = offset_read_data_channel;
-    #ifdef DEBUG_READ_DATA
-      printf("READ_DATA_IN: o_iter %u  offset %u\n", o_iter, offset);
-    #endif
-
-    for (uint i = 0; i < read_pixels_total; i++) {
    
-    pixel_in_t data = data_in[offset + i];
-    
-    #ifdef DEBUG_READ_DATA
+  for (uint o_iter = 0; o_iter < O_ITER; o_iter++) {    
+    for (int i_iter = 0; i_iter < I_ITER; i_iter++) {
+      int offset_global = offset + (cpi_group_offset * i_iter);
+
+      #ifdef DEBUG_READ_DATA
       #ifdef DEBUG_VERBOSE
-        printf("  READ_DATA_IN  o_iter %u   ind %3u   data ", o_iter, i);
-        for(uint j = 0; j < CPI; j++) {
-          printf(" %2.2f", data.pixel[j]);
-        }
-        printf("\n");
+      printf("READ_DATA_IN: o_iter %2u   i_iter %2u   offset %6u\n", o_iter, i_iter , offset);
       #endif
-    #endif
-   
-    write_channel_intel(CH_DATA_IN, data);
+      #endif
+  
+      for (uint i = 0; i < num_pixels; i++) {
+     
+        pixel_in_t data = data_in[offset + i];
+      
+        #ifdef DEBUG_READ_DATA
+          printf("  READ_DATA_IN  o_iter %u   i_iter %u   ind %3u ", o_iter, i_iter, i);
+          #ifdef DEBUG_VERBOSE
+            printf("   data: ");
+            for(uint j = 0; j < CPI; j++) {
+              printf(" %2.2f", data.pixel[j]);
+            }
+          #endif
+          printf("\n");
+        #endif
+    
+        #ifdef DEBUG_READ_DATA
+        #ifdef DEBUG_VERY_VERBOSE
+        printf("READ_DATA_IN: waiting to write to CH_DATA_IN\n");  
+        #endif
+        #endif
+        write_channel_intel(CH_DATA_IN, data);
+        #ifdef DEBUG_READ_DATA
+        #ifdef DEBUG_VERY_VERBOSE
+        printf("READ_DATA_IN: wrote data to CH_DATA_IN\n");  
+        #endif
+        #endif
+      }
     }
   }
   #ifdef DEBUG_READ_DATA
-    printf("READ_DATA_IN gihwcpi: end\n");
+  printf("READ_DATA_IN gihwcpi: end\n");
   #endif
 }
 
@@ -285,7 +281,7 @@ kernel void batch_norm_in(global bnp_st_t *restrict b_ptr, uint o_iter_first, ui
   uint enable_bn = enable_batch_norm;
   
   #ifdef DEBUG_READ_BATCH_NORM
-  printf("BATCH NORM IN: start read data for batch normalization  enable_bn %u  O_ITER %u   o_iter_first %u\n", enable_bn, O_ITER, o_iter_first);
+  printf("BATCH NORM IN: start enable_bn %u  O_ITER %u   o_iter_first %u\n", enable_bn, O_ITER, o_iter_first);
   #endif
 
   if (enable_bn) {
@@ -314,29 +310,32 @@ kernel void batch_norm_in(global bnp_st_t *restrict b_ptr, uint o_iter_first, ui
 // Data IN Add kernel
 // ----------------------------------------------------------------------------
 
-kernel void add_data_in(global pixel_out_t* restrict data_in, uint H, uint W, uint rows, uint o_iter_first, uint O_ITER,  uint enable_pooling, uint enable_add_data) {
+//kernel void add_data_in(global pixel_out_t* restrict data_in, uint H, uint W, uint rows, uint o_iter_first, uint O_ITER,  uint enable_pooling, uint enable_add_data) 
+kernel void add_data_in(global pixel_out_t* restrict data_in, uint num_pixels_in, uint write_offset_in, uint offset_read_add_group_cpo_in, uint o_iter_first_in, uint O_ITER_in, uint enable_add_data_in){
   
-  uint enable_add = enable_add_data;
+  uint enable_add      = enable_add_data_in;
+  uint num_pixels      = num_pixels_in;
+  uint write_offset    = write_offset_in;
+  uint offset_read_add_group_cpo = offset_read_add_group_cpo_in;
+  uint o_iter_first    = o_iter_first_in;
+  uint O_ITER          = O_ITER_in;
+
   
   #ifdef DEBUG_READ_ADD_DATA
-  printf("ADD_DATA_READER: start (gihwcpi data format) enable_add %u   H %u   W %u   rows %u   o_iter_first %u   O_ITER %u\n",
-      enable_add, enable_pooling, W, rows, o_iter_first, O_ITER
+  printf("ADD_DATA_READER: start (gihwcpi data format) enable_add %u   num_pixels %u   write_offset %u   offset_read_add_group_cpo %u   o_iter_first %u   O_ITER %u\n",
+      enable_add, num_pixels, write_offset, offset_read_add_group_cpo, o_iter_first, O_ITER
       );
   #endif
 
-  #ifdef USE_POOLING
-  uint read_add_pixels = enable_pooling ? (rows * W / 4) : (rows * W);
-  #else
-  uint read_add_pixels = rows * W; // num pixels to write to output memory per o_iter pass
-  #endif
 
   if (enable_add) {
     for (uint o_iter = 0; o_iter < O_ITER; o_iter++) {
-      uint o_iter_read_add_offset = read_add_pixels * (o_iter + o_iter_first);
+      //uint o_iter_read_add_offset = num_pixels * (o_iter + o_iter_first);
+      uint o_iter_read_add_offset =   write_offset + (offset_read_add_group_cpo * (o_iter + o_iter_first));
       #ifdef DEBUG_READ_ADD_DATA
-        printf("ADD_DATA_READER: o_iter %u   num_pixels %u  o_iter_write_offset %u\n", o_iter, read_add_pixels, o_iter_read_add_offset);
+        printf("ADD_DATA_READER: o_iter %u   num_pixels %u  o_iter_write_offset %u\n", o_iter, num_pixels, o_iter_read_add_offset);
       #endif
-      for(uint i = 0; i < read_add_pixels; i++) {
+      for(uint i = 0; i < num_pixels; i++) {
         pixel_out_t px = data_in[o_iter_read_add_offset + i];
         write_channel_intel(CH_ADDDATA_ADD_IN, px);
         #ifdef DEBUG_READ_ADD_DATA
@@ -361,35 +360,48 @@ kernel void add_data_in(global pixel_out_t* restrict data_in, uint H, uint W, ui
 // ----------------------------------------------------------------------------
 // Data  OUT kernel
 // ----------------------------------------------------------------------------
-kernel void data_out(global pixel_out_t * restrict data_out, uint H, uint W, uint rows, uint o_iter_first, uint O_ITER, uint enable_pooling) {
+kernel void data_out(global pixel_out_t * restrict data_out, uint write_pixels_in, uint o_iter_first_in, uint O_ITER_in, uint write_offset_frame_in) {
+
+  uint write_pixels = write_pixels_in;
+  uint o_iter_first = o_iter_first_in;
+  uint O_ITER       = O_ITER_in;
+  uint write_offset_frame = write_offset_frame_in; // offset to data ptr due to splitting matrix in frames
+
   #ifdef DEBUG_WRITE_DATA
-  printf("WRITER: start (gihwcpi data format) H %u   W %u   rows %u   o_iter_first %u   O_ITER %u\n",
-      H, W, rows, o_iter_first, O_ITER
+  printf("WRITER: start (gihwcpi data format) num_pixels %u   o_iter_first %u   O_ITER %u  glbl_frames_offset %u\n",
+      write_pixels, o_iter_first, O_ITER, write_offset_frame
       );
   #endif
 
-  #ifdef USE_POOLING
-  uint write_pixels = enable_pooling ? (rows * W / 4) : (rows * W);
-  #else
-  uint write_pixels = rows * W; // num pixels to write to output memory per o_iter pass
-  #endif
-
   for (uint o_iter = 0; o_iter < O_ITER; o_iter++) {
-    uint o_iter_write_offset = write_pixels * (o_iter + o_iter_first);
+    uint offset_tmp1 = (o_iter + o_iter_first);
+    uint offset_tmp2 = write_pixels * offset_tmp1;
+    uint o_iter_write_offset = write_offset_frame_in + offset_tmp2;
+    
     #ifdef DEBUG_WRITE_DATA
       printf("WRITER: o_iter %u   num_pixels %u  o_iter_write_offset %u\n", o_iter, write_pixels, o_iter_write_offset);
     #endif
     for(uint i = 0; i < write_pixels; i++) {
+      #ifdef DEBUG_WRITE_DATA
+      #ifdef DEBUG_VERY_VERBOSE
+      printf("WRITER: waiting to read from CH_DATA_OUT\n");
+      #endif
+      #endif
       pixel_out_t px = read_channel_intel(CH_DATA_OUT);
+      #ifdef DEBUG_WRITE_DATA
+      #ifdef DEBUG_VERY_VERBOSE
+      printf("WRITER: data read  from CH_DATA_OUT\n");
+      #endif
+      #endif
       data_out[o_iter_write_offset + i] = px;
       #ifdef DEBUG_WRITE_DATA
-        #ifdef DEBUG_VERBOSE
+        //#ifdef DEBUG_VERBOSE
           printf("WRITE_DATA_OUT  o_iter %u   index %u   px: ", o_iter, i);
           for(uint i = 0; i < CPO; i++) {
             printf(" %2.2f", px.pixel[i]);
           }
           printf("\n");
-        #endif
+       // #endif
       #endif
     }
   }
@@ -406,8 +418,12 @@ kernel void data_out(global pixel_out_t * restrict data_out, uint H, uint W, uin
 
 
 // ----------------------------------------------------------------------------
+// Kernel input_buffer disables
+//  dummy kernel bypassing input pixles
+//  currently disabled to minimize resource usage
 // ----------------------------------------------------------------------------
-kernel void input_buffer (uint H, uint W, uint rows, uint i_iter, uint O_ITER, uint enable_lower_padding, uint enable_upper_padding) {
+/*
+kernel void input_buffer ( uint num_pixels_in, uint I_ITER_in, uint O_ITER_in) {
   #ifdef DEBUG_INPUT_BUFFER
   printf ("INPUT_BUFFER: start\n");
   #endif
@@ -420,23 +436,16 @@ kernel void input_buffer (uint H, uint W, uint rows, uint i_iter, uint O_ITER, u
   // input data buffering is not currently supported
   // data is read from memory for all iterations
 
+  uint num_pixels = num_pixels_in;
+  uint I_ITER     = I_ITER_in;
+  uint O_ITER     = O_ITER_in;
 
-  uint num_extra_rows           = (enable_lower_padding == 0) + (enable_upper_padding == 0);
-  uint read_pixels_i_it         = W * (rows + num_extra_rows);
-  uint read_pixels_o_it         = read_pixels_i_it * i_iter;
-  uint read_pixels_total        = read_pixels_o_it * O_ITER;
-  // external loop is o_iter
-  // internal loop is i_iter
-  // for (uint o_iter = 0; o_iter < O_ITER; o_iter++) {
-  //   for (uint i_iter = ; i_iter < I_ITER; i_iter++) {
-  //     for (uint p = 0; p < read_pixels_it; p++)
-  //   }
-  // }
-  //
-  for (unsigned i = 0; i < read_pixels_total; i++) {
-    pixel_in_t px = read_channel_intel(CH_IB_IN);
-    #ifdef DEBUG_INPUT_BUFFER
-      #ifdef DEBUG_VERBOSE
+  for (uint o_iter = 0; o_iter < O_ITER; o_iter++) {    
+    for (int i_iter = 0; i_iter < I_ITER; i_iter++) {
+      for (uint i = 0; i < read_pixels_total; i++) {
+        pixel_in_t px = read_channel_intel(CH_IB_IN);
+        #ifdef DEBUG_INPUT_BUFFER
+        #ifdef DEBUG_VERBOSE
         uint i_it = i / read_pixels_i_it;
         uint o_it = i / read_pixels_o_it;
         uint ind = i % read_pixels_i_it;
@@ -445,14 +454,16 @@ kernel void input_buffer (uint H, uint W, uint rows, uint i_iter, uint O_ITER, u
         printf("INPUT_BUFFER: o_it: %2u   i_it: %2u   px %2u [%2u, %2u]: ", o_it, i_it, ind, ch_low, ch_hi);
         for (uint p = 0; p < CPI; p++) printf("  %8.2f", px.pixel[p]);
         printf("\n");
-      #endif
-    #endif
-    write_channel_intel(CH_IB_OUT, px);
+        #endif
+        write_channel_intel(CH_IB_OUT, px);
+      }
+    }
   }
   #ifdef DEBUG_INPUT_BUFFER
   printf ("INPUT_BUFFER: end\n");
   #endif
 }
+*/
 
 // ----------------------------------------------------------------------------
 // padding. Adds padding to the input and forwards it through the output
@@ -464,72 +475,110 @@ kernel void input_buffer (uint H, uint W, uint rows, uint i_iter, uint O_ITER, u
 //   enable_lower_padding  : 
 //   enable_uppder_padding : 
 //// --------------------------------------------------------------------------
-kernel void padding(uint H, uint W, uint i_iter, uint O_ITER, uint enable_lower_padding, uint enable_upper_padding){
+kernel void padding(uint H_in, uint W_in, uint PT_in, uint PB_in, uint PL_in, uint PR_in, uint I_ITER_in, uint O_ITER_in){
+
   #ifdef DEBUG_PADDING
-  printf("PADDING: start\n");
+  printf("PADDING: start  H %2u   W %2u   PT %2u   PB %2u   PL %2u   PR %2u   I_ITER %2u   O_ITER %2u\n", H_in, W_in, PT_in, PB_in, PL_in, PR_in, I_ITER_in, O_ITER_in);
   #endif
 
-  uint num_iters;
-  //uint h;
-  //uint w;
+
+  uint O_ITER = O_ITER_in;
+  uint I_ITER = I_ITER_in;
+  uint H = H_in;
+  uint W = W_in;
+  uint PT = PT_in;
+  uint PB = PB_in;
+  uint PL = PL_in;
+  uint PR = PR_in;
+
   pixel_in_t px_data;
   pixel_in_t px_zero;
-
-  uint HH = H + 2;;
-  uint WW = W + 2; 
   
+  uint HH = H + PT + PB;
+  uint WW = W + PL + PR;
+
   padding_cpi_loop:
   #pragma unroll CPI
   for (uint cpi=0; cpi<CPI; cpi++){
     px_zero.pixel[cpi] = 0.f;
   }
 
-  num_iters = i_iter * (HH) * (WW);
+  //uint val_e1 = ;
+  uint val_e2 = H+PT;
+  //uint val_e3 = ;
+  uint val_e4 = W+PL;
 
   #ifdef DEBUG_PADDING
-    #ifdef DEBUG_VERBOSE
-      printf("PADDING:  O_ITER %2u   i_iter %2u    pixels per i_iter %4u \n", O_ITER, i_iter, (unsigned)((H + 2) * (W + 2)));
-    #endif
+    //#ifdef DEBUG_VERBOSE
+      uint num_pixels_per_i_iter = (H + PT + PB) * (W + PL + PR);
+      printf("PADDING:  O_ITER %2u   I_ITER %2u   HH %2u   WW %2u   pixels per i_iter %4u \n",
+          O_ITER, I_ITER, HH, WW, HH*WW 
+          );
+    //#endif
   #endif
 
+  #ifdef DEBUG_PADDING
+  uint px_index = 0;
+  #endif
 
   for (uint o_iter = 0; o_iter < O_ITER; o_iter++) {
-    #ifdef DEBUG_PADDING
-      #ifdef DEBUG_VERBOSE
-        printf("PADDING: o_iter %u   for %u iters \n", o_iter, num_iters);
-      #endif
-    #endif
-
     padding_loop:
     #pragma loop_coalesce
-    for (uint i = 0; i < i_iter; i++) {
+    for (uint i = 0; i < I_ITER; i++) {
+
+      #ifdef DEBUG_PADDING
+        //#ifdef DEBUG_VERBOSE
+          printf("PADDING: o_iter %u   i_iter %2u of %2u \n", o_iter, i, I_ITER);
+        //#endif
+      #endif
+
+
       for (uint h = 0; h < HH ;h++) {
         for (uint w = 0; w < WW; w++) {
 
-          uint enable1 = enable_upper_padding & (h==0);
-          uint enable2 = enable_lower_padding & (h == H+1);
-          uint enable3 = (w == 0);
-          uint enable4 = (w == W+1);
+
+
+          //uint enable1 = enable_upper_padding & (h==0);
+          //uint enable2 = enable_lower_padding & (h == H+1);
+          //uint enable3 = (w == 0);
+          //uint enable4 = (w == W+1);
+          uint enable1 = (h < PT);
+          uint enable2 = (h >= val_e2); //(h >= H+PT);
+          uint enable3 = (w < PL);
+          uint enable4 = (w >= val_e4); //(w >= W+PL);
           
+
+
           if (enable1 | enable2 | enable3 | enable4) {
             px_data = px_zero; 
           } else {
+            #ifdef DEBUG_PADDING
+            #ifdef DEBUG_VERY_VERBOSE
+            printf("PADDING:  waiting to read from CH_PADD_OUT\n");
+            #endif
+            #endif
             px_data = read_channel_intel(CH_PADD_IN);
+            #ifdef DEBUG_PADDING
+            #ifdef DEBUG_VERY_VERBOSE
+            printf("PADDING: data read from CH_PADD_OUT\n");
+            #endif
+            #endif
           }
     
           #ifdef DEBUG_PADDING
-            #ifdef DEBUG_VERBOSE
-              uint i_it = (unsigned)(i / ((HH) * (WW)));
-              uint px   = (unsigned)(i % ((HH) * (WW)));
-              uint ch_low = (unsigned)(i_it * CPI);
-              uint ch_hi  = (unsigned)((i_it + 1) * CPI - 1);
-              printf("PADDING: o_it: %2u   i_it: %2u   px %2u [%2u, %2u]: ", o_iter, i_it, px, ch_low, ch_hi);
-              for (uint p = 0; p < CPI; p++) printf("  %8.2f",(float)px_data.pixel[p]);
-              printf("\n");
-            #endif
+          printf("PADDING: o_it: %2u   i_it: %2u   h: %2u  w: %2u  px_index %2u  padding %u\n", o_iter, i, h, w, px_index, (enable1 | enable2 | enable3 | enable4));        
+          //#ifdef DEBUG_VERBOSE
+          //printf("PADDING: o_it: %2u   i_it: %2u   h: %2u  w: %2u  px_index %2u  padding %u  px: ", o_iter, i, h, w, px_index, (enable1 | enable2 | enable3 | enable4));
+          //for (uint p = 0; p < CPI; p++) printf("  %8.2f",(float)px_data.pixel[p]);
+          // printf("\n");
+          //#endif
           #endif
       
           write_channel_intel(CH_PADD_OUT, px_data);
+
+          #ifdef DEBUG_PADDING
+          px_index++;
+          #endif
         }
       }
     }
@@ -551,20 +600,34 @@ kernel void padding(uint H, uint W, uint i_iter, uint O_ITER, uint enable_lower_
 //   in     : input stream (format pixel_in_t)
 //   out    : output stream (format frame_t)
 // ----------------------------------------------------------------------------
-kernel void cvt(uint H, uint W, uint I_ITER, uint O_ITER){
+kernel void cvt(uint HH_in, uint WW_in, uint I_ITER_in, uint O_ITER_in, uint SH_in, uint SW_in){
+
   #ifdef DEBUG_CVT
   printf("CVT: start\n");
+
+  uint dbg_cnt = 0;
   #endif
 
-  uint HH=H+2;
-  uint WW=W+2;
+  uint HH = HH_in;
+  uint WW = WW_in;
+  uint I_ITER = I_ITER_in;
+  uint O_ITER = O_ITER_in;
+  uint SH = SH_in;
+  uint SW = SW_in;
+
   // buffers (keep three rows)
   pixel_in_t buffer0[WMAX+2];
   pixel_in_t buffer1[WMAX+2];
   pixel_in_t buffer2[WMAX+2];
 
-  // Automatically flattened loop (for the purposes of getting the expected pipelined design) 
+  #ifdef DEBUG_CVT
+  //#ifdef DEBUG_VERBOSE
+  printf("CVT:  HH %2u   WW %2u   I_ITER %2u   O_ITER %2u   SH %2u   SW %2u\n", HH, WW, I_ITER, O_ITER, SH, SW);
+  //#endif
+  #endif
 
+
+  // Automatically flattened loop (for the purposes of getting the expected pipelined design) 
   for (uint o_iter = 0; o_iter < O_ITER; o_iter++){
     pixel_in_t p0, p1, p2, p3, p4, p5, p6, p7, p8;
 
@@ -574,6 +637,9 @@ kernel void cvt(uint H, uint W, uint I_ITER, uint O_ITER){
       uint row0_buffer_write = 0;
       uint row1_buffer_write = 0;
       uint row2_buffer_write = 0;
+	  
+      uint stride_row = 2;
+	    uint stride_col = 2;
       
       for(uint pin_row = 0; pin_row < HH; pin_row++) {  // rows iteration, 
         if (row0_buffer_write) {
@@ -600,7 +666,25 @@ kernel void cvt(uint H, uint W, uint I_ITER, uint O_ITER){
       
           // get the pixel
           pixel_in_t pixel;
+          #ifdef DEBUG_CVT
+          #ifdef DEBUG_VERY_VERBOSE
+          printf("CVT: waiting read from CH_CVT_IN\n");
+          #endif
+          #endif
           pixel = read_channel_intel(CH_CVT_IN);
+          #ifdef DEBUG_CVT
+          #ifdef DEBUG_VERY_VERBOSE
+          printf("CVT: data read from CH_CVT_IN\n");
+          #endif
+          #endif
+
+          #ifdef DEBUG_CVT
+          #ifdef DEBUG_VERBOSE
+          printf("CVT: read data (o_it %2u   i_it %2u    pin_row %d pin_col %d stride_row %d stride_col %d):",o_iter, i_it, pin_row, pin_col, stride_row, stride_col);
+          for (int x=0; x<CPI; x++) printf(" %f", (float)pixel.pixel[x]);
+          printf("\n");
+          #endif
+          #endif
       
           // row buffer write (in which buffer row we write the pixel)
           // first row buffer
@@ -629,7 +713,11 @@ kernel void cvt(uint H, uint W, uint I_ITER, uint O_ITER){
           pixel_b2 = buffer2[pin_col];
   
           uint shift_frame = (pin_row>1) & (pin_col > 2);
-          uint send_frame = (pin_row>1) & (pin_col > 1);
+          uint send_frame_pin    = (pin_row>1) & (pin_col > 1);
+          uint send_frame_stride = (stride_row == SH) & (stride_col == SW);
+          uint send_frame = send_frame_pin & send_frame_stride;
+
+           if (stride_col == 1) stride_col = SW; else stride_col = stride_col - 1;
          
           // p0, p1, p2
           if (shift_frame) {p0 = p1;} else if (pin_col0) {if (row0) p0 = pixel_b0; else if (row1) p0 = pixel_b1; else p0 = pixel_b2;}
@@ -648,10 +736,29 @@ kernel void cvt(uint H, uint W, uint I_ITER, uint O_ITER){
             frame.pixel[0] = p0; frame.pixel[1] = p1; frame.pixel[2] = p2;
             frame.pixel[3] = p3; frame.pixel[4] = p4; frame.pixel[5] = p5;
             frame.pixel[6] = p6; frame.pixel[7] = p7; frame.pixel[8] = p8;
+            #ifdef DEBUG_CVT
+            //#ifdef DEBUG_VERY_VERBOSE
+            printf("CVT: waiting to write to CH_CVT_IN\n");
+            //#endif
+            #endif
             write_channel_intel(CH_CVT_OUT, frame);
             #ifdef DEBUG_CVT
+            //#ifdef DEBUG_VERY_VERBOSE
+            printf("CVT: wrote data to CH_CVT_IN\n");
+            //#endif
+            #endif
+
+
+            #ifdef DEBUG_CVT
+            uint num_pixels = HH * WW;
+            uint p = (pin_row * WW) + pin_col;
+            uint fr_ind = i_it * num_pixels + p;
+  
+            uint ch_low = i_it * CPI;
+            uint ch_hi  = (i_it + 1) * CPI - 1;
+            printf("CVT: o_it: %2u   i_it: %2u   FRAME %2u (%2u)   frames sent %2u   [%2u, %2u]    TO-BE-DELETED JM10 DEBUGGING\n"
+                , o_iter, i_it, p, fr_ind, dbg_cnt++, ch_low, ch_hi);
             #ifdef DEBUG_VERBOSE
-    
             //uint i_it = i_iter / ((H + 2) * (W + 2));
             //uint px   = i_iter % ((H + 2) * (W + 2));
             uint num_pixels = HH * WW;
@@ -671,8 +778,10 @@ kernel void cvt(uint H, uint W, uint I_ITER, uint O_ITER){
             #endif
             #endif
           }
-        }        
-      }
+        } // pin_col ++
+        stride_col = 2;
+    	  if (stride_row == 1) stride_row = SH; else stride_row = stride_row - 1;
+      } // pin_row ++
     } //i_iter
   }// o_iter
 
@@ -682,14 +791,22 @@ kernel void cvt(uint H, uint W, uint I_ITER, uint O_ITER){
 }
 
 // ----------------------------------------------------------------------------
+// mul: This function performs the application of the kernel filter to the frames
+//   
+// Arguments:
+//   num_data_frames   : 
+//   I_ITER            : Number of input iterations (I / CPI)
+//   O_ITER            : Number of output iterations 
 // ----------------------------------------------------------------------------
-kernel void mul (uint H, uint W, uint i_iter, uint O_ITER) {
-  #ifdef DEBUG_MUL
-  printf("MUL: start   i_iter %2u  o_iter %2u\n", i_iter, O_ITER);
-  #endif
+kernel void mul (uint num_data_frames_in, uint i_iter_in, uint O_ITER_in) {
 
-  uint i_max = i_iter;
-  uint j_max = H * W;
+  uint i_iter  = i_iter_in;
+  uint O_ITER = O_ITER_in;
+  uint num_data_frames  = num_data_frames_in;
+
+  #ifdef DEBUG_MUL
+  printf("MUL: start   data_frames %4u   i_iter %2u   o_iter %2u\n",num_data_frames, i_iter, O_ITER);
+  #endif
 
   for (uint o_iter = 0; o_iter < O_ITER; o_iter++){
 
@@ -700,7 +817,7 @@ kernel void mul (uint H, uint W, uint i_iter, uint O_ITER) {
     pixel_out_t p_out;
   
     mul_loop_i_iter:
-    for (uint i_it = 0; i_it < i_max; i_it++) {
+    for (uint i_it = 0; i_it < i_iter; i_it++) {
       kernel_frame = read_channel_intel(CH_KERNEL_IN); // kernel_t -> pixel[CPO][CPI][9];
       
 
@@ -720,7 +837,7 @@ kernel void mul (uint H, uint W, uint i_iter, uint O_ITER) {
           #endif
         #endif 
  
-      for (uint j_ext = 0; j_ext < j_max; j_ext++) {
+      for (uint j_ext = 0; j_ext < num_data_frames; j_ext++) {
 
         mul_loop_2:
         #pragma unroll CPO
@@ -728,7 +845,18 @@ kernel void mul (uint H, uint W, uint i_iter, uint O_ITER) {
           sum[i] = (data_type)0;
         }
   
+        #ifdef DEBUG_MUL
+        #ifdef DEBUG_VERY_VERBOSE
+        printf("MUL: waiting read from CH_MUL_IN\n");
+        #endif
+        #endif      
         data_in = read_channel_intel(CH_MUL_IN); // frame_t from cvt stage-> 9 pixels (pixel_in_t)
+        #ifdef DEBUG_MUL
+        #ifdef DEBUG_VERY_VERBOSE
+        printf("MUL: data read from CH_MUL_IN\n");
+        #endif
+        #endif
+
 
         loop_mul_cpi:
         #pragma unroll CPI
@@ -764,7 +892,19 @@ kernel void mul (uint H, uint W, uint i_iter, uint O_ITER) {
           printf("\n");
           #endif
         #endif
+
+        #ifdef DEBUG_MUL
+        #ifdef DEBUG_VERY_VERBOSE
+        printf("MUL: waiting to write data to CH_MUL_OUT\n");
+        #endif
+        #endif
         write_channel_intel(CH_MUL_OUT, p_out);
+        #ifdef DEBUG_MUL
+        #ifdef DEBUG_VERY_VERBOSE
+        printf("MUL: wrote data to CH_MUL_OUT\n");
+        #endif
+        #endif
+
       }
     } // i_it
   } // o_iter
@@ -779,19 +919,23 @@ kernel void mul (uint H, uint W, uint i_iter, uint O_ITER) {
 // It adds also the corresponding bias.
 //
 // Arguments:
-//   H     : Height of input channel
-//   W     : Width of input channel
-//   I_ITER: Number of input iterations (I / CPI)
+//   num_data_frames   : 
+//   I_ITER            : Number of input iterations (I / CPI)
+//   O_ITER            : Number of output iterations 
 // ----------------------------------------------------------------------------
-kernel void add (uint H, uint W, uint i_iter, uint O_ITER) {
-  #ifdef DEBUG_ADD
-  printf("ADD: start  i_iter %2u  o_iter %2u \n", i_iter, O_ITER);
-  #endif
+kernel void add (uint num_data_frames_in, uint i_iter_in, uint O_ITER_in) {
  
   // Buffer for all data and CPO channels
   pixel_out_t buff_o_channels[(WMAX)*(HMAX)];
   // number of iterations by CPI || CPO channels
-  uint num_iterations = W * H;
+  uint num_data_frames = num_data_frames_in;
+  uint i_iter  = i_iter_in;
+  uint O_ITER  = O_ITER_in;
+  
+  #ifdef DEBUG_ADD
+  printf("ADD: start  data_frames %4u   i_iter %2u   o_iter %2u\n", num_data_frames, i_iter, O_ITER);
+  #endif
+
 
   add_o_iter_loop:
   for(uint o_iter = 0; o_iter < O_ITER; o_iter++) {
@@ -801,7 +945,17 @@ kernel void add (uint H, uint W, uint i_iter, uint O_ITER) {
     pixel_out_t bias;
   
     // read bias
+    #ifdef DEBUG_ADD
+    #ifdef DEBUG_VERY_VERBOSE
+    printf("ADD: waiting read from CH_BIAS_IN\n");
+    #endif
+    #endif
     bias = read_channel_intel(CH_BIAS_IN);
+    #ifdef DEBUG_ADD
+    #ifdef DEBUG_VERY_VERBOSE
+    printf("ADD: data read from CH_BIAS_IN\n");
+    #endif
+    #endif
     #ifdef DEBUG_ADD
     #ifdef DEBUG_VERBOSE
       printf("ADD:  bias ");
@@ -812,8 +966,8 @@ kernel void add (uint H, uint W, uint i_iter, uint O_ITER) {
   
       for(uint cpo = 0; cpo<CPO; cpo++){
         printf("Channel cpo = %u: ", (unsigned)(cpo + (CPO* o_iter)));
-        for(uint it = 0; it<num_iterations; it++){
-          printf("%6.2f ", (float)buff_o_channels[it].pixel[cpo]);
+        for(uint f = 0; f < num_data_frames; f++){
+          printf("%6.2f ", (float)buff_o_channels[f].pixel[cpo]);
         }
         printf("\n");
       }
@@ -832,20 +986,30 @@ kernel void add (uint H, uint W, uint i_iter, uint O_ITER) {
       pixel_out_t data_out;
       //#pragma HLS loop_flatten off
       add_load_data_it_loop:
-      for(uint it = 0; it<num_iterations; it++){
+      for(uint f = 0; f < num_data_frames; f++){
         pixel_out_t px;
         pixel_out_t data_in;
         pixel_out_t data_out;
        
+        #ifdef DEBUG_ADD
+        #ifdef DEBUG_VERY_VERBOSE
+        printf("ADD: waiting read from CH_ADD_IN\n");
+        #endif
+        #endif
         px = read_channel_intel(CH_ADD_IN);
+        #ifdef DEBUG_ADD
+        #ifdef DEBUG_VERY_VERBOSE
+        printf("ADD: data read from CH_ADD_IN\n");
+        #endif
+        #endif
   
-        if (i_it == 0) data_in = bias; else data_in = buff_o_channels[it];
+        if (i_it == 0) data_in = bias; else data_in = buff_o_channels[f];
   
         // data_in  = bias o calculos anteriores
         // px       = datos del mmul
         #ifdef DEBUG_ADD
           #ifdef DEBUG_VERBOSE
-            printf("ADD:  o_iter %2u  i_iter %2u  it %2u [0, HxW[\n", (unsigned)o_iter, (unsigned)i_it, (unsigned)it );
+            printf("ADD:  o_iter %2u  i_iter %2u  frame %2u [0, HxW[\n", (unsigned)o_iter, i_it, f );
             printf("ADD:  px (from mul stage) :  ");
             for (uint c = 0; c < CPO; c++) printf ("  %8.2f", (float)px.pixel[c]);
             printf("\n");
@@ -858,18 +1022,29 @@ kernel void add (uint H, uint W, uint i_iter, uint O_ITER) {
           data_out.pixel[cpo] = data_in.pixel[cpo] + px.pixel[cpo];
         }
 
-        buff_o_channels[it] = data_out;
+        buff_o_channels[f] = data_out;
 
         if(i_it ==(i_iter-1)){
           #ifdef DEBUG_ADD
           #ifdef DEBUG_VERBOSE
-          printf("ADD:  writting adder out channel for it %2u - channels %2u to %2u",(unsigned)it,  (unsigned)(o_iter*CPO), (unsigned)((o_iter*CPO) + CPO - 1 ));
+          printf("ADD:  writting adder out channel for frame %2u - channels %2u to %2u",f,  (unsigned)(o_iter*CPO), (unsigned)((o_iter*CPO) + CPO - 1 ));
           for(uint c = 0; c < CPO; c++) printf("  %8.2f", data_out.pixel[c]);
           printf ("\n");
           #endif
           #endif
-
+      
+          #ifdef DEBUG_ADD
+          #ifdef DEBUG_VERY_VERBOSE
+          printf("RELU: waiting to write data to CH_ADD_OUT\n");
+          #endif
+          #endif
           write_channel_intel(CH_ADD_OUT, data_out);
+          #ifdef DEBUG_ADD
+          #ifdef DEBUG_VERY_VERBOSE
+          printf("RELU: wrote data to CH_ADD_OUT\n");
+          #endif
+          #endif
+
         }
       }
     } //i_iter
@@ -878,8 +1053,8 @@ kernel void add (uint H, uint W, uint i_iter, uint O_ITER) {
       #ifdef DEBUG_VERBOSE
       for (uint cpo=0; cpo<CPO; cpo++) {
         printf("CH %u: ", cpo + (CPO* o_iter));
-        for (uint it=0; it<num_iterations; it++) {
-          printf("%6.2f ", (float)buff_o_channels[it].pixel[cpo]);
+        for (uint f = 0; f < num_data_frames; f++) {
+          printf("%6.2f ", (float)buff_o_channels[f].pixel[cpo]);
         }
         printf("\n");
       }
@@ -895,21 +1070,37 @@ kernel void add (uint H, uint W, uint i_iter, uint O_ITER) {
 
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
-kernel void relu(uint W, uint H, uint O_ITER, uint enable_relu) {
+kernel void relu(uint num_pixels_in, uint O_ITER_in, uint enable_relu_in) {
+  uint num_pixels = num_pixels_in;
+  uint O_ITER = O_ITER_in;
+  uint enable_relu = enable_relu_in;
+
   #ifdef DEBUG_RELU
   printf("RELU: start\n");
+  //#ifdef DEBUG_VERBOSE
+  printf("RELU:   num_pixels %2u   O_ITER %2u   enable_relu %u\n", num_pixels, O_ITER, enable_relu);
+  //#endif
   #endif
 
   for(uint o_iter = 0; o_iter < O_ITER; o_iter++) {
     #ifdef DEBUG_RELU
       printf("RELU: o_iter %u\n", o_iter);
     #endif
-    uint data_size = W * H;
-    for (uint i = 0; i < data_size; i++) {
+    for (uint i = 0; i < num_pixels; i++) {
       pixel_out_t data_in;
       pixel_out_t data_out;
 
+      #ifdef DEBUG_RELU
+      #ifdef DEBUG_VERY_VERBOSE
+      printf("RELU: waiting read from CH_RELU_IN\n");
+      #endif
+      #endif
       data_in = read_channel_intel(CH_RELU_IN);
+      #ifdef DEBUG_RELU
+      #ifdef DEBUG_VERY_VERBOSE
+      printf("RELU: data read from CH_RELU_IN\n");
+      #endif
+      #endif
       
       loop_relu_cpo:
       #pragma unroll
@@ -960,8 +1151,19 @@ kernel void relu(uint W, uint H, uint O_ITER, uint enable_relu) {
           }
         #endif
       #endif
-  
+ 
+      #ifdef DEBUG_RELU
+      #ifdef DEBUG_VERY_VERBOSE
+      printf("RELU: waiting to write data to CH_RELU_OUT\n");
+      #endif
+      #endif
       write_channel_intel(CH_RELU_OUT, data_out);
+      #ifdef DEBUG_RELU
+      #ifdef DEBUG_VERY_VERBOSE
+      printf("RELU: wrote data to CH_RELU_OUT\n");
+      #endif
+      #endif
+
     }
   }
   #ifdef DEBUG_RELU
@@ -1119,6 +1321,8 @@ kernel void pool_pooling (uint H, uint W, uint enable_maxpooling, uint enable_av
   uint HO = enable_pooling ? ((H - KH_POOLING)/SH_POOLING + 1) : H;
 
   uint size_out = HO * WO;
+
+
   uint size_kernel = KH_POOLING * KW_POOLING;
   uint iterations = size_out;
 
@@ -1222,38 +1426,32 @@ kernel void pool_pooling (uint H, uint W, uint enable_maxpooling, uint enable_av
 // new layer between pool_pooling and output,
 //  During training the layer returns    gamma * (batch - mean(batch)     ) / sqrt(var(batch)      + epsilon) + beta
 //  During inference the layer returns   gamma * (batch - self.moving_mean) / sqrt(self.moving_var + epsilon) + beta
-kernel void batch_norm (uint H, uint W, uint enable_batch_norm, uint enable_maxpooling, uint enable_avgpooling, uint O_ITER) {
+kernel void batch_norm (uint num_pixels_in, uint enable_batch_norm_in, uint O_ITER_in) {
   
-  uint enable_bn = enable_batch_norm;
+  uint enable_bn  = enable_batch_norm_in;
+  uint O_ITER     = O_ITER_in;
+  uint num_pixels = num_pixels_in; //num iteratios per o_iter pass
+
+  //#ifdef DEBUG_BATCH_NORM
+  //printf("BATCH NORM: start. enable_batch_norm = %u\n", enable_bn);
+  //#endif
+
   #ifdef DEBUG_BATCH_NORM
-  printf("BATCH NORM: start. enable_batch_norm = %u\n", enable_bn);
+  //#ifdef DEBUG_VERBOSE
+  printf("BATCH_NORM: enable_batch_norm = %u   O_ITER %u  num_pixels %u\n",
+          enable_bn, O_ITER, num_pixels);
+  //#endif
   #endif
-
-  // copied from pool pooling, since this kernel/task will read as many "pixels" as the previous stage writes into the channel
-  uint enable_pooling = enable_maxpooling || enable_avgpooling;
-  uint WO = enable_pooling ? ((W - KW_POOLING)/SW_POOLING + 1) : W;
-  uint HO = enable_pooling ? ((H - KH_POOLING)/SH_POOLING + 1) : H;
-
-  uint size_out = HO * WO;
-  uint iterations = size_out; //num iteratios per o_iter pass
-
-   #ifdef DEBUG_BATCH_NORM
-  #ifdef DEBUG_VERBOSE
-  printf("batch_norm: O_ITER %u  enable_pooling %u   H0= %u  W0= %u   iterations %u\n", O_ITER, enable_pooling, HO, WO, iterations);
-  #endif
-  #endif
-
 
   // ---------------------------------------------
 
   for (uint o_iter = 0; o_iter < O_ITER; o_iter++){
 
-    uint data_size = iterations;
     bnp_st_t     bn_values_in; // batch normalaziton values, to perform bn stage
     
     #ifdef DEBUG_BATCH_NORM
     #ifdef DEBUG_VERBOSE
-    printf("BATCH NORM: dbg o_iter %u  enable_bn = %u\n", o_iter, enable_bn);
+    printf("BATCH NORM: dbg o_iter %u\n", o_iter);
     #endif
     #endif
     
@@ -1268,7 +1466,7 @@ kernel void batch_norm (uint H, uint W, uint enable_batch_norm, uint enable_maxp
     }
 
     loop_batch_norm_pixels:
-    for(uint i = 0; i < data_size; i++) {
+    for(uint i = 0; i < num_pixels; i++) {
       pixel_out_t  data_in; // data from previous convolution stage, currently previous stage is pooling
       pixel_out_t  data_out;
       
@@ -1339,11 +1537,17 @@ kernel void batch_norm (uint H, uint W, uint enable_batch_norm, uint enable_maxp
 //   in_pool: input stream data from previous module
 //   out    : output stream
 //
-kernel void add_data(uint H, uint W, uint enable_add_data, uint enable_maxpooling, uint enable_avgpooling, uint O_ITER) {
+kernel void add_data(uint num_pixels_in, uint enable_add_data_in, uint O_ITER_in) {
 
-  uint enable_add = enable_add_data;
+  uint enable_add = enable_add_data_in;
+  uint O_ITER     = O_ITER_in;
+  uint num_pixels = num_pixels_in; //num iteratios per o_iter pass
+
   #ifdef DEBUG_ADD_DATA
-  printf("add_data: start\n");
+  printf("ADD_DATA: start\n");
+  //#ifdef DEBUG_VERBOSE
+  printf("ADD_DATA: num_pixels %u   O_ITER %u   enable_add %u\n", num_pixels, O_ITER, enable_add);
+  //#endif
   #endif
 
   pixel_out_t data_in_r;
@@ -1352,18 +1556,10 @@ kernel void add_data(uint H, uint W, uint enable_add_data, uint enable_maxpoolin
   pixel_out_t px_o_zero;
 
   // copied from pool pooling, since this kernel/task will read as many "pixels" as the previous stage writes into the channel
-  uint enable_pooling = enable_maxpooling || enable_avgpooling;
-  uint WO = enable_pooling ? ((W - KW_POOLING)/SW_POOLING + 1) : W;
-  uint HO = enable_pooling ? ((H - KH_POOLING)/SH_POOLING + 1) : H;
 
-  uint iterations = HO * WO; //num iteratios per o_iter pass
+
   // ----------------------------------------------------------------------------------------------------
 
-  #ifdef DEBUG_ADD_DATA
-  #ifdef DEBUG_VERBOSE
-  printf("add_data: O_ITER %u  enable_pooling %u   H0= %u  W0= %u   iterations %u\n", O_ITER, enable_pooling, HO, WO, iterations);
-  #endif
-  #endif
 
   px_o_zero_init_loop:
   #pragma unroll
@@ -1380,7 +1576,7 @@ kernel void add_data(uint H, uint W, uint enable_add_data, uint enable_maxpoolin
     #endif
 
     loop_add_data_pixels:
-    for (int i=0; i < iterations; i++) {
+    for (int i=0; i < num_pixels; i++) {
       // Let's read the input data
       
       data_in_prev = read_channel_intel(CH_ADDDATA_IN); // Data from previous stage, pool_pooling
@@ -1416,7 +1612,7 @@ kernel void add_data(uint H, uint W, uint enable_add_data, uint enable_maxpoolin
     }
   }
   #ifdef DEBUG_ADD_DATA
-  printf("add_data: end\n");
+  printf("ADD_DATA: end\n");
   #endif
 }
 //*********************************************************************************************************************

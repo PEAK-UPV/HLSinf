@@ -39,8 +39,8 @@ int check_result(data_type *max_difference, int *num_elements_differ, int from_f
   if ((enable_maxpooling) || (enable_avgpooling)) {
 
     for (int cout=0; cout < O_output; cout++) {
-      for (int h=0; h<H/2; h++) {
-        for (int w=0; w<W/2; w++) {
+      for (int h=0; h<HO_final; h++) {
+        for (int w=0; w<WO_final; w++) {
           // data_out pixel position
           int addr_o = output_data_address_div(cout, h, w);
           data_type diff  = (data_type)(fabs(float(out_cpu[addr_o]) - float(out[addr_o])));
@@ -62,10 +62,10 @@ int check_result(data_type *max_difference, int *num_elements_differ, int from_f
   } else {
 
     for (int cout=0; cout < O_output; cout++) {
-      for (int h=0; h<H; h++) {
-        for (int w=0; w<W; w++) {
+      for (int h=0; h<HO_final; h++) {
+        for (int w=0; w<WO_final; w++) {
           // data_out pixel position
-          int addr_o = output_data_address(cout, h, w);
+          int addr_o = output_data_address(cout, h, w, HO_final, WO_final);
           data_type diff;
           diff = data_type(fabs(float(out_cpu[addr_o]) - float(out[addr_o])));
           data_type diff2 = from_file?(data_type)(fabs(float(out_cpu_from_file[addr_o]) - float(out[addr_o]))): diff;
@@ -93,7 +93,7 @@ int check_result(data_type *max_difference, int *num_elements_differ, int from_f
         printf ("H %2d ", h);
         for (int w=0; w<W; w++) {
           // data_out pixel position
-          int       addr_o = output_data_address(cout, h, w);
+          int       addr_o = output_data_address(cout, h, w, HO_final, WO_final);
           data_type diff   = fabs(float(out_cpu[addr_o]) - float(out[addr_o]));
 
           if(diff > epsilon) {

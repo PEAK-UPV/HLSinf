@@ -1,4 +1,13 @@
 /*
+* HLSinf accelerator
+* Version: 1.0
+* copyright (c) 2020, Universidad Politécnica de Valencia (UPV), GAP research group
+* Date: December 2021
+* Author: GAP Research Group (UPV), contact: jflich@disca.upv.es
+* All rights reserved
+*/
+
+/*
  * data-related test functions
  */
 
@@ -39,9 +48,6 @@ void init_data(int from_file) {
     printf("\n");
     printf(KYEL "INIT_DATA from files\n" KNRM);
 
-    int HO_final = (enable_maxpooling | enable_avgpooling)? (HO / 2) : HO;
-    int WO_final = (enable_maxpooling | enable_avgpooling)? (WO / 2) : WO;
-
     read_from_file("input.bin", I_input * H * W, sizeof(data_type), (void *)data_in);
     if (enable_add) read_from_file("add.bin", O_output * HO_final * WO_final, sizeof(data_type), (void *)data_in_add);
     read_from_file("weights.bin", I_kernel * O_kernel * KH * KW, sizeof(data_type), (void *)kernel);
@@ -57,7 +63,6 @@ void init_data(int from_file) {
     if (enable_batch_norm) {printf("bn_v (file)   : "); print_batchnorm_buffer_stats(batch_norm_values, O_output * 4);}
     printf("output (file) : "); print_output_buffer_stats(out_cpu_from_file, O_output * HO_final * WO_final);
    
-
     printf("data initialization (read from files) finalizes\n\n");
     return;
   }
@@ -158,10 +163,57 @@ void init_data(int from_file) {
 
   #endif
   
+
+  // ----------------- 
+  //    ADD DATA IN
+  // -----------------
+  // IF enable_add ???
+  //input add data
+  if(enable_add) {
+	  addr = 0;
+
+    #ifdef DEBUG_ADD_DATA
+    {
+      uint enable_pooling = enable_maxpooling || enable_avgpooling;
+      printf("enable_add ->>>  add_data: O_OUTPUT %d  enable_pooling %s  H = %d   W = %d   HO = %d   WO = %d   HO_final = %d   WO_final = %d\n", O_output, enable_pooling?"yes":" no", H, W, HO, WO, HO_final, WO_final);
+      printf(KCYN "initializing add_data deterministic_values -> %s\n" KNRM,  deterministic_input_values?"yes":" no");
+      printf("add data in matrix for %d output channels channels\n", O);
+    }
+    #endif
+    
+
+	  for (int o=0; o<O_output; o++) {
+		  for (int h=0; h<HO_final; h++) {
+			  for (int w=0; w<WO_final; w++) {
+				  addr = output_data_address(o, h, w, HO_final, WO_final);
+				  if (o<O) {
+					  data_in_add[addr] = deterministic_input_values?o:dist(gen);
+				  } else {
+					  data_in_add[addr] = 0;
+				  }
+          #ifdef DEBUG_READ_ADD_DATA
+          #ifdef DEBUG_VERBOSE
+          if (o < O)printf("  o = %2d   h = %2d   w = %2d   addr = %2d   add_data_in[%2d] = %2.2f \n", o, h, w, addr, addr, (float)data_in_add[addr]);
+          #endif
+          #endif
+				  addr++;
+			  }
+		  }
+	  }
+    #ifdef DEBUG_READ_ADD_DATA
+    printf("enable_add finalizes\n\n");
+    #endif
+  }
+  else {
+    #ifdef DEBUG_READ_ADD_DATA
+    printf(KCYN "add_data kernel dissabled\n" KNRM);
+    #endif
+  }
+
+
   // ----------------- 
   //    KERNEL
   // ----------------
-  #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
   int kernel_id = 1;
   for (int i=0; i<I_kernel; i++) {
     for (int o=0; o<O_kernel; o++) {
@@ -216,106 +268,6 @@ void init_data(int from_file) {
   }
   #endif // DEBUG
 
-  #endif // direct_conv winograd
-
-  // ----------------- 
-  //    KERNEL dw-pw
-  // ----------------
-  #ifdef DWS_CONV
-  int kernel_id = 1;
-  for (int i=0; i<I_kernel; i++) {
-    for (int kh=0; kh<KH; kh++) {
-      for (int kw=0; kw<KW; kw++) {
-    	  int addr_k = (i * KW * KH) + (kh * KW) + kw;
-    	  if (i < I) dw_kernel[addr_k] = deterministic_input_values ? (kernel_id%20)-10 : dist_filters(gen);
-        else       dw_kernel[addr_k] = 0;
-      }
-    }
-    kernel_id++;
-  }
-  kernel_id = 1;
-  for (int i=0; i<I_kernel; i++) {
-	  for (int o=0; o<O_kernel; o++) {
-		  int gi = i / CPI;
-		  int ki = i % CPI;
-		  int go = o / CPO;
-		  int ko = o % CPO;
-		  int addr_k = (go * GI * CPO * CPI) + (gi * CPO * CPI) + (ko * CPI) + ki;
-		  if ((i < I) && (o < O)) pw_kernel[addr_k] = deterministic_input_values?(kernel_id%20)-10:dist_filters(gen); else pw_kernel[addr_k] = 0;
-	  }
-	  kernel_id++;
-  }
-  #endif
-
-  // ----------------- 
-  //    BIAS
-  // ----------------
-  for (int cout=0; cout<O; cout++) 
-    bias[cout] = deterministic_input_values?(cout%20)-10:dist(gen);
-
-  #ifdef DEBUG_DATA_BIAS
-  // for bias
-  printf(KCYN "bias matrix ( %d output channels )\n" KNRM, O);
-  for (int cout=0; cout<O; cout++){
-    printf("  bias [%2d] = %6.2f\n", cout, bias[cout]);
-  }
-  printf("\n");
-  #endif
-
-  // ----------------- 
-  //    ADD DATA IN
-  // -----------------
-  // IF enable_add ???
-  //input add data
-  if(enable_add) {
-	  addr = 0;
-    uint enable_pooling = enable_maxpooling || enable_avgpooling;
-    uint WO_final = enable_pooling ? ((W - KW_POOLING)/SW_POOLING + 1) : W;
-    uint HO_final = enable_pooling ? ((H - KH_POOLING)/SH_POOLING + 1) : H;
-
-
-
-  #ifdef DEBUG_ADD_DATA
-  printf("enable_add ->>>  add_data: O_OUTPUT %d  enable_pooling %s  H = %d   W = %d   HO = %d   WO = %d\n", O_output, enable_pooling?"yes":" no", H, W, HO_final, WO_final);
-  #endif
-
-
-    #ifdef DEBUG_READ_ADD_DATA
-    printf(KCYN "initializing add_data deterministic_values -> %s\n" KNRM,  deterministic_input_values?"yes":" no");
-    printf("add data in matrix for %d output channels channels\n", O);
-    #endif
-    
-
-	  for (int o=0; o<O_output; o++) {
-		  for (int h=0; h<HO_final; h++) {
-			  for (int w=0; w<WO_final; w++) {
-				  //addr = output_data_address(o, h, w, HO_final, WO_final);
-          addr = output_data_address(o, h, w);
-				  if (o<O) {
-					  data_in_add[addr] = deterministic_input_values?o:dist(gen);
-				  } else {
-					  data_in_add[addr] = 0;
-				  }
-          #ifdef DEBUG_READ_ADD_DATA
-          #ifdef DEBUG_VERBOSE
-          if (o < O)printf("  o = %2d   h = %2d   w = %2d   addr = %2d   add_data_in[%2d] = %2.2f \n", o, h, w, addr, addr, (float)data_in_add[addr]);
-          #endif
-          #endif
-				  addr++;
-			  }
-		  }
-	  }
-    #ifdef DEBUG_READ_ADD_DATA
-    printf("enable_add finalizes\n\n");
-    #endif
-  }
-  else {
-    #ifdef DEBUG_READ_ADD_DATA
-    printf(KCYN "add_data kernel dissabled\n" KNRM);
-    #endif
-  }
-  
-
 
   // ----------------- 
   //    BATCH NORM
@@ -354,6 +306,25 @@ void init_data(int from_file) {
   }
   printf("\n");
   #endif
+
+
+  // ----------------- 
+  //    BIAS
+  // ----------------
+  for (int cout=0; cout<O_output; cout++) {
+    if (cout < O) bias[cout] = deterministic_input_values?(cout%20)-10:dist(gen);
+    else          bias[cout] = 0;
+  }
+
+  #ifdef DEBUG_DATA_BIAS
+  // for bias
+  printf(KCYN "bias matrix ( %d output channels )\n" KNRM, O);
+  for (int cout=0; cout<O; cout++){
+    printf("  bias [%2d] = %6.2f\n", cout, bias[cout]);
+  }
+  printf("\n");
+  #endif
+
 
 
   printf("data initialization finalizes\n\n");

@@ -49,7 +49,7 @@ enum KERNELS {
   K_BIAS_IN_READER,
   K_BATCH_NORM_READER,
   K_ADD_DATA_READER,
-  K_INPUT_BUFFER,
+  //K_INPUT_BUFFER,
   K_PADDING,
   K_CVT,
   K_MULTIPLIER,
@@ -69,7 +69,7 @@ static const char* kernel_names[K_NUM_KERNELS] =
   "bias_in",
   "batch_norm_in",
   "add_data_in",
-  "input_buffer",
+  //"input_buffer",
   "padding",
   "cvt",
   "mul",
@@ -83,6 +83,10 @@ static const char* kernel_names[K_NUM_KERNELS] =
 };
 
 
+//JM10_TO_DELETE
+//extern int enable_upper_padding;   // enables the upper row of padding
+//extern int enable_lower_padding;   // enables the lower row of padding
+
 // Global variables
 extern int CONVS;     // Number of convolutional layers
 extern int KERNELS;   // Number of FPGA kernels to use
@@ -94,17 +98,8 @@ extern int O;         // Number of output channels
 extern int HO;        // Output width
 extern int WO;        // Output height
 
-
-//
-//extern int PT;     // Top padding
-//extern int PB;     // Bottom padding
-//extern int PL;     // Left padding
-//extern int PR;     // Right padding
-//extern int SH;     // Vertical stride
-//extern int SW;     // Horizontal stride
-//
-//extern int HO_final;   // HO at the output of the kernel
-//extern int WO_final;   // WO at the output of the kernel
+extern int HO_final;   // HO at the output of the kernel
+extern int WO_final;   // WO at the output of the kernel
 
 extern int enable_batch_norm;
 extern int enable_add;
@@ -116,8 +111,15 @@ extern int O_kernel;    // Number of output channels for the kernel (filter) - p
 extern int I_input;     // Number of input channels for the input data - padding (needed in GIHWCPI data format)
 extern int O_output;    // Number of output channels for the output data - padding (needed in GIHWCPI data format)
 extern int rows;        // number of rows to compute by the kernel
-extern int enable_upper_padding;   // enables the upper row of padding
-extern int enable_lower_padding;   // enables the lower row of padding
+
+extern int PT;          // enables the upper row of padding
+extern int PB;          // enables the lower row of padding
+extern int PL;          // enables the left  column of padding
+extern int PR;          // enables the right column of padding
+
+extern int SH;          // vertical stride
+extern int SW;          // horizontal stride
+
 extern int enable_relu;				     // enables applying the relu activation functions
 extern int enable_shift;           // enables applying shift to the output
 extern int dir_shift;              // shift direction (left or right)
@@ -129,7 +131,7 @@ extern int min_clip;				 // minimum clip value
 extern int max_clip;				 // maximum clip value
 extern int i_iter;					 // number of input iterations
 extern int o_iter;					 // number of output iterations
-extern int global_offset;    // global offset for the output data for the kernel
+//extern int global_offset;    // global offset for the output data for the kernel
 extern int GI;							 // number of groups for input channels
 extern int GO;							 // number of groups for output channels
 
@@ -226,7 +228,8 @@ int open_test_file();
 int read_test_file(int *enable, int *from_file, int *cpu);
 int close_test_file();
 //void run_kernel();
-void run_aoc_kernels();
+//void run_aoc_kernels();
+void compute();  // determine multi-fame config and launch kernel
 void run_kernel_opencl();
 void parse_arguments(int argc, char **argv);
 void print_configuration();
@@ -234,7 +237,7 @@ void print_timings(unsigned long long time, unsigned long long time_per_iteratio
 void print_check(int result, float max_difference, int num_differences);
 void print_message(const char *str);
 int input_data_address(int i, int h, int w);
-int output_data_address(int o, int h, int w);
+int output_data_address(int o, int h, int w, int height, int width);
 int output_data_address_div(int o, int h, int w);
 
 #ifdef OPENCL_TEST
