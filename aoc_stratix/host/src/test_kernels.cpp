@@ -19,7 +19,7 @@
 //   read_offset_fr_fr  ..... for current frame
 //   write_offset_fr    ..... for current frame
 // ----------------------------------------------------------------------------
-void run_aoc_kernels(int first_frame_H, int last_frame_H, int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_offset_p, int write_offset_p) {
+void run_aoc_kernels(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_offset_p, int write_offset_p) {
   cl_int status;
   
   // Legacy num_kernels interpretation
@@ -275,7 +275,8 @@ void run_aoc_kernels(int first_frame_H, int last_frame_H, int rows_p, int PT_p, 
     
     // o_iter_read_add_offset
     //int o_iter_read_add_offset     = write_offset + (offset_read_add_group_cpo * (o_iter + o_iter_first));  // write_offset, o_iter_first are kernel input paramenters.  o_iter is a kernel internal loop variable
-    uint offset_read_add_group_cpo = HO * WO;
+    //uint offset_read_add_group_cpo = HO * WO;
+    uint offset_read_add_group_cpo = (cl_uint) (HO_final * WO_final);
     cl_uint k_offset_read_add_group_cpo = (cl_uint)offset_read_add_group_cpo;
 
     cl_uint k_read_pixels_add = (cl_uint)read_pixels_add;
@@ -306,23 +307,17 @@ void run_aoc_kernels(int first_frame_H, int last_frame_H, int rows_p, int PT_p, 
     //int write_pixels             = (enable_upsize)? write_pixels_tmp * 4 : write_pixels_tmp;
     uint write_pixels = enable_pooling ? (HO_conv / 2) * (WO_conv / 2) : HO_conv * WO_conv;
 
-    cl_uint k_write_pixels = (cl_uint)write_pixels;
+    cl_uint k_write_pixels  = (cl_uint)write_pixels;
+    cl_uint k_write_offset  = (cl_uint)write_offset_p;
+    cl_uint k_offset_data_out_group_cpo = (cl_uint) (HO_final * WO_final);  // this is ok
 
-//    if ((first_frame_H != 0) || (last_frame_H != 0)) {
-//      // let's remove one row, so we remove (num_columns -> width) frames
-//      printf (KCYN "JM10 debugging force updated num data frames for write kernel from %u  to %u\n" KNRM, 
-//          k_write_pixels, k_write_pixels - WO_conv);
-//       k_write_pixels = k_write_pixels - WO_conv;
-//    }
-
-cl_uint k_write_offset    = (cl_uint)write_offset_p;
- 
     arg_ind = 0;
     OCL_CHECK(status, status = clSetKernelArg(kernels[K_WRITER], arg_ind++, sizeof(cl_mem), (void*)&buffer_o));
     OCL_CHECK(status, status = clSetKernelArg(kernels[K_WRITER], arg_ind++, sizeof(cl_uint), (void*)&k_write_pixels));
     OCL_CHECK(status, status = clSetKernelArg(kernels[K_WRITER], arg_ind++, sizeof(cl_uint), (void*)&k_o_iter_first));
     OCL_CHECK(status, status = clSetKernelArg(kernels[K_WRITER], arg_ind++, sizeof(cl_uint), (void*)&k_O_ITER));
     OCL_CHECK(status, status = clSetKernelArg(kernels[K_WRITER], arg_ind++, sizeof(cl_uint), (void*)&k_write_offset));
+    OCL_CHECK(status, status = clSetKernelArg(kernels[K_WRITER], arg_ind++, sizeof(cl_uint), (void*)&k_offset_data_out_group_cpo));
   }
 
 
@@ -405,18 +400,6 @@ cl_uint k_write_offset    = (cl_uint)write_offset_p;
     // from hls num_data_frames = num_output_conv_pixels =  HO_conv * WO_conv;
     uint mul_num_data_frames    = HO_conv * WO_conv;
 
-    // in case of multi-frame, the kernel does not have to create the zero-padding,
-    // uses instead the real values
-    // currently set rows_p are good for that purpose but NOt for mult nor add stages, where these kernels
-    // would expect more frames/pixels, 
-    //  let's set the rows to the value to not expect the real value (fake-zero-padding)
-//    if ((first_frame_H != 0) || (last_frame_H != 0)) {
-//      // let's remove one row, so we remove (num_columns -> width) frames
-//      printf (KCYN "JM10 debugging force updated num data frames for mul kernel from %u  to %u\n" KNRM, 
-//          mul_num_data_frames, mul_num_data_frames - WO_conv);
-//       mul_num_data_frames = mul_num_data_frames - WO_conv;
-//    }
-
     cl_uint k_mul_num_data_frames = (cl_uint)mul_num_data_frames;
 
     arg_ind = 0;
@@ -435,18 +418,6 @@ cl_uint k_write_offset    = (cl_uint)write_offset_p;
     #endif
     uint add_num_data_frames    = HO_conv * WO_conv;
 
-    // in case of multi-frame, the kernel does not have to create the zero-padding,
-    // uses instead the real values
-    // currently set rows_p are good for that purpose but NOt for mult nor add stages, where these kernels
-    // would expect more frames/pixels, 
-    //  let's set the rows to the value to not expect the real value (fake-zero-padding)
-//    if ((first_frame_H != 0) || (last_frame_H != 0)) {
-//      // let's remove one row, so we remove (num_columns -> width) frames
-//      printf (KCYN "JM10 debugging force updated num data frames for add kernel from %u  to %u\n" KNRM, 
-//          add_num_data_frames, add_num_data_frames - WO_conv);
-//       add_num_data_frames = add_num_data_frames - WO_conv;
-//    }
-
     cl_uint k_add_num_data_frames = (cl_uint)add_num_data_frames;
     arg_ind = 0;
     OCL_CHECK(status, status = clSetKernelArg(kernels[K_ADDER], arg_ind++, sizeof(cl_uint), (void*)&k_add_num_data_frames));
@@ -464,18 +435,6 @@ cl_uint k_write_offset    = (cl_uint)write_offset_p;
     #endif
     
     uint relu_num_pixels = HO_conv * WO_conv;
-
-    // in case of multi-frame, the kernel does not have to create the zero-padding,
-    // uses instead the real values
-    // currently set rows_p are good for that purpose but NOt for mult nor add stages, where these kernels
-    // would expect more frames/pixels, 
-    //  let's set the rows to the value to not expect the real value (fake-zero-padding)
-//    if ((first_frame_H != 0) || (last_frame_H != 0)) {
-//      // let's remove one row, so we remove (num_columns -> width) frames
-//      printf (KCYN "JM10 debugging force updated num data frames for relu kernel from %u  to %u\n" KNRM, 
-//          relu_num_pixels, relu_num_pixels - WO_conv);
-//       relu_num_pixels = relu_num_pixels - WO_conv;
-//    }
     cl_uint k_relu_num_pixels = relu_num_pixels;
 
     arg_ind = 0;
@@ -485,24 +444,17 @@ cl_uint k_write_offset    = (cl_uint)write_offset_p;
   }
 
   //--------------------------------
-  // POOL CVT
+  // POOLING 
   // xil_hls -> for o_iter -> void 
   //--------------------------------
   {
+    // POOL CVT
     #ifdef DEBUG_HOST_KERNELS
     printf("run_aoc_kernels: set kernel %s arguments\n", "K_POOL_CVT");
     #endif
 
     cl_uint k_HI_pooling  = HO_conv; // input rows for pooling
     cl_uint k_WI_pooling  = WO_conv; // input cols for pooling
-
-//    if ((first_frame_H != 0) || (last_frame_H != 0)) {
-//      // let's remove one row, so we remove (num_columns -> width) frames
-//      printf (KCYN "JM10 debugging force updated k_HI_pooling for pool kernels from %u  to %u\n" KNRM, 
-//          k_HI_pooling, k_HI_pooling - 1);
-//       k_HI_pooling = k_HI_pooling - 1;
-//    }
-
     
     arg_ind = 0;
     OCL_CHECK(status, status = clSetKernelArg(kernels[K_POOL_CVT], arg_ind++, sizeof(cl_uint), (void*)&k_HI_pooling));
@@ -535,14 +487,6 @@ cl_uint k_write_offset    = (cl_uint)write_offset_p;
     uint bn_num_pixels = enable_pooling ? (HO_conv / 2) * (WO_conv / 2) : HO_conv * WO_conv; // pixels to read for add module (before upsize)
     cl_uint k_bn_num_pixels = (cl_uint)bn_num_pixels;
 
-//    if ((first_frame_H != 0) || (last_frame_H != 0)) {
-//      // let's remove one row, so we remove (num_columns -> width) frames
-//      printf (KCYN "JM10 debugging force updated num_pixles for batch_norm kernel from %u  to %u\n" KNRM, 
-//           k_bn_num_pixels, k_bn_num_pixels - WO_conv);
-//       k_bn_num_pixels = k_bn_num_pixels - WO_conv;
-//    }
-
-
     arg_ind = 0;
     OCL_CHECK(status, status = clSetKernelArg(kernels[K_BATCH_NORM], arg_ind++, sizeof(cl_uint), (void*)&k_bn_num_pixels));
     OCL_CHECK(status, status = clSetKernelArg(kernels[K_BATCH_NORM], arg_ind++, sizeof(cl_uint), (void*)&k_enable_batch_norm));
@@ -561,14 +505,6 @@ cl_uint k_write_offset    = (cl_uint)write_offset_p;
     //uint enable_pooling = enable_maxpooling || enable_avgpooling;
     uint add_num_pixels = enable_pooling ? (HO_conv / 2) * (WO_conv / 2) : HO_conv * WO_conv; // pixels to read for add module (before upsize)
     cl_uint k_add_num_pixels = (cl_uint)add_num_pixels;
-
-//    if ((first_frame_H != 0) || (last_frame_H != 0)) {
-//      // let's remove one row, so we remove (num_columns -> width) frames
-//      printf (KCYN "JM10 debugging force updated num_pixles for add_data kernel from %u  to %u\n" KNRM, 
-//           k_add_num_pixels, k_add_num_pixels - WO_conv);
-//       k_add_num_pixels = k_add_num_pixels - WO_conv;
-//    }
-
 
     arg_ind = 0;
     OCL_CHECK(status, status = clSetKernelArg(kernels[K_ADD_DATA], arg_ind++, sizeof(cl_uint), (void*)&k_add_num_pixels));
@@ -736,7 +672,7 @@ cl_uint k_write_offset    = (cl_uint)write_offset_p;
 
   #ifdef DEBUG_HOST_KERNELS
   printf("run_aoc_kernels: all kernels launched\n");
-  printf("\n")
+  printf("\n");
   printf("run_aoc_kernels: waiting for kernels completion\n");
   #endif
 
@@ -826,9 +762,6 @@ void compute() {
       printf("HOST compute: frame %d -> %d out of %d\n", fr, fr+1, num_frames);
       #endif
 
-      int first_frame_H = (fr == 0); // first frame, processing first chunk of rows
-      int last_frame_H  = (fr == num_frames - 1);  // last frame,  processing last  chunk of rows
-
       // first output row for this frame
       int row_o = fr * HMAX;
 
@@ -859,19 +792,25 @@ void compute() {
 
       // read and write offsets
       int read_offset_frame = row_i * W;
-      int write_offset_frame = (fr * HMAX * WO);
+      
+      int enable_pooling = enable_maxpooling | enable_avgpooling;
+      //int write_offset_frame = (fr * HMAX * WO);
+      int write_offset_frame = (fr * HMAX * WO_final);
+      if(enable_pooling) write_offset_frame = write_offset_frame / 2; // the number of total colums has been taken into account with W0_final, but we still have to reduce data due to "H" -> /2
+
+      
       
       #ifdef DEBUG_HOST_KERNELS
       printf("HOST compute: Frame %d   HxW = %3dx%3d, rows %d   Padding = PT %1d - PB %1d - PL %1d - PR %1d, off_rd %d, off_wr %d, rows_to_read %d\n",
           fr, H, W, rows_to_read, PT_frame, PB_frame, PL_frame, PR_frame, read_offset_frame, write_offset_frame, rows_to_read);
       #endif
-      run_aoc_kernels(first_frame_H, last_frame_H, rows_to_read, PT_frame, PB_frame, PL_frame, PR_frame, read_offset_frame, write_offset_frame);
+      run_aoc_kernels( rows_to_read, PT_frame, PB_frame, PL_frame, PR_frame, read_offset_frame, write_offset_frame);
     }
   } else {
     #ifdef DEBUG_HOST_KERNELS
     printf("HOST compute: Launching single-frame mode (1 frame)...\n");
     #endif
-    run_aoc_kernels(0 ,0 ,rows, PT, PB, PL, PR, 0, 0);
+    run_aoc_kernels(rows, PT, PB, PL, PR, 0, 0);
   }
 }
 

@@ -145,25 +145,25 @@ channel pixel_out_t  CH_DATA_OUT          __attribute__((depth(STREAMS_DEPTH)));
 // Data IN kernel
 //  read data from memory and write it to input stream
 // ----------------------------------------------------------------------------
-kernel void data_in(global pixel_in_t* restrict data_in, uint num_pixels_in, uint I_ITER_in, uint O_ITER_in, uint offset_in, uint cpi_group_offset_in) {
+kernel void data_in(global pixel_in_t* restrict data_in, uint num_pixels_in, uint I_ITER_in, uint O_ITER_in, uint offset_glob_in, uint cpi_group_offset_in) {
 
   uint num_pixels  = num_pixels_in;
   uint I_ITER      = I_ITER_in;
   uint O_ITER      = O_ITER_in;
-  uint offset      = offset_in;
+  uint offset_glob = offset_glob_in;
   uint cpi_group_offset  = cpi_group_offset_in;
 
   #ifdef DEBUG_READ_DATA
-  printf("READ_DATA_IN: gihwcpi format: start num_pixels(per_iter) %2u  i_iter %2u   o_iter %2u   offset %6u\n", num_pixels, I_ITER, O_ITER, offset);  
+  printf("READ_DATA_IN: gihwcpi format: start num_pixels(per_iter) %2u  i_iter %2u   o_iter %2u   offset_glob %6u   cpi_group_offset %6u \n", num_pixels, I_ITER, O_ITER, offset_glob, cpi_group_offset);  
   #endif 
    
   for (uint o_iter = 0; o_iter < O_ITER; o_iter++) {    
     for (int i_iter = 0; i_iter < I_ITER; i_iter++) {
-      int offset_global = offset + (cpi_group_offset * i_iter);
+      int offset = offset_glob + (cpi_group_offset * i_iter);
 
       #ifdef DEBUG_READ_DATA
       #ifdef DEBUG_VERBOSE
-      printf("READ_DATA_IN: o_iter %2u   i_iter %2u   offset %6u\n", o_iter, i_iter , offset);
+      printf("READ_DATA_IN: o_iter %2u   i_iter %2u   start offset %6u\n", o_iter, i_iter , offset);
       #endif
       #endif
   
@@ -172,7 +172,7 @@ kernel void data_in(global pixel_in_t* restrict data_in, uint num_pixels_in, uin
         pixel_in_t data = data_in[offset + i];
       
         #ifdef DEBUG_READ_DATA
-          printf("  READ_DATA_IN  o_iter %u   i_iter %u   ind %3u ", o_iter, i_iter, i);
+          printf("  READ_DATA_IN  o_iter %u   i_iter %u   ind %3u (%u)", o_iter, i_iter, i, offset + i);
           #ifdef DEBUG_VERBOSE
             printf("   data: ");
             for(uint j = 0; j < CPI; j++) {
@@ -340,7 +340,7 @@ kernel void add_data_in(global pixel_out_t* restrict data_in, uint num_pixels_in
         write_channel_intel(CH_ADDDATA_ADD_IN, px);
         #ifdef DEBUG_READ_ADD_DATA
           #ifdef DEBUG_VERBOSE
-            printf("ADD_DATA_READER:  o_iter %u   index %u   px: ", o_iter, i);
+            printf("ADD_DATA_READER:  o_iter %u   index %3u (%3u)   px: ", o_iter, i, o_iter_read_add_offset + i);
             for(uint i = 0; i < CPO; i++) {
               printf(" %2.2f", px.pixel[i]);
             }
@@ -360,24 +360,31 @@ kernel void add_data_in(global pixel_out_t* restrict data_in, uint num_pixels_in
 // ----------------------------------------------------------------------------
 // Data  OUT kernel
 // ----------------------------------------------------------------------------
-kernel void data_out(global pixel_out_t * restrict data_out, uint write_pixels_in, uint o_iter_first_in, uint O_ITER_in, uint write_offset_frame_in) {
+kernel void data_out(global pixel_out_t * restrict data_out, uint write_pixels_in, uint o_iter_first_in, uint O_ITER_in, uint write_offset_frame_in, uint offset_data_out_group_cpo_in) {
 
   uint write_pixels = write_pixels_in;
   uint o_iter_first = o_iter_first_in;
   uint O_ITER       = O_ITER_in;
   uint write_offset_frame = write_offset_frame_in; // offset to data ptr due to splitting matrix in frames
+  uint offset_data_out_group_cpo = offset_data_out_group_cpo_in;
 
   #ifdef DEBUG_WRITE_DATA
-  printf("WRITER: start (gihwcpi data format) num_pixels %u   o_iter_first %u   O_ITER %u  glbl_frames_offset %u\n",
-      write_pixels, o_iter_first, O_ITER, write_offset_frame
+  printf("WRITER: start (gihwcpi data format) num_pixels %u   o_iter_first %u   O_ITER %u  glbl_frames_offset %u   offset_data_out_group_cpo_in %u \n",
+      write_pixels, o_iter_first, O_ITER, write_offset_frame, offset_data_out_group_cpo
       );
   #endif
 
   for (uint o_iter = 0; o_iter < O_ITER; o_iter++) {
-    uint offset_tmp1 = (o_iter + o_iter_first);
-    uint offset_tmp2 = write_pixels * offset_tmp1;
-    uint o_iter_write_offset = write_offset_frame_in + offset_tmp2;
-    
+    uint o_iter_write_offset = write_offset_frame + (offset_data_out_group_cpo * (o_iter + o_iter_first));
+
+    #ifdef DEBUG_WRITE_DATA
+    #ifdef DEBUG_VERBOSE
+    printf("WRITER: o_iter_write_offset = write_offset + (offset_data_out_group_cpo * (o_iter + o_iter_first))\n");
+    printf("WRITER:                     = %12u + (%25u * (%6u + %12u))\n", write_offset_frame, offset_data_out_group_cpo, o_iter, o_iter_first);
+    printf("WRITER:                     = %u\n", write_offset_frame + (offset_data_out_group_cpo * (o_iter + o_iter_first)));
+    #endif
+    #endif
+ 
     #ifdef DEBUG_WRITE_DATA
       printf("WRITER: o_iter %u   num_pixels %u  o_iter_write_offset %u\n", o_iter, write_pixels, o_iter_write_offset);
     #endif
@@ -393,16 +400,18 @@ kernel void data_out(global pixel_out_t * restrict data_out, uint write_pixels_i
       printf("WRITER: data read  from CH_DATA_OUT\n");
       #endif
       #endif
-      data_out[o_iter_write_offset + i] = px;
+
       #ifdef DEBUG_WRITE_DATA
         //#ifdef DEBUG_VERBOSE
-          printf("WRITE_DATA_OUT  o_iter %u   index %u   px: ", o_iter, i);
-          for(uint i = 0; i < CPO; i++) {
-            printf(" %2.2f", px.pixel[i]);
+          printf("WRITE_DATA_OUT  o_iter %u   index %3u (%3u)  px: ", o_iter, i, o_iter_write_offset + i);
+          for(uint p = 0; p < CPO; p++) {
+            printf(" %6.3f", px.pixel[p]);
           }
           printf("\n");
        // #endif
       #endif
+      data_out[o_iter_write_offset + i] = px;
+          
     }
   }
   #ifdef DEBUG_WRITE_DATA

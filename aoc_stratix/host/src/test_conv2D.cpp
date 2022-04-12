@@ -47,7 +47,7 @@
 
 #ifdef FPGA_STRATIX_10MX
   //#define KERNEL_FREQUENCY_MHZ 43  BSP 20.4 WITH TIMING VIOLATIONS
-  #define KERNEL_FREQUENCY_MHZ ((float)361.11)
+  #define KERNEL_FREQUENCY_MHZ ((float)262.00)
 #else
   // let's set the alveo u200 as the default device
 //iffdef FPGA_ALVEO_U200
