@@ -2,17 +2,13 @@
 
 void parse_arguments(int argc, char **argv) {
 #ifdef OPENCL_TEST
-  if (argc != 2 || argc != 3) {
+  if (argc != 3) {
     printf("%s <probability> <xclbin file>\n", argv[0]);
     exit(1);
   } else {
-	  if(argc == 3) {
 		  prob = atoi(argv[1]);
 		  binaryFile = argv[2];
-	  } else {
-		  binaryFile = argv[1];
 	  }
-  }
 #else
   if (argc > 2) prob =  atoi(argv[1]);
 #endif
@@ -85,19 +81,19 @@ void allocate_buffers() {
   // Now we allocate those buffers in the FPGA (for OpenCL)
   cl_int err;
   data_in_ddr0.flags  =  0 | XCL_MEM_TOPOLOGY;
-  data_in_ddr0.obj = x0;
+  data_in_ddr0.obj = x[0];
   data_in_ddr0.param = 0;
 
   data_in_ddr1.flags  =  0 | XCL_MEM_TOPOLOGY;
-  data_in_ddr1.obj = x1;
+  data_in_ddr1.obj = x[1];
   data_in_ddr1.param = 0;
 
   data_in_ddr2.flags  =  0 | XCL_MEM_TOPOLOGY;
-  data_in_ddr2.obj = x2;
+  data_in_ddr2.obj = x[2];
   data_in_ddr2.param = 0;
 
   data_in_ddr3.flags  =  0 | XCL_MEM_TOPOLOGY;
-  data_in_ddr3.obj = x3;
+  data_in_ddr3.obj = x[3];
   data_in_ddr3.param = 0;
 
   out_ddr.flags  = 0 | XCL_MEM_TOPOLOGY;
@@ -108,10 +104,10 @@ void allocate_buffers() {
   kernel_ddr.obj = w;
   kernel_ddr.param = 0;
 
-  OCL_CHECK(err, buffer_i0      = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_x_in_bytes*I, &data_in_ddr0, &err));
-  OCL_CHECK(err, buffer_i1      = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_x_in_bytes*I, &data_in_ddr1, &err));
-  OCL_CHECK(err, buffer_i2      = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_x_in_bytes*I, &data_in_ddr2, &err));
-  OCL_CHECK(err, buffer_i3      = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_x_in_bytes*I, &data_in_ddr3, &err));
+  OCL_CHECK(err, buffer_i0      = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_x_in_bytes, &data_in_ddr0, &err));
+  if (I>1) OCL_CHECK(err, buffer_i1      = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_x_in_bytes, &data_in_ddr1, &err));
+  if (I>2) OCL_CHECK(err, buffer_i2      = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_x_in_bytes, &data_in_ddr2, &err));
+  if (I>3) OCL_CHECK(err, buffer_i3      = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_x_in_bytes, &data_in_ddr3, &err));
   OCL_CHECK(err, buffer_o    = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_WRITE_ONLY  | CL_MEM_USE_HOST_PTR , size_y_in_bytes, &out_ddr, &err));
   OCL_CHECK(err, buffer_k    = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_w_in_bytes, &kernel_ddr, &err));
 }
@@ -122,17 +118,23 @@ void copy_to_fpga() {
   set_callback(write_events[0], "ooo_queue");
   OCL_CHECK(err, err = write_events[0].wait());
 
-  OCL_CHECK(err, err = q.enqueueMigrateMemObjects( {*buffer_i1}, 0 /*0 means from host*/, NULL, &write_events[0]));
-  set_callback(write_events[0], "ooo_queue");
-  OCL_CHECK(err, err = write_events[0].wait());
+  if (I>1) {
+    OCL_CHECK(err, err = q.enqueueMigrateMemObjects( {*buffer_i1}, 0 /*0 means from host*/, NULL, &write_events[0]));
+    set_callback(write_events[0], "ooo_queue");
+    OCL_CHECK(err, err = write_events[0].wait());
+  }
 
-  OCL_CHECK(err, err = q.enqueueMigrateMemObjects( {*buffer_i2}, 0 /*0 means from host*/, NULL, &write_events[0]));
-  set_callback(write_events[0], "ooo_queue");
-  OCL_CHECK(err, err = write_events[0].wait());
+  if (I>2) {
+    OCL_CHECK(err, err = q.enqueueMigrateMemObjects( {*buffer_i2}, 0 /*0 means from host*/, NULL, &write_events[0]));
+    set_callback(write_events[0], "ooo_queue");
+    OCL_CHECK(err, err = write_events[0].wait());
+  }
 
-  OCL_CHECK(err, err = q.enqueueMigrateMemObjects( {*buffer_i3}, 0 /*0 means from host*/, NULL, &write_events[0]));
-  set_callback(write_events[0], "ooo_queue");
-  OCL_CHECK(err, err = write_events[0].wait());
+  if (I>3) {
+    OCL_CHECK(err, err = q.enqueueMigrateMemObjects( {*buffer_i3}, 0 /*0 means from host*/, NULL, &write_events[0]));
+    set_callback(write_events[0], "ooo_queue");
+    OCL_CHECK(err, err = write_events[0].wait());
+  }
 
   OCL_CHECK(err, err = q.enqueueMigrateMemObjects( {*buffer_k}, 0 /*0 means from host*/, NULL, &write_events[0]));
   set_callback(write_events[0], "ooo_queue");
@@ -161,7 +163,6 @@ void run_kernel() {
 	OCL_CHECK(err, err = kernel_conv2d.setArg(arg++, *buffer_i1));
 	OCL_CHECK(err, err = kernel_conv2d.setArg(arg++, *buffer_i2));
 	OCL_CHECK(err, err = kernel_conv2d.setArg(arg++, *buffer_i3));
-	OCL_CHECK(err, err = kernel_conv2d.setArg(arg++, *buffer_i0));
 	OCL_CHECK(err, err = kernel_conv2d.setArg(arg++, *buffer_k));
 	OCL_CHECK(err, err = kernel_conv2d.setArg(arg++, *buffer_o));
     OCL_CHECK(err, err = q.enqueueNDRangeKernel(kernel_conv2d, 0, 1, 1, NULL, &kernel_events));
@@ -169,4 +170,3 @@ void run_kernel() {
     OCL_CHECK(err, err = kernel_events.wait());
 }
 #endif
-

@@ -423,6 +423,7 @@ template <int num_its> void write(ap_uint<512> *ptr, hls::stream<ap_uint<512>> &
   //printf("write ends\n");
 }
 
+extern "C" {
 void top(ap_uint<READ_GROUP_SIZE*DATA_SIZE> *x0, ap_uint<READ_GROUP_SIZE*DATA_SIZE> *x1, ap_uint<READ_GROUP_SIZE*DATA_SIZE> *x2, ap_uint<READ_GROUP_SIZE*DATA_SIZE> *x3, ap_uint<I*O*DATA_SIZE> *w, ap_uint<512> *y) {
   #pragma hls interface m_axi port=w offset=slave bundle=gmem
   #pragma hls interface m_axi port=y offset=slave bundle=gmem1
@@ -430,6 +431,8 @@ void top(ap_uint<READ_GROUP_SIZE*DATA_SIZE> *x0, ap_uint<READ_GROUP_SIZE*DATA_SI
   #pragma hls interface m_axi port=x1 offset=slave bundle=gmem3
   #pragma hls interface m_axi port=x2 offset=slave bundle=gmem4
   #pragma hls interface m_axi port=x3 offset=slave bundle=gmem5
+
+	printf("top kernel in...\n");
 
   #pragma hls dataflow
   hls::stream<ap_uint<2*DATA_SIZE*READ_GROUP_SIZE>> st_mul[O];
@@ -464,4 +467,5 @@ void top(ap_uint<READ_GROUP_SIZE*DATA_SIZE> *x0, ap_uint<READ_GROUP_SIZE*DATA_SI
   hls::stream<ap_uint<512>> st_serialize;
   serialize<READ_GROUP_SIZE, 2*DATA_SIZE, O*H*W/READ_GROUP_SIZE>(st_merge, st_serialize);
   write<O*H*W*2*DATA_SIZE/512>(y, st_serialize);
+}
 }

@@ -17,5 +17,6 @@
 #define READ_GROUP_SIZE  2
 #define DATA_SIZE        8
 
+extern "C" {
 void top(ap_uint<DATA_SIZE*READ_GROUP_SIZE> *x0, ap_uint<DATA_SIZE*READ_GROUP_SIZE> *x1, ap_uint<DATA_SIZE*READ_GROUP_SIZE> *x2, ap_uint<DATA_SIZE*READ_GROUP_SIZE> *x3, ap_uint<8*O*I> *w, ap_uint<512> *y);
-
+}

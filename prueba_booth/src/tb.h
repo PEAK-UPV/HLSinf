@@ -30,6 +30,7 @@ extern ap_uint<DATA_SIZE*READ_GROUP_SIZE> *x2;
 extern ap_uint<DATA_SIZE*READ_GROUP_SIZE> *x3;
 extern ap_uint<8> *w;
 extern ap_uint<16> *y;
+extern ap_uint<8> *x[I];
 
 #ifdef OPENCL_TEST
 // OpenCL variables

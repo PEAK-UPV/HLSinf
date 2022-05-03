@@ -91,7 +91,7 @@ endif
 
 
 
-EXECUTABLE = ./test_conv2D
+EXECUTABLE = ./test_booth
 CMD_ARGS = $(BUILD_DIR)/kernel_top.xclbin
 EMCONFIG_DIR = $(TEMP_DIR)
 EMU_DIR = $(SDCARD)/data/emulation

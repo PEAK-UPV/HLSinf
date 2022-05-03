@@ -12,6 +12,7 @@ ap_uint<DATA_SIZE*READ_GROUP_SIZE> *x2;
 ap_uint<DATA_SIZE*READ_GROUP_SIZE> *x3;
 ap_uint<8> *w;
 ap_uint<16> *y;
+ap_uint<8> *x[I];
 
 #ifdef OPENCL_TEST
 // OpenCL variables
@@ -61,17 +62,14 @@ int main(int argc, char* argv[]) {
 
   std::uniform_int_distribution<int> dist(0, 255);
 
+  parse_arguments(argc, argv);
+  printf("Prob of 0: %d\n", prob);
+
 #ifdef OPENCL_TEST
   fn_init_fpga();
 #endif
 
-  ap_uint<8> *x[I];
-  parse_arguments(argc, argv);
-  printf("Prob of 0: %d%\n", prob);
   // x and w integer vectors
-#ifdef OPENCL_TEST
-  allocate_buffers();
-#else
   size_x_in_bytes = sizeof(ap_uint<8>) * H * W;
   size_w_in_bytes = sizeof(ap_uint<8>) * I * O * KH * KW;
   size_y_in_bytes = sizeof(ap_uint<16>) * H * W * O;
@@ -79,16 +77,23 @@ int main(int argc, char* argv[]) {
   for (int i=0; i<I; i++) posix_memalign((void **)&x[i], 4096, size_x_in_bytes);
   posix_memalign((void **)&w, 4096, size_w_in_bytes);
   posix_memalign((void **)&y, 4096, size_y_in_bytes);
+
+#ifdef OPENCL_TEST
+  allocate_buffers();
 #endif
+
+  printf("initializing input data...\n");
   for (int i=0; i<I; i++) {
 	  ap_uint<8> *ptr = x[i];
 	  zerogen(ptr, prob, H*W, gen, dist);
   }
-
+  printf("initializing filters...\n");
   for (int i=0; i<I; i++) for (int o=0; o<O; o++) for (int k=0; k<KH*KW; k++) w[i+(o*I)+(k*O*I)] = dist(gen);
+  printf("reseting output...\n");
   for (int i=0; i<H*W*O; i++) y[i] = 0;
 
 #ifdef OPENCL_TEST
+    printf("copying data to fpga\n");
     copy_to_fpga();
 #endif
 
@@ -114,6 +119,7 @@ int main(int argc, char* argv[]) {
   x3 = (I>=4) ? (ap_uint<DATA_SIZE*READ_GROUP_SIZE> *)x[3] : nullptr;
 
 #ifdef OPENCL_TEST
+  printf("runing kernel\n");
   run_kernel();
 #else
   top(x0, x1, x2, x3, (ap_uint<8*O*I> *)w, (ap_uint<512> *)y);
@@ -127,6 +133,7 @@ int main(int argc, char* argv[]) {
   double diff = time_end-time_start;
   std::cout<< "TIME KERNEL = " << (diff/1000000)<<" ms \n"<<std::endl;
 
+  printf("copying result from fpga...\n");
   copy_from_fpga();
 #endif
 
@@ -137,6 +144,7 @@ int main(int argc, char* argv[]) {
 
   for (int z=0; z<O*H*W; z++) y_cpu[z] = 0;
 
+  printf("cpu convolution...\n");
   for (int i=0; i<I; i++) {
 	  ap_uint<8> *ptr = x[i];
 	  for (int o=0; o<O; o++) {
