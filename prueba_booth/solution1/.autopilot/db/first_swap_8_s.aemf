@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cdfg:DBCdfg xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cdfg="http://www.autoesl.com/DBCdfg" timeStamp="1651154263000">
+  <ports id="1" name="p_read" type="PortType" coreId="0" bitwidth="8">
+    <dataOutputObjs>read</dataOutputObjs>
+  </ports>
+  <ports id="2" name="p_read1" type="PortType" coreId="540697965" bitwidth="8">
+    <dataOutputObjs>read</dataOutputObjs>
+  </ports>
+  <ports id="3" name="output_r" type="PortType" originalName="output.V" coreName="RAM" coreId="218" bitwidth="8" direction="DirOut" iftype="IfTypeRegister" arraysize="2">
+    <dataInputObjs>getelementptr</dataInputObjs>
+    <dataInputObjs>getelementptr</dataInputObjs>
+  </ports>
+  <ports id="13" name="ap_return" direction="DirOut">
+    <dataInputObjs>ret</dataInputObjs>
+  </ports>
+  <edges id="17" source_obj="//@ports.1" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.0"/>
+  <edges id="19" source_obj="//@ports.0" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.1"/>
+  <edges id="20" source_obj="//@regions.0/@basic_blocks.0/@node_objs.2" sink_obj="//@ports.2"/>
+  <edges id="24" source_obj="//@regions.0/@basic_blocks.0/@node_objs.1" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.3"/>
+  <edges id="27" source_obj="//@regions.0/@basic_blocks.0/@node_objs.4" sink_obj="//@ports.2"/>
+  <edges id="31" source_obj="//@regions.0/@basic_blocks.0/@node_objs.3" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.5"/>
+  <edges id="32" source_obj="//@regions.0/@basic_blocks.0/@node_objs.0" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.5"/>
+  <edges id="33" source_obj="//@regions.0/@basic_blocks.0/@node_objs.1" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.5"/>
+  <edges id="34" source_obj="//@regions.0/@basic_blocks.0/@node_objs.3" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.6"/>
+  <edges id="36" source_obj="//@regions.0/@basic_blocks.0/@node_objs.0" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.6"/>
+  <edges id="37" source_obj="//@regions.0/@basic_blocks.0/@node_objs.5" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.7"/>
+  <edges id="38" source_obj="//@regions.0/@basic_blocks.0/@node_objs.2" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.7"/>
+  <edges id="39" source_obj="//@regions.0/@basic_blocks.0/@node_objs.6" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.8"/>
+  <edges id="40" source_obj="//@regions.0/@basic_blocks.0/@node_objs.4" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.8"/>
+  <edges id="41" source_obj="//@regions.0/@basic_blocks.0/@node_objs.3" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.9"/>
+  <edges source_obj="//@regions.0/@basic_blocks.0/@node_objs.9" sink_obj="//@ports.3"/>
+  <regions anchor_node="-1" region_type="8" interval="1" typeName="Pipeline" id="53" pipe_depth="1" RegionName="first_swap&lt;8>">
+    <basic_blocks id="14" name="first_swap&lt;8>" type="BlockType">
+      <node_objs xsi:type="cdfg:CdfgNode" id="4" name="p_read_1" lineNumber="5" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="0" contextFuncName="first_swap_8_s" bitwidth="8" opcode="read" m_display="0" m_topoIndex="1" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="5" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="first_swap&amp;lt;8&amp;gt;"/>
+        <dataInputObjs>p_read1</dataInputObjs>
+        <dataOutputObjs>select</dataOutputObjs>
+        <dataOutputObjs>select</dataOutputObjs>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="5" name="p_read_2" lineNumber="5" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="690565672" contextFuncName="first_swap_8_s" bitwidth="8" opcode="read" m_display="0" m_topoIndex="2" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="5" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="first_swap&amp;lt;8&amp;gt;"/>
+        <dataInputObjs>p_read</dataInputObjs>
+        <dataOutputObjs>icmp</dataOutputObjs>
+        <dataOutputObjs>select</dataOutputObjs>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="6" name="output_addr" lineNumber="5" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="132" contextFuncName="first_swap_8_s" bitwidth="1" opcode="getelementptr" m_display="0" m_topoIndex="3" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="5" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="first_swap&amp;lt;8&amp;gt;"/>
+        <dataOutputObjs>output_r</dataOutputObjs>
+        <dataOutputObjs>store</dataOutputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="7" name="icmp_ln870" lineNumber="870" fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/ap_int_base.h" fileDirectory=".." rtlName="icmp_ln870_fu_53_p2" opType="icmp" coreId="129" contextFuncName="operator_eq_32_true" bitwidth="1" opcode="icmp" m_display="0" m_delay="0.58" m_topoIndex="4" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/ap_int_base.h" linenumber="870" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="operator==&amp;lt;32, true&amp;gt;"/>
+        <dataInputObjs>read</dataInputObjs>
+        <dataOutputObjs>select</dataOutputObjs>
+        <dataOutputObjs>select</dataOutputObjs>
+        <dataOutputObjs>ret</dataOutputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="8" name="output_addr_1" lineNumber="9" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="129" contextFuncName="first_swap_8_s" bitwidth="1" opcode="getelementptr" m_display="0" m_topoIndex="5" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="9" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="first_swap&amp;lt;8&amp;gt;"/>
+        <dataOutputObjs>output_r</dataOutputObjs>
+        <dataOutputObjs>store</dataOutputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="9" name="select_ln7" lineNumber="7" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." rtlName="output_r_d1" coreName="Sel" implIndex="auto_sel" control="auto" opType="select" coreId="73" contextFuncName="first_swap_8_s" bitwidth="8" opcode="select" m_display="0" m_delay="0.3" m_topoIndex="6" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="7" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="first_swap&amp;lt;8&amp;gt;"/>
+        <dataInputObjs>icmp</dataInputObjs>
+        <dataInputObjs>read</dataInputObjs>
+        <dataInputObjs>read</dataInputObjs>
+        <dataOutputObjs>store</dataOutputObjs>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="10" name="select_ln7_1" lineNumber="7" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." rtlName="output_r_d0" coreName="Sel" implIndex="auto_sel" control="auto" opType="select" coreId="73" contextFuncName="first_swap_8_s" bitwidth="8" opcode="select" m_display="0" m_delay="0.3" m_topoIndex="7" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="7" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="first_swap&amp;lt;8&amp;gt;"/>
+        <dataInputObjs>icmp</dataInputObjs>
+        <dataInputObjs>read</dataInputObjs>
+        <dataOutputObjs>store</dataOutputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="11" name="output_addr_write_ln12" lineNumber="12" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreName="RAM" implIndex="auto" control="auto" opType="ram" coreId="83" contextFuncName="first_swap_8_s" opcode="store" m_display="0" m_delay="0.66" m_topoIndex="8" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="12" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="first_swap&amp;lt;8&amp;gt;"/>
+        <dataInputObjs>select</dataInputObjs>
+        <dataInputObjs>getelementptr</dataInputObjs>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="12" name="output_addr_1_write_ln9" lineNumber="9" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreName="RAM" implIndex="auto" control="auto" opType="ram" coreId="83" contextFuncName="first_swap_8_s" opcode="store" m_display="0" m_delay="0.66" m_topoIndex="9" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="9" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="first_swap&amp;lt;8&amp;gt;"/>
+        <dataInputObjs>select</dataInputObjs>
+        <dataInputObjs>getelementptr</dataInputObjs>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="13" name="_ln16" lineNumber="16" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="177" contextFuncName="first_swap_8_s" opcode="ret" m_display="0" m_topoIndex="10" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="16" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="first_swap&amp;lt;8&amp;gt;"/>
+        <dataInputObjs>icmp</dataInputObjs>
+        <dataOutputObjs>ap_return</dataOutputObjs>
+      </node_objs>
+      <fileValidLineNumbers fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/ap_int_base.h">
+        <validLinenumbers>870</validLinenumbers>
+      </fileValidLineNumbers>
+      <fileValidLineNumbers fileName="prueba_booth/src/premults.cpp">
+        <validLinenumbers>5</validLinenumbers>
+        <validLinenumbers>9</validLinenumbers>
+        <validLinenumbers>7</validLinenumbers>
+        <validLinenumbers>12</validLinenumbers>
+        <validLinenumbers>16</validLinenumbers>
+      </fileValidLineNumbers>
+    </basic_blocks>
+  </regions>
+  <ScheduleInfo time="0"/>
+  <expressionNodes realName="select_ln7_1_fu_68">
+    <nodeIds>10</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="output_addr_gep_fu_26">
+    <nodeIds>6</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="select_ln7_fu_59">
+    <nodeIds>9</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="output_addr_1_gep_fu_34">
+    <nodeIds>8</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="icmp_ln870_fu_53">
+    <nodeIds>7</nodeIds>
+  </expressionNodes>
+  <ioNodes realName="p_read_2_read_fu_20">
+    <nodeIds>5</nodeIds>
+  </ioNodes>
+  <ioNodes realName="p_read_1_read_fu_14">
+    <nodeIds>4</nodeIds>
+  </ioNodes>
+  <memoryPorts dataString="output_r">
+    <nodeIds>12</nodeIds>
+  </memoryPorts>
+  <memoryPorts dataString="output_r" portID="1">
+    <nodeIds>11</nodeIds>
+  </memoryPorts>
+  <ioPorts name="output_r(p0)">
+    <contents name="store">
+      <nodeIds>12</nodeIds>
+    </contents>
+  </ioPorts>
+  <ioPorts name="output_r(p1)">
+    <contents name="store">
+      <nodeIds>11</nodeIds>
+    </contents>
+  </ioPorts>
+  <ioPorts name="p_read">
+    <contents name="read">
+      <nodeIds>5</nodeIds>
+    </contents>
+  </ioPorts>
+  <ioPorts name="p_read1">
+    <contents name="read">
+      <nodeIds>4</nodeIds>
+    </contents>
+  </ioPorts>
+  <ioPorts name="ap_return">
+    <contents name="ret">
+      <nodeIds>13</nodeIds>
+    </contents>
+  </ioPorts>
+  <fsm>
+    <states id="1">
+      <operations id="4" stage="1" latency="1"/>
+      <operations id="5" stage="1" latency="1"/>
+      <operations id="6" stage="1" latency="1"/>
+      <operations id="7" stage="1" latency="1"/>
+      <operations id="8" stage="1" latency="1"/>
+      <operations id="9" stage="1" latency="1"/>
+      <operations id="10" stage="1" latency="1"/>
+      <operations id="11" stage="1" latency="1"/>
+      <operations id="12" stage="1" latency="1"/>
+      <operations id="13" stage="1" latency="1"/>
+    </states>
+  </fsm>
+  <CFGRegionsRoot>
+    <cfgRegions mId="1" mTag="first_swap_8_s" mII="1" mDepth="1" mMinTripCount="-1" mMaxTripCount="-1">
+      <basicBlocks>14</basicBlocks>
+      <mDfPipe/>
+    </cfgRegions>
+  </CFGRegionsRoot>
+</cdfg:DBCdfg>

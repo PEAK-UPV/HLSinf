@@ -1,0 +1,21 @@
+
+
+Implementation tool: Xilinx Vivado v.2020.2
+Project:             prueba_booth
+Solution:            solution1
+Device target:       xcu200-fsgd2104-2-e
+Report date:         Thu Apr 28 16:08:52 CEST 2022
+
+#=== Post-Implementation Resource usage ===
+CLB:           1316
+LUT:           4701
+FF:            8236
+DSP:              1
+BRAM:            19
+SRL:            655
+URAM:             1
+#=== Final timing ===
+CP required:    3.330
+CP achieved post-synthesis:    2.087
+CP achieved post-implementation:    3.006
+Timing met

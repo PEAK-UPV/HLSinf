@@ -1,0 +1,152 @@
+
+
+================================================================
+== Vitis HLS Report for 'merge_1_2_16_128_s'
+================================================================
+* Date:           Thu Apr 28 15:57:40 2022
+
+* Version:        2020.2 (Build 3064766 on Wed Nov 18 09:12:47 MST 2020)
+* Project:        prueba_booth
+* Solution:       solution1 (Vitis Kernel Flow Target)
+* Product family: virtexuplus
+* Target device:  xcu200-fsgd2104-2-e
+
+
+================================================================
+== Performance Estimates
+================================================================
++ Timing: 
+    * Summary: 
+    +--------+---------+----------+------------+
+    |  Clock |  Target | Estimated| Uncertainty|
+    +--------+---------+----------+------------+
+    |ap_clk  |  3.33 ns|  2.431 ns|     0.90 ns|
+    +--------+---------+----------+------------+
+
++ Latency: 
+    * Summary: 
+    +---------+---------+----------+----------+-----+-----+---------+
+    |  Latency (cycles) |  Latency (absolute) |  Interval | Pipeline|
+    |   min   |   max   |    min   |    max   | min | max |   Type  |
+    +---------+---------+----------+----------+-----+-----+---------+
+    |      130|      130|  0.433 us|  0.433 us|  130|  130|     none|
+    +---------+---------+----------+----------+-----+-----+---------+
+
+    + Detail: 
+        * Instance: 
+        N/A
+
+        * Loop: 
+        +--------------------+---------+---------+----------+-----------+-----------+------+----------+
+        |                    |  Latency (cycles) | Iteration|  Initiation Interval  | Trip |          |
+        |      Loop Name     |   min   |   max   |  Latency |  achieved |   target  | Count| Pipelined|
+        +--------------------+---------+---------+----------+-----------+-----------+------+----------+
+        |- VITIS_LOOP_404_2  |      128|      128|         2|          1|          1|   128|       yes|
+        +--------------------+---------+---------+----------+-----------+-----------+------+----------+
+
+============================================================
++ Verbose Summary: Synthesis Manager
+============================================================
+InlineROM: 1
+ExposeGlobal: 0
+============================================================
++ Verbose Summary: CDFG Model
+============================================================
+IsTopModel: 0
+ResetActiveHigh: 1
+IsCombinational: 2
+IsDatapathOnly: 0
+HasWiredReturn: 1
+HasMFsm: 0
+HasVarLatency: 1
+IsPipeline: 0
+IsRtlPipelined: 0
+IsInstanceOverlapped: 0
+IsDontTouch: 0
+HasImplIP: 0
+IsGatedGlobalClock: 0
+
++ Individual pipeline summary: 
+  * Pipeline-0: initiation interval (II) = 1, depth = 2
+
+
+============================================================
++ Verbose Summary: Schedule
+============================================================
+* Number of FSM states : 4
+* Pipeline : 1
+  Pipeline-0 : II = 1, D = 2, States = { 2 3 }
+* Dataflow Pipeline: 0
+
+* FSM state transitions: 
+1 --> 2 
+2 --> 4 3 
+3 --> 2 
+4 --> 
+
+* FSM state operations: 
+
+State 1 <SV = 0> <Delay = 0.38>
+ST_1 : Operation 5 [1/1] (0.00ns)   --->   "%specinterface_ln0 = specinterface void @_ssdm_op_SpecInterface, i32 %in_V_V, void @ap_fifo_str, i32 0, i32 0, void @p_str, i32 0, i32 0, void @p_str, void @p_str, void @p_str, i32 2, i32 2, i32 16, i32 16, void @p_str, void @p_str"   --->   Operation 5 'specinterface' 'specinterface_ln0' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 6 [1/1] (0.00ns)   --->   "%specinterface_ln0 = specinterface void @_ssdm_op_SpecInterface, i32 %out_r, void @empty_2, i32 0, i32 0, void @empty_0, i32 0, i32 0, void @empty_0, void @empty_0, void @empty_0, i32 0, i32 0, i32 0, i32 0, void @empty_0, void @empty_0"   --->   Operation 6 'specinterface' 'specinterface_ln0' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 7 [1/1] (0.38ns)   --->   "%br_ln404 = br void" [prueba_booth/src/premults.cpp:404]   --->   Operation 7 'br' 'br_ln404' <Predicate = true> <Delay = 0.38>
+
+State 2 <SV = 1> <Delay = 0.70>
+ST_2 : Operation 8 [1/1] (0.00ns)   --->   "%it = phi i8 0, void, i8 %it_1, void %.split"   --->   Operation 8 'phi' 'it' <Predicate = true> <Delay = 0.00>
+ST_2 : Operation 9 [1/1] (0.70ns)   --->   "%it_1 = add i8 %it, i8 1" [prueba_booth/src/premults.cpp:404]   --->   Operation 9 'add' 'it_1' <Predicate = true> <Delay = 0.70> <CoreInst = "Adder">   --->   Core 1 'Adder' <Latency = 0> <II = 1> <Delay = 0.70> <FuncUnit> <Opcode : 'add' 'sub'> <InPorts = 2> <OutPorts = 1>
+ST_2 : Operation 10 [1/1] (0.58ns)   --->   "%icmp_ln404 = icmp_eq  i8 %it, i8 128" [prueba_booth/src/premults.cpp:404]   --->   Operation 10 'icmp' 'icmp_ln404' <Predicate = true> <Delay = 0.58> <CoreInst = "Cmp">   --->   Core 9 'Cmp' <Latency = 0> <II = 1> <Delay = 0.58> <FuncUnit> <Opcode : 'icmp'> <InPorts = 2> <OutPorts = 1>
+ST_2 : Operation 11 [1/1] (0.00ns)   --->   "%speclooptripcount_ln0 = speclooptripcount void @_ssdm_op_SpecLoopTripCount, i64 128, i64 128, i64 128"   --->   Operation 11 'speclooptripcount' 'speclooptripcount_ln0' <Predicate = true> <Delay = 0.00>
+ST_2 : Operation 12 [1/1] (0.00ns)   --->   "%br_ln404 = br i1 %icmp_ln404, void %.split, void" [prueba_booth/src/premults.cpp:404]   --->   Operation 12 'br' 'br_ln404' <Predicate = true> <Delay = 0.00>
+
+State 3 <SV = 2> <Delay = 2.43>
+ST_3 : Operation 13 [1/1] (0.00ns)   --->   "%specpipeline_ln404 = specpipeline void @_ssdm_op_SpecPipeline, i32 1, i32 0, i32 0, i32 0, void @empty_0" [prueba_booth/src/premults.cpp:404]   --->   Operation 13 'specpipeline' 'specpipeline_ln404' <Predicate = (!icmp_ln404)> <Delay = 0.00>
+ST_3 : Operation 14 [1/1] (0.00ns)   --->   "%specloopname_ln404 = specloopname void @_ssdm_op_SpecLoopName, void @empty_10" [prueba_booth/src/premults.cpp:404]   --->   Operation 14 'specloopname' 'specloopname_ln404' <Predicate = (!icmp_ln404)> <Delay = 0.00>
+ST_3 : Operation 15 [1/1] (1.21ns)   --->   "%in_V_V_read = read i32 @_ssdm_op_Read.ap_fifo.volatile.i32P0A, i32 %in_V_V" [/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:145]   --->   Operation 15 'read' 'in_V_V_read' <Predicate = (!icmp_ln404)> <Delay = 1.21> <CoreInst = "FIFO_SRL">   --->   Core 81 'FIFO_SRL' <Latency = 0> <II = 1> <Delay = 1.39> <Storage> <Opcode : 'read' 'write' 'nbread' 'nbwrite'> <Ports = 0> <Width = 32> <Depth = 2> <FIFO>
+ST_3 : Operation 16 [1/1] (1.21ns)   --->   "%write_ln174 = write void @_ssdm_op_Write.ap_fifo.volatile.i32P0A, i32 %out_r, i32 %in_V_V_read" [/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:174]   --->   Operation 16 'write' 'write_ln174' <Predicate = (!icmp_ln404)> <Delay = 1.21> <CoreInst = "FIFO_SRL">   --->   Core 81 'FIFO_SRL' <Latency = 0> <II = 1> <Delay = 1.39> <Storage> <Opcode : 'read' 'write' 'nbread' 'nbwrite'> <Ports = 0> <Width = 32> <Depth = 2> <FIFO>
+ST_3 : Operation 17 [1/1] (0.00ns)   --->   "%br_ln0 = br void"   --->   Operation 17 'br' 'br_ln0' <Predicate = (!icmp_ln404)> <Delay = 0.00>
+
+State 4 <SV = 2> <Delay = 0.00>
+ST_4 : Operation 18 [1/1] (0.00ns)   --->   "%ret_ln411 = ret" [prueba_booth/src/premults.cpp:411]   --->   Operation 18 'ret' 'ret_ln411' <Predicate = true> <Delay = 0.00>
+
+
+============================================================
++ Verbose Summary: Timing violations
+============================================================
+Target clock period: 3.33ns, clock uncertainty: 0.899ns.
+
+ <State 1>: 0.387ns
+The critical path consists of the following:
+	multiplexor before 'phi' operation ('it') with incoming values : ('it', prueba_booth/src/premults.cpp:404) [7]  (0.387 ns)
+
+ <State 2>: 0.705ns
+The critical path consists of the following:
+	'phi' operation ('it') with incoming values : ('it', prueba_booth/src/premults.cpp:404) [7]  (0 ns)
+	'add' operation ('it', prueba_booth/src/premults.cpp:404) [8]  (0.705 ns)
+
+ <State 3>: 2.43ns
+The critical path consists of the following:
+	fifo read on port 'in_V_V' (/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:145) [15]  (1.22 ns)
+	fifo write on port 'out_r' (/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:174) [16]  (1.22 ns)
+
+ <State 4>: 0ns
+The critical path consists of the following:
+
+
+============================================================
++ Verbose Summary: Binding
+============================================================
+N/A
+* FSMD analyzer results:
+  - Output states:
+ - Input state : 
+  - Chain level:
+	State 1
+	State 2
+	State 3
+	State 4
+
+
+============================================================
++ Verbose Summary: Datapath Resource usage 
+============================================================
+N/A

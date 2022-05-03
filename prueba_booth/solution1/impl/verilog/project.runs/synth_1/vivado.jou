@@ -1,0 +1,12 @@
+#-----------------------------------------------------------
+# Vivado v2020.2 (64-bit)
+# SW Build 3064766 on Wed Nov 18 09:12:47 MST 2020
+# IP Build 3064653 on Wed Nov 18 14:17:31 MST 2020
+# Start of session at: Thu Apr 28 16:01:34 2022
+# Process ID: 64976
+# Current directory: /mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.runs/synth_1
+# Command line: vivado -log bd_0_wrapper.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source bd_0_wrapper.tcl
+# Log file: /mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.runs/synth_1/bd_0_wrapper.vds
+# Journal file: /mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.runs/synth_1/vivado.jou
+#-----------------------------------------------------------
+source bd_0_wrapper.tcl -notrace

@@ -1,0 +1,295 @@
+
+
+================================================================
+== Vitis HLS Report for 'mul_1_2_8_9_128_s'
+================================================================
+* Date:           Thu Apr 28 15:57:39 2022
+
+* Version:        2020.2 (Build 3064766 on Wed Nov 18 09:12:47 MST 2020)
+* Project:        prueba_booth
+* Solution:       solution1 (Vitis Kernel Flow Target)
+* Product family: virtexuplus
+* Target device:  xcu200-fsgd2104-2-e
+
+
+================================================================
+== Performance Estimates
+================================================================
++ Timing: 
+    * Summary: 
+    +--------+---------+----------+------------+
+    |  Clock |  Target | Estimated| Uncertainty|
+    +--------+---------+----------+------------+
+    |ap_clk  |  3.33 ns|  2.248 ns|     0.90 ns|
+    +--------+---------+----------+------------+
+
++ Latency: 
+    * Summary: 
+    +---------+---------+----------+-----------+------+------+---------+
+    |  Latency (cycles) |  Latency (absolute)  |   Interval  | Pipeline|
+    |   min   |   max   |    min   |    max    |  min |  max |   Type  |
+    +---------+---------+----------+-----------+------+------+---------+
+    |     2368|     4672|  7.885 us|  15.558 us|  2368|  4672|     none|
+    +---------+---------+----------+-----------+------+------+---------+
+
+    + Detail: 
+        * Instance: 
+        N/A
+
+        * Loop: 
+        +-----------------+---------+---------+-----------+-----------+-----------+----------+----------+
+        |                 |  Latency (cycles) | Iteration |  Initiation Interval  |   Trip   |          |
+        |    Loop Name    |   min   |   max   |  Latency  |  achieved |   target  |   Count  | Pipelined|
+        +-----------------+---------+---------+-----------+-----------+-----------+----------+----------+
+        |- num_its1_loop  |     2367|     4671|  263 ~ 519|          -|          -|         9|        no|
+        | + mult_loop     |      260|      516|          9|          4|          1|  64 ~ 128|       yes|
+        +-----------------+---------+---------+-----------+-----------+-----------+----------+----------+
+
+============================================================
++ Verbose Summary: Synthesis Manager
+============================================================
+InlineROM: 1
+ExposeGlobal: 0
+============================================================
++ Verbose Summary: CDFG Model
+============================================================
+IsTopModel: 0
+ResetActiveHigh: 1
+IsCombinational: 2
+IsDatapathOnly: 0
+HasWiredReturn: 1
+HasMFsm: 0
+HasVarLatency: 1
+IsPipeline: 0
+IsRtlPipelined: 0
+IsInstanceOverlapped: 0
+IsDontTouch: 0
+HasImplIP: 0
+IsGatedGlobalClock: 0
+
++ Individual pipeline summary: 
+  * Pipeline-0: initiation interval (II) = 4, depth = 9
+
+
+============================================================
++ Verbose Summary: Schedule
+============================================================
+* Number of FSM states : 12
+* Pipeline : 1
+  Pipeline-0 : II = 4, D = 9, States = { 3 4 5 6 7 8 9 10 11 }
+* Dataflow Pipeline: 0
+
+* FSM state transitions: 
+1 --> 2 
+2 --> 3 
+3 --> 4 
+4 --> 12 5 
+5 --> 6 
+6 --> 7 
+7 --> 8 
+8 --> 9 
+9 --> 10 
+10 --> 11 
+11 --> 3 
+12 --> 2 
+
+* FSM state operations: 
+
+State 1 <SV = 0> <Delay = 0.38>
+ST_1 : Operation 13 [1/1] (0.00ns)   --->   "%specinterface_ln0 = specinterface void @_ssdm_op_SpecInterface, i16 %in_x_V_V, void @ap_fifo_str, i32 0, i32 0, void @p_str, i32 0, i32 0, void @p_str, void @p_str, void @p_str, i32 2, i32 2, i32 16, i32 16, void @p_str, void @p_str"   --->   Operation 13 'specinterface' 'specinterface_ln0' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 14 [1/1] (0.00ns)   --->   "%specinterface_ln0 = specinterface void @_ssdm_op_SpecInterface, i8 %in_w_V_V, void @ap_fifo_str, i32 0, i32 0, void @p_str, i32 0, i32 0, void @p_str, void @p_str, void @p_str, i32 2, i32 2, i32 16, i32 16, void @p_str, void @p_str"   --->   Operation 14 'specinterface' 'specinterface_ln0' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 15 [1/1] (0.00ns)   --->   "%specinterface_ln0 = specinterface void @_ssdm_op_SpecInterface, i32 %out_V_V, void @ap_fifo_str, i32 0, i32 0, void @p_str, i32 0, i32 0, void @p_str, void @p_str, void @p_str, i32 2, i32 2, i32 16, i32 16, void @p_str, void @p_str"   --->   Operation 15 'specinterface' 'specinterface_ln0' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 16 [1/1] (0.00ns)   --->   "%xs_V = alloca i64 1" [prueba_booth/src/premults.cpp:191]   --->   Operation 16 'alloca' 'xs_V' <Predicate = true> <Delay = 0.00> <CoreInst = "RAM">   --->   Core 83 'RAM' <Latency = 1> <II = 1> <Delay = 0.66> <Storage> <Opcode : 'load' 'store'> <Ports = 2> <Width = 8> <Depth = 2> <RAM>
+ST_1 : Operation 17 [1/1] (0.00ns)   --->   "%ys_V = alloca i64 1" [prueba_booth/src/premults.cpp:192]   --->   Operation 17 'alloca' 'ys_V' <Predicate = true> <Delay = 0.00> <CoreInst = "RAM">   --->   Core 83 'RAM' <Latency = 1> <II = 1> <Delay = 0.68> <Storage> <Opcode : 'load' 'store'> <Ports = 2> <Width = 16> <Depth = 2> <RAM>
+ST_1 : Operation 18 [1/1] (0.00ns)   --->   "%xs_V_addr = getelementptr i8 %xs_V, i64 0, i64 1"   --->   Operation 18 'getelementptr' 'xs_V_addr' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 19 [1/1] (0.00ns)   --->   "%ys_V_addr = getelementptr i16 %ys_V, i64 0, i64 0"   --->   Operation 19 'getelementptr' 'ys_V_addr' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 20 [1/1] (0.00ns)   --->   "%ys_V_addr_1 = getelementptr i16 %ys_V, i64 0, i64 1"   --->   Operation 20 'getelementptr' 'ys_V_addr_1' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 21 [1/1] (0.38ns)   --->   "%br_ln176 = br void %arrayctor.loop" [prueba_booth/src/premults.cpp:176]   --->   Operation 21 'br' 'br_ln176' <Predicate = true> <Delay = 0.38>
+
+State 2 <SV = 1> <Delay = 1.87>
+ST_2 : Operation 22 [1/1] (0.00ns)   --->   "%p = phi i4 0, void, i4 %p_1, void"   --->   Operation 22 'phi' 'p' <Predicate = true> <Delay = 0.00>
+ST_2 : Operation 23 [1/1] (0.70ns)   --->   "%p_1 = add i4 %p, i4 1" [prueba_booth/src/premults.cpp:176]   --->   Operation 23 'add' 'p_1' <Predicate = true> <Delay = 0.70> <CoreInst = "Adder">   --->   Core 1 'Adder' <Latency = 0> <II = 1> <Delay = 0.70> <FuncUnit> <Opcode : 'add' 'sub'> <InPorts = 2> <OutPorts = 1>
+ST_2 : Operation 24 [1/1] (0.65ns)   --->   "%icmp_ln176 = icmp_eq  i4 %p, i4 9" [prueba_booth/src/premults.cpp:176]   --->   Operation 24 'icmp' 'icmp_ln176' <Predicate = true> <Delay = 0.65> <CoreInst = "Cmp">   --->   Core 9 'Cmp' <Latency = 0> <II = 1> <Delay = 0.65> <FuncUnit> <Opcode : 'icmp'> <InPorts = 2> <OutPorts = 1>
+ST_2 : Operation 25 [1/1] (0.00ns)   --->   "%speclooptripcount_ln0 = speclooptripcount void @_ssdm_op_SpecLoopTripCount, i64 9, i64 9, i64 9"   --->   Operation 25 'speclooptripcount' 'speclooptripcount_ln0' <Predicate = true> <Delay = 0.00>
+ST_2 : Operation 26 [1/1] (0.00ns)   --->   "%br_ln176 = br i1 %icmp_ln176, void %arrayctor.loop.split, void" [prueba_booth/src/premults.cpp:176]   --->   Operation 26 'br' 'br_ln176' <Predicate = true> <Delay = 0.00>
+ST_2 : Operation 27 [1/1] (0.00ns)   --->   "%specloopname_ln189 = specloopname void @_ssdm_op_SpecLoopName, void @empty_14" [prueba_booth/src/premults.cpp:189]   --->   Operation 27 'specloopname' 'specloopname_ln189' <Predicate = (!icmp_ln176)> <Delay = 0.00>
+ST_2 : Operation 28 [1/1] (1.21ns)   --->   "%px_w_V = read i8 @_ssdm_op_Read.ap_fifo.volatile.i8P0A, i8 %in_w_V_V" [/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:145]   --->   Operation 28 'read' 'px_w_V' <Predicate = (!icmp_ln176)> <Delay = 1.21> <CoreInst = "FIFO_SRL">   --->   Core 81 'FIFO_SRL' <Latency = 0> <II = 1> <Delay = 1.36> <Storage> <Opcode : 'read' 'write' 'nbread' 'nbwrite'> <Ports = 0> <Width = 8> <Depth = 2> <FIFO>
+ST_2 : Operation 29 [1/1] (0.00ns)   --->   "%zext_ln213 = zext i8 %px_w_V" [prueba_booth/src/premults.cpp:213]   --->   Operation 29 'zext' 'zext_ln213' <Predicate = (!icmp_ln176)> <Delay = 0.00>
+ST_2 : Operation 30 [1/1] (0.38ns)   --->   "%br_ln213 = br void" [prueba_booth/src/premults.cpp:213]   --->   Operation 30 'br' 'br_ln213' <Predicate = (!icmp_ln176)> <Delay = 0.38>
+ST_2 : Operation 31 [1/1] (0.00ns)   --->   "%ret_ln252 = ret" [prueba_booth/src/premults.cpp:252]   --->   Operation 31 'ret' 'ret_ln252' <Predicate = (icmp_ln176)> <Delay = 0.00>
+
+State 3 <SV = 2> <Delay = 2.19>
+ST_3 : Operation 32 [1/1] (0.00ns)   --->   "%free_slots = phi i32 2, void %arrayctor.loop.split, i32 %free_slots_2165, void %._crit_edge2" [prueba_booth/src/premults.cpp:238]   --->   Operation 32 'phi' 'free_slots' <Predicate = true> <Delay = 0.00>
+ST_3 : Operation 33 [1/1] (0.00ns)   --->   "%phi_ln213 = phi i1 1, void %arrayctor.loop.split, i1 %xor_ln213, void %._crit_edge2" [prueba_booth/src/premults.cpp:213]   --->   Operation 33 'phi' 'phi_ln213' <Predicate = true> <Delay = 0.00>
+ST_3 : Operation 34 [1/1] (0.00ns)   --->   "%br_ln213 = br i1 %phi_ln213, void, void" [prueba_booth/src/premults.cpp:213]   --->   Operation 34 'br' 'br_ln213' <Predicate = true> <Delay = 0.00>
+ST_3 : Operation 35 [1/1] (0.85ns)   --->   "%icmp_ln216 = icmp_eq  i32 %free_slots, i32 2" [prueba_booth/src/premults.cpp:216]   --->   Operation 35 'icmp' 'icmp_ln216' <Predicate = (phi_ln213)> <Delay = 0.85> <CoreInst = "Cmp">   --->   Core 9 'Cmp' <Latency = 0> <II = 1> <Delay = 0.65> <FuncUnit> <Opcode : 'icmp'> <InPorts = 2> <OutPorts = 1>
+ST_3 : Operation 36 [1/1] (1.21ns)   --->   "%px_in_V = read i16 @_ssdm_op_Read.ap_fifo.volatile.i16P0A, i16 %in_x_V_V" [/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:145]   --->   Operation 36 'read' 'px_in_V' <Predicate = (phi_ln213 & icmp_ln216)> <Delay = 1.21> <CoreInst = "FIFO_SRL">   --->   Core 81 'FIFO_SRL' <Latency = 0> <II = 1> <Delay = 1.34> <Storage> <Opcode : 'read' 'write' 'nbread' 'nbwrite'> <Ports = 0> <Width = 16> <Depth = 2> <FIFO>
+ST_3 : Operation 37 [1/1] (0.00ns)   --->   "%x_V_0 = trunc i16 %px_in_V"   --->   Operation 37 'trunc' 'x_V_0' <Predicate = (phi_ln213 & icmp_ln216)> <Delay = 0.00>
+ST_3 : Operation 38 [1/1] (0.00ns)   --->   "%x_V_1 = partselect i8 @_ssdm_op_PartSelect.i8.i16.i32.i32, i16 %px_in_V, i32 8, i32 15"   --->   Operation 38 'partselect' 'x_V_1' <Predicate = (phi_ln213 & icmp_ln216)> <Delay = 0.00>
+
+State 4 <SV = 3> <Delay = 1.55>
+ST_4 : Operation 39 [1/1] (0.00ns)   --->   "%num_reads = phi i32 0, void %arrayctor.loop.split, i32 %num_reads_1, void %._crit_edge2"   --->   Operation 39 'phi' 'num_reads' <Predicate = true> <Delay = 0.00>
+ST_4 : Operation 40 [1/1] (0.00ns)   --->   "%swap = phi i32 0, void %arrayctor.loop.split, i32 %swap_1, void %._crit_edge2"   --->   Operation 40 'phi' 'swap' <Predicate = true> <Delay = 0.00>
+ST_4 : Operation 41 [1/1] (0.00ns)   --->   "%specpipeline_ln216 = specpipeline void @_ssdm_op_SpecPipeline, i32 1, i32 0, i32 0, i32 0, void @empty_0" [prueba_booth/src/premults.cpp:216]   --->   Operation 41 'specpipeline' 'specpipeline_ln216' <Predicate = (phi_ln213)> <Delay = 0.00>
+ST_4 : Operation 42 [1/1] (0.00ns)   --->   "%speclooptripcount_ln216 = speclooptripcount void @_ssdm_op_SpecLoopTripCount, i64 64, i64 128, i64 96" [prueba_booth/src/premults.cpp:216]   --->   Operation 42 'speclooptripcount' 'speclooptripcount_ln216' <Predicate = (phi_ln213)> <Delay = 0.00>
+ST_4 : Operation 43 [1/1] (0.00ns)   --->   "%specloopname_ln216 = specloopname void @_ssdm_op_SpecLoopName, void @empty_13" [prueba_booth/src/premults.cpp:216]   --->   Operation 43 'specloopname' 'specloopname_ln216' <Predicate = (phi_ln213)> <Delay = 0.00>
+ST_4 : Operation 44 [1/1] (0.38ns)   --->   "%br_ln216 = br i1 %icmp_ln216, void %0, void" [prueba_booth/src/premults.cpp:216]   --->   Operation 44 'br' 'br_ln216' <Predicate = (phi_ln213)> <Delay = 0.38>
+ST_4 : Operation 45 [1/1] (1.55ns)   --->   "%swap_2 = call i1 @first_swap<8>, i8 %x_V_0, i8 %x_V_1, i8 %xs_V" [prueba_booth/src/premults.cpp:220]   --->   Operation 45 'call' 'swap_2' <Predicate = (phi_ln213 & icmp_ln216)> <Delay = 1.55> <CoreType = "Generic">   --->   Core 0 '' <Latency = 0> <II = 1> <Delay = 1.00> <Generic> <Opcode : >
+ST_4 : Operation 46 [1/1] (0.00ns)   --->   "%zext_ln200 = zext i1 %swap_2" [prueba_booth/src/premults.cpp:200]   --->   Operation 46 'zext' 'zext_ln200' <Predicate = (phi_ln213 & icmp_ln216)> <Delay = 0.00>
+ST_4 : Operation 47 [1/1] (0.88ns)   --->   "%num_reads_2 = add i32 %num_reads, i32 1" [prueba_booth/src/premults.cpp:222]   --->   Operation 47 'add' 'num_reads_2' <Predicate = (phi_ln213 & icmp_ln216)> <Delay = 0.88> <CoreInst = "Adder">   --->   Core 1 'Adder' <Latency = 0> <II = 1> <Delay = 0.70> <FuncUnit> <Opcode : 'add' 'sub'> <InPorts = 2> <OutPorts = 1>
+ST_4 : Operation 48 [1/1] (0.38ns)   --->   "%br_ln223 = br void %0" [prueba_booth/src/premults.cpp:223]   --->   Operation 48 'br' 'br_ln223' <Predicate = (phi_ln213 & icmp_ln216)> <Delay = 0.38>
+
+State 5 <SV = 4> <Delay = 1.64>
+ST_5 : Operation 49 [1/1] (0.00ns)   --->   "%free_slots_1 = phi i32 0, void, i32 %free_slots, void"   --->   Operation 49 'phi' 'free_slots_1' <Predicate = (phi_ln213)> <Delay = 0.00>
+ST_5 : Operation 50 [1/1] (0.00ns)   --->   "%num_reads_1 = phi i32 %num_reads_2, void, i32 %num_reads, void"   --->   Operation 50 'phi' 'num_reads_1' <Predicate = (phi_ln213)> <Delay = 0.00>
+ST_5 : Operation 51 [1/1] (0.00ns)   --->   "%swap_1 = phi i32 %zext_ln200, void, i32 %swap, void"   --->   Operation 51 'phi' 'swap_1' <Predicate = (phi_ln213)> <Delay = 0.00>
+ST_5 : Operation 52 [1/1] (0.85ns)   --->   "%icmp_ln225 = icmp_eq  i32 %free_slots_1, i32 0" [prueba_booth/src/premults.cpp:225]   --->   Operation 52 'icmp' 'icmp_ln225' <Predicate = (phi_ln213)> <Delay = 0.85> <CoreInst = "Cmp">   --->   Core 9 'Cmp' <Latency = 0> <II = 1> <Delay = 0.65> <FuncUnit> <Opcode : 'icmp'> <InPorts = 2> <OutPorts = 1>
+ST_5 : Operation 53 [2/2] (0.66ns)   --->   "%op1_V = load i1 %xs_V_addr" [prueba_booth/src/premults.cpp:226]   --->   Operation 53 'load' 'op1_V' <Predicate = (phi_ln213)> <Delay = 0.66> <CoreInst = "RAM">   --->   Core 83 'RAM' <Latency = 1> <II = 1> <Delay = 0.66> <Storage> <Opcode : 'load' 'store'> <Ports = 2> <Width = 8> <Depth = 2> <RAM>
+ST_5 : Operation 54 [1/1] (0.12ns)   --->   "%xor_ln225 = xor i1 %icmp_ln225, i1 1" [prueba_booth/src/premults.cpp:225]   --->   Operation 54 'xor' 'xor_ln225' <Predicate = (phi_ln213)> <Delay = 0.12> <CoreInst = "LogicGate">   --->   Core 74 'LogicGate' <Latency = 0> <II = 1> <Delay = 0.12> <FuncUnit> <Opcode : 'and' 'or' 'xor'> <InPorts = 2> <OutPorts = 1>
+ST_5 : Operation 55 [1/1] (0.00ns)   --->   "%select_ln225_cast = zext i1 %xor_ln225" [prueba_booth/src/premults.cpp:225]   --->   Operation 55 'zext' 'select_ln225_cast' <Predicate = (phi_ln213)> <Delay = 0.00>
+ST_5 : Operation 56 [1/1] (0.00ns)   --->   "%xs_V_addr_1 = getelementptr i8 %xs_V, i64 0, i64 %select_ln225_cast" [prueba_booth/src/premults.cpp:225]   --->   Operation 56 'getelementptr' 'xs_V_addr_1' <Predicate = (phi_ln213)> <Delay = 0.00>
+ST_5 : Operation 57 [2/2] (0.66ns)   --->   "%op1_V_1 = load i1 %xs_V_addr_1" [prueba_booth/src/premults.cpp:225]   --->   Operation 57 'load' 'op1_V_1' <Predicate = (phi_ln213)> <Delay = 0.66> <CoreInst = "RAM">   --->   Core 83 'RAM' <Latency = 1> <II = 1> <Delay = 0.66> <Storage> <Opcode : 'load' 'store'> <Ports = 2> <Width = 8> <Depth = 2> <RAM>
+ST_5 : Operation 58 [1/1] (0.00ns)   --->   "%br_ln230 = br i1 %icmp_ln225, void, void" [prueba_booth/src/premults.cpp:230]   --->   Operation 58 'br' 'br_ln230' <Predicate = (phi_ln213)> <Delay = 0.00>
+ST_5 : Operation 59 [1/1] (0.85ns)   --->   "%icmp_ln247 = icmp_eq  i32 %num_reads_1, i32 128" [prueba_booth/src/premults.cpp:247]   --->   Operation 59 'icmp' 'icmp_ln247' <Predicate = (phi_ln213)> <Delay = 0.85> <CoreInst = "Cmp">   --->   Core 9 'Cmp' <Latency = 0> <II = 1> <Delay = 0.65> <FuncUnit> <Opcode : 'icmp'> <InPorts = 2> <OutPorts = 1>
+
+State 6 <SV = 5> <Delay = 2.24>
+ST_6 : Operation 60 [1/2] (0.66ns)   --->   "%op1_V = load i1 %xs_V_addr" [prueba_booth/src/premults.cpp:226]   --->   Operation 60 'load' 'op1_V' <Predicate = (phi_ln213)> <Delay = 0.66> <CoreInst = "RAM">   --->   Core 83 'RAM' <Latency = 1> <II = 1> <Delay = 0.66> <Storage> <Opcode : 'load' 'store'> <Ports = 2> <Width = 8> <Depth = 2> <RAM>
+ST_6 : Operation 61 [1/2] (0.66ns)   --->   "%op1_V_1 = load i1 %xs_V_addr_1" [prueba_booth/src/premults.cpp:225]   --->   Operation 61 'load' 'op1_V_1' <Predicate = (phi_ln213)> <Delay = 0.66> <CoreInst = "RAM">   --->   Core 83 'RAM' <Latency = 1> <II = 1> <Delay = 0.66> <Storage> <Opcode : 'load' 'store'> <Ports = 2> <Width = 8> <Depth = 2> <RAM>
+ST_6 : Operation 62 [1/1] (0.00ns) (grouped into LUT with out node icmp_ln233)   --->   "%trunc_ln233 = trunc i32 %free_slots_1" [prueba_booth/src/premults.cpp:233]   --->   Operation 62 'trunc' 'trunc_ln233' <Predicate = (phi_ln213)> <Delay = 0.00>
+ST_6 : Operation 63 [1/1] (0.00ns) (grouped into LUT with out node icmp_ln233)   --->   "%or_ln233 = or i8 %op1_V, i8 %trunc_ln233" [prueba_booth/src/premults.cpp:233]   --->   Operation 63 'or' 'or_ln233' <Predicate = (phi_ln213)> <Delay = 0.00> <CoreInst = "LogicGate">   --->   Core 74 'LogicGate' <Latency = 0> <II = 1> <Delay = 0.12> <FuncUnit> <Opcode : 'and' 'or' 'xor'> <InPorts = 2> <OutPorts = 1>
+ST_6 : Operation 64 [1/1] (0.00ns) (grouped into LUT with out node icmp_ln233)   --->   "%tmp_2 = partselect i24 @_ssdm_op_PartSelect.i24.i32.i32.i32, i32 %free_slots_1, i32 8, i32 31" [prueba_booth/src/premults.cpp:233]   --->   Operation 64 'partselect' 'tmp_2' <Predicate = (phi_ln213)> <Delay = 0.00>
+ST_6 : Operation 65 [1/1] (0.00ns) (grouped into LUT with out node icmp_ln233)   --->   "%or_ln = bitconcatenate i32 @_ssdm_op_BitConcatenate.i32.i24.i8, i24 %tmp_2, i8 %or_ln233" [prueba_booth/src/premults.cpp:233]   --->   Operation 65 'bitconcatenate' 'or_ln' <Predicate = (phi_ln213)> <Delay = 0.00>
+ST_6 : Operation 66 [1/1] (0.85ns) (out node of the LUT)   --->   "%icmp_ln233 = icmp_eq  i32 %or_ln, i32 0" [prueba_booth/src/premults.cpp:233]   --->   Operation 66 'icmp' 'icmp_ln233' <Predicate = (phi_ln213)> <Delay = 0.85> <CoreInst = "Cmp">   --->   Core 9 'Cmp' <Latency = 0> <II = 1> <Delay = 0.65> <FuncUnit> <Opcode : 'icmp'> <InPorts = 2> <OutPorts = 1>
+ST_6 : Operation 67 [1/1] (0.00ns)   --->   "%br_ln233 = br i1 %icmp_ln233, void, void %.thread" [prueba_booth/src/premults.cpp:233]   --->   Operation 67 'br' 'br_ln233' <Predicate = (phi_ln213)> <Delay = 0.00>
+ST_6 : Operation 68 [1/1] (0.88ns)   --->   "%free_slots_3 = add i32 %free_slots_1, i32 1" [prueba_booth/src/premults.cpp:238]   --->   Operation 68 'add' 'free_slots_3' <Predicate = (phi_ln213 & !icmp_ln233)> <Delay = 0.88> <CoreInst = "Adder">   --->   Core 1 'Adder' <Latency = 0> <II = 1> <Delay = 0.70> <FuncUnit> <Opcode : 'add' 'sub'> <InPorts = 2> <OutPorts = 1>
+ST_6 : Operation 69 [1/1] (0.85ns)   --->   "%icmp_ln241 = icmp_eq  i32 %free_slots_3, i32 2" [prueba_booth/src/premults.cpp:241]   --->   Operation 69 'icmp' 'icmp_ln241' <Predicate = (phi_ln213 & !icmp_ln233)> <Delay = 0.85> <CoreInst = "Cmp">   --->   Core 9 'Cmp' <Latency = 0> <II = 1> <Delay = 0.65> <FuncUnit> <Opcode : 'icmp'> <InPorts = 2> <OutPorts = 1>
+ST_6 : Operation 70 [1/1] (0.38ns)   --->   "%br_ln241 = br i1 %icmp_ln241, void %._crit_edge2, void %._crit_edge1" [prueba_booth/src/premults.cpp:241]   --->   Operation 70 'br' 'br_ln241' <Predicate = (phi_ln213 & !icmp_ln233)> <Delay = 0.38>
+ST_6 : Operation 71 [1/1] (0.38ns)   --->   "%br_ln246 = br void %._crit_edge2" [prueba_booth/src/premults.cpp:246]   --->   Operation 71 'br' 'br_ln246' <Predicate = (phi_ln213 & icmp_ln241) | (phi_ln213 & icmp_ln233)> <Delay = 0.38>
+ST_6 : Operation 72 [1/1] (0.00ns) (grouped into LUT with out node xor_ln213)   --->   "%cmp51167 = phi i1 1, void %._crit_edge1, i1 0, void"   --->   Operation 72 'phi' 'cmp51167' <Predicate = (phi_ln213)> <Delay = 0.00>
+ST_6 : Operation 73 [1/1] (0.00ns)   --->   "%free_slots_2165 = phi i32 2, void %._crit_edge1, i32 %free_slots_3, void"   --->   Operation 73 'phi' 'free_slots_2165' <Predicate = (phi_ln213)> <Delay = 0.00>
+ST_6 : Operation 74 [1/1] (0.00ns) (grouped into LUT with out node xor_ln213)   --->   "%and_ln247 = and i1 %icmp_ln247, i1 %cmp51167" [prueba_booth/src/premults.cpp:247]   --->   Operation 74 'and' 'and_ln247' <Predicate = (phi_ln213)> <Delay = 0.00> <CoreInst = "LogicGate">   --->   Core 74 'LogicGate' <Latency = 0> <II = 1> <Delay = 0.12> <FuncUnit> <Opcode : 'and' 'or' 'xor'> <InPorts = 2> <OutPorts = 1>
+ST_6 : Operation 75 [1/1] (0.12ns) (out node of the LUT)   --->   "%xor_ln213 = xor i1 %and_ln247, i1 1" [prueba_booth/src/premults.cpp:213]   --->   Operation 75 'xor' 'xor_ln213' <Predicate = (phi_ln213)> <Delay = 0.12> <CoreInst = "LogicGate">   --->   Core 74 'LogicGate' <Latency = 0> <II = 1> <Delay = 0.12> <FuncUnit> <Opcode : 'and' 'or' 'xor'> <InPorts = 2> <OutPorts = 1>
+ST_6 : Operation 76 [1/1] (0.00ns)   --->   "%br_ln213 = br void" [prueba_booth/src/premults.cpp:213]   --->   Operation 76 'br' 'br_ln213' <Predicate = (phi_ln213)> <Delay = 0.00>
+
+State 7 <SV = 6> <Delay = 1.77>
+ST_7 : Operation 77 [1/1] (0.00ns)   --->   "%rbegin = specregionbegin i32 @_ssdm_op_SpecRegionBegin, void @empty_30" [prueba_booth/src/premults.cpp:225]   --->   Operation 77 'specregionbegin' 'rbegin' <Predicate = true> <Delay = 0.00>
+ST_7 : Operation 78 [1/1] (0.00ns)   --->   "%zext_ln1345 = zext i8 %op1_V_1"   --->   Operation 78 'zext' 'zext_ln1345' <Predicate = true> <Delay = 0.00>
+ST_7 : Operation 79 [1/1] (1.77ns)   --->   "%ret = mul i16 %zext_ln1345, i16 %zext_ln213"   --->   Operation 79 'mul' 'ret' <Predicate = true> <Delay = 1.77> <CoreInst = "Mul_DSP">   --->   Core 5 'Mul_DSP' <Latency = 0> <II = 1> <Delay = 1.77> <FuncUnit> <Opcode : 'mul'> <InPorts = 2> <OutPorts = 1>
+ST_7 : Operation 80 [1/1] (0.00ns)   --->   "%specfucore_ln1345 = specfucore void @_ssdm_op_SpecFUCore, i16 %ret, i64 12, i64 3, i64 18446744073709551615"   --->   Operation 80 'specfucore' 'specfucore_ln1345' <Predicate = true> <Delay = 0.00>
+ST_7 : Operation 81 [1/1] (0.00ns)   --->   "%rend = specregionend i32 @_ssdm_op_SpecRegionEnd, void @empty_30, i32 %rbegin" [prueba_booth/src/premults.cpp:228]   --->   Operation 81 'specregionend' 'rend' <Predicate = true> <Delay = 0.00>
+
+State 8 <SV = 7> <Delay = 0.68>
+ST_8 : Operation 82 [1/1] (0.68ns)   --->   "%store_ln231 = store i16 %ret, i1 %ys_V_addr_1" [prueba_booth/src/premults.cpp:231]   --->   Operation 82 'store' 'store_ln231' <Predicate = (!icmp_ln225)> <Delay = 0.68> <CoreInst = "RAM">   --->   Core 83 'RAM' <Latency = 1> <II = 1> <Delay = 0.68> <Storage> <Opcode : 'load' 'store'> <Ports = 2> <Width = 16> <Depth = 2> <RAM>
+ST_8 : Operation 83 [1/1] (0.00ns)   --->   "%br_ln0 = br void"   --->   Operation 83 'br' 'br_ln0' <Predicate = (!icmp_ln225)> <Delay = 0.00>
+ST_8 : Operation 84 [1/1] (0.68ns)   --->   "%store_ln230 = store i16 %ret, i1 %ys_V_addr" [prueba_booth/src/premults.cpp:230]   --->   Operation 84 'store' 'store_ln230' <Predicate = (icmp_ln225)> <Delay = 0.68> <CoreInst = "RAM">   --->   Core 83 'RAM' <Latency = 1> <II = 1> <Delay = 0.68> <Storage> <Opcode : 'load' 'store'> <Ports = 2> <Width = 16> <Depth = 2> <RAM>
+ST_8 : Operation 85 [1/1] (0.00ns)   --->   "%br_ln230 = br void" [prueba_booth/src/premults.cpp:230]   --->   Operation 85 'br' 'br_ln230' <Predicate = (icmp_ln225)> <Delay = 0.00>
+
+State 9 <SV = 8> <Delay = 0.68>
+ST_9 : Operation 86 [1/1] (0.68ns)   --->   "%store_ln235 = store i16 0, i1 %ys_V_addr_1" [prueba_booth/src/premults.cpp:235]   --->   Operation 86 'store' 'store_ln235' <Predicate = (icmp_ln233)> <Delay = 0.68> <CoreInst = "RAM">   --->   Core 83 'RAM' <Latency = 1> <II = 1> <Delay = 0.68> <Storage> <Opcode : 'load' 'store'> <Ports = 2> <Width = 16> <Depth = 2> <RAM>
+ST_9 : Operation 87 [1/1] (0.00ns)   --->   "%br_ln241 = br void %._crit_edge1" [prueba_booth/src/premults.cpp:241]   --->   Operation 87 'br' 'br_ln241' <Predicate = (icmp_ln233)> <Delay = 0.00>
+
+State 10 <SV = 9> <Delay = 1.66>
+ST_10 : Operation 88 [2/2] (1.66ns)   --->   "%call_ret = call i32 @last_swap<8>, i32 %swap_1, i16 %ys_V" [prueba_booth/src/premults.cpp:242]   --->   Operation 88 'call' 'call_ret' <Predicate = (phi_ln213 & icmp_ln241) | (phi_ln213 & icmp_ln233)> <Delay = 1.66> <CoreType = "Generic">   --->   Core 0 '' <Latency = 0> <II = 1> <Delay = 1.00> <Generic> <Opcode : >
+
+State 11 <SV = 10> <Delay = 1.89>
+ST_11 : Operation 89 [1/2] (0.68ns)   --->   "%call_ret = call i32 @last_swap<8>, i32 %swap_1, i16 %ys_V" [prueba_booth/src/premults.cpp:242]   --->   Operation 89 'call' 'call_ret' <Predicate = (phi_ln213 & icmp_ln241) | (phi_ln213 & icmp_ln233)> <Delay = 0.68> <CoreType = "Generic">   --->   Core 0 '' <Latency = 0> <II = 1> <Delay = 1.00> <Generic> <Opcode : >
+ST_11 : Operation 90 [1/1] (0.00ns)   --->   "%yf_V_0 = extractvalue i32 %call_ret" [prueba_booth/src/premults.cpp:242]   --->   Operation 90 'extractvalue' 'yf_V_0' <Predicate = (phi_ln213 & icmp_ln241) | (phi_ln213 & icmp_ln233)> <Delay = 0.00>
+ST_11 : Operation 91 [1/1] (0.00ns)   --->   "%yf_V_1 = extractvalue i32 %call_ret" [prueba_booth/src/premults.cpp:242]   --->   Operation 91 'extractvalue' 'yf_V_1' <Predicate = (phi_ln213 & icmp_ln241) | (phi_ln213 & icmp_ln233)> <Delay = 0.00>
+ST_11 : Operation 92 [1/1] (0.00ns)   --->   "%p_Result_s = bitconcatenate i32 @_ssdm_op_BitConcatenate.i32.i16.i16, i16 %yf_V_1, i16 %yf_V_0"   --->   Operation 92 'bitconcatenate' 'p_Result_s' <Predicate = (phi_ln213 & icmp_ln241) | (phi_ln213 & icmp_ln233)> <Delay = 0.00>
+ST_11 : Operation 93 [1/1] (1.21ns)   --->   "%write_ln174 = write void @_ssdm_op_Write.ap_fifo.volatile.i32P0A, i32 %out_V_V, i32 %p_Result_s" [/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:174]   --->   Operation 93 'write' 'write_ln174' <Predicate = (phi_ln213 & icmp_ln241) | (phi_ln213 & icmp_ln233)> <Delay = 1.21> <CoreInst = "FIFO_SRL">   --->   Core 81 'FIFO_SRL' <Latency = 0> <II = 1> <Delay = 1.39> <Storage> <Opcode : 'read' 'write' 'nbread' 'nbwrite'> <Ports = 0> <Width = 32> <Depth = 2> <FIFO>
+
+State 12 <SV = 4> <Delay = 0.00>
+ST_12 : Operation 94 [1/1] (0.00ns)   --->   "%br_ln0 = br void %arrayctor.loop"   --->   Operation 94 'br' 'br_ln0' <Predicate = true> <Delay = 0.00>
+
+
+============================================================
++ Verbose Summary: Timing violations
+============================================================
+Target clock period: 3.33ns, clock uncertainty: 0.899ns.
+
+ <State 1>: 0.387ns
+The critical path consists of the following:
+	multiplexor before 'phi' operation ('p') with incoming values : ('p', prueba_booth/src/premults.cpp:176) [14]  (0.387 ns)
+
+ <State 2>: 1.87ns
+The critical path consists of the following:
+	fifo read on port 'in_w_V_V' (/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:145) [21]  (1.22 ns)
+	blocking operation 0.656 ns on control path)
+
+ <State 3>: 2.2ns
+The critical path consists of the following:
+	fifo read on port 'in_x_V_V' (/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:145) [37]  (1.22 ns)
+	blocking operation 0.981 ns on control path)
+
+ <State 4>: 1.55ns
+The critical path consists of the following:
+	'call' operation ('swap', prueba_booth/src/premults.cpp:220) to 'first_swap<8>' [40]  (1.55 ns)
+
+ <State 5>: 1.65ns
+The critical path consists of the following:
+	'phi' operation ('free_slots') with incoming values : ('free_slots', prueba_booth/src/premults.cpp:238) [45]  (0 ns)
+	'icmp' operation ('icmp_ln225', prueba_booth/src/premults.cpp:225) [48]  (0.859 ns)
+	'xor' operation ('xor_ln225', prueba_booth/src/premults.cpp:225) [50]  (0.122 ns)
+	'getelementptr' operation ('xs_V_addr_1', prueba_booth/src/premults.cpp:225) [52]  (0 ns)
+	'load' operation ('op1.V', prueba_booth/src/premults.cpp:225) on array 'xs.V', prueba_booth/src/premults.cpp:191 [53]  (0.667 ns)
+
+ <State 6>: 2.25ns
+The critical path consists of the following:
+	'add' operation ('free_slots', prueba_booth/src/premults.cpp:238) [74]  (0.88 ns)
+	'icmp' operation ('icmp_ln241', prueba_booth/src/premults.cpp:241) [75]  (0.859 ns)
+	multiplexor before 'phi' operation ('cmp51167') [88]  (0.387 ns)
+	'phi' operation ('cmp51167') [88]  (0 ns)
+	'and' operation ('and_ln247', prueba_booth/src/premults.cpp:247) [91]  (0 ns)
+	'xor' operation ('xor_ln213', prueba_booth/src/premults.cpp:213) [92]  (0.122 ns)
+
+ <State 7>: 1.77ns
+The critical path consists of the following:
+	'mul' operation ('ret') [56]  (1.77 ns)
+
+ <State 8>: 0.683ns
+The critical path consists of the following:
+	'store' operation ('store_ln230', prueba_booth/src/premults.cpp:230) of variable 'ret' on array 'ys.V', prueba_booth/src/premults.cpp:192 [64]  (0.683 ns)
+
+ <State 9>: 0.683ns
+The critical path consists of the following:
+	'store' operation ('store_ln235', prueba_booth/src/premults.cpp:235) of constant 0 on array 'ys.V', prueba_booth/src/premults.cpp:192 [78]  (0.683 ns)
+
+ <State 10>: 1.66ns
+The critical path consists of the following:
+	'call' operation ('call_ret', prueba_booth/src/premults.cpp:242) to 'last_swap<8>' [81]  (1.66 ns)
+
+ <State 11>: 1.9ns
+The critical path consists of the following:
+	'call' operation ('call_ret', prueba_booth/src/premults.cpp:242) to 'last_swap<8>' [81]  (0.683 ns)
+	fifo write on port 'out_V_V' (/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h:174) [85]  (1.22 ns)
+
+ <State 12>: 0ns
+The critical path consists of the following:
+
+
+============================================================
++ Verbose Summary: Binding
+============================================================
+N/A
+* FSMD analyzer results:
+  - Output states:
+ - Input state : 
+  - Chain level:
+	State 1
+	State 2
+	State 3
+	State 4
+	State 5
+	State 6
+	State 7
+	State 8
+	State 9
+	State 10
+	State 11
+	State 12
+
+
+============================================================
++ Verbose Summary: Datapath Resource usage 
+============================================================
+N/A

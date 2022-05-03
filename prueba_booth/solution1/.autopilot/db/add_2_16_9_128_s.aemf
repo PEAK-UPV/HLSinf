@@ -1,0 +1,786 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cdfg:DBCdfg xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cdfg="http://www.autoesl.com/DBCdfg" timeStamp="1651154264000">
+  <ports id="1" name="in_V_V" type="PortType" originalName="in.V.V" coreName="FIFO_SRL" coreId="49" bitwidth="32" iftype="IfTypeRom">
+    <dataOutputObjs>read</dataOutputObjs>
+  </ports>
+  <ports id="2" name="out_V_V" type="PortType" originalName="out.V.V" coreName="FIFO_SRL" coreId="49" bitwidth="32" direction="DirOut" iftype="IfTypeRom">
+    <dataInputObjs>write</dataInputObjs>
+  </ports>
+  <edges id="71" edge_type="CtrlEdge" source_obj="//@regions.0/@basic_blocks.0" sink_obj="//@blocks.0/@node_objs.1"/>
+  <edges id="72" source_obj="//@regions.0/@basic_blocks.0/@node_objs.1" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.0" is_back_edge="1"/>
+  <edges id="73" edge_type="CtrlEdge" source_obj="//@regions.0/@basic_blocks.1" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.0" is_back_edge="1"/>
+  <edges id="76" edge_type="CtrlEdge" source_obj="//@blocks.0" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.0"/>
+  <edges id="77" source_obj="//@regions.0/@basic_blocks.0/@node_objs.0" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.1"/>
+  <edges id="80" source_obj="//@regions.0/@basic_blocks.0/@node_objs.0" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.2"/>
+  <edges id="83" source_obj="//@regions.0/@basic_blocks.0/@node_objs.2" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.3"/>
+  <edges id="84" edge_type="CtrlEdge" source_obj="//@regions.0/@basic_blocks.1" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.3"/>
+  <edges id="85" edge_type="CtrlEdge" source_obj="//@blocks.1" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.3"/>
+  <edges id="86" edge_type="CtrlEdge" source_obj="//@regions.1/@basic_blocks.0" sink_obj="//@blocks.1/@node_objs.0"/>
+  <edges id="87" source_obj="//@regions.0/@basic_blocks.0/@node_objs.0" sink_obj="//@regions.0/@basic_blocks.1/@node_objs.0"/>
+  <edges id="88" source_obj="//@blocks.0/@node_objs.0" sink_obj="//@regions.0/@basic_blocks.1/@node_objs.1"/>
+  <edges id="91" source_obj="//@regions.0/@basic_blocks.1/@node_objs.0" sink_obj="//@regions.0/@basic_blocks.1/@node_objs.1"/>
+  <edges id="94" source_obj="//@regions.0/@basic_blocks.1/@node_objs.1" sink_obj="//@regions.0/@basic_blocks.1/@node_objs.2"/>
+  <edges id="95" edge_type="CtrlEdge" source_obj="//@regions.0/@basic_blocks.0" sink_obj="//@regions.0/@basic_blocks.1/@node_objs.3"/>
+  <edges id="96" source_obj="//@regions.1/@basic_blocks.0/@node_objs.2" sink_obj="//@regions.1/@basic_blocks.0/@node_objs.0" is_back_edge="1"/>
+  <edges id="97" edge_type="CtrlEdge" source_obj="//@regions.1/@basic_blocks.1" sink_obj="//@regions.1/@basic_blocks.0/@node_objs.0" is_back_edge="1"/>
+  <edges id="100" edge_type="CtrlEdge" source_obj="//@blocks.1" sink_obj="//@regions.1/@basic_blocks.0/@node_objs.0"/>
+  <edges id="101" source_obj="//@regions.1/@basic_blocks.1/@node_objs.14" sink_obj="//@regions.1/@basic_blocks.0/@node_objs.1" is_back_edge="1"/>
+  <edges id="102" edge_type="CtrlEdge" source_obj="//@regions.1/@basic_blocks.1" sink_obj="//@regions.1/@basic_blocks.0/@node_objs.1" is_back_edge="1"/>
+  <edges id="104" edge_type="CtrlEdge" source_obj="//@blocks.1" sink_obj="//@regions.1/@basic_blocks.0/@node_objs.1"/>
+  <edges id="105" source_obj="//@regions.1/@basic_blocks.0/@node_objs.0" sink_obj="//@regions.1/@basic_blocks.0/@node_objs.2"/>
+  <edges id="108" source_obj="//@regions.1/@basic_blocks.0/@node_objs.0" sink_obj="//@regions.1/@basic_blocks.0/@node_objs.3"/>
+  <edges id="111" source_obj="//@regions.1/@basic_blocks.0/@node_objs.3" sink_obj="//@regions.1/@basic_blocks.0/@node_objs.4"/>
+  <edges id="112" edge_type="CtrlEdge" source_obj="//@regions.1/@basic_blocks.1" sink_obj="//@regions.1/@basic_blocks.0/@node_objs.4"/>
+  <edges id="113" edge_type="CtrlEdge" source_obj="//@blocks.2" sink_obj="//@regions.1/@basic_blocks.0/@node_objs.4"/>
+  <edges id="114" edge_type="CtrlEdge" source_obj="//@regions.2/@basic_blocks.0" sink_obj="//@blocks.2/@node_objs.0"/>
+  <edges id="115" source_obj="//@regions.1/@basic_blocks.0/@node_objs.1" sink_obj="//@regions.1/@basic_blocks.1/@node_objs.0"/>
+  <edges id="117" source_obj="//@regions.1/@basic_blocks.1/@node_objs.0" sink_obj="//@regions.1/@basic_blocks.1/@node_objs.1"/>
+  <edges id="119" source_obj="//@regions.1/@basic_blocks.0/@node_objs.1" sink_obj="//@regions.1/@basic_blocks.1/@node_objs.1"/>
+  <edges id="120" source_obj="//@regions.1/@basic_blocks.1/@node_objs.1" sink_obj="//@regions.1/@basic_blocks.1/@node_objs.2"/>
+  <edges id="121" source_obj="//@blocks.0/@node_objs.0" sink_obj="//@regions.1/@basic_blocks.1/@node_objs.3"/>
+  <edges id="123" source_obj="//@regions.1/@basic_blocks.1/@node_objs.2" sink_obj="//@regions.1/@basic_blocks.1/@node_objs.3"/>
+  <edges id="124" source_obj="//@regions.1/@basic_blocks.1/@node_objs.3" sink_obj="//@regions.1/@basic_blocks.1/@node_objs.4"/>
+  <edges id="127" source_obj="//@ports.0" sink_obj="//@regions.1/@basic_blocks.1/@node_objs.5"/>
+  <edges id="128" source_obj="//@regions.1/@basic_blocks.1/@node_objs.5" sink_obj="//@regions.1/@basic_blocks.1/@node_objs.6"/>
+  <edges id="129" source_obj="//@regions.1/@basic_blocks.1/@node_objs.4" sink_obj="//@regions.1/@basic_blocks.1/@node_objs.7"/>
+  <edges id="130" source_obj="//@regions.1/@basic_blocks.1/@node_objs.7" sink_obj="//@regions.1/@basic_blocks.1/@node_objs.8"/>
+  <edges id="131" source_obj="//@regions.1/@basic_blocks.1/@node_objs.6" sink_obj="//@regions.1/@basic_blocks.1/@node_objs.8"/>
+  <edges id="134" source_obj="//@regions.1/@basic_blocks.1/@node_objs.5" sink_obj="//@regions.1/@basic_blocks.1/@node_objs.9"/>
+  <edges id="140" source_obj="//@regions.1/@basic_blocks.1/@node_objs.4" sink_obj="//@regions.1/@basic_blocks.1/@node_objs.10"/>
+  <edges id="143" source_obj="//@regions.1/@basic_blocks.1/@node_objs.10" sink_obj="//@regions.1/@basic_blocks.1/@node_objs.11"/>
+  <edges id="144" source_obj="//@regions.1/@basic_blocks.1/@node_objs.9" sink_obj="//@regions.1/@basic_blocks.1/@node_objs.11"/>
+  <edges id="147" source_obj="//@regions.1/@basic_blocks.1/@node_objs.11" sink_obj="//@regions.1/@basic_blocks.1/@node_objs.12"/>
+  <edges id="148" source_obj="//@regions.1/@basic_blocks.1/@node_objs.8" sink_obj="//@regions.1/@basic_blocks.1/@node_objs.12"/>
+  <edges id="149" source_obj="//@regions.1/@basic_blocks.1/@node_objs.12" sink_obj="//@regions.1/@basic_blocks.1/@node_objs.13"/>
+  <edges id="150" source_obj="//@regions.1/@basic_blocks.1/@node_objs.3" sink_obj="//@regions.1/@basic_blocks.1/@node_objs.13"/>
+  <edges id="151" source_obj="//@regions.1/@basic_blocks.1/@node_objs.1" sink_obj="//@regions.1/@basic_blocks.1/@node_objs.14"/>
+  <edges id="153" edge_type="CtrlEdge" source_obj="//@regions.1/@basic_blocks.0" sink_obj="//@regions.1/@basic_blocks.1/@node_objs.15"/>
+  <edges id="154" source_obj="//@regions.2/@basic_blocks.0/@node_objs.1" sink_obj="//@regions.2/@basic_blocks.0/@node_objs.0" is_back_edge="1"/>
+  <edges id="155" edge_type="CtrlEdge" source_obj="//@regions.2/@basic_blocks.1" sink_obj="//@regions.2/@basic_blocks.0/@node_objs.0" is_back_edge="1"/>
+  <edges id="157" edge_type="CtrlEdge" source_obj="//@blocks.2" sink_obj="//@regions.2/@basic_blocks.0/@node_objs.0"/>
+  <edges id="158" source_obj="//@regions.2/@basic_blocks.0/@node_objs.0" sink_obj="//@regions.2/@basic_blocks.0/@node_objs.1"/>
+  <edges id="160" source_obj="//@regions.2/@basic_blocks.0/@node_objs.0" sink_obj="//@regions.2/@basic_blocks.0/@node_objs.2"/>
+  <edges id="162" source_obj="//@regions.2/@basic_blocks.0/@node_objs.2" sink_obj="//@regions.2/@basic_blocks.0/@node_objs.3"/>
+  <edges id="163" edge_type="CtrlEdge" source_obj="//@regions.2/@basic_blocks.1" sink_obj="//@regions.2/@basic_blocks.0/@node_objs.3"/>
+  <edges id="164" edge_type="CtrlEdge" source_obj="//@blocks.3" sink_obj="//@regions.2/@basic_blocks.0/@node_objs.3"/>
+  <edges id="165" source_obj="//@regions.2/@basic_blocks.0/@node_objs.0" sink_obj="//@regions.2/@basic_blocks.1/@node_objs.0"/>
+  <edges id="166" source_obj="//@blocks.0/@node_objs.0" sink_obj="//@regions.2/@basic_blocks.1/@node_objs.1"/>
+  <edges id="168" source_obj="//@regions.2/@basic_blocks.1/@node_objs.0" sink_obj="//@regions.2/@basic_blocks.1/@node_objs.1"/>
+  <edges id="169" source_obj="//@regions.2/@basic_blocks.1/@node_objs.1" sink_obj="//@regions.2/@basic_blocks.1/@node_objs.2"/>
+  <edges id="172" source_obj="//@regions.2/@basic_blocks.1/@node_objs.3" sink_obj="//@ports.1"/>
+  <edges id="173" source_obj="//@regions.2/@basic_blocks.1/@node_objs.2" sink_obj="//@regions.2/@basic_blocks.1/@node_objs.3"/>
+  <edges id="174" edge_type="CtrlEdge" source_obj="//@regions.2/@basic_blocks.0" sink_obj="//@regions.2/@basic_blocks.1/@node_objs.4"/>
+  <edges id="278" edge_type="CtrlEdge" source_obj="//@blocks.0" sink_obj="//@regions.0/@basic_blocks.0"/>
+  <edges id="279" edge_type="CtrlEdge" source_obj="//@regions.0/@basic_blocks.0" sink_obj="//@blocks.1"/>
+  <edges id="280" edge_type="CtrlEdge" source_obj="//@regions.0/@basic_blocks.0" sink_obj="//@regions.0/@basic_blocks.1"/>
+  <edges id="281" edge_type="CtrlEdge" source_obj="//@regions.0/@basic_blocks.1" sink_obj="//@regions.0/@basic_blocks.0" is_back_edge="1"/>
+  <edges id="282" edge_type="CtrlEdge" source_obj="//@blocks.1" sink_obj="//@regions.1/@basic_blocks.0"/>
+  <edges id="283" edge_type="CtrlEdge" source_obj="//@regions.1/@basic_blocks.0" sink_obj="//@blocks.2"/>
+  <edges id="284" edge_type="CtrlEdge" source_obj="//@regions.1/@basic_blocks.0" sink_obj="//@regions.1/@basic_blocks.1"/>
+  <edges id="285" edge_type="CtrlEdge" source_obj="//@regions.1/@basic_blocks.1" sink_obj="//@regions.1/@basic_blocks.0" is_back_edge="1"/>
+  <edges id="286" edge_type="CtrlEdge" source_obj="//@blocks.2" sink_obj="//@regions.2/@basic_blocks.0"/>
+  <edges id="287" edge_type="CtrlEdge" source_obj="//@regions.2/@basic_blocks.0" sink_obj="//@blocks.3"/>
+  <edges id="288" edge_type="CtrlEdge" source_obj="//@regions.2/@basic_blocks.0" sink_obj="//@regions.2/@basic_blocks.1"/>
+  <edges id="289" edge_type="CtrlEdge" source_obj="//@regions.2/@basic_blocks.1" sink_obj="//@regions.2/@basic_blocks.0" is_back_edge="1"/>
+  <edges id="290" edge_type="VirtEdge" source_obj="//@regions.1/@basic_blocks.1/@node_objs.4" sink_obj="//@regions.1/@basic_blocks.1/@node_objs.13"/>
+  <blocks id="8" name="block_8" type="BlockType">
+    <controlOutputObjs>phi</controlOutputObjs>
+    <controlOutputObjs>block_15</controlOutputObjs>
+    <node_objs xsi:type="cdfg:CdfgNode" id="5" name="buff" rtlName="buff_U" coreName="RAM_T2P_URAM" implIndex="uram" control="pragma" opType="ram_t2p" coreId="100" bitwidth="32" opcode="alloca" m_display="0" m_topoIndex="1" m_clusterGroupNumber="-1">
+      <dataOutputObjs>getelementptr</dataOutputObjs>
+      <dataOutputObjs>getelementptr</dataOutputObjs>
+      <dataOutputObjs>getelementptr</dataOutputObjs>
+      <constName>empty</constName>
+    </node_objs>
+    <node_objs xsi:type="cdfg:CdfgNode" id="7" name="br_ln372" lineNumber="372" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="0" contextFuncName="add_2_16_9_128_s" opcode="br" m_display="0" m_delay="0.38" m_topoIndex="2" m_clusterGroupNumber="-1">
+      <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="372" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+      <controlInputObjs>block_15</controlInputObjs>
+    </node_objs>
+    <fileValidLineNumbers fileName="prueba_booth/src/premults.cpp">
+      <validLinenumbers>372</validLinenumbers>
+    </fileValidLineNumbers>
+  </blocks>
+  <blocks id="23" name=".preheader2.preheader.preheader" type="BlockType">
+    <controlInputObjs>block_15</controlInputObjs>
+    <controlOutputObjs>br</controlOutputObjs>
+    <controlOutputObjs>phi</controlOutputObjs>
+    <controlOutputObjs>phi</controlOutputObjs>
+    <controlOutputObjs>.preheader2.preheader</controlOutputObjs>
+    <node_objs xsi:type="cdfg:CdfgNode" id="22" name="br_ln374" lineNumber="374" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="3416137712" contextFuncName="add_2_16_9_128_s" opcode="br" nodeLabel="2.0" m_display="0" m_delay="0.38" m_topoIndex="11" m_clusterGroupNumber="-1">
+      <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="374" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+      <controlInputObjs>.preheader2.preheader</controlInputObjs>
+    </node_objs>
+    <fileValidLineNumbers fileName="prueba_booth/src/premults.cpp">
+      <validLinenumbers>374</validLinenumbers>
+    </fileValidLineNumbers>
+  </blocks>
+  <blocks id="52" name=".preheader.preheader" type="BlockType">
+    <controlInputObjs>.preheader2.preheader</controlInputObjs>
+    <controlOutputObjs>br</controlOutputObjs>
+    <controlOutputObjs>phi</controlOutputObjs>
+    <controlOutputObjs>.preheader</controlOutputObjs>
+    <node_objs xsi:type="cdfg:CdfgNode" id="51" name="br_ln394" lineNumber="394" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="0" contextFuncName="add_2_16_9_128_s" opcode="br" nodeLabel="7.0" m_display="0" m_delay="0.38" m_topoIndex="33" m_clusterGroupNumber="-1">
+      <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="394" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+      <controlInputObjs>.preheader</controlInputObjs>
+    </node_objs>
+    <fileValidLineNumbers fileName="prueba_booth/src/premults.cpp">
+      <validLinenumbers>394</validLinenumbers>
+    </fileValidLineNumbers>
+  </blocks>
+  <blocks id="68" name="block_68" type="BlockType">
+    <controlInputObjs>.preheader</controlInputObjs>
+    <controlOutputObjs>br</controlOutputObjs>
+    <node_objs xsi:type="cdfg:CdfgNode" id="67" name="_ln398" lineNumber="398" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="804029344" contextFuncName="add_2_16_9_128_s" opcode="ret" nodeLabel="11.0" m_display="0" m_topoIndex="43" m_clusterGroupNumber="-1">
+      <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="398" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+    </node_objs>
+    <fileValidLineNumbers fileName="prueba_booth/src/premults.cpp">
+      <validLinenumbers>398</validLinenumbers>
+    </fileValidLineNumbers>
+  </blocks>
+  <regions anchor_node="-1" region_type="8" interval="1" typeName="Pipeline" id="260" pipe_depth="1" RegionName="VITIS_LOOP_372_1">
+    <basic_blocks id="15" name="block_15" type="BlockType">
+      <controlInputObjs>block_8</controlInputObjs>
+      <controlInputObjs>.split10</controlInputObjs>
+      <controlOutputObjs>br</controlOutputObjs>
+      <controlOutputObjs>br</controlOutputObjs>
+      <controlOutputObjs>.preheader2.preheader.preheader</controlOutputObjs>
+      <controlOutputObjs>.split10</controlOutputObjs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="9" name="x" lineNumber="372" originalName="x" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="3416092184" contextFuncName="add_2_16_9_128_s" bitwidth="8" opcode="phi" nodeLabel="1.0" m_display="0" m_topoIndex="3" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="372" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+        <dataInputObjs>add</dataInputObjs>
+        <dataOutputObjs>add</dataOutputObjs>
+        <dataOutputObjs>icmp</dataOutputObjs>
+        <dataOutputObjs>zext</dataOutputObjs>
+        <controlInputObjs>.split10</controlInputObjs>
+        <controlInputObjs>block_8</controlInputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="10" name="add_ln372" lineNumber="372" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." rtlName="add_ln372_fu_165_p2" coreName="Adder" implIndex="fabric" control="auto" opType="add" coreId="1" contextFuncName="add_2_16_9_128_s" bitwidth="8" opcode="add" nodeLabel="1.0" m_display="0" m_delay="0.7" m_topoIndex="4" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="372" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+        <dataInputObjs>phi</dataInputObjs>
+        <dataOutputObjs>phi</dataOutputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="12" name="icmp_ln372" lineNumber="372" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." rtlName="icmp_ln372_fu_171_p2" opType="icmp" coreId="113" contextFuncName="add_2_16_9_128_s" bitwidth="1" opcode="icmp" nodeLabel="1.0" m_display="0" m_delay="0.58" m_topoIndex="5" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="372" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+        <dataInputObjs>phi</dataInputObjs>
+        <dataOutputObjs>br</dataOutputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="14" name="br_ln372" lineNumber="372" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="113" contextFuncName="add_2_16_9_128_s" opcode="br" nodeLabel="1.0" m_display="0" m_topoIndex="6" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="372" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+        <dataInputObjs>icmp</dataInputObjs>
+        <controlInputObjs>.split10</controlInputObjs>
+        <controlInputObjs>.preheader2.preheader.preheader</controlInputObjs>
+      </node_objs>
+      <fileValidLineNumbers fileName="prueba_booth/src/premults.cpp">
+        <validLinenumbers>372</validLinenumbers>
+      </fileValidLineNumbers>
+    </basic_blocks>
+    <basic_blocks id="21" name=".split10" type="BlockType">
+      <controlInputObjs>block_15</controlInputObjs>
+      <controlOutputObjs>phi</controlOutputObjs>
+      <controlOutputObjs>br</controlOutputObjs>
+      <controlOutputObjs>block_15</controlOutputObjs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="16" name="x_cast" lineNumber="372" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." rtlName="x_cast_fu_177_p1" coreId="4026531968" contextFuncName="add_2_16_9_128_s" bitwidth="64" opcode="zext" nodeLabel="1.0" m_display="0" m_topoIndex="7" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="372" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+        <dataInputObjs>phi</dataInputObjs>
+        <dataOutputObjs>getelementptr</dataOutputObjs>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="18" name="buff_addr" lineNumber="372" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="132" contextFuncName="add_2_16_9_128_s" bitwidth="7" opcode="getelementptr" nodeLabel="1.0" m_display="0" m_topoIndex="8" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="372" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+        <dataInputObjs>alloca</dataInputObjs>
+        <dataInputObjs>zext</dataInputObjs>
+        <dataOutputObjs>store</dataOutputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="19" name="buff_addr_write_ln372" lineNumber="372" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreName="RAM_T2P_URAM" implIndex="uram" control="auto" opType="ram_t2p" coreId="100" contextFuncName="add_2_16_9_128_s" opcode="store" nodeLabel="1.0" m_display="0" m_delay="1.64" m_topoIndex="9" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="372" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+        <dataInputObjs>getelementptr</dataInputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="20" name="br_ln0" coreId="49" opcode="br" nodeLabel="1.0" m_display="0" m_topoIndex="10" m_clusterGroupNumber="-1">
+        <controlInputObjs>block_15</controlInputObjs>
+      </node_objs>
+      <fileValidLineNumbers fileName="prueba_booth/src/premults.cpp">
+        <validLinenumbers>372</validLinenumbers>
+      </fileValidLineNumbers>
+    </basic_blocks>
+  </regions>
+  <regions anchor_node="-1" region_type="8" interval="1" typeName="Pipeline" id="261" pipe_depth="4" RegionName="VITIS_LOOP_374_2_VITIS_LOOP_375_3">
+    <basic_blocks id="29" name=".preheader2.preheader" type="BlockType">
+      <controlInputObjs>.preheader2.preheader.preheader</controlInputObjs>
+      <controlInputObjs>.preheader2</controlInputObjs>
+      <controlOutputObjs>br</controlOutputObjs>
+      <controlOutputObjs>br</controlOutputObjs>
+      <controlOutputObjs>.preheader.preheader</controlOutputObjs>
+      <controlOutputObjs>.preheader2</controlOutputObjs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="24" name="indvar_flatten" lineNumber="374" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="49" contextFuncName="add_2_16_9_128_s" bitwidth="11" opcode="phi" nodeLabel="3.0" m_display="0" m_topoIndex="12" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="374" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+        <dataInputObjs>add</dataInputObjs>
+        <dataOutputObjs>add</dataOutputObjs>
+        <dataOutputObjs>icmp</dataOutputObjs>
+        <controlInputObjs>.preheader2</controlInputObjs>
+        <controlInputObjs>.preheader2.preheader.preheader</controlInputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="25" name="x_3" lineNumber="375" originalName="x" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="540697965" contextFuncName="add_2_16_9_128_s" bitwidth="8" opcode="phi" nodeLabel="3.0" m_display="0" m_topoIndex="13" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="375" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+        <dataInputObjs>add</dataInputObjs>
+        <dataOutputObjs>icmp</dataOutputObjs>
+        <dataOutputObjs>select</dataOutputObjs>
+        <controlInputObjs>.preheader2</controlInputObjs>
+        <controlInputObjs>.preheader2.preheader.preheader</controlInputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="26" name="add_ln374" lineNumber="374" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." rtlName="add_ln374_fu_182_p2" coreName="Adder" implIndex="fabric" control="auto" opType="add" coreId="1" contextFuncName="add_2_16_9_128_s" bitwidth="11" opcode="add" nodeLabel="3.0" m_display="0" m_delay="0.73" m_topoIndex="14" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="374" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+        <dataInputObjs>phi</dataInputObjs>
+        <dataOutputObjs>phi</dataOutputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="27" name="icmp_ln374" lineNumber="374" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." rtlName="icmp_ln374_fu_188_p2" opType="icmp" coreId="49" contextFuncName="add_2_16_9_128_s" bitwidth="1" opcode="icmp" nodeLabel="3.0" m_display="0" m_delay="0.61" m_topoIndex="15" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="374" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+        <dataInputObjs>phi</dataInputObjs>
+        <dataOutputObjs>br</dataOutputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="28" name="br_ln374" lineNumber="374" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="132" contextFuncName="add_2_16_9_128_s" opcode="br" nodeLabel="3.0" m_display="0" m_topoIndex="16" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="374" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+        <dataInputObjs>icmp</dataInputObjs>
+        <controlInputObjs>.preheader2</controlInputObjs>
+        <controlInputObjs>.preheader.preheader</controlInputObjs>
+      </node_objs>
+      <fileValidLineNumbers fileName="prueba_booth/src/premults.cpp">
+        <validLinenumbers>374</validLinenumbers>
+        <validLinenumbers>375</validLinenumbers>
+      </fileValidLineNumbers>
+    </basic_blocks>
+    <basic_blocks id="50" name=".preheader2" type="BlockType">
+      <controlInputObjs>.preheader2.preheader</controlInputObjs>
+      <controlOutputObjs>phi</controlOutputObjs>
+      <controlOutputObjs>phi</controlOutputObjs>
+      <controlOutputObjs>br</controlOutputObjs>
+      <controlOutputObjs>.preheader2.preheader</controlOutputObjs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="32" name="icmp_ln375" lineNumber="375" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." rtlName="icmp_ln375_fu_194_p2" opType="icmp" coreId="1701978212" contextFuncName="add_2_16_9_128_s" bitwidth="1" opcode="icmp" nodeLabel="3.0" m_display="0" m_delay="0.58" m_topoIndex="17" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="375" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+        <dataInputObjs>phi</dataInputObjs>
+        <dataOutputObjs>select</dataOutputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="33" name="select_ln374" lineNumber="374" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." rtlName="select_ln374_fu_200_p3" coreName="Sel" implIndex="auto_sel" control="auto" opType="select" coreId="73" contextFuncName="add_2_16_9_128_s" bitwidth="8" opcode="select" nodeLabel="3.0" m_display="0" m_delay="0.3" m_topoIndex="18" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="374" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+        <dataInputObjs>icmp</dataInputObjs>
+        <dataInputObjs>phi</dataInputObjs>
+        <dataOutputObjs>zext</dataOutputObjs>
+        <dataOutputObjs>add</dataOutputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="34" name="zext_ln375" lineNumber="375" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." rtlName="zext_ln375_fu_208_p1" coreId="3416892080" contextFuncName="add_2_16_9_128_s" bitwidth="64" opcode="zext" nodeLabel="3.0" m_display="0" m_topoIndex="19" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="375" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+        <dataInputObjs>select</dataInputObjs>
+        <dataOutputObjs>getelementptr</dataOutputObjs>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="37" name="buff_addr_2" lineNumber="378" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="1377" contextFuncName="add_2_16_9_128_s" bitwidth="7" opcode="getelementptr" nodeLabel="3.0" m_display="0" m_topoIndex="20" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="378" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+        <dataInputObjs>alloca</dataInputObjs>
+        <dataInputObjs>zext</dataInputObjs>
+        <dataOutputObjs>load</dataOutputObjs>
+        <dataOutputObjs>store</dataOutputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="38" name="buff_in_V_1" lineNumber="378" originalName="buff_in.V" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreName="RAM_T2P_URAM" implIndex="uram" control="auto" opType="ram_t2p" coreId="100" contextFuncName="add_2_16_9_128_s" bitwidth="32" opcode="load" nodeLabel="4.0" nodeLatency="1" m_display="0" m_delay="1.64" m_topoIndex="22" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="378" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+        <dataInputObjs>getelementptr</dataInputObjs>
+        <dataOutputObjs>trunc</dataOutputObjs>
+        <dataOutputObjs>partselect</dataOutputObjs>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="39" name="p_Val2_s" lineNumber="145" originalName="__Val2__" fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h" fileDirectory=".." coreName="FIFO_SRL" implIndex="srl" control="auto" opType="fifo" coreId="81" contextFuncName="read" bitwidth="32" opcode="read" nodeLabel="5.0" m_display="0" m_delay="1.21" m_topoIndex="23" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h" linenumber="145" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="read"/>
+        <dataInputObjs>in_V_V</dataInputObjs>
+        <dataOutputObjs>trunc</dataOutputObjs>
+        <dataOutputObjs>partselect</dataOutputObjs>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="40" name="v" lineNumber="674" originalName="v" fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/ap_int_ref.h" fileDirectory=".." rtlName="v_fu_219_p1" coreId="132" contextFuncName="get" bitwidth="16" opcode="trunc" nodeLabel="5.0" m_display="0" m_topoIndex="24" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/ap_int_ref.h" linenumber="674" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="get"/>
+        <dataInputObjs>read</dataInputObjs>
+        <dataOutputObjs>add</dataOutputObjs>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="41" name="v_buff" lineNumber="674" originalName="v_buff" fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/ap_int_ref.h" fileDirectory=".." rtlName="v_buff_fu_223_p1" coreId="1393" contextFuncName="get" bitwidth="16" opcode="trunc" nodeLabel="5.0" m_display="0" m_topoIndex="25" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/ap_int_ref.h" linenumber="674" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="get"/>
+        <dataInputObjs>load</dataInputObjs>
+        <dataOutputObjs>add</dataOutputObjs>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="42" name="v_1" lineNumber="691" originalName="v" fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/ap_int_base.h" fileDirectory=".." rtlName="v_1_fu_227_p2" coreName="Adder" implIndex="fabric" control="auto" opType="add" coreId="1" contextFuncName="operator_add_assign_16_false" bitwidth="16" opcode="add" nodeLabel="5.0" m_display="0" m_delay="0.78" m_topoIndex="26" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/ap_int_base.h" linenumber="691" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="operator+=&amp;lt;16, false&amp;gt;"/>
+        <dataInputObjs>trunc</dataInputObjs>
+        <dataInputObjs>trunc</dataInputObjs>
+        <dataOutputObjs>bitconcatenate</dataOutputObjs>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="43" name="v_2" lineNumber="674" originalName="v" fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/ap_int_ref.h" fileDirectory=".." rtlName="v_2_fu_233_p4" coreId="132" contextFuncName="get" bitwidth="16" opcode="partselect" nodeLabel="5.0" m_display="0" m_topoIndex="27" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/ap_int_ref.h" linenumber="674" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="get"/>
+        <dataInputObjs>read</dataInputObjs>
+        <dataOutputObjs>add</dataOutputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="44" name="v_buff_1" lineNumber="674" originalName="v_buff" fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/ap_int_ref.h" fileDirectory=".." rtlName="v_buff_1_fu_243_p4" coreId="0" contextFuncName="get" bitwidth="16" opcode="partselect" nodeLabel="5.0" m_display="0" m_topoIndex="28" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/ap_int_ref.h" linenumber="674" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="get"/>
+        <dataInputObjs>load</dataInputObjs>
+        <dataOutputObjs>add</dataOutputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="45" name="v_3" lineNumber="691" originalName="v" fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/ap_int_base.h" fileDirectory=".." rtlName="v_3_fu_253_p2" coreName="Adder" implIndex="fabric" control="auto" opType="add" coreId="1" contextFuncName="operator_add_assign_16_false" bitwidth="16" opcode="add" nodeLabel="5.0" m_display="0" m_delay="0.78" m_topoIndex="29" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/ap_int_base.h" linenumber="691" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="operator+=&amp;lt;16, false&amp;gt;"/>
+        <dataInputObjs>partselect</dataInputObjs>
+        <dataInputObjs>partselect</dataInputObjs>
+        <dataOutputObjs>bitconcatenate</dataOutputObjs>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="46" name="p_Result_s" lineNumber="414" originalName="__Result__" fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/ap_int_ref.h" fileDirectory=".." rtlName="p_Result_s_fu_259_p3" coreId="0" contextFuncName="operator_assign_16_false" bitwidth="32" opcode="bitconcatenate" nodeLabel="6.0" m_display="0" m_topoIndex="30" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/ap_int_ref.h" linenumber="414" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="operator=&amp;lt;16, false&amp;gt;"/>
+        <dataInputObjs>add</dataInputObjs>
+        <dataInputObjs>add</dataInputObjs>
+        <dataOutputObjs>store</dataOutputObjs>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="47" name="buff_addr_2_write_ln390" lineNumber="390" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreName="RAM_T2P_URAM" implIndex="uram" control="auto" opType="ram_t2p" coreId="100" contextFuncName="add_2_16_9_128_s" opcode="store" nodeLabel="6.0" m_display="0" m_delay="1.64" m_topoIndex="31" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="390" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+        <dataInputObjs>bitconcatenate</dataInputObjs>
+        <dataInputObjs>getelementptr</dataInputObjs>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="48" name="add_ln375" lineNumber="375" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." rtlName="add_ln375_fu_213_p2" coreName="Adder" implIndex="fabric" control="auto" opType="add" coreId="1" contextFuncName="add_2_16_9_128_s" bitwidth="8" opcode="add" nodeLabel="3.0" m_display="0" m_delay="0.7" m_topoIndex="21" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="375" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+        <dataInputObjs>select</dataInputObjs>
+        <dataOutputObjs>phi</dataOutputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="49" name="br_ln0" coreId="1697" opcode="br" nodeLabel="6.0" m_display="0" m_topoIndex="32" m_clusterGroupNumber="-1">
+        <controlInputObjs>.preheader2.preheader</controlInputObjs>
+      </node_objs>
+      <fileValidLineNumbers fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h">
+        <validLinenumbers>145</validLinenumbers>
+      </fileValidLineNumbers>
+      <fileValidLineNumbers fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/ap_int_base.h">
+        <validLinenumbers>691</validLinenumbers>
+      </fileValidLineNumbers>
+      <fileValidLineNumbers fileName="prueba_booth/src/premults.cpp">
+        <validLinenumbers>375</validLinenumbers>
+        <validLinenumbers>374</validLinenumbers>
+        <validLinenumbers>378</validLinenumbers>
+        <validLinenumbers>390</validLinenumbers>
+      </fileValidLineNumbers>
+      <fileValidLineNumbers fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/ap_int_ref.h">
+        <validLinenumbers>674</validLinenumbers>
+        <validLinenumbers>414</validLinenumbers>
+      </fileValidLineNumbers>
+    </basic_blocks>
+  </regions>
+  <regions anchor_node="-1" region_type="8" interval="1" typeName="Pipeline" id="262" pipe_depth="3" RegionName="VITIS_LOOP_394_5">
+    <basic_blocks id="58" name=".preheader" type="BlockType">
+      <controlInputObjs>.preheader.preheader</controlInputObjs>
+      <controlInputObjs>.split</controlInputObjs>
+      <controlOutputObjs>br</controlOutputObjs>
+      <controlOutputObjs>br</controlOutputObjs>
+      <controlOutputObjs>block_68</controlOutputObjs>
+      <controlOutputObjs>.split</controlOutputObjs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="53" name="x_2" lineNumber="394" originalName="x" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="3417882784" contextFuncName="add_2_16_9_128_s" bitwidth="8" opcode="phi" nodeLabel="8.0" m_display="0" m_topoIndex="34" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="394" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+        <dataInputObjs>add</dataInputObjs>
+        <dataOutputObjs>add</dataOutputObjs>
+        <dataOutputObjs>icmp</dataOutputObjs>
+        <dataOutputObjs>zext</dataOutputObjs>
+        <controlInputObjs>.split</controlInputObjs>
+        <controlInputObjs>.preheader.preheader</controlInputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="54" name="add_ln394" lineNumber="394" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." rtlName="add_ln394_fu_266_p2" coreName="Adder" implIndex="fabric" control="auto" opType="add" coreId="1" contextFuncName="add_2_16_9_128_s" bitwidth="8" opcode="add" nodeLabel="8.0" m_display="0" m_delay="0.7" m_topoIndex="35" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="394" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+        <dataInputObjs>phi</dataInputObjs>
+        <dataOutputObjs>phi</dataOutputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="55" name="icmp_ln394" lineNumber="394" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." rtlName="icmp_ln394_fu_272_p2" opType="icmp" coreId="4" contextFuncName="add_2_16_9_128_s" bitwidth="1" opcode="icmp" nodeLabel="8.0" m_display="0" m_delay="0.58" m_topoIndex="36" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="394" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+        <dataInputObjs>phi</dataInputObjs>
+        <dataOutputObjs>br</dataOutputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="57" name="br_ln394" lineNumber="394" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="4026531968" contextFuncName="add_2_16_9_128_s" opcode="br" nodeLabel="8.0" m_display="0" m_topoIndex="37" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="394" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+        <dataInputObjs>icmp</dataInputObjs>
+        <controlInputObjs>.split</controlInputObjs>
+        <controlInputObjs>block_68</controlInputObjs>
+      </node_objs>
+      <fileValidLineNumbers fileName="prueba_booth/src/premults.cpp">
+        <validLinenumbers>394</validLinenumbers>
+      </fileValidLineNumbers>
+    </basic_blocks>
+    <basic_blocks id="66" name=".split" type="BlockType">
+      <controlInputObjs>.preheader</controlInputObjs>
+      <controlOutputObjs>phi</controlOutputObjs>
+      <controlOutputObjs>br</controlOutputObjs>
+      <controlOutputObjs>.preheader</controlOutputObjs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="59" name="zext_ln394" lineNumber="394" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." rtlName="zext_ln394_fu_278_p1" coreId="0" contextFuncName="add_2_16_9_128_s" bitwidth="64" opcode="zext" nodeLabel="8.0" m_display="0" m_topoIndex="38" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="394" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+        <dataInputObjs>phi</dataInputObjs>
+        <dataOutputObjs>getelementptr</dataOutputObjs>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="62" name="buff_addr_1" lineNumber="396" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="0" contextFuncName="add_2_16_9_128_s" bitwidth="7" opcode="getelementptr" nodeLabel="8.0" m_display="0" m_topoIndex="39" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="396" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="add&amp;lt;2, 16, 9, 128&amp;gt;"/>
+        <dataInputObjs>alloca</dataInputObjs>
+        <dataInputObjs>zext</dataInputObjs>
+        <dataOutputObjs>load</dataOutputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="63" name="buff_load" lineNumber="174" fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h" fileDirectory=".." coreName="RAM_T2P_URAM" implIndex="uram" control="auto" opType="ram_t2p" coreId="100" contextFuncName="write" bitwidth="32" opcode="load" nodeLabel="8.0" nodeLatency="1" m_display="0" m_delay="1.64" m_topoIndex="40" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h" linenumber="174" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="write"/>
+        <dataInputObjs>getelementptr</dataInputObjs>
+        <dataOutputObjs>write</dataOutputObjs>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="64" name="out_V_V_write_ln174" lineNumber="174" fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h" fileDirectory=".." coreName="FIFO_SRL" implIndex="srl" control="auto" opType="fifo" coreId="81" contextFuncName="write" opcode="write" nodeLabel="10.0" m_display="0" m_delay="1.21" m_topoIndex="41" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h" linenumber="174" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="write"/>
+        <dataInputObjs>load</dataInputObjs>
+        <dataOutputObjs>out_V_V</dataOutputObjs>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="65" name="br_ln0" coreId="49" opcode="br" nodeLabel="10.0" m_display="0" m_topoIndex="42" m_clusterGroupNumber="-1">
+        <controlInputObjs>.preheader</controlInputObjs>
+      </node_objs>
+      <fileValidLineNumbers fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h">
+        <validLinenumbers>174</validLinenumbers>
+      </fileValidLineNumbers>
+      <fileValidLineNumbers fileName="prueba_booth/src/premults.cpp">
+        <validLinenumbers>394</validLinenumbers>
+        <validLinenumbers>396</validLinenumbers>
+      </fileValidLineNumbers>
+    </basic_blocks>
+  </regions>
+  <ScheduleInfo time="0"/>
+  <ScheduleInfo time="1"/>
+  <ScheduleInfo time="2"/>
+  <ScheduleInfo time="3"/>
+  <ScheduleInfo time="4"/>
+  <ScheduleInfo time="5"/>
+  <ScheduleInfo time="6"/>
+  <ScheduleInfo time="7"/>
+  <ScheduleInfo time="8"/>
+  <ScheduleInfo time="9"/>
+  <ScheduleInfo time="10"/>
+  <ScheduleInfo time="11"/>
+  <regnodes realName="buff_addr_1_reg_330">
+    <nodeIds>62</nodeIds>
+  </regnodes>
+  <regnodes realName="buff_addr_2_reg_300">
+    <nodeIds>37</nodeIds>
+  </regnodes>
+  <regnodes realName="add_ln372_reg_283">
+    <nodeIds>10</nodeIds>
+  </regnodes>
+  <regnodes realName="x_reg_121">
+    <nodeIds>9</nodeIds>
+  </regnodes>
+  <regnodes realName="x_2_reg_154">
+    <nodeIds>53</nodeIds>
+  </regnodes>
+  <regnodes realName="add_ln374_reg_291">
+    <nodeIds>26</nodeIds>
+  </regnodes>
+  <regnodes realName="v_3_reg_316">
+    <nodeIds>45</nodeIds>
+  </regnodes>
+  <regnodes realName="x_3_reg_143">
+    <nodeIds>25</nodeIds>
+  </regnodes>
+  <regnodes realName="buff_load_reg_335">
+    <nodeIds>63</nodeIds>
+  </regnodes>
+  <regnodes realName="icmp_ln394_reg_326">
+    <nodeIds>55</nodeIds>
+  </regnodes>
+  <regnodes realName="add_ln394_reg_321">
+    <nodeIds>54</nodeIds>
+  </regnodes>
+  <regnodes realName="indvar_flatten_reg_132">
+    <nodeIds>24</nodeIds>
+  </regnodes>
+  <regnodes realName="v_1_reg_311">
+    <nodeIds>42</nodeIds>
+  </regnodes>
+  <regnodes realName="add_ln375_reg_306">
+    <nodeIds>48</nodeIds>
+  </regnodes>
+  <regnodes realName="icmp_ln374_reg_296">
+    <nodeIds>27</nodeIds>
+  </regnodes>
+  <expressionNodes realName="indvar_flatten_phi_fu_136">
+    <nodeIds>24</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="buff_alloca_fu_74">
+    <nodeIds>5</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="add_ln374_fu_182">
+    <nodeIds>26</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="v_1_fu_227">
+    <nodeIds>42</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="x_2_phi_fu_158">
+    <nodeIds>53</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="p_Result_s_fu_259">
+    <nodeIds>46</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="icmp_ln374_fu_188">
+    <nodeIds>27</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="add_ln394_fu_266">
+    <nodeIds>54</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="select_ln374_fu_200">
+    <nodeIds>33</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="icmp_ln375_fu_194">
+    <nodeIds>32</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="v_3_fu_253">
+    <nodeIds>45</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="v_buff_fu_223">
+    <nodeIds>41</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="buff_addr_gep_fu_91">
+    <nodeIds>18</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="buff_addr_2_gep_fu_104">
+    <nodeIds>37</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="icmp_ln394_fu_272">
+    <nodeIds>55</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="x_cast_fu_177">
+    <nodeIds>16</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="zext_ln394_fu_278">
+    <nodeIds>59</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="zext_ln375_fu_208">
+    <nodeIds>34</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="v_2_fu_233">
+    <nodeIds>43</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="add_ln372_fu_165">
+    <nodeIds>10</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="x_phi_fu_125">
+    <nodeIds>9</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="add_ln375_fu_213">
+    <nodeIds>48</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="buff_addr_1_gep_fu_114">
+    <nodeIds>62</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="v_fu_219">
+    <nodeIds>40</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="v_buff_1_fu_243">
+    <nodeIds>44</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="x_3_phi_fu_147">
+    <nodeIds>25</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="icmp_ln372_fu_171">
+    <nodeIds>12</nodeIds>
+  </expressionNodes>
+  <ioNodes realName="p_Val2_s_read_fu_78">
+    <nodeIds>39</nodeIds>
+  </ioNodes>
+  <ioNodes realName="write_ln174_write_fu_84">
+    <nodeIds>64</nodeIds>
+  </ioNodes>
+  <memoryPorts dataString="buff">
+    <nodeIds>19</nodeIds>
+    <nodeIds>47</nodeIds>
+  </memoryPorts>
+  <memoryPorts dataString="buff" portID="1">
+    <nodeIds>38</nodeIds>
+    <nodeIds>63</nodeIds>
+  </memoryPorts>
+  <ioPorts name="in_V_V">
+    <contents name="read">
+      <nodeIds>39</nodeIds>
+    </contents>
+  </ioPorts>
+  <ioPorts name="out_V_V">
+    <contents name="write">
+      <nodeIds>64</nodeIds>
+    </contents>
+  </ioPorts>
+  <fsm>
+    <states id="1">
+      <operations id="3" stage="1" latency="1"/>
+      <operations id="4" stage="1" latency="1"/>
+      <operations id="5" stage="1" latency="1"/>
+      <operations id="6" stage="1" latency="1"/>
+      <operations id="7" stage="1" latency="1"/>
+    </states>
+    <states id="2">
+      <operations id="9" stage="1" latency="1"/>
+      <operations id="10" stage="1" latency="1"/>
+      <operations id="11" stage="1" latency="1"/>
+      <operations id="12" stage="1" latency="1"/>
+      <operations id="13" stage="1" latency="1"/>
+      <operations id="14" stage="1" latency="1"/>
+      <operations id="16" stage="1" latency="1"/>
+      <operations id="17" stage="1" latency="1"/>
+      <operations id="18" stage="1" latency="1"/>
+      <operations id="19" stage="1" latency="1"/>
+      <operations id="20" stage="1" latency="1"/>
+    </states>
+    <states id="3">
+      <operations id="22" stage="1" latency="1"/>
+    </states>
+    <states id="4">
+      <operations id="24" stage="1" latency="1"/>
+      <operations id="25" stage="1" latency="1"/>
+      <operations id="26" stage="1" latency="1"/>
+      <operations id="27" stage="1" latency="1"/>
+      <operations id="28" stage="1" latency="1"/>
+      <operations id="32" stage="1" latency="1"/>
+      <operations id="33" stage="1" latency="1"/>
+      <operations id="34" stage="1" latency="1"/>
+      <operations id="37" stage="1" latency="1"/>
+      <operations id="48" stage="1" latency="1"/>
+    </states>
+    <states id="5">
+      <operations id="38" stage="2" latency="2"/>
+    </states>
+    <states id="6">
+      <operations id="38" stage="1" latency="2"/>
+      <operations id="39" stage="1" latency="1"/>
+      <operations id="40" stage="1" latency="1"/>
+      <operations id="41" stage="1" latency="1"/>
+      <operations id="42" stage="1" latency="1"/>
+      <operations id="43" stage="1" latency="1"/>
+      <operations id="44" stage="1" latency="1"/>
+      <operations id="45" stage="1" latency="1"/>
+    </states>
+    <states id="7">
+      <operations id="30" stage="1" latency="1"/>
+      <operations id="31" stage="1" latency="1"/>
+      <operations id="35" stage="1" latency="1"/>
+      <operations id="36" stage="1" latency="1"/>
+      <operations id="46" stage="1" latency="1"/>
+      <operations id="47" stage="1" latency="1"/>
+      <operations id="49" stage="1" latency="1"/>
+    </states>
+    <states id="8">
+      <operations id="51" stage="1" latency="1"/>
+    </states>
+    <states id="9">
+      <operations id="53" stage="1" latency="1"/>
+      <operations id="54" stage="1" latency="1"/>
+      <operations id="55" stage="1" latency="1"/>
+      <operations id="56" stage="1" latency="1"/>
+      <operations id="57" stage="1" latency="1"/>
+      <operations id="59" stage="1" latency="1"/>
+      <operations id="62" stage="1" latency="1"/>
+      <operations id="63" stage="2" latency="2"/>
+    </states>
+    <states id="10">
+      <operations id="63" stage="1" latency="2"/>
+    </states>
+    <states id="11">
+      <operations id="60" stage="1" latency="1"/>
+      <operations id="61" stage="1" latency="1"/>
+      <operations id="64" stage="1" latency="1"/>
+      <operations id="65" stage="1" latency="1"/>
+    </states>
+    <states id="12">
+      <operations id="67" stage="1" latency="1"/>
+    </states>
+    <transitions inState="1" outState="2">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="3" outState="4">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="8" outState="9">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="2" outState="3">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="2" outState="2">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="5" outState="6">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="6" outState="7">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="7" outState="4">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="4" outState="8">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="4" outState="5">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="10" outState="11">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="11" outState="9">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="9" outState="12">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="9" outState="10">
+      <condition id="-1"/>
+    </transitions>
+  </fsm>
+  <CFGRegionsRoot>
+    <cfgRegions mId="1" mTag="add_2_16_9_128_s" mII="-1" mDepth="-1" mMinTripCount="-1" mMaxTripCount="-1" mMinLatency="1417" mMaxLatency="1417">
+      <subRegions>2</subRegions>
+      <subRegions>3</subRegions>
+      <subRegions>4</subRegions>
+      <subRegions>5</subRegions>
+      <subRegions>6</subRegions>
+      <subRegions>7</subRegions>
+      <subRegions>8</subRegions>
+      <mDfPipe/>
+    </cfgRegions>
+    <cfgRegions mId="2" mTag="Entry" mII="-1" mDepth="-1" mMinTripCount="-1" mMaxTripCount="-1">
+      <basicBlocks>8</basicBlocks>
+      <mDfPipe/>
+    </cfgRegions>
+    <cfgRegions mId="3" mTag="VITIS_LOOP_372_1" mII="1" mDepth="1" mMinTripCount="128" mMaxTripCount="128" mMinLatency="128" mMaxLatency="128" mType="1">
+      <basicBlocks>15</basicBlocks>
+      <basicBlocks>21</basicBlocks>
+      <mDfPipe/>
+    </cfgRegions>
+    <cfgRegions mId="4" mTag="Region 1" mII="-1" mDepth="-1" mMinTripCount="-1" mMaxTripCount="-1">
+      <basicBlocks>23</basicBlocks>
+      <mDfPipe/>
+    </cfgRegions>
+    <cfgRegions mId="5" mTag="VITIS_LOOP_374_2_VITIS_LOOP_375_3" mII="1" mDepth="4" mMinTripCount="1152" mMaxTripCount="1152" mMinLatency="1154" mMaxLatency="1154" mType="1">
+      <basicBlocks>29</basicBlocks>
+      <basicBlocks>50</basicBlocks>
+      <mDfPipe/>
+    </cfgRegions>
+    <cfgRegions mId="6" mTag="Region 2" mII="-1" mDepth="-1" mMinTripCount="-1" mMaxTripCount="-1">
+      <basicBlocks>52</basicBlocks>
+      <mDfPipe/>
+    </cfgRegions>
+    <cfgRegions mId="7" mTag="VITIS_LOOP_394_5" mII="1" mDepth="3" mMinTripCount="128" mMaxTripCount="128" mMinLatency="129" mMaxLatency="129" mType="1">
+      <basicBlocks>58</basicBlocks>
+      <basicBlocks>66</basicBlocks>
+      <mDfPipe/>
+    </cfgRegions>
+    <cfgRegions mId="8" mTag="Return" mII="-1" mDepth="-1" mMinTripCount="-1" mMaxTripCount="-1">
+      <basicBlocks>68</basicBlocks>
+      <mDfPipe/>
+    </cfgRegions>
+  </CFGRegionsRoot>
+</cdfg:DBCdfg>

@@ -1,0 +1,911 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cdfg:DBCdfg xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cdfg="http://www.autoesl.com/DBCdfg" timeStamp="1651154263000">
+  <ports id="1" name="gmem2" type="PortType" coreId="976498996" bitwidth="16" iftype="IfTypeFifo">
+    <dataOutputObjs>getelementptr</dataOutputObjs>
+  </ports>
+  <ports id="2" name="ptr" type="PortType" coreName="FIFO_SRL" coreId="145" bitwidth="64" iftype="IfTypeRom">
+    <dataOutputObjs>read</dataOutputObjs>
+  </ports>
+  <ports id="3" name="out_V_V" type="PortType" originalName="out.V.V" coreName="FIFO_SRL" coreId="0" bitwidth="16" direction="DirOut" iftype="IfTypeRom">
+    <dataInputObjs>write</dataInputObjs>
+  </ports>
+  <edges id="43" source_obj="//@ports.1" sink_obj="//@blocks.0/@node_objs.0"/>
+  <edges id="46" source_obj="//@blocks.0/@node_objs.0" sink_obj="//@blocks.0/@node_objs.1"/>
+  <edges id="51" source_obj="//@blocks.0/@node_objs.1" sink_obj="//@blocks.0/@node_objs.2"/>
+  <edges id="52" source_obj="//@ports.0" sink_obj="//@blocks.0/@node_objs.3"/>
+  <edges id="53" source_obj="//@blocks.0/@node_objs.2" sink_obj="//@blocks.0/@node_objs.3"/>
+  <edges id="54" edge_type="CtrlEdge" source_obj="//@blocks.1" sink_obj="//@blocks.0/@node_objs.4"/>
+  <edges id="57" edge_type="CtrlEdge" source_obj="//@blocks.0" sink_obj="//@blocks.1/@node_objs.0"/>
+  <edges id="58" source_obj="//@blocks.1/@node_objs.1" sink_obj="//@blocks.1/@node_objs.0" is_back_edge="1"/>
+  <edges id="59" edge_type="CtrlEdge" source_obj="//@blocks.3" sink_obj="//@blocks.1/@node_objs.0" is_back_edge="1"/>
+  <edges id="60" source_obj="//@blocks.1/@node_objs.0" sink_obj="//@blocks.1/@node_objs.1"/>
+  <edges id="63" source_obj="//@blocks.1/@node_objs.0" sink_obj="//@blocks.1/@node_objs.2"/>
+  <edges id="66" source_obj="//@blocks.1/@node_objs.2" sink_obj="//@blocks.1/@node_objs.3"/>
+  <edges id="67" edge_type="CtrlEdge" source_obj="//@blocks.2" sink_obj="//@blocks.1/@node_objs.3"/>
+  <edges id="68" edge_type="CtrlEdge" source_obj="//@blocks.4" sink_obj="//@blocks.1/@node_objs.3"/>
+  <edges id="71" source_obj="//@blocks.0/@node_objs.3" sink_obj="//@blocks.2/@node_objs.0"/>
+  <edges id="74" edge_type="CtrlEdge" source_obj="//@regions.0/@basic_blocks.0" sink_obj="//@blocks.2/@node_objs.1"/>
+  <edges id="75" source_obj="//@regions.0/@basic_blocks.0/@node_objs.1" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.0" is_back_edge="1"/>
+  <edges id="76" edge_type="CtrlEdge" source_obj="//@regions.0/@basic_blocks.1" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.0" is_back_edge="1"/>
+  <edges id="79" edge_type="CtrlEdge" source_obj="//@blocks.2" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.0"/>
+  <edges id="80" source_obj="//@regions.0/@basic_blocks.0/@node_objs.0" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.1"/>
+  <edges id="83" source_obj="//@regions.0/@basic_blocks.0/@node_objs.0" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.2"/>
+  <edges id="86" source_obj="//@regions.0/@basic_blocks.0/@node_objs.2" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.3"/>
+  <edges id="87" edge_type="CtrlEdge" source_obj="//@regions.0/@basic_blocks.1" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.3"/>
+  <edges id="88" edge_type="CtrlEdge" source_obj="//@blocks.3" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.3"/>
+  <edges id="91" source_obj="//@blocks.0/@node_objs.3" sink_obj="//@regions.0/@basic_blocks.1/@node_objs.0"/>
+  <edges id="94" source_obj="//@regions.0/@basic_blocks.1/@node_objs.1" sink_obj="//@ports.2"/>
+  <edges id="95" source_obj="//@regions.0/@basic_blocks.1/@node_objs.0" sink_obj="//@regions.0/@basic_blocks.1/@node_objs.1"/>
+  <edges id="96" edge_type="CtrlEdge" source_obj="//@regions.0/@basic_blocks.0" sink_obj="//@regions.0/@basic_blocks.1/@node_objs.2"/>
+  <edges id="97" edge_type="CtrlEdge" source_obj="//@blocks.1" sink_obj="//@blocks.3/@node_objs.0"/>
+  <edges id="228" edge_type="CtrlEdge" source_obj="//@blocks.0" sink_obj="//@blocks.1"/>
+  <edges id="229" edge_type="CtrlEdge" source_obj="//@blocks.1" sink_obj="//@blocks.4"/>
+  <edges id="230" edge_type="CtrlEdge" source_obj="//@blocks.1" sink_obj="//@blocks.2"/>
+  <edges id="231" edge_type="CtrlEdge" source_obj="//@blocks.2" sink_obj="//@regions.0/@basic_blocks.0"/>
+  <edges id="232" edge_type="CtrlEdge" source_obj="//@regions.0/@basic_blocks.0" sink_obj="//@blocks.3"/>
+  <edges id="233" edge_type="CtrlEdge" source_obj="//@regions.0/@basic_blocks.0" sink_obj="//@regions.0/@basic_blocks.1"/>
+  <edges id="234" edge_type="CtrlEdge" source_obj="//@regions.0/@basic_blocks.1" sink_obj="//@regions.0/@basic_blocks.0" is_back_edge="1"/>
+  <edges id="235" edge_type="CtrlEdge" source_obj="//@blocks.3" sink_obj="//@blocks.1" is_back_edge="1"/>
+  <edges id="236" edge_type="VirtEdge" source_obj="//@blocks.2/@node_objs.0" sink_obj="//@regions.0/@basic_blocks.1/@node_objs.0"/>
+  <blocks id="14" name="entry" type="BlockType">
+    <controlOutputObjs>phi</controlOutputObjs>
+    <controlOutputObjs>block_20</controlOutputObjs>
+    <node_objs xsi:type="cdfg:CdfgNode" id="7" name="ptr_read" lineNumber="56" originalName="ptr" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreName="FIFO_SRL" implIndex="srl" control="auto" opType="fifo" coreId="81" contextFuncName="read_x_2_8_s" bitwidth="64" opcode="read" m_display="0" m_delay="1.21" m_topoIndex="1" m_clusterGroupNumber="-1">
+      <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="56" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="read_x&amp;lt;2, 8&amp;gt;"/>
+      <dataInputObjs>ptr</dataInputObjs>
+      <dataOutputObjs>partselect</dataOutputObjs>
+    </node_objs>
+    <node_objs xsi:type="cdfg:CdfgNode" id="10" name="trunc_ln" lineNumber="62" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." rtlName="trunc_ln_fu_119_p4" coreId="25" contextFuncName="read_x_2_8_s" bitwidth="63" opcode="partselect" m_display="0" m_topoIndex="2" m_clusterGroupNumber="-1">
+      <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="62" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="read_x&amp;lt;2, 8&amp;gt;"/>
+      <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="426" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="top"/>
+      <dataInputObjs>read</dataInputObjs>
+      <dataOutputObjs>sext</dataOutputObjs>
+      <constName>empty</constName>
+    </node_objs>
+    <node_objs xsi:type="cdfg:CdfgNode" id="11" name="sext_ln62" lineNumber="62" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." rtlName="sext_ln62_fu_129_p1" coreId="0" contextFuncName="read_x_2_8_s" bitwidth="64" opcode="sext" m_display="0" m_topoIndex="3" m_clusterGroupNumber="-1">
+      <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="62" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="read_x&amp;lt;2, 8&amp;gt;"/>
+      <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="426" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="top"/>
+      <dataInputObjs>partselect</dataInputObjs>
+      <dataOutputObjs>getelementptr</dataOutputObjs>
+    </node_objs>
+    <node_objs xsi:type="cdfg:CdfgNode" id="12" name="gmem2_addr" lineNumber="62" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="4294967295" contextFuncName="read_x_2_8_s" bitwidth="16" opcode="getelementptr" m_display="0" m_topoIndex="4" m_clusterGroupNumber="-1">
+      <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="62" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="read_x&amp;lt;2, 8&amp;gt;"/>
+      <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="426" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="top"/>
+      <dataInputObjs>gmem2</dataInputObjs>
+      <dataInputObjs>sext</dataInputObjs>
+      <dataOutputObjs>readreq</dataOutputObjs>
+      <dataOutputObjs>read</dataOutputObjs>
+    </node_objs>
+    <node_objs xsi:type="cdfg:CdfgNode" id="13" name="br_ln61" lineNumber="61" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="0" contextFuncName="read_x_2_8_s" opcode="br" m_display="0" m_delay="0.38" m_topoIndex="5" m_clusterGroupNumber="-1">
+      <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="61" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="read_x&amp;lt;2, 8&amp;gt;"/>
+      <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="426" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="top"/>
+      <controlInputObjs>block_20</controlInputObjs>
+    </node_objs>
+    <fileValidLineNumbers fileName="prueba_booth/src/premults.cpp">
+      <validLinenumbers>56</validLinenumbers>
+      <validLinenumbers>62</validLinenumbers>
+      <validLinenumbers>61</validLinenumbers>
+      <validLinenumbers>426</validLinenumbers>
+    </fileValidLineNumbers>
+  </blocks>
+  <blocks id="20" name="block_20" type="BlockType">
+    <controlInputObjs>entry</controlInputObjs>
+    <controlInputObjs>block_38</controlInputObjs>
+    <controlOutputObjs>br</controlOutputObjs>
+    <controlOutputObjs>br</controlOutputObjs>
+    <controlOutputObjs>.exit</controlOutputObjs>
+    <controlOutputObjs>.split2.i</controlOutputObjs>
+    <node_objs xsi:type="cdfg:CdfgNode" id="15" name="x" originalName="x" coreId="0" bitwidth="4" opcode="phi" nodeLabel="1.0" m_display="0" m_topoIndex="6" m_clusterGroupNumber="-1">
+      <dataInputObjs>add</dataInputObjs>
+      <dataOutputObjs>add</dataOutputObjs>
+      <dataOutputObjs>icmp</dataOutputObjs>
+      <controlInputObjs>entry</controlInputObjs>
+      <controlInputObjs>block_38</controlInputObjs>
+      <constName>empty</constName>
+    </node_objs>
+    <node_objs xsi:type="cdfg:CdfgNode" id="16" name="x_1" lineNumber="61" originalName="x" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." rtlName="x_1_fu_139_p2" coreName="Adder" implIndex="fabric" control="auto" opType="add" coreId="1" contextFuncName="read_x_2_8_s" bitwidth="4" opcode="add" nodeLabel="1.0" m_display="0" m_delay="0.7" m_topoIndex="7" m_clusterGroupNumber="-1">
+      <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="61" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="read_x&amp;lt;2, 8&amp;gt;"/>
+      <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="426" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="top"/>
+      <dataInputObjs>phi</dataInputObjs>
+      <dataOutputObjs>phi</dataOutputObjs>
+      <constName>empty</constName>
+    </node_objs>
+    <node_objs xsi:type="cdfg:CdfgNode" id="17" name="icmp_ln61" lineNumber="61" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." rtlName="icmp_ln61_fu_145_p2" opType="icmp" coreId="49" contextFuncName="read_x_2_8_s" bitwidth="1" opcode="icmp" nodeLabel="1.0" m_display="0" m_delay="0.65" m_topoIndex="8" m_clusterGroupNumber="-1">
+      <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="61" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="read_x&amp;lt;2, 8&amp;gt;"/>
+      <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="426" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="top"/>
+      <dataInputObjs>phi</dataInputObjs>
+      <dataOutputObjs>br</dataOutputObjs>
+      <constName>empty</constName>
+    </node_objs>
+    <node_objs xsi:type="cdfg:CdfgNode" id="19" name="br_ln61" lineNumber="61" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="193" contextFuncName="read_x_2_8_s" opcode="br" nodeLabel="1.0" m_display="0" m_topoIndex="9" m_clusterGroupNumber="-1">
+      <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="61" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="read_x&amp;lt;2, 8&amp;gt;"/>
+      <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="426" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="top"/>
+      <dataInputObjs>icmp</dataInputObjs>
+      <controlInputObjs>.split2.i</controlInputObjs>
+      <controlInputObjs>.exit</controlInputObjs>
+    </node_objs>
+    <fileValidLineNumbers fileName="prueba_booth/src/premults.cpp">
+      <validLinenumbers>61</validLinenumbers>
+      <validLinenumbers>426</validLinenumbers>
+    </fileValidLineNumbers>
+  </blocks>
+  <blocks id="24" name=".split2.i" type="BlockType">
+    <controlInputObjs>block_20</controlInputObjs>
+    <controlOutputObjs>br</controlOutputObjs>
+    <controlOutputObjs>phi</controlOutputObjs>
+    <controlOutputObjs>block_30</controlOutputObjs>
+    <node_objs xsi:type="cdfg:CdfgNode" id="22" name="empty" lineNumber="62" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreName="m_axi" implIndex="m_axi" control="auto" opType="readreq" coreId="121" contextFuncName="read_x_2_8_s" bitwidth="1" opcode="readreq" nodeLabel="2.0" nodeLatency="69" m_display="0" m_delay="2.43" m_topoIndex="11" m_clusterGroupNumber="-1">
+      <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="62" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="read_x&amp;lt;2, 8&amp;gt;"/>
+      <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="426" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="top"/>
+      <dataInputObjs>getelementptr</dataInputObjs>
+      <constName>empty</constName>
+    </node_objs>
+    <node_objs xsi:type="cdfg:CdfgNode" id="23" name="br_ln62" lineNumber="62" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="49" contextFuncName="read_x_2_8_s" opcode="br" nodeLabel="71.0" m_display="0" m_delay="0.38" m_topoIndex="12" m_clusterGroupNumber="-1">
+      <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="62" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="read_x&amp;lt;2, 8&amp;gt;"/>
+      <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="426" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="top"/>
+      <controlInputObjs>block_30</controlInputObjs>
+    </node_objs>
+    <fileValidLineNumbers fileName="prueba_booth/src/premults.cpp">
+      <validLinenumbers>62</validLinenumbers>
+      <validLinenumbers>426</validLinenumbers>
+    </fileValidLineNumbers>
+  </blocks>
+  <blocks id="38" name="block_38" type="BlockType">
+    <controlInputObjs>block_30</controlInputObjs>
+    <controlOutputObjs>phi</controlOutputObjs>
+    <controlOutputObjs>br</controlOutputObjs>
+    <controlOutputObjs>block_20</controlOutputObjs>
+    <node_objs xsi:type="cdfg:CdfgNode" id="37" name="br_ln0" coreId="0" opcode="br" nodeLabel="75.0" m_display="0" m_topoIndex="20" m_clusterGroupNumber="-1">
+      <controlInputObjs>block_20</controlInputObjs>
+    </node_objs>
+  </blocks>
+  <blocks id="40" name=".exit" type="BlockType">
+    <controlInputObjs>block_20</controlInputObjs>
+    <controlOutputObjs>br</controlOutputObjs>
+    <node_objs xsi:type="cdfg:CdfgNode" id="39" name="_ln426" lineNumber="426" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="49" contextFuncName="top" opcode="ret" nodeLabel="1.0" m_display="0" m_topoIndex="10" m_clusterGroupNumber="-1">
+      <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="426" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="top"/>
+    </node_objs>
+    <fileValidLineNumbers fileName="prueba_booth/src/premults.cpp">
+      <validLinenumbers>426</validLinenumbers>
+    </fileValidLineNumbers>
+  </blocks>
+  <regions anchor_node="-1" region_type="8" interval="1" typeName="Pipeline" id="348" pipe_depth="3" RegionName="VITIS_LOOP_62_2">
+    <basic_blocks id="30" name="block_30" type="BlockType">
+      <controlInputObjs>.split2.i</controlInputObjs>
+      <controlInputObjs>.split.i</controlInputObjs>
+      <controlOutputObjs>br</controlOutputObjs>
+      <controlOutputObjs>br</controlOutputObjs>
+      <controlOutputObjs>block_38</controlOutputObjs>
+      <controlOutputObjs>.split.i</controlOutputObjs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="25" name="p" lineNumber="62" originalName="p" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="132" contextFuncName="read_x_2_8_s" bitwidth="8" opcode="phi" nodeLabel="72.0" m_display="0" m_topoIndex="13" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="62" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="read_x&amp;lt;2, 8&amp;gt;"/>
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="426" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="top"/>
+        <dataInputObjs>add</dataInputObjs>
+        <dataOutputObjs>add</dataOutputObjs>
+        <dataOutputObjs>icmp</dataOutputObjs>
+        <controlInputObjs>.split.i</controlInputObjs>
+        <controlInputObjs>.split2.i</controlInputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="26" name="add_ln62" lineNumber="62" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." rtlName="add_ln62_fu_151_p2" coreName="Adder" implIndex="fabric" control="auto" opType="add" coreId="1" contextFuncName="read_x_2_8_s" bitwidth="8" opcode="add" nodeLabel="72.0" m_display="0" m_delay="0.7" m_topoIndex="14" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="62" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="read_x&amp;lt;2, 8&amp;gt;"/>
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="426" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="top"/>
+        <dataInputObjs>phi</dataInputObjs>
+        <dataOutputObjs>phi</dataOutputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="27" name="icmp_ln62" lineNumber="62" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." rtlName="icmp_ln62_fu_157_p2" opType="icmp" coreId="497" contextFuncName="read_x_2_8_s" bitwidth="1" opcode="icmp" nodeLabel="72.0" m_display="0" m_delay="0.58" m_topoIndex="15" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="62" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="read_x&amp;lt;2, 8&amp;gt;"/>
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="426" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="top"/>
+        <dataInputObjs>phi</dataInputObjs>
+        <dataOutputObjs>br</dataOutputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="29" name="br_ln62" lineNumber="62" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="497" contextFuncName="read_x_2_8_s" opcode="br" nodeLabel="72.0" m_display="0" m_topoIndex="16" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="62" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="read_x&amp;lt;2, 8&amp;gt;"/>
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="426" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="top"/>
+        <dataInputObjs>icmp</dataInputObjs>
+        <controlInputObjs>.split.i</controlInputObjs>
+        <controlInputObjs>block_38</controlInputObjs>
+      </node_objs>
+      <fileValidLineNumbers fileName="prueba_booth/src/premults.cpp">
+        <validLinenumbers>62</validLinenumbers>
+        <validLinenumbers>426</validLinenumbers>
+      </fileValidLineNumbers>
+    </basic_blocks>
+    <basic_blocks id="36" name=".split.i" type="BlockType">
+      <controlInputObjs>block_30</controlInputObjs>
+      <controlOutputObjs>phi</controlOutputObjs>
+      <controlOutputObjs>br</controlOutputObjs>
+      <controlOutputObjs>block_30</controlOutputObjs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="33" name="px" lineNumber="64" originalName="px" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreName="m_axi" implIndex="UNSUPPORTED" control="auto" coreId="121" contextFuncName="read_x_2_8_s" bitwidth="16" opcode="read" nodeLabel="73.0" m_display="0" m_delay="2.43" m_topoIndex="17" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="64" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="read_x&amp;lt;2, 8&amp;gt;"/>
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="426" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="top"/>
+        <dataInputObjs>getelementptr</dataInputObjs>
+        <dataOutputObjs>write</dataOutputObjs>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="34" name="out_V_V_write_ln174" lineNumber="174" fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h" fileDirectory=".." coreName="FIFO_SRL" implIndex="srl" control="auto" opType="fifo" coreId="81" contextFuncName="write" opcode="write" nodeLabel="74.0" m_display="0" m_delay="1.21" m_topoIndex="18" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h" linenumber="174" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="write"/>
+        <dataInputObjs>read</dataInputObjs>
+        <dataOutputObjs>out_V_V</dataOutputObjs>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="35" name="br_ln0" coreId="49" opcode="br" nodeLabel="74.0" m_display="0" m_topoIndex="19" m_clusterGroupNumber="-1">
+        <controlInputObjs>block_30</controlInputObjs>
+      </node_objs>
+      <fileValidLineNumbers fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h">
+        <validLinenumbers>174</validLinenumbers>
+      </fileValidLineNumbers>
+      <fileValidLineNumbers fileName="prueba_booth/src/premults.cpp">
+        <validLinenumbers>64</validLinenumbers>
+        <validLinenumbers>426</validLinenumbers>
+      </fileValidLineNumbers>
+    </basic_blocks>
+  </regions>
+  <ScheduleInfo time="0"/>
+  <ScheduleInfo time="1"/>
+  <ScheduleInfo time="2"/>
+  <ScheduleInfo time="3"/>
+  <ScheduleInfo time="4"/>
+  <ScheduleInfo time="5"/>
+  <ScheduleInfo time="6"/>
+  <ScheduleInfo time="7"/>
+  <ScheduleInfo time="8"/>
+  <ScheduleInfo time="9"/>
+  <ScheduleInfo time="10"/>
+  <ScheduleInfo time="11"/>
+  <ScheduleInfo time="12"/>
+  <ScheduleInfo time="13"/>
+  <ScheduleInfo time="14"/>
+  <ScheduleInfo time="15"/>
+  <ScheduleInfo time="16"/>
+  <ScheduleInfo time="17"/>
+  <ScheduleInfo time="18"/>
+  <ScheduleInfo time="19"/>
+  <ScheduleInfo time="20"/>
+  <ScheduleInfo time="21"/>
+  <ScheduleInfo time="22"/>
+  <ScheduleInfo time="23"/>
+  <ScheduleInfo time="24"/>
+  <ScheduleInfo time="25"/>
+  <ScheduleInfo time="26"/>
+  <ScheduleInfo time="27"/>
+  <ScheduleInfo time="28"/>
+  <ScheduleInfo time="29"/>
+  <ScheduleInfo time="30"/>
+  <ScheduleInfo time="31"/>
+  <ScheduleInfo time="32"/>
+  <ScheduleInfo time="33"/>
+  <ScheduleInfo time="34"/>
+  <ScheduleInfo time="35"/>
+  <ScheduleInfo time="36"/>
+  <ScheduleInfo time="37"/>
+  <ScheduleInfo time="38"/>
+  <ScheduleInfo time="39"/>
+  <ScheduleInfo time="40"/>
+  <ScheduleInfo time="41"/>
+  <ScheduleInfo time="42"/>
+  <ScheduleInfo time="43"/>
+  <ScheduleInfo time="44"/>
+  <ScheduleInfo time="45"/>
+  <ScheduleInfo time="46"/>
+  <ScheduleInfo time="47"/>
+  <ScheduleInfo time="48"/>
+  <ScheduleInfo time="49"/>
+  <ScheduleInfo time="50"/>
+  <ScheduleInfo time="51"/>
+  <ScheduleInfo time="52"/>
+  <ScheduleInfo time="53"/>
+  <ScheduleInfo time="54"/>
+  <ScheduleInfo time="55"/>
+  <ScheduleInfo time="56"/>
+  <ScheduleInfo time="57"/>
+  <ScheduleInfo time="58"/>
+  <ScheduleInfo time="59"/>
+  <ScheduleInfo time="60"/>
+  <ScheduleInfo time="61"/>
+  <ScheduleInfo time="62"/>
+  <ScheduleInfo time="63"/>
+  <ScheduleInfo time="64"/>
+  <ScheduleInfo time="65"/>
+  <ScheduleInfo time="66"/>
+  <ScheduleInfo time="67"/>
+  <ScheduleInfo time="68"/>
+  <ScheduleInfo time="69"/>
+  <ScheduleInfo time="70"/>
+  <ScheduleInfo time="71"/>
+  <ScheduleInfo time="72"/>
+  <ScheduleInfo time="73"/>
+  <ScheduleInfo time="74"/>
+  <ScheduleInfo time="75"/>
+  <regnodes realName="icmp_ln62_reg_182">
+    <nodeIds>27</nodeIds>
+  </regnodes>
+  <regnodes realName="x_1_reg_169">
+    <nodeIds>16</nodeIds>
+  </regnodes>
+  <regnodes realName="px_reg_186">
+    <nodeIds>33</nodeIds>
+  </regnodes>
+  <regnodes realName="gmem2_addr_reg_163">
+    <nodeIds>12</nodeIds>
+  </regnodes>
+  <regnodes realName="x_reg_97">
+    <nodeIds>15</nodeIds>
+  </regnodes>
+  <regnodes realName="add_ln62_reg_177">
+    <nodeIds>26</nodeIds>
+  </regnodes>
+  <regnodes realName="p_reg_108">
+    <nodeIds>25</nodeIds>
+  </regnodes>
+  <expressionNodes realName="add_ln62_fu_151">
+    <nodeIds>26</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="sext_ln62_fu_129">
+    <nodeIds>11</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="p_phi_fu_112">
+    <nodeIds>25</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="trunc_ln_fu_119">
+    <nodeIds>10</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="icmp_ln61_fu_145">
+    <nodeIds>17</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="icmp_ln62_fu_157">
+    <nodeIds>27</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="x_1_fu_139">
+    <nodeIds>16</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="gmem2_addr_fu_133">
+    <nodeIds>12</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="x_phi_fu_101">
+    <nodeIds>15</nodeIds>
+  </expressionNodes>
+  <ioNodes realName="grp_readreq_fu_78">
+    <nodeIds>22</nodeIds>
+  </ioNodes>
+  <ioNodes realName="ptr_read_read_fu_72">
+    <nodeIds>7</nodeIds>
+  </ioNodes>
+  <ioNodes realName="write_ln174_write_fu_90">
+    <nodeIds>34</nodeIds>
+  </ioNodes>
+  <ioNodes realName="px_read_fu_85">
+    <nodeIds>33</nodeIds>
+  </ioNodes>
+  <ioPorts name="gmem2"/>
+  <ioPorts name="out_V_V">
+    <contents name="write">
+      <nodeIds>34</nodeIds>
+    </contents>
+  </ioPorts>
+  <ioPorts name="ptr">
+    <contents name="read">
+      <nodeIds>7</nodeIds>
+    </contents>
+  </ioPorts>
+  <fsm>
+    <states id="1">
+      <operations id="4" stage="1" latency="1"/>
+      <operations id="5" stage="1" latency="1"/>
+      <operations id="6" stage="1" latency="1"/>
+      <operations id="7" stage="1" latency="1"/>
+      <operations id="8" stage="1" latency="1"/>
+      <operations id="9" stage="1" latency="1"/>
+      <operations id="10" stage="1" latency="1"/>
+      <operations id="11" stage="1" latency="1"/>
+      <operations id="12" stage="1" latency="1"/>
+      <operations id="13" stage="1" latency="1"/>
+    </states>
+    <states id="2">
+      <operations id="15" stage="1" latency="1"/>
+      <operations id="16" stage="1" latency="1"/>
+      <operations id="17" stage="1" latency="1"/>
+      <operations id="18" stage="1" latency="1"/>
+      <operations id="19" stage="1" latency="1"/>
+      <operations id="39" stage="1" latency="1"/>
+    </states>
+    <states id="3">
+      <operations id="22" stage="70" latency="70"/>
+    </states>
+    <states id="4">
+      <operations id="22" stage="69" latency="70"/>
+    </states>
+    <states id="5">
+      <operations id="22" stage="68" latency="70"/>
+    </states>
+    <states id="6">
+      <operations id="22" stage="67" latency="70"/>
+    </states>
+    <states id="7">
+      <operations id="22" stage="66" latency="70"/>
+    </states>
+    <states id="8">
+      <operations id="22" stage="65" latency="70"/>
+    </states>
+    <states id="9">
+      <operations id="22" stage="64" latency="70"/>
+    </states>
+    <states id="10">
+      <operations id="22" stage="63" latency="70"/>
+    </states>
+    <states id="11">
+      <operations id="22" stage="62" latency="70"/>
+    </states>
+    <states id="12">
+      <operations id="22" stage="61" latency="70"/>
+    </states>
+    <states id="13">
+      <operations id="22" stage="60" latency="70"/>
+    </states>
+    <states id="14">
+      <operations id="22" stage="59" latency="70"/>
+    </states>
+    <states id="15">
+      <operations id="22" stage="58" latency="70"/>
+    </states>
+    <states id="16">
+      <operations id="22" stage="57" latency="70"/>
+    </states>
+    <states id="17">
+      <operations id="22" stage="56" latency="70"/>
+    </states>
+    <states id="18">
+      <operations id="22" stage="55" latency="70"/>
+    </states>
+    <states id="19">
+      <operations id="22" stage="54" latency="70"/>
+    </states>
+    <states id="20">
+      <operations id="22" stage="53" latency="70"/>
+    </states>
+    <states id="21">
+      <operations id="22" stage="52" latency="70"/>
+    </states>
+    <states id="22">
+      <operations id="22" stage="51" latency="70"/>
+    </states>
+    <states id="23">
+      <operations id="22" stage="50" latency="70"/>
+    </states>
+    <states id="24">
+      <operations id="22" stage="49" latency="70"/>
+    </states>
+    <states id="25">
+      <operations id="22" stage="48" latency="70"/>
+    </states>
+    <states id="26">
+      <operations id="22" stage="47" latency="70"/>
+    </states>
+    <states id="27">
+      <operations id="22" stage="46" latency="70"/>
+    </states>
+    <states id="28">
+      <operations id="22" stage="45" latency="70"/>
+    </states>
+    <states id="29">
+      <operations id="22" stage="44" latency="70"/>
+    </states>
+    <states id="30">
+      <operations id="22" stage="43" latency="70"/>
+    </states>
+    <states id="31">
+      <operations id="22" stage="42" latency="70"/>
+    </states>
+    <states id="32">
+      <operations id="22" stage="41" latency="70"/>
+    </states>
+    <states id="33">
+      <operations id="22" stage="40" latency="70"/>
+    </states>
+    <states id="34">
+      <operations id="22" stage="39" latency="70"/>
+    </states>
+    <states id="35">
+      <operations id="22" stage="38" latency="70"/>
+    </states>
+    <states id="36">
+      <operations id="22" stage="37" latency="70"/>
+    </states>
+    <states id="37">
+      <operations id="22" stage="36" latency="70"/>
+    </states>
+    <states id="38">
+      <operations id="22" stage="35" latency="70"/>
+    </states>
+    <states id="39">
+      <operations id="22" stage="34" latency="70"/>
+    </states>
+    <states id="40">
+      <operations id="22" stage="33" latency="70"/>
+    </states>
+    <states id="41">
+      <operations id="22" stage="32" latency="70"/>
+    </states>
+    <states id="42">
+      <operations id="22" stage="31" latency="70"/>
+    </states>
+    <states id="43">
+      <operations id="22" stage="30" latency="70"/>
+    </states>
+    <states id="44">
+      <operations id="22" stage="29" latency="70"/>
+    </states>
+    <states id="45">
+      <operations id="22" stage="28" latency="70"/>
+    </states>
+    <states id="46">
+      <operations id="22" stage="27" latency="70"/>
+    </states>
+    <states id="47">
+      <operations id="22" stage="26" latency="70"/>
+    </states>
+    <states id="48">
+      <operations id="22" stage="25" latency="70"/>
+    </states>
+    <states id="49">
+      <operations id="22" stage="24" latency="70"/>
+    </states>
+    <states id="50">
+      <operations id="22" stage="23" latency="70"/>
+    </states>
+    <states id="51">
+      <operations id="22" stage="22" latency="70"/>
+    </states>
+    <states id="52">
+      <operations id="22" stage="21" latency="70"/>
+    </states>
+    <states id="53">
+      <operations id="22" stage="20" latency="70"/>
+    </states>
+    <states id="54">
+      <operations id="22" stage="19" latency="70"/>
+    </states>
+    <states id="55">
+      <operations id="22" stage="18" latency="70"/>
+    </states>
+    <states id="56">
+      <operations id="22" stage="17" latency="70"/>
+    </states>
+    <states id="57">
+      <operations id="22" stage="16" latency="70"/>
+    </states>
+    <states id="58">
+      <operations id="22" stage="15" latency="70"/>
+    </states>
+    <states id="59">
+      <operations id="22" stage="14" latency="70"/>
+    </states>
+    <states id="60">
+      <operations id="22" stage="13" latency="70"/>
+    </states>
+    <states id="61">
+      <operations id="22" stage="12" latency="70"/>
+    </states>
+    <states id="62">
+      <operations id="22" stage="11" latency="70"/>
+    </states>
+    <states id="63">
+      <operations id="22" stage="10" latency="70"/>
+    </states>
+    <states id="64">
+      <operations id="22" stage="9" latency="70"/>
+    </states>
+    <states id="65">
+      <operations id="22" stage="8" latency="70"/>
+    </states>
+    <states id="66">
+      <operations id="22" stage="7" latency="70"/>
+    </states>
+    <states id="67">
+      <operations id="22" stage="6" latency="70"/>
+    </states>
+    <states id="68">
+      <operations id="22" stage="5" latency="70"/>
+    </states>
+    <states id="69">
+      <operations id="22" stage="4" latency="70"/>
+    </states>
+    <states id="70">
+      <operations id="22" stage="3" latency="70"/>
+    </states>
+    <states id="71">
+      <operations id="22" stage="2" latency="70"/>
+    </states>
+    <states id="72">
+      <operations id="21" stage="1" latency="1"/>
+      <operations id="22" stage="1" latency="70"/>
+      <operations id="23" stage="1" latency="1"/>
+    </states>
+    <states id="73">
+      <operations id="25" stage="1" latency="1"/>
+      <operations id="26" stage="1" latency="1"/>
+      <operations id="27" stage="1" latency="1"/>
+      <operations id="28" stage="1" latency="1"/>
+      <operations id="29" stage="1" latency="1"/>
+    </states>
+    <states id="74">
+      <operations id="33" stage="1" latency="1"/>
+    </states>
+    <states id="75">
+      <operations id="31" stage="1" latency="1"/>
+      <operations id="32" stage="1" latency="1"/>
+      <operations id="34" stage="1" latency="1"/>
+      <operations id="35" stage="1" latency="1"/>
+    </states>
+    <states id="76">
+      <operations id="37" stage="1" latency="1"/>
+    </states>
+    <transitions inState="1" outState="2">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="2" outState="3">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="3" outState="4">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="4" outState="5">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="5" outState="6">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="6" outState="7">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="7" outState="8">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="8" outState="9">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="9" outState="10">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="10" outState="11">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="11" outState="12">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="12" outState="13">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="13" outState="14">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="14" outState="15">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="15" outState="16">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="16" outState="17">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="17" outState="18">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="18" outState="19">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="19" outState="20">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="20" outState="21">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="21" outState="22">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="22" outState="23">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="23" outState="24">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="24" outState="25">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="25" outState="26">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="26" outState="27">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="27" outState="28">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="28" outState="29">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="29" outState="30">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="30" outState="31">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="31" outState="32">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="32" outState="33">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="33" outState="34">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="34" outState="35">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="35" outState="36">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="36" outState="37">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="37" outState="38">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="38" outState="39">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="39" outState="40">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="40" outState="41">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="41" outState="42">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="42" outState="43">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="43" outState="44">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="44" outState="45">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="45" outState="46">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="46" outState="47">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="47" outState="48">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="48" outState="49">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="49" outState="50">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="50" outState="51">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="51" outState="52">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="52" outState="53">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="53" outState="54">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="54" outState="55">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="55" outState="56">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="56" outState="57">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="57" outState="58">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="58" outState="59">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="59" outState="60">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="60" outState="61">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="61" outState="62">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="62" outState="63">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="63" outState="64">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="64" outState="65">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="65" outState="66">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="66" outState="67">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="67" outState="68">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="68" outState="69">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="69" outState="70">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="70" outState="71">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="71" outState="72">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="72" outState="73">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="76" outState="2">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="74" outState="75">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="75" outState="73">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="73" outState="76">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="73" outState="74">
+      <condition id="-1"/>
+    </transitions>
+  </fsm>
+  <CFGRegionsRoot>
+    <cfgRegions mId="1" mTag="read_x_2_8_s" mII="-1" mDepth="-1" mMinTripCount="-1" mMaxTripCount="-1" mMinLatency="1819" mMaxLatency="1819">
+      <subRegions>2</subRegions>
+      <subRegions>3</subRegions>
+      <subRegions>7</subRegions>
+      <mDfPipe/>
+    </cfgRegions>
+    <cfgRegions mId="2" mTag="Entry" mII="-1" mDepth="-1" mMinTripCount="-1" mMaxTripCount="-1">
+      <basicBlocks>14</basicBlocks>
+      <mDfPipe/>
+    </cfgRegions>
+    <cfgRegions mId="3" mTag="VITIS_LOOP_61_1" mII="-1" mDepth="-1" mMinTripCount="9" mMaxTripCount="9" mMinLatency="1818" mMaxLatency="1818" mType="1">
+      <subRegions>4</subRegions>
+      <subRegions>5</subRegions>
+      <subRegions>6</subRegions>
+      <mDfPipe/>
+    </cfgRegions>
+    <cfgRegions mId="4" mTag="Region 1" mII="-1" mDepth="-1" mMinTripCount="-1" mMaxTripCount="-1" mMaxLatency="70">
+      <basicBlocks>20</basicBlocks>
+      <basicBlocks>24</basicBlocks>
+      <mDfPipe/>
+    </cfgRegions>
+    <cfgRegions mId="5" mTag="VITIS_LOOP_62_2" mII="1" mDepth="3" mMinTripCount="128" mMaxTripCount="128" mMinLatency="129" mMaxLatency="129" mType="1">
+      <basicBlocks>30</basicBlocks>
+      <basicBlocks>36</basicBlocks>
+      <mDfPipe/>
+    </cfgRegions>
+    <cfgRegions mId="6" mTag="Region 2" mII="-1" mDepth="-1" mMinTripCount="-1" mMaxTripCount="-1">
+      <basicBlocks>38</basicBlocks>
+      <mDfPipe/>
+    </cfgRegions>
+    <cfgRegions mId="7" mTag="Return" mII="-1" mDepth="-1" mMinTripCount="-1" mMaxTripCount="-1">
+      <basicBlocks>40</basicBlocks>
+      <mDfPipe/>
+    </cfgRegions>
+  </CFGRegionsRoot>
+</cdfg:DBCdfg>

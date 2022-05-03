@@ -1,0 +1,1536 @@
+#-----------------------------------------------------------
+# Vivado v2020.2 (64-bit)
+# SW Build 3064766 on Wed Nov 18 09:12:47 MST 2020
+# IP Build 3064653 on Wed Nov 18 14:17:31 MST 2020
+# Start of session at: Thu Apr 28 15:59:17 2022
+# Process ID: 64669
+# Current directory: /mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.runs/bd_0_hls_inst_0_synth_1
+# Command line: vivado -log bd_0_hls_inst_0.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source bd_0_hls_inst_0.tcl
+# Log file: /mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.runs/bd_0_hls_inst_0_synth_1/bd_0_hls_inst_0.vds
+# Journal file: /mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.runs/bd_0_hls_inst_0_synth_1/vivado.jou
+#-----------------------------------------------------------
+source bd_0_hls_inst_0.tcl -notrace
+INFO: [IP_Flow 19-234] Refreshing IP repositories
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/ip'.
+INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/opt/Xilinx/Vivado/2020.2/data/ip'.
+Command: synth_design -top bd_0_hls_inst_0 -part xcu200-fsgd2104-2-e -directive sdx_optimization_effort_high -mode out_of_context
+Starting synth_design
+Attempting to get a license for feature 'Synthesis' and/or device 'xcu200'
+INFO: [Common 17-349] Got license for feature 'Synthesis' and/or device 'xcu200'
+INFO: [Device 21-403] Loading part xcu200-fsgd2104-2-e
+INFO: [Synth 8-7079] Multithreading enabled for synth_design using a maximum of 4 processes.
+INFO: [Synth 8-7078] Launching helper process for spawning children vivado processes
+INFO: [Synth 8-7075] Helper process launched with PID 64700
+---------------------------------------------------------------------------------
+Starting RTL Elaboration : Time (s): cpu = 00:00:03 ; elapsed = 00:00:04 . Memory (MB): peak = 2973.559 ; gain = 214.688 ; free physical = 425913 ; free virtual = 504893
+---------------------------------------------------------------------------------
+INFO: [Synth 8-6157] synthesizing module 'bd_0_hls_inst_0' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ip/bd_0_hls_inst_0/synth/bd_0_hls_inst_0.v:62]
+INFO: [Synth 8-6157] synthesizing module 'top' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top.v:12]
+	Parameter C_S_AXI_CONTROL_DATA_WIDTH bound to: 32 - type: integer 
+	Parameter C_S_AXI_CONTROL_ADDR_WIDTH bound to: 7 - type: integer 
+	Parameter C_S_AXI_DATA_WIDTH bound to: 32 - type: integer 
+	Parameter C_S_AXI_ADDR_WIDTH bound to: 32 - type: integer 
+	Parameter C_M_AXI_GMEM2_ID_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM2_ADDR_WIDTH bound to: 64 - type: integer 
+	Parameter C_M_AXI_GMEM2_DATA_WIDTH bound to: 32 - type: integer 
+	Parameter C_M_AXI_GMEM2_AWUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM2_ARUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM2_WUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM2_RUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM2_BUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM2_USER_VALUE bound to: 0 - type: integer 
+	Parameter C_M_AXI_GMEM2_PROT_VALUE bound to: 3'b000 
+	Parameter C_M_AXI_GMEM2_CACHE_VALUE bound to: 4'b0011 
+	Parameter C_M_AXI_ID_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_ADDR_WIDTH bound to: 64 - type: integer 
+	Parameter C_M_AXI_DATA_WIDTH bound to: 32 - type: integer 
+	Parameter C_M_AXI_AWUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_ARUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_WUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_RUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_BUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM3_ID_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM3_ADDR_WIDTH bound to: 64 - type: integer 
+	Parameter C_M_AXI_GMEM3_DATA_WIDTH bound to: 32 - type: integer 
+	Parameter C_M_AXI_GMEM3_AWUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM3_ARUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM3_WUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM3_RUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM3_BUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM3_USER_VALUE bound to: 0 - type: integer 
+	Parameter C_M_AXI_GMEM3_PROT_VALUE bound to: 3'b000 
+	Parameter C_M_AXI_GMEM3_CACHE_VALUE bound to: 4'b0011 
+	Parameter C_M_AXI_GMEM4_ID_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM4_ADDR_WIDTH bound to: 64 - type: integer 
+	Parameter C_M_AXI_GMEM4_DATA_WIDTH bound to: 32 - type: integer 
+	Parameter C_M_AXI_GMEM4_AWUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM4_ARUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM4_WUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM4_RUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM4_BUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM4_USER_VALUE bound to: 0 - type: integer 
+	Parameter C_M_AXI_GMEM4_PROT_VALUE bound to: 3'b000 
+	Parameter C_M_AXI_GMEM4_CACHE_VALUE bound to: 4'b0011 
+	Parameter C_M_AXI_GMEM5_ID_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM5_ADDR_WIDTH bound to: 64 - type: integer 
+	Parameter C_M_AXI_GMEM5_DATA_WIDTH bound to: 32 - type: integer 
+	Parameter C_M_AXI_GMEM5_AWUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM5_ARUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM5_WUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM5_RUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM5_BUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM5_USER_VALUE bound to: 0 - type: integer 
+	Parameter C_M_AXI_GMEM5_PROT_VALUE bound to: 3'b000 
+	Parameter C_M_AXI_GMEM5_CACHE_VALUE bound to: 4'b0011 
+	Parameter C_M_AXI_GMEM_ID_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM_ADDR_WIDTH bound to: 64 - type: integer 
+	Parameter C_M_AXI_GMEM_DATA_WIDTH bound to: 32 - type: integer 
+	Parameter C_M_AXI_GMEM_AWUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM_ARUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM_WUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM_RUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM_BUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM_USER_VALUE bound to: 0 - type: integer 
+	Parameter C_M_AXI_GMEM_PROT_VALUE bound to: 3'b000 
+	Parameter C_M_AXI_GMEM_CACHE_VALUE bound to: 4'b0011 
+	Parameter C_M_AXI_GMEM1_ID_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM1_ADDR_WIDTH bound to: 64 - type: integer 
+	Parameter C_M_AXI_GMEM1_DATA_WIDTH bound to: 512 - type: integer 
+	Parameter C_M_AXI_GMEM1_AWUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM1_ARUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM1_WUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM1_RUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM1_BUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_GMEM1_USER_VALUE bound to: 0 - type: integer 
+	Parameter C_M_AXI_GMEM1_PROT_VALUE bound to: 3'b000 
+	Parameter C_M_AXI_GMEM1_CACHE_VALUE bound to: 4'b0011 
+	Parameter C_S_AXI_CONTROL_WSTRB_WIDTH bound to: 4 - type: integer 
+	Parameter C_S_AXI_WSTRB_WIDTH bound to: 4 - type: integer 
+	Parameter C_M_AXI_GMEM2_WSTRB_WIDTH bound to: 4 - type: integer 
+	Parameter C_M_AXI_WSTRB_WIDTH bound to: 4 - type: integer 
+	Parameter C_M_AXI_GMEM3_WSTRB_WIDTH bound to: 4 - type: integer 
+	Parameter C_M_AXI_GMEM4_WSTRB_WIDTH bound to: 4 - type: integer 
+	Parameter C_M_AXI_GMEM5_WSTRB_WIDTH bound to: 4 - type: integer 
+	Parameter C_M_AXI_GMEM_WSTRB_WIDTH bound to: 4 - type: integer 
+	Parameter C_M_AXI_GMEM1_WSTRB_WIDTH bound to: 64 - type: integer 
+INFO: [Synth 8-6157] synthesizing module 'top_control_s_axi' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_control_s_axi.v:6]
+	Parameter C_S_AXI_ADDR_WIDTH bound to: 7 - type: integer 
+	Parameter C_S_AXI_DATA_WIDTH bound to: 32 - type: integer 
+	Parameter ADDR_AP_CTRL bound to: 7'b0000000 
+	Parameter ADDR_GIE bound to: 7'b0000100 
+	Parameter ADDR_IER bound to: 7'b0001000 
+	Parameter ADDR_ISR bound to: 7'b0001100 
+	Parameter ADDR_X0_DATA_0 bound to: 7'b0010000 
+	Parameter ADDR_X0_DATA_1 bound to: 7'b0010100 
+	Parameter ADDR_X0_CTRL bound to: 7'b0011000 
+	Parameter ADDR_X1_DATA_0 bound to: 7'b0011100 
+	Parameter ADDR_X1_DATA_1 bound to: 7'b0100000 
+	Parameter ADDR_X1_CTRL bound to: 7'b0100100 
+	Parameter ADDR_X2_DATA_0 bound to: 7'b0101000 
+	Parameter ADDR_X2_DATA_1 bound to: 7'b0101100 
+	Parameter ADDR_X2_CTRL bound to: 7'b0110000 
+	Parameter ADDR_X3_DATA_0 bound to: 7'b0110100 
+	Parameter ADDR_X3_DATA_1 bound to: 7'b0111000 
+	Parameter ADDR_X3_CTRL bound to: 7'b0111100 
+	Parameter ADDR_W_DATA_0 bound to: 7'b1000000 
+	Parameter ADDR_W_DATA_1 bound to: 7'b1000100 
+	Parameter ADDR_W_CTRL bound to: 7'b1001000 
+	Parameter ADDR_Y_DATA_0 bound to: 7'b1001100 
+	Parameter ADDR_Y_DATA_1 bound to: 7'b1010000 
+	Parameter ADDR_Y_CTRL bound to: 7'b1010100 
+	Parameter WRIDLE bound to: 2'b00 
+	Parameter WRDATA bound to: 2'b01 
+	Parameter WRRESP bound to: 2'b10 
+	Parameter WRRESET bound to: 2'b11 
+	Parameter RDIDLE bound to: 2'b00 
+	Parameter RDDATA bound to: 2'b01 
+	Parameter RDRESET bound to: 2'b10 
+	Parameter ADDR_BITS bound to: 7 - type: integer 
+INFO: [Synth 8-155] case statement is not full and has no default [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_control_s_axi.v:248]
+INFO: [Synth 8-6155] done synthesizing module 'top_control_s_axi' (1#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_control_s_axi.v:6]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem2_m_axi' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:8]
+	Parameter CONSERVATIVE bound to: 0 - type: integer 
+	Parameter NUM_READ_OUTSTANDING bound to: 16 - type: integer 
+	Parameter NUM_WRITE_OUTSTANDING bound to: 16 - type: integer 
+	Parameter MAX_READ_BURST_LENGTH bound to: 16 - type: integer 
+	Parameter MAX_WRITE_BURST_LENGTH bound to: 16 - type: integer 
+	Parameter C_M_AXI_ID_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_ADDR_WIDTH bound to: 64 - type: integer 
+	Parameter C_TARGET_ADDR bound to: 0 - type: integer 
+	Parameter C_M_AXI_DATA_WIDTH bound to: 32 - type: integer 
+	Parameter C_M_AXI_AWUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_ARUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_WUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_RUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_BUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_USER_VALUE bound to: 0 - type: integer 
+	Parameter C_PROT_VALUE bound to: 3'b000 
+	Parameter C_CACHE_VALUE bound to: 4'b0011 
+	Parameter USER_DW bound to: 16 - type: integer 
+	Parameter USER_AW bound to: 64 - type: integer 
+	Parameter USER_MAXREQS bound to: 69 - type: integer 
+INFO: [Synth 8-6157] synthesizing module 'top_gmem2_m_axi_write' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:1729]
+	Parameter NUM_WRITE_OUTSTANDING bound to: 16 - type: integer 
+	Parameter MAX_WRITE_BURST_LENGTH bound to: 16 - type: integer 
+	Parameter C_M_AXI_ID_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_ADDR_WIDTH bound to: 64 - type: integer 
+	Parameter C_TARGET_ADDR bound to: 0 - type: integer 
+	Parameter C_M_AXI_DATA_WIDTH bound to: 32 - type: integer 
+	Parameter C_M_AXI_AWUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_WUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_BUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_USER_VALUE bound to: 0 - type: integer 
+	Parameter C_PROT_VALUE bound to: 3'b000 
+	Parameter C_CACHE_VALUE bound to: 4'b0011 
+	Parameter USER_DW bound to: 16 - type: integer 
+	Parameter USER_AW bound to: 64 - type: integer 
+	Parameter USER_MAXREQS bound to: 69 - type: integer 
+	Parameter USER_DATA_WIDTH bound to: 16 - type: integer 
+	Parameter USER_DATA_BYTES bound to: 2 - type: integer 
+	Parameter USER_ADDR_ALIGN bound to: 1 - type: integer 
+	Parameter BUS_DATA_WIDTH bound to: 32 - type: integer 
+	Parameter BUS_DATA_BYTES bound to: 4 - type: integer 
+	Parameter BUS_ADDR_ALIGN bound to: 2 - type: integer 
+	Parameter NUM_WRITE_WIDTH bound to: 4 - type: integer 
+	Parameter TARGET_ADDR bound to: 0 - type: integer 
+	Parameter BOUNDARY_BEATS bound to: 10'b1111111111 
+INFO: [Synth 8-6157] synthesizing module 'top_gmem2_m_axi_fifo' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:418]
+	Parameter DATA_BITS bound to: 10 - type: integer 
+	Parameter DEPTH bound to: 69 - type: integer 
+	Parameter DEPTH_BITS bound to: 7 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem2_m_axi_fifo' (2#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:418]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem2_m_axi_decoder' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:694]
+	Parameter DIN_WIDTH bound to: 1 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem2_m_axi_decoder' (3#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:694]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem2_m_axi_reg_slice' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:314]
+	Parameter N bound to: 96 - type: integer 
+	Parameter ZERO bound to: 2'b10 
+	Parameter ONE bound to: 2'b11 
+	Parameter TWO bound to: 2'b01 
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem2_m_axi_reg_slice' (4#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:314]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem2_m_axi_fifo__parameterized0' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:418]
+	Parameter DATA_BITS bound to: 96 - type: integer 
+	Parameter DEPTH bound to: 69 - type: integer 
+	Parameter DEPTH_BITS bound to: 7 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem2_m_axi_fifo__parameterized0' (4#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:418]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem2_m_axi_buffer' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:529]
+	Parameter MEM_STYLE bound to: block - type: string 
+	Parameter DATA_WIDTH bound to: 18 - type: integer 
+	Parameter ADDR_WIDTH bound to: 8 - type: integer 
+	Parameter DEPTH bound to: 256 - type: integer 
+WARNING: [Synth 8-589] replacing case/wildcard equality operator === with logical equality operator == [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:582]
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem2_m_axi_buffer' (5#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:529]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem2_m_axi_fifo__parameterized1' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:418]
+	Parameter DATA_BITS bound to: 2 - type: integer 
+	Parameter DEPTH bound to: 15 - type: integer 
+	Parameter DEPTH_BITS bound to: 4 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem2_m_axi_fifo__parameterized1' (5#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:418]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem2_m_axi_fifo__parameterized2' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:418]
+	Parameter DATA_BITS bound to: 2 - type: integer 
+	Parameter DEPTH bound to: 69 - type: integer 
+	Parameter DEPTH_BITS bound to: 7 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem2_m_axi_fifo__parameterized2' (5#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:418]
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem2_m_axi_write' (6#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:1729]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem2_m_axi_read' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:932]
+	Parameter NUM_READ_OUTSTANDING bound to: 16 - type: integer 
+	Parameter MAX_READ_BURST_LENGTH bound to: 16 - type: integer 
+	Parameter C_M_AXI_ID_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_ADDR_WIDTH bound to: 64 - type: integer 
+	Parameter C_TARGET_ADDR bound to: 0 - type: integer 
+	Parameter C_M_AXI_DATA_WIDTH bound to: 32 - type: integer 
+	Parameter C_M_AXI_ARUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_RUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_USER_VALUE bound to: 0 - type: integer 
+	Parameter C_PROT_VALUE bound to: 3'b000 
+	Parameter C_CACHE_VALUE bound to: 4'b0011 
+	Parameter USER_DW bound to: 16 - type: integer 
+	Parameter USER_AW bound to: 64 - type: integer 
+	Parameter USER_MAXREQS bound to: 69 - type: integer 
+	Parameter USER_DATA_WIDTH bound to: 16 - type: integer 
+	Parameter USER_DATA_BYTES bound to: 2 - type: integer 
+	Parameter USER_ADDR_ALIGN bound to: 1 - type: integer 
+	Parameter BUS_DATA_WIDTH bound to: 32 - type: integer 
+	Parameter BUS_DATA_BYTES bound to: 4 - type: integer 
+	Parameter BUS_ADDR_ALIGN bound to: 2 - type: integer 
+	Parameter NUM_READ_WIDTH bound to: 4 - type: integer 
+	Parameter TARGET_ADDR bound to: 0 - type: integer 
+	Parameter BOUNDARY_BEATS bound to: 10'b1111111111 
+INFO: [Synth 8-6157] synthesizing module 'top_gmem2_m_axi_buffer__parameterized0' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:529]
+	Parameter MEM_STYLE bound to: block - type: string 
+	Parameter DATA_WIDTH bound to: 35 - type: integer 
+	Parameter ADDR_WIDTH bound to: 8 - type: integer 
+	Parameter DEPTH bound to: 256 - type: integer 
+WARNING: [Synth 8-589] replacing case/wildcard equality operator === with logical equality operator == [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:582]
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem2_m_axi_buffer__parameterized0' (6#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:529]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem2_m_axi_reg_slice__parameterized0' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:314]
+	Parameter N bound to: 18 - type: integer 
+	Parameter ZERO bound to: 2'b10 
+	Parameter ONE bound to: 2'b11 
+	Parameter TWO bound to: 2'b01 
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem2_m_axi_reg_slice__parameterized0' (6#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:314]
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem2_m_axi_read' (7#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:932]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem2_m_axi_throttle' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:710]
+	Parameter USED_FIX bound to: 0 - type: integer 
+	Parameter FIX_VALUE bound to: 4 - type: integer 
+	Parameter ADDR_WIDTH bound to: 64 - type: integer 
+	Parameter DATA_WIDTH bound to: 32 - type: integer 
+	Parameter DEPTH bound to: 16 - type: integer 
+	Parameter USER_MAXREQS bound to: 16 - type: integer 
+	Parameter CONSERVATIVE bound to: 0 - type: integer 
+	Parameter AVERAGE_MODE bound to: 0 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem2_m_axi_throttle' (8#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:710]
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem2_m_axi' (9#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem2_m_axi.v:8]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem_m_axi' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:8]
+	Parameter CONSERVATIVE bound to: 0 - type: integer 
+	Parameter NUM_READ_OUTSTANDING bound to: 16 - type: integer 
+	Parameter NUM_WRITE_OUTSTANDING bound to: 16 - type: integer 
+	Parameter MAX_READ_BURST_LENGTH bound to: 16 - type: integer 
+	Parameter MAX_WRITE_BURST_LENGTH bound to: 16 - type: integer 
+	Parameter C_M_AXI_ID_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_ADDR_WIDTH bound to: 64 - type: integer 
+	Parameter C_TARGET_ADDR bound to: 0 - type: integer 
+	Parameter C_M_AXI_DATA_WIDTH bound to: 32 - type: integer 
+	Parameter C_M_AXI_AWUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_ARUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_WUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_RUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_BUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_USER_VALUE bound to: 0 - type: integer 
+	Parameter C_PROT_VALUE bound to: 3'b000 
+	Parameter C_CACHE_VALUE bound to: 4'b0011 
+	Parameter USER_DW bound to: 8 - type: integer 
+	Parameter USER_AW bound to: 64 - type: integer 
+	Parameter USER_MAXREQS bound to: 69 - type: integer 
+INFO: [Synth 8-6157] synthesizing module 'top_gmem_m_axi_write' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:1729]
+	Parameter NUM_WRITE_OUTSTANDING bound to: 16 - type: integer 
+	Parameter MAX_WRITE_BURST_LENGTH bound to: 16 - type: integer 
+	Parameter C_M_AXI_ID_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_ADDR_WIDTH bound to: 64 - type: integer 
+	Parameter C_TARGET_ADDR bound to: 0 - type: integer 
+	Parameter C_M_AXI_DATA_WIDTH bound to: 32 - type: integer 
+	Parameter C_M_AXI_AWUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_WUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_BUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_USER_VALUE bound to: 0 - type: integer 
+	Parameter C_PROT_VALUE bound to: 3'b000 
+	Parameter C_CACHE_VALUE bound to: 4'b0011 
+	Parameter USER_DW bound to: 8 - type: integer 
+	Parameter USER_AW bound to: 64 - type: integer 
+	Parameter USER_MAXREQS bound to: 69 - type: integer 
+	Parameter USER_DATA_WIDTH bound to: 8 - type: integer 
+	Parameter USER_DATA_BYTES bound to: 1 - type: integer 
+	Parameter USER_ADDR_ALIGN bound to: 0 - type: integer 
+	Parameter BUS_DATA_WIDTH bound to: 32 - type: integer 
+	Parameter BUS_DATA_BYTES bound to: 4 - type: integer 
+	Parameter BUS_ADDR_ALIGN bound to: 2 - type: integer 
+	Parameter NUM_WRITE_WIDTH bound to: 4 - type: integer 
+	Parameter TARGET_ADDR bound to: 0 - type: integer 
+	Parameter BOUNDARY_BEATS bound to: 10'b1111111111 
+INFO: [Synth 8-6157] synthesizing module 'top_gmem_m_axi_fifo' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:418]
+	Parameter DATA_BITS bound to: 12 - type: integer 
+	Parameter DEPTH bound to: 69 - type: integer 
+	Parameter DEPTH_BITS bound to: 7 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem_m_axi_fifo' (10#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:418]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem_m_axi_decoder' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:694]
+	Parameter DIN_WIDTH bound to: 2 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem_m_axi_decoder' (11#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:694]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem_m_axi_reg_slice' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:314]
+	Parameter N bound to: 96 - type: integer 
+	Parameter ZERO bound to: 2'b10 
+	Parameter ONE bound to: 2'b11 
+	Parameter TWO bound to: 2'b01 
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem_m_axi_reg_slice' (12#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:314]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem_m_axi_fifo__parameterized0' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:418]
+	Parameter DATA_BITS bound to: 96 - type: integer 
+	Parameter DEPTH bound to: 69 - type: integer 
+	Parameter DEPTH_BITS bound to: 7 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem_m_axi_fifo__parameterized0' (12#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:418]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem_m_axi_buffer' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:529]
+	Parameter MEM_STYLE bound to: block - type: string 
+	Parameter DATA_WIDTH bound to: 9 - type: integer 
+	Parameter ADDR_WIDTH bound to: 8 - type: integer 
+	Parameter DEPTH bound to: 256 - type: integer 
+WARNING: [Synth 8-589] replacing case/wildcard equality operator === with logical equality operator == [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:582]
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem_m_axi_buffer' (13#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:529]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem_m_axi_fifo__parameterized1' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:418]
+	Parameter DATA_BITS bound to: 2 - type: integer 
+	Parameter DEPTH bound to: 15 - type: integer 
+	Parameter DEPTH_BITS bound to: 4 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem_m_axi_fifo__parameterized1' (13#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:418]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem_m_axi_fifo__parameterized2' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:418]
+	Parameter DATA_BITS bound to: 2 - type: integer 
+	Parameter DEPTH bound to: 69 - type: integer 
+	Parameter DEPTH_BITS bound to: 7 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem_m_axi_fifo__parameterized2' (13#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:418]
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem_m_axi_write' (14#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:1729]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem_m_axi_read' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:932]
+	Parameter NUM_READ_OUTSTANDING bound to: 16 - type: integer 
+	Parameter MAX_READ_BURST_LENGTH bound to: 16 - type: integer 
+	Parameter C_M_AXI_ID_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_ADDR_WIDTH bound to: 64 - type: integer 
+	Parameter C_TARGET_ADDR bound to: 0 - type: integer 
+	Parameter C_M_AXI_DATA_WIDTH bound to: 32 - type: integer 
+	Parameter C_M_AXI_ARUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_RUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_USER_VALUE bound to: 0 - type: integer 
+	Parameter C_PROT_VALUE bound to: 3'b000 
+	Parameter C_CACHE_VALUE bound to: 4'b0011 
+	Parameter USER_DW bound to: 8 - type: integer 
+	Parameter USER_AW bound to: 64 - type: integer 
+	Parameter USER_MAXREQS bound to: 69 - type: integer 
+	Parameter USER_DATA_WIDTH bound to: 8 - type: integer 
+	Parameter USER_DATA_BYTES bound to: 1 - type: integer 
+	Parameter USER_ADDR_ALIGN bound to: 0 - type: integer 
+	Parameter BUS_DATA_WIDTH bound to: 32 - type: integer 
+	Parameter BUS_DATA_BYTES bound to: 4 - type: integer 
+	Parameter BUS_ADDR_ALIGN bound to: 2 - type: integer 
+	Parameter NUM_READ_WIDTH bound to: 4 - type: integer 
+	Parameter TARGET_ADDR bound to: 0 - type: integer 
+	Parameter BOUNDARY_BEATS bound to: 10'b1111111111 
+INFO: [Synth 8-6157] synthesizing module 'top_gmem_m_axi_buffer__parameterized0' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:529]
+	Parameter MEM_STYLE bound to: block - type: string 
+	Parameter DATA_WIDTH bound to: 35 - type: integer 
+	Parameter ADDR_WIDTH bound to: 8 - type: integer 
+	Parameter DEPTH bound to: 256 - type: integer 
+WARNING: [Synth 8-589] replacing case/wildcard equality operator === with logical equality operator == [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:582]
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem_m_axi_buffer__parameterized0' (14#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:529]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem_m_axi_reg_slice__parameterized0' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:314]
+	Parameter N bound to: 10 - type: integer 
+	Parameter ZERO bound to: 2'b10 
+	Parameter ONE bound to: 2'b11 
+	Parameter TWO bound to: 2'b01 
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem_m_axi_reg_slice__parameterized0' (14#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:314]
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem_m_axi_read' (15#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:932]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem_m_axi_throttle' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:710]
+	Parameter USED_FIX bound to: 0 - type: integer 
+	Parameter FIX_VALUE bound to: 4 - type: integer 
+	Parameter ADDR_WIDTH bound to: 64 - type: integer 
+	Parameter DATA_WIDTH bound to: 32 - type: integer 
+	Parameter DEPTH bound to: 16 - type: integer 
+	Parameter USER_MAXREQS bound to: 16 - type: integer 
+	Parameter CONSERVATIVE bound to: 0 - type: integer 
+	Parameter AVERAGE_MODE bound to: 0 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem_m_axi_throttle' (16#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:710]
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem_m_axi' (17#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem_m_axi.v:8]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem1_m_axi' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem1_m_axi.v:8]
+	Parameter CONSERVATIVE bound to: 0 - type: integer 
+	Parameter NUM_READ_OUTSTANDING bound to: 16 - type: integer 
+	Parameter NUM_WRITE_OUTSTANDING bound to: 16 - type: integer 
+	Parameter MAX_READ_BURST_LENGTH bound to: 16 - type: integer 
+	Parameter MAX_WRITE_BURST_LENGTH bound to: 16 - type: integer 
+	Parameter C_M_AXI_ID_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_ADDR_WIDTH bound to: 64 - type: integer 
+	Parameter C_TARGET_ADDR bound to: 0 - type: integer 
+	Parameter C_M_AXI_DATA_WIDTH bound to: 512 - type: integer 
+	Parameter C_M_AXI_AWUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_ARUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_WUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_RUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_BUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_USER_VALUE bound to: 0 - type: integer 
+	Parameter C_PROT_VALUE bound to: 3'b000 
+	Parameter C_CACHE_VALUE bound to: 4'b0011 
+	Parameter USER_DW bound to: 512 - type: integer 
+	Parameter USER_AW bound to: 64 - type: integer 
+	Parameter USER_MAXREQS bound to: 69 - type: integer 
+INFO: [Synth 8-6157] synthesizing module 'top_gmem1_m_axi_write' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem1_m_axi.v:1729]
+	Parameter NUM_WRITE_OUTSTANDING bound to: 16 - type: integer 
+	Parameter MAX_WRITE_BURST_LENGTH bound to: 16 - type: integer 
+	Parameter C_M_AXI_ID_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_ADDR_WIDTH bound to: 64 - type: integer 
+	Parameter C_TARGET_ADDR bound to: 0 - type: integer 
+	Parameter C_M_AXI_DATA_WIDTH bound to: 512 - type: integer 
+	Parameter C_M_AXI_AWUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_WUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_BUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_USER_VALUE bound to: 0 - type: integer 
+	Parameter C_PROT_VALUE bound to: 3'b000 
+	Parameter C_CACHE_VALUE bound to: 4'b0011 
+	Parameter USER_DW bound to: 512 - type: integer 
+	Parameter USER_AW bound to: 64 - type: integer 
+	Parameter USER_MAXREQS bound to: 69 - type: integer 
+	Parameter USER_DATA_WIDTH bound to: 512 - type: integer 
+	Parameter USER_DATA_BYTES bound to: 64 - type: integer 
+	Parameter USER_ADDR_ALIGN bound to: 6 - type: integer 
+	Parameter BUS_DATA_WIDTH bound to: 512 - type: integer 
+	Parameter BUS_DATA_BYTES bound to: 64 - type: integer 
+	Parameter BUS_ADDR_ALIGN bound to: 6 - type: integer 
+	Parameter NUM_WRITE_WIDTH bound to: 4 - type: integer 
+	Parameter TARGET_ADDR bound to: 0 - type: integer 
+	Parameter BOUNDARY_BEATS bound to: 6'b111111 
+INFO: [Synth 8-6157] synthesizing module 'top_gmem1_m_axi_fifo' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem1_m_axi.v:418]
+	Parameter DATA_BITS bound to: 8 - type: integer 
+	Parameter DEPTH bound to: 69 - type: integer 
+	Parameter DEPTH_BITS bound to: 7 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem1_m_axi_fifo' (18#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem1_m_axi.v:418]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem1_m_axi_reg_slice' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem1_m_axi.v:314]
+	Parameter N bound to: 96 - type: integer 
+	Parameter ZERO bound to: 2'b10 
+	Parameter ONE bound to: 2'b11 
+	Parameter TWO bound to: 2'b01 
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem1_m_axi_reg_slice' (19#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem1_m_axi.v:314]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem1_m_axi_fifo__parameterized0' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem1_m_axi.v:418]
+	Parameter DATA_BITS bound to: 96 - type: integer 
+	Parameter DEPTH bound to: 69 - type: integer 
+	Parameter DEPTH_BITS bound to: 7 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem1_m_axi_fifo__parameterized0' (19#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem1_m_axi.v:418]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem1_m_axi_buffer' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem1_m_axi.v:529]
+	Parameter MEM_STYLE bound to: block - type: string 
+	Parameter DATA_WIDTH bound to: 576 - type: integer 
+	Parameter ADDR_WIDTH bound to: 8 - type: integer 
+	Parameter DEPTH bound to: 256 - type: integer 
+WARNING: [Synth 8-589] replacing case/wildcard equality operator === with logical equality operator == [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem1_m_axi.v:582]
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem1_m_axi_buffer' (20#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem1_m_axi.v:529]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem1_m_axi_fifo__parameterized1' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem1_m_axi.v:418]
+	Parameter DATA_BITS bound to: 2 - type: integer 
+	Parameter DEPTH bound to: 15 - type: integer 
+	Parameter DEPTH_BITS bound to: 4 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem1_m_axi_fifo__parameterized1' (20#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem1_m_axi.v:418]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem1_m_axi_fifo__parameterized2' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem1_m_axi.v:418]
+	Parameter DATA_BITS bound to: 2 - type: integer 
+	Parameter DEPTH bound to: 69 - type: integer 
+	Parameter DEPTH_BITS bound to: 7 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem1_m_axi_fifo__parameterized2' (20#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem1_m_axi.v:418]
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem1_m_axi_write' (21#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem1_m_axi.v:1729]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem1_m_axi_read' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem1_m_axi.v:932]
+	Parameter NUM_READ_OUTSTANDING bound to: 16 - type: integer 
+	Parameter MAX_READ_BURST_LENGTH bound to: 16 - type: integer 
+	Parameter C_M_AXI_ID_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_ADDR_WIDTH bound to: 64 - type: integer 
+	Parameter C_TARGET_ADDR bound to: 0 - type: integer 
+	Parameter C_M_AXI_DATA_WIDTH bound to: 512 - type: integer 
+	Parameter C_M_AXI_ARUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_M_AXI_RUSER_WIDTH bound to: 1 - type: integer 
+	Parameter C_USER_VALUE bound to: 0 - type: integer 
+	Parameter C_PROT_VALUE bound to: 3'b000 
+	Parameter C_CACHE_VALUE bound to: 4'b0011 
+	Parameter USER_DW bound to: 512 - type: integer 
+	Parameter USER_AW bound to: 64 - type: integer 
+	Parameter USER_MAXREQS bound to: 69 - type: integer 
+	Parameter USER_DATA_WIDTH bound to: 512 - type: integer 
+	Parameter USER_DATA_BYTES bound to: 64 - type: integer 
+	Parameter USER_ADDR_ALIGN bound to: 6 - type: integer 
+	Parameter BUS_DATA_WIDTH bound to: 512 - type: integer 
+	Parameter BUS_DATA_BYTES bound to: 64 - type: integer 
+	Parameter BUS_ADDR_ALIGN bound to: 6 - type: integer 
+	Parameter NUM_READ_WIDTH bound to: 4 - type: integer 
+	Parameter TARGET_ADDR bound to: 0 - type: integer 
+	Parameter BOUNDARY_BEATS bound to: 6'b111111 
+INFO: [Synth 8-6157] synthesizing module 'top_gmem1_m_axi_buffer__parameterized0' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem1_m_axi.v:529]
+	Parameter MEM_STYLE bound to: block - type: string 
+	Parameter DATA_WIDTH bound to: 515 - type: integer 
+	Parameter ADDR_WIDTH bound to: 8 - type: integer 
+	Parameter DEPTH bound to: 256 - type: integer 
+WARNING: [Synth 8-589] replacing case/wildcard equality operator === with logical equality operator == [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem1_m_axi.v:582]
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem1_m_axi_buffer__parameterized0' (21#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem1_m_axi.v:529]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem1_m_axi_reg_slice__parameterized0' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem1_m_axi.v:314]
+	Parameter N bound to: 514 - type: integer 
+	Parameter ZERO bound to: 2'b10 
+	Parameter ONE bound to: 2'b11 
+	Parameter TWO bound to: 2'b01 
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem1_m_axi_reg_slice__parameterized0' (21#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem1_m_axi.v:314]
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem1_m_axi_read' (22#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem1_m_axi.v:932]
+INFO: [Synth 8-6157] synthesizing module 'top_gmem1_m_axi_throttle' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem1_m_axi.v:710]
+	Parameter USED_FIX bound to: 0 - type: integer 
+	Parameter FIX_VALUE bound to: 4 - type: integer 
+	Parameter ADDR_WIDTH bound to: 64 - type: integer 
+	Parameter DATA_WIDTH bound to: 512 - type: integer 
+	Parameter DEPTH bound to: 16 - type: integer 
+	Parameter USER_MAXREQS bound to: 16 - type: integer 
+	Parameter CONSERVATIVE bound to: 0 - type: integer 
+	Parameter AVERAGE_MODE bound to: 0 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem1_m_axi_throttle' (23#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem1_m_axi.v:710]
+INFO: [Synth 8-6155] done synthesizing module 'top_gmem1_m_axi' (24#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_gmem1_m_axi.v:8]
+INFO: [Synth 8-6157] synthesizing module 'top_top_entry64' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_top_entry64.v:10]
+	Parameter ap_ST_fsm_state1 bound to: 1'b1 
+INFO: [Synth 8-6155] done synthesizing module 'top_top_entry64' (25#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_top_entry64.v:10]
+INFO: [Synth 8-6157] synthesizing module 'top_read_w_1_8_s' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_read_w_1_8_s.v:10]
+	Parameter ap_ST_fsm_state1 bound to: 73'b0000000000000000000000000000000000000000000000000000000000000000000000001 
+	Parameter ap_ST_fsm_state2 bound to: 73'b0000000000000000000000000000000000000000000000000000000000000000000000010 
+	Parameter ap_ST_fsm_state3 bound to: 73'b0000000000000000000000000000000000000000000000000000000000000000000000100 
+	Parameter ap_ST_fsm_state4 bound to: 73'b0000000000000000000000000000000000000000000000000000000000000000000001000 
+	Parameter ap_ST_fsm_state5 bound to: 73'b0000000000000000000000000000000000000000000000000000000000000000000010000 
+	Parameter ap_ST_fsm_state6 bound to: 73'b0000000000000000000000000000000000000000000000000000000000000000000100000 
+	Parameter ap_ST_fsm_state7 bound to: 73'b0000000000000000000000000000000000000000000000000000000000000000001000000 
+	Parameter ap_ST_fsm_state8 bound to: 73'b0000000000000000000000000000000000000000000000000000000000000000010000000 
+	Parameter ap_ST_fsm_state9 bound to: 73'b0000000000000000000000000000000000000000000000000000000000000000100000000 
+	Parameter ap_ST_fsm_state10 bound to: 73'b0000000000000000000000000000000000000000000000000000000000000001000000000 
+	Parameter ap_ST_fsm_state11 bound to: 73'b0000000000000000000000000000000000000000000000000000000000000010000000000 
+	Parameter ap_ST_fsm_state12 bound to: 73'b0000000000000000000000000000000000000000000000000000000000000100000000000 
+	Parameter ap_ST_fsm_state13 bound to: 73'b0000000000000000000000000000000000000000000000000000000000001000000000000 
+	Parameter ap_ST_fsm_state14 bound to: 73'b0000000000000000000000000000000000000000000000000000000000010000000000000 
+	Parameter ap_ST_fsm_state15 bound to: 73'b0000000000000000000000000000000000000000000000000000000000100000000000000 
+	Parameter ap_ST_fsm_state16 bound to: 73'b0000000000000000000000000000000000000000000000000000000001000000000000000 
+	Parameter ap_ST_fsm_state17 bound to: 73'b0000000000000000000000000000000000000000000000000000000010000000000000000 
+	Parameter ap_ST_fsm_state18 bound to: 73'b0000000000000000000000000000000000000000000000000000000100000000000000000 
+	Parameter ap_ST_fsm_state19 bound to: 73'b0000000000000000000000000000000000000000000000000000001000000000000000000 
+	Parameter ap_ST_fsm_state20 bound to: 73'b0000000000000000000000000000000000000000000000000000010000000000000000000 
+	Parameter ap_ST_fsm_state21 bound to: 73'b0000000000000000000000000000000000000000000000000000100000000000000000000 
+	Parameter ap_ST_fsm_state22 bound to: 73'b0000000000000000000000000000000000000000000000000001000000000000000000000 
+	Parameter ap_ST_fsm_state23 bound to: 73'b0000000000000000000000000000000000000000000000000010000000000000000000000 
+	Parameter ap_ST_fsm_state24 bound to: 73'b0000000000000000000000000000000000000000000000000100000000000000000000000 
+	Parameter ap_ST_fsm_state25 bound to: 73'b0000000000000000000000000000000000000000000000001000000000000000000000000 
+	Parameter ap_ST_fsm_state26 bound to: 73'b0000000000000000000000000000000000000000000000010000000000000000000000000 
+	Parameter ap_ST_fsm_state27 bound to: 73'b0000000000000000000000000000000000000000000000100000000000000000000000000 
+	Parameter ap_ST_fsm_state28 bound to: 73'b0000000000000000000000000000000000000000000001000000000000000000000000000 
+	Parameter ap_ST_fsm_state29 bound to: 73'b0000000000000000000000000000000000000000000010000000000000000000000000000 
+	Parameter ap_ST_fsm_state30 bound to: 73'b0000000000000000000000000000000000000000000100000000000000000000000000000 
+	Parameter ap_ST_fsm_state31 bound to: 73'b0000000000000000000000000000000000000000001000000000000000000000000000000 
+	Parameter ap_ST_fsm_state32 bound to: 73'b0000000000000000000000000000000000000000010000000000000000000000000000000 
+	Parameter ap_ST_fsm_state33 bound to: 73'b0000000000000000000000000000000000000000100000000000000000000000000000000 
+	Parameter ap_ST_fsm_state34 bound to: 73'b0000000000000000000000000000000000000001000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state35 bound to: 73'b0000000000000000000000000000000000000010000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state36 bound to: 73'b0000000000000000000000000000000000000100000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state37 bound to: 73'b0000000000000000000000000000000000001000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state38 bound to: 73'b0000000000000000000000000000000000010000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state39 bound to: 73'b0000000000000000000000000000000000100000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state40 bound to: 73'b0000000000000000000000000000000001000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state41 bound to: 73'b0000000000000000000000000000000010000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state42 bound to: 73'b0000000000000000000000000000000100000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state43 bound to: 73'b0000000000000000000000000000001000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state44 bound to: 73'b0000000000000000000000000000010000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state45 bound to: 73'b0000000000000000000000000000100000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state46 bound to: 73'b0000000000000000000000000001000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state47 bound to: 73'b0000000000000000000000000010000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state48 bound to: 73'b0000000000000000000000000100000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state49 bound to: 73'b0000000000000000000000001000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state50 bound to: 73'b0000000000000000000000010000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state51 bound to: 73'b0000000000000000000000100000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state52 bound to: 73'b0000000000000000000001000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state53 bound to: 73'b0000000000000000000010000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state54 bound to: 73'b0000000000000000000100000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state55 bound to: 73'b0000000000000000001000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state56 bound to: 73'b0000000000000000010000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state57 bound to: 73'b0000000000000000100000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state58 bound to: 73'b0000000000000001000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state59 bound to: 73'b0000000000000010000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state60 bound to: 73'b0000000000000100000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state61 bound to: 73'b0000000000001000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state62 bound to: 73'b0000000000010000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state63 bound to: 73'b0000000000100000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state64 bound to: 73'b0000000001000000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state65 bound to: 73'b0000000010000000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state66 bound to: 73'b0000000100000000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state67 bound to: 73'b0000001000000000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state68 bound to: 73'b0000010000000000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state69 bound to: 73'b0000100000000000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state70 bound to: 73'b0001000000000000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state71 bound to: 73'b0010000000000000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_pp0_stage0 bound to: 73'b0100000000000000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state75 bound to: 73'b1000000000000000000000000000000000000000000000000000000000000000000000000 
+INFO: [Synth 8-6155] done synthesizing module 'top_read_w_1_8_s' (26#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_read_w_1_8_s.v:10]
+INFO: [Synth 8-6157] synthesizing module 'top_split_1_1_8_9_s' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_split_1_1_8_9_s.v:10]
+	Parameter ap_ST_fsm_state1 bound to: 3'b001 
+	Parameter ap_ST_fsm_pp0_stage0 bound to: 3'b010 
+	Parameter ap_ST_fsm_state4 bound to: 3'b100 
+INFO: [Synth 8-6155] done synthesizing module 'top_split_1_1_8_9_s' (27#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_split_1_1_8_9_s.v:10]
+INFO: [Synth 8-6157] synthesizing module 'top_read_x_2_8_s' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_read_x_2_8_s.v:10]
+	Parameter ap_ST_fsm_state1 bound to: 74'b00000000000000000000000000000000000000000000000000000000000000000000000001 
+	Parameter ap_ST_fsm_state2 bound to: 74'b00000000000000000000000000000000000000000000000000000000000000000000000010 
+	Parameter ap_ST_fsm_state3 bound to: 74'b00000000000000000000000000000000000000000000000000000000000000000000000100 
+	Parameter ap_ST_fsm_state4 bound to: 74'b00000000000000000000000000000000000000000000000000000000000000000000001000 
+	Parameter ap_ST_fsm_state5 bound to: 74'b00000000000000000000000000000000000000000000000000000000000000000000010000 
+	Parameter ap_ST_fsm_state6 bound to: 74'b00000000000000000000000000000000000000000000000000000000000000000000100000 
+	Parameter ap_ST_fsm_state7 bound to: 74'b00000000000000000000000000000000000000000000000000000000000000000001000000 
+	Parameter ap_ST_fsm_state8 bound to: 74'b00000000000000000000000000000000000000000000000000000000000000000010000000 
+	Parameter ap_ST_fsm_state9 bound to: 74'b00000000000000000000000000000000000000000000000000000000000000000100000000 
+	Parameter ap_ST_fsm_state10 bound to: 74'b00000000000000000000000000000000000000000000000000000000000000001000000000 
+	Parameter ap_ST_fsm_state11 bound to: 74'b00000000000000000000000000000000000000000000000000000000000000010000000000 
+	Parameter ap_ST_fsm_state12 bound to: 74'b00000000000000000000000000000000000000000000000000000000000000100000000000 
+	Parameter ap_ST_fsm_state13 bound to: 74'b00000000000000000000000000000000000000000000000000000000000001000000000000 
+	Parameter ap_ST_fsm_state14 bound to: 74'b00000000000000000000000000000000000000000000000000000000000010000000000000 
+	Parameter ap_ST_fsm_state15 bound to: 74'b00000000000000000000000000000000000000000000000000000000000100000000000000 
+	Parameter ap_ST_fsm_state16 bound to: 74'b00000000000000000000000000000000000000000000000000000000001000000000000000 
+	Parameter ap_ST_fsm_state17 bound to: 74'b00000000000000000000000000000000000000000000000000000000010000000000000000 
+	Parameter ap_ST_fsm_state18 bound to: 74'b00000000000000000000000000000000000000000000000000000000100000000000000000 
+	Parameter ap_ST_fsm_state19 bound to: 74'b00000000000000000000000000000000000000000000000000000001000000000000000000 
+	Parameter ap_ST_fsm_state20 bound to: 74'b00000000000000000000000000000000000000000000000000000010000000000000000000 
+	Parameter ap_ST_fsm_state21 bound to: 74'b00000000000000000000000000000000000000000000000000000100000000000000000000 
+	Parameter ap_ST_fsm_state22 bound to: 74'b00000000000000000000000000000000000000000000000000001000000000000000000000 
+	Parameter ap_ST_fsm_state23 bound to: 74'b00000000000000000000000000000000000000000000000000010000000000000000000000 
+	Parameter ap_ST_fsm_state24 bound to: 74'b00000000000000000000000000000000000000000000000000100000000000000000000000 
+	Parameter ap_ST_fsm_state25 bound to: 74'b00000000000000000000000000000000000000000000000001000000000000000000000000 
+	Parameter ap_ST_fsm_state26 bound to: 74'b00000000000000000000000000000000000000000000000010000000000000000000000000 
+	Parameter ap_ST_fsm_state27 bound to: 74'b00000000000000000000000000000000000000000000000100000000000000000000000000 
+	Parameter ap_ST_fsm_state28 bound to: 74'b00000000000000000000000000000000000000000000001000000000000000000000000000 
+	Parameter ap_ST_fsm_state29 bound to: 74'b00000000000000000000000000000000000000000000010000000000000000000000000000 
+	Parameter ap_ST_fsm_state30 bound to: 74'b00000000000000000000000000000000000000000000100000000000000000000000000000 
+	Parameter ap_ST_fsm_state31 bound to: 74'b00000000000000000000000000000000000000000001000000000000000000000000000000 
+	Parameter ap_ST_fsm_state32 bound to: 74'b00000000000000000000000000000000000000000010000000000000000000000000000000 
+	Parameter ap_ST_fsm_state33 bound to: 74'b00000000000000000000000000000000000000000100000000000000000000000000000000 
+	Parameter ap_ST_fsm_state34 bound to: 74'b00000000000000000000000000000000000000001000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state35 bound to: 74'b00000000000000000000000000000000000000010000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state36 bound to: 74'b00000000000000000000000000000000000000100000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state37 bound to: 74'b00000000000000000000000000000000000001000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state38 bound to: 74'b00000000000000000000000000000000000010000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state39 bound to: 74'b00000000000000000000000000000000000100000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state40 bound to: 74'b00000000000000000000000000000000001000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state41 bound to: 74'b00000000000000000000000000000000010000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state42 bound to: 74'b00000000000000000000000000000000100000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state43 bound to: 74'b00000000000000000000000000000001000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state44 bound to: 74'b00000000000000000000000000000010000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state45 bound to: 74'b00000000000000000000000000000100000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state46 bound to: 74'b00000000000000000000000000001000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state47 bound to: 74'b00000000000000000000000000010000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state48 bound to: 74'b00000000000000000000000000100000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state49 bound to: 74'b00000000000000000000000001000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state50 bound to: 74'b00000000000000000000000010000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state51 bound to: 74'b00000000000000000000000100000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state52 bound to: 74'b00000000000000000000001000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state53 bound to: 74'b00000000000000000000010000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state54 bound to: 74'b00000000000000000000100000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state55 bound to: 74'b00000000000000000001000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state56 bound to: 74'b00000000000000000010000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state57 bound to: 74'b00000000000000000100000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state58 bound to: 74'b00000000000000001000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state59 bound to: 74'b00000000000000010000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state60 bound to: 74'b00000000000000100000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state61 bound to: 74'b00000000000001000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state62 bound to: 74'b00000000000010000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state63 bound to: 74'b00000000000100000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state64 bound to: 74'b00000000001000000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state65 bound to: 74'b00000000010000000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state66 bound to: 74'b00000000100000000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state67 bound to: 74'b00000001000000000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state68 bound to: 74'b00000010000000000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state69 bound to: 74'b00000100000000000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state70 bound to: 74'b00001000000000000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state71 bound to: 74'b00010000000000000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state72 bound to: 74'b00100000000000000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_pp0_stage0 bound to: 74'b01000000000000000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state76 bound to: 74'b10000000000000000000000000000000000000000000000000000000000000000000000000 
+INFO: [Synth 8-6155] done synthesizing module 'top_read_x_2_8_s' (28#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_read_x_2_8_s.v:10]
+INFO: [Synth 8-6157] synthesizing module 'top_broadcast_1_1_2_8_1152_s' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_broadcast_1_1_2_8_1152_s.v:10]
+	Parameter ap_ST_fsm_state1 bound to: 3'b001 
+	Parameter ap_ST_fsm_pp0_stage0 bound to: 3'b010 
+	Parameter ap_ST_fsm_state4 bound to: 3'b100 
+INFO: [Synth 8-6155] done synthesizing module 'top_broadcast_1_1_2_8_1152_s' (29#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_broadcast_1_1_2_8_1152_s.v:10]
+INFO: [Synth 8-6157] synthesizing module 'top_mul_1_2_8_9_128_s' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_mul_1_2_8_9_128_s.v:10]
+	Parameter ap_ST_fsm_state1 bound to: 7'b0000001 
+	Parameter ap_ST_fsm_state2 bound to: 7'b0000010 
+	Parameter ap_ST_fsm_pp0_stage0 bound to: 7'b0000100 
+	Parameter ap_ST_fsm_pp0_stage1 bound to: 7'b0001000 
+	Parameter ap_ST_fsm_pp0_stage2 bound to: 7'b0010000 
+	Parameter ap_ST_fsm_pp0_stage3 bound to: 7'b0100000 
+	Parameter ap_ST_fsm_state12 bound to: 7'b1000000 
+INFO: [Synth 8-6157] synthesizing module 'top_mul_1_2_8_9_128_s_xs_V' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_mul_1_2_8_9_128_s_xs_V.v:52]
+	Parameter DataWidth bound to: 8 - type: integer 
+	Parameter AddressRange bound to: 2 - type: integer 
+	Parameter AddressWidth bound to: 1 - type: integer 
+INFO: [Synth 8-6157] synthesizing module 'top_mul_1_2_8_9_128_s_xs_V_ram' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_mul_1_2_8_9_128_s_xs_V.v:6]
+	Parameter DWIDTH bound to: 8 - type: integer 
+	Parameter AWIDTH bound to: 1 - type: integer 
+	Parameter MEM_SIZE bound to: 2 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'top_mul_1_2_8_9_128_s_xs_V_ram' (30#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_mul_1_2_8_9_128_s_xs_V.v:6]
+INFO: [Synth 8-6155] done synthesizing module 'top_mul_1_2_8_9_128_s_xs_V' (31#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_mul_1_2_8_9_128_s_xs_V.v:52]
+INFO: [Synth 8-6157] synthesizing module 'top_mul_1_2_8_9_128_s_ys_V' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_mul_1_2_8_9_128_s_ys_V.v:48]
+	Parameter DataWidth bound to: 16 - type: integer 
+	Parameter AddressRange bound to: 2 - type: integer 
+	Parameter AddressWidth bound to: 1 - type: integer 
+INFO: [Synth 8-6157] synthesizing module 'top_mul_1_2_8_9_128_s_ys_V_ram' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_mul_1_2_8_9_128_s_ys_V.v:6]
+	Parameter DWIDTH bound to: 16 - type: integer 
+	Parameter AWIDTH bound to: 1 - type: integer 
+	Parameter MEM_SIZE bound to: 2 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'top_mul_1_2_8_9_128_s_ys_V_ram' (32#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_mul_1_2_8_9_128_s_ys_V.v:6]
+INFO: [Synth 8-6155] done synthesizing module 'top_mul_1_2_8_9_128_s_ys_V' (33#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_mul_1_2_8_9_128_s_ys_V.v:48]
+INFO: [Synth 8-6157] synthesizing module 'top_last_swap_8_s' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_last_swap_8_s.v:10]
+	Parameter ap_ST_fsm_pp0_stage0 bound to: 1'b1 
+INFO: [Synth 8-6155] done synthesizing module 'top_last_swap_8_s' (34#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_last_swap_8_s.v:10]
+INFO: [Synth 8-6157] synthesizing module 'top_first_swap_8_s' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_first_swap_8_s.v:10]
+INFO: [Synth 8-6155] done synthesizing module 'top_first_swap_8_s' (35#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_first_swap_8_s.v:10]
+INFO: [Synth 8-6157] synthesizing module 'top_mul_8ns_8ns_16_1_1' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_mul_8ns_8ns_16_1_1.v:16]
+	Parameter ID bound to: 1 - type: integer 
+	Parameter NUM_STAGE bound to: 1 - type: integer 
+	Parameter din0_WIDTH bound to: 8 - type: integer 
+	Parameter din1_WIDTH bound to: 8 - type: integer 
+	Parameter dout_WIDTH bound to: 16 - type: integer 
+INFO: [Synth 8-6157] synthesizing module 'top_mul_8ns_8ns_16_1_1_Mul_DSP_0' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_mul_8ns_8ns_16_1_1.v:8]
+INFO: [Synth 8-6155] done synthesizing module 'top_mul_8ns_8ns_16_1_1_Mul_DSP_0' (36#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_mul_8ns_8ns_16_1_1.v:8]
+INFO: [Synth 8-6155] done synthesizing module 'top_mul_8ns_8ns_16_1_1' (37#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_mul_8ns_8ns_16_1_1.v:16]
+INFO: [Synth 8-6155] done synthesizing module 'top_mul_1_2_8_9_128_s' (38#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_mul_1_2_8_9_128_s.v:10]
+INFO: [Synth 8-6157] synthesizing module 'top_add_2_16_9_128_s' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_add_2_16_9_128_s.v:10]
+	Parameter ap_ST_fsm_state1 bound to: 7'b0000001 
+	Parameter ap_ST_fsm_state2 bound to: 7'b0000010 
+	Parameter ap_ST_fsm_state3 bound to: 7'b0000100 
+	Parameter ap_ST_fsm_pp1_stage0 bound to: 7'b0001000 
+	Parameter ap_ST_fsm_state8 bound to: 7'b0010000 
+	Parameter ap_ST_fsm_pp2_stage0 bound to: 7'b0100000 
+	Parameter ap_ST_fsm_state12 bound to: 7'b1000000 
+INFO: [Synth 8-6157] synthesizing module 'top_add_2_16_9_128_s_buff' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_add_2_16_9_128_s_buff.v:46]
+	Parameter DataWidth bound to: 32 - type: integer 
+	Parameter AddressRange bound to: 128 - type: integer 
+	Parameter AddressWidth bound to: 7 - type: integer 
+INFO: [Synth 8-6157] synthesizing module 'top_add_2_16_9_128_s_buff_ram' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_add_2_16_9_128_s_buff.v:6]
+	Parameter DWIDTH bound to: 32 - type: integer 
+	Parameter AWIDTH bound to: 7 - type: integer 
+	Parameter MEM_SIZE bound to: 128 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'top_add_2_16_9_128_s_buff_ram' (39#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_add_2_16_9_128_s_buff.v:6]
+INFO: [Synth 8-6155] done synthesizing module 'top_add_2_16_9_128_s_buff' (40#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_add_2_16_9_128_s_buff.v:46]
+INFO: [Synth 8-6155] done synthesizing module 'top_add_2_16_9_128_s' (41#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_add_2_16_9_128_s.v:10]
+INFO: [Synth 8-6157] synthesizing module 'top_merge_1_2_16_128_s' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_merge_1_2_16_128_s.v:10]
+	Parameter ap_ST_fsm_state1 bound to: 3'b001 
+	Parameter ap_ST_fsm_pp0_stage0 bound to: 3'b010 
+	Parameter ap_ST_fsm_state4 bound to: 3'b100 
+INFO: [Synth 8-6155] done synthesizing module 'top_merge_1_2_16_128_s' (42#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_merge_1_2_16_128_s.v:10]
+INFO: [Synth 8-6157] synthesizing module 'top_serialize_2_16_128_s' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_serialize_2_16_128_s.v:10]
+	Parameter ap_ST_fsm_state1 bound to: 3'b001 
+	Parameter ap_ST_fsm_pp0_stage0 bound to: 3'b010 
+	Parameter ap_ST_fsm_state5 bound to: 3'b100 
+INFO: [Synth 8-6155] done synthesizing module 'top_serialize_2_16_128_s' (43#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_serialize_2_16_128_s.v:10]
+INFO: [Synth 8-6157] synthesizing module 'top_write_8_s' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_write_8_s.v:10]
+	Parameter ap_ST_fsm_state1 bound to: 71'b00000000000000000000000000000000000000000000000000000000000000000000001 
+	Parameter ap_ST_fsm_state2 bound to: 71'b00000000000000000000000000000000000000000000000000000000000000000000010 
+	Parameter ap_ST_fsm_pp0_stage0 bound to: 71'b00000000000000000000000000000000000000000000000000000000000000000000100 
+	Parameter ap_ST_fsm_state6 bound to: 71'b00000000000000000000000000000000000000000000000000000000000000000001000 
+	Parameter ap_ST_fsm_state7 bound to: 71'b00000000000000000000000000000000000000000000000000000000000000000010000 
+	Parameter ap_ST_fsm_state8 bound to: 71'b00000000000000000000000000000000000000000000000000000000000000000100000 
+	Parameter ap_ST_fsm_state9 bound to: 71'b00000000000000000000000000000000000000000000000000000000000000001000000 
+	Parameter ap_ST_fsm_state10 bound to: 71'b00000000000000000000000000000000000000000000000000000000000000010000000 
+	Parameter ap_ST_fsm_state11 bound to: 71'b00000000000000000000000000000000000000000000000000000000000000100000000 
+	Parameter ap_ST_fsm_state12 bound to: 71'b00000000000000000000000000000000000000000000000000000000000001000000000 
+	Parameter ap_ST_fsm_state13 bound to: 71'b00000000000000000000000000000000000000000000000000000000000010000000000 
+	Parameter ap_ST_fsm_state14 bound to: 71'b00000000000000000000000000000000000000000000000000000000000100000000000 
+	Parameter ap_ST_fsm_state15 bound to: 71'b00000000000000000000000000000000000000000000000000000000001000000000000 
+	Parameter ap_ST_fsm_state16 bound to: 71'b00000000000000000000000000000000000000000000000000000000010000000000000 
+	Parameter ap_ST_fsm_state17 bound to: 71'b00000000000000000000000000000000000000000000000000000000100000000000000 
+	Parameter ap_ST_fsm_state18 bound to: 71'b00000000000000000000000000000000000000000000000000000001000000000000000 
+	Parameter ap_ST_fsm_state19 bound to: 71'b00000000000000000000000000000000000000000000000000000010000000000000000 
+	Parameter ap_ST_fsm_state20 bound to: 71'b00000000000000000000000000000000000000000000000000000100000000000000000 
+	Parameter ap_ST_fsm_state21 bound to: 71'b00000000000000000000000000000000000000000000000000001000000000000000000 
+	Parameter ap_ST_fsm_state22 bound to: 71'b00000000000000000000000000000000000000000000000000010000000000000000000 
+	Parameter ap_ST_fsm_state23 bound to: 71'b00000000000000000000000000000000000000000000000000100000000000000000000 
+	Parameter ap_ST_fsm_state24 bound to: 71'b00000000000000000000000000000000000000000000000001000000000000000000000 
+	Parameter ap_ST_fsm_state25 bound to: 71'b00000000000000000000000000000000000000000000000010000000000000000000000 
+	Parameter ap_ST_fsm_state26 bound to: 71'b00000000000000000000000000000000000000000000000100000000000000000000000 
+	Parameter ap_ST_fsm_state27 bound to: 71'b00000000000000000000000000000000000000000000001000000000000000000000000 
+	Parameter ap_ST_fsm_state28 bound to: 71'b00000000000000000000000000000000000000000000010000000000000000000000000 
+	Parameter ap_ST_fsm_state29 bound to: 71'b00000000000000000000000000000000000000000000100000000000000000000000000 
+	Parameter ap_ST_fsm_state30 bound to: 71'b00000000000000000000000000000000000000000001000000000000000000000000000 
+	Parameter ap_ST_fsm_state31 bound to: 71'b00000000000000000000000000000000000000000010000000000000000000000000000 
+	Parameter ap_ST_fsm_state32 bound to: 71'b00000000000000000000000000000000000000000100000000000000000000000000000 
+	Parameter ap_ST_fsm_state33 bound to: 71'b00000000000000000000000000000000000000001000000000000000000000000000000 
+	Parameter ap_ST_fsm_state34 bound to: 71'b00000000000000000000000000000000000000010000000000000000000000000000000 
+	Parameter ap_ST_fsm_state35 bound to: 71'b00000000000000000000000000000000000000100000000000000000000000000000000 
+	Parameter ap_ST_fsm_state36 bound to: 71'b00000000000000000000000000000000000001000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state37 bound to: 71'b00000000000000000000000000000000000010000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state38 bound to: 71'b00000000000000000000000000000000000100000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state39 bound to: 71'b00000000000000000000000000000000001000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state40 bound to: 71'b00000000000000000000000000000000010000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state41 bound to: 71'b00000000000000000000000000000000100000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state42 bound to: 71'b00000000000000000000000000000001000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state43 bound to: 71'b00000000000000000000000000000010000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state44 bound to: 71'b00000000000000000000000000000100000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state45 bound to: 71'b00000000000000000000000000001000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state46 bound to: 71'b00000000000000000000000000010000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state47 bound to: 71'b00000000000000000000000000100000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state48 bound to: 71'b00000000000000000000000001000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state49 bound to: 71'b00000000000000000000000010000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state50 bound to: 71'b00000000000000000000000100000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state51 bound to: 71'b00000000000000000000001000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state52 bound to: 71'b00000000000000000000010000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state53 bound to: 71'b00000000000000000000100000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state54 bound to: 71'b00000000000000000001000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state55 bound to: 71'b00000000000000000010000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state56 bound to: 71'b00000000000000000100000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state57 bound to: 71'b00000000000000001000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state58 bound to: 71'b00000000000000010000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state59 bound to: 71'b00000000000000100000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state60 bound to: 71'b00000000000001000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state61 bound to: 71'b00000000000010000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state62 bound to: 71'b00000000000100000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state63 bound to: 71'b00000000001000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state64 bound to: 71'b00000000010000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state65 bound to: 71'b00000000100000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state66 bound to: 71'b00000001000000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state67 bound to: 71'b00000010000000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state68 bound to: 71'b00000100000000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state69 bound to: 71'b00001000000000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state70 bound to: 71'b00010000000000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state71 bound to: 71'b00100000000000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state72 bound to: 71'b01000000000000000000000000000000000000000000000000000000000000000000000 
+	Parameter ap_ST_fsm_state73 bound to: 71'b10000000000000000000000000000000000000000000000000000000000000000000000 
+INFO: [Synth 8-6155] done synthesizing module 'top_write_8_s' (44#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_write_8_s.v:10]
+INFO: [Synth 8-6157] synthesizing module 'top_fifo_w64_d2_S' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_fifo_w64_d2_S.v:42]
+	Parameter MEM_STYLE bound to: shiftreg - type: string 
+	Parameter DATA_WIDTH bound to: 64 - type: integer 
+	Parameter ADDR_WIDTH bound to: 1 - type: integer 
+	Parameter DEPTH bound to: 2'b10 
+INFO: [Synth 8-6157] synthesizing module 'top_fifo_w64_d2_S_shiftReg' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_fifo_w64_d2_S.v:8]
+	Parameter DATA_WIDTH bound to: 64 - type: integer 
+	Parameter ADDR_WIDTH bound to: 1 - type: integer 
+	Parameter DEPTH bound to: 2'b10 
+INFO: [Synth 8-6155] done synthesizing module 'top_fifo_w64_d2_S_shiftReg' (45#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_fifo_w64_d2_S.v:8]
+INFO: [Synth 8-6155] done synthesizing module 'top_fifo_w64_d2_S' (46#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_fifo_w64_d2_S.v:42]
+INFO: [Synth 8-6157] synthesizing module 'top_fifo_w64_d8_S' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_fifo_w64_d8_S.v:42]
+	Parameter MEM_STYLE bound to: shiftreg - type: string 
+	Parameter DATA_WIDTH bound to: 64 - type: integer 
+	Parameter ADDR_WIDTH bound to: 3 - type: integer 
+	Parameter DEPTH bound to: 4'b1000 
+INFO: [Synth 8-6157] synthesizing module 'top_fifo_w64_d8_S_shiftReg' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_fifo_w64_d8_S.v:8]
+	Parameter DATA_WIDTH bound to: 64 - type: integer 
+	Parameter ADDR_WIDTH bound to: 3 - type: integer 
+	Parameter DEPTH bound to: 4'b1000 
+INFO: [Synth 8-6155] done synthesizing module 'top_fifo_w64_d8_S_shiftReg' (47#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_fifo_w64_d8_S.v:8]
+INFO: [Synth 8-6155] done synthesizing module 'top_fifo_w64_d8_S' (48#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_fifo_w64_d8_S.v:42]
+INFO: [Synth 8-6157] synthesizing module 'top_fifo_w8_d2_S' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_fifo_w8_d2_S.v:42]
+	Parameter MEM_STYLE bound to: shiftreg - type: string 
+	Parameter DATA_WIDTH bound to: 8 - type: integer 
+	Parameter ADDR_WIDTH bound to: 1 - type: integer 
+	Parameter DEPTH bound to: 2'b10 
+INFO: [Synth 8-6157] synthesizing module 'top_fifo_w8_d2_S_shiftReg' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_fifo_w8_d2_S.v:8]
+	Parameter DATA_WIDTH bound to: 8 - type: integer 
+	Parameter ADDR_WIDTH bound to: 1 - type: integer 
+	Parameter DEPTH bound to: 2'b10 
+INFO: [Synth 8-6155] done synthesizing module 'top_fifo_w8_d2_S_shiftReg' (49#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_fifo_w8_d2_S.v:8]
+INFO: [Synth 8-6155] done synthesizing module 'top_fifo_w8_d2_S' (50#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_fifo_w8_d2_S.v:42]
+INFO: [Synth 8-6157] synthesizing module 'top_fifo_w16_d2_S' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_fifo_w16_d2_S.v:42]
+	Parameter MEM_STYLE bound to: shiftreg - type: string 
+	Parameter DATA_WIDTH bound to: 16 - type: integer 
+	Parameter ADDR_WIDTH bound to: 1 - type: integer 
+	Parameter DEPTH bound to: 2'b10 
+INFO: [Synth 8-6157] synthesizing module 'top_fifo_w16_d2_S_shiftReg' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_fifo_w16_d2_S.v:8]
+	Parameter DATA_WIDTH bound to: 16 - type: integer 
+	Parameter ADDR_WIDTH bound to: 1 - type: integer 
+	Parameter DEPTH bound to: 2'b10 
+INFO: [Synth 8-6155] done synthesizing module 'top_fifo_w16_d2_S_shiftReg' (51#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_fifo_w16_d2_S.v:8]
+INFO: [Synth 8-6155] done synthesizing module 'top_fifo_w16_d2_S' (52#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_fifo_w16_d2_S.v:42]
+INFO: [Synth 8-6157] synthesizing module 'top_fifo_w32_d2_S' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_fifo_w32_d2_S.v:42]
+	Parameter MEM_STYLE bound to: shiftreg - type: string 
+	Parameter DATA_WIDTH bound to: 32 - type: integer 
+	Parameter ADDR_WIDTH bound to: 1 - type: integer 
+	Parameter DEPTH bound to: 2'b10 
+INFO: [Synth 8-6157] synthesizing module 'top_fifo_w32_d2_S_shiftReg' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_fifo_w32_d2_S.v:8]
+	Parameter DATA_WIDTH bound to: 32 - type: integer 
+	Parameter ADDR_WIDTH bound to: 1 - type: integer 
+	Parameter DEPTH bound to: 2'b10 
+INFO: [Synth 8-6155] done synthesizing module 'top_fifo_w32_d2_S_shiftReg' (53#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_fifo_w32_d2_S.v:8]
+INFO: [Synth 8-6155] done synthesizing module 'top_fifo_w32_d2_S' (54#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_fifo_w32_d2_S.v:42]
+INFO: [Synth 8-6157] synthesizing module 'top_fifo_w512_d2_S' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_fifo_w512_d2_S.v:42]
+	Parameter MEM_STYLE bound to: shiftreg - type: string 
+	Parameter DATA_WIDTH bound to: 512 - type: integer 
+	Parameter ADDR_WIDTH bound to: 1 - type: integer 
+	Parameter DEPTH bound to: 2'b10 
+INFO: [Synth 8-6157] synthesizing module 'top_fifo_w512_d2_S_shiftReg' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_fifo_w512_d2_S.v:8]
+	Parameter DATA_WIDTH bound to: 512 - type: integer 
+	Parameter ADDR_WIDTH bound to: 1 - type: integer 
+	Parameter DEPTH bound to: 2'b10 
+INFO: [Synth 8-6155] done synthesizing module 'top_fifo_w512_d2_S_shiftReg' (55#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_fifo_w512_d2_S.v:8]
+INFO: [Synth 8-6155] done synthesizing module 'top_fifo_w512_d2_S' (56#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_fifo_w512_d2_S.v:42]
+INFO: [Synth 8-6157] synthesizing module 'top_start_for_write_8_U0' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_write_8_U0.v:42]
+	Parameter MEM_STYLE bound to: shiftreg - type: string 
+	Parameter DATA_WIDTH bound to: 1 - type: integer 
+	Parameter ADDR_WIDTH bound to: 3 - type: integer 
+	Parameter DEPTH bound to: 4'b1000 
+INFO: [Synth 8-6157] synthesizing module 'top_start_for_write_8_U0_shiftReg' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_write_8_U0.v:8]
+	Parameter DATA_WIDTH bound to: 1 - type: integer 
+	Parameter ADDR_WIDTH bound to: 3 - type: integer 
+	Parameter DEPTH bound to: 4'b1000 
+INFO: [Synth 8-6155] done synthesizing module 'top_start_for_write_8_U0_shiftReg' (57#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_write_8_U0.v:8]
+INFO: [Synth 8-6155] done synthesizing module 'top_start_for_write_8_U0' (58#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_write_8_U0.v:42]
+INFO: [Synth 8-6157] synthesizing module 'top_start_for_split_1_1_8_9_U0' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_split_1_1_8_9_U0.v:42]
+	Parameter MEM_STYLE bound to: shiftreg - type: string 
+	Parameter DATA_WIDTH bound to: 1 - type: integer 
+	Parameter ADDR_WIDTH bound to: 1 - type: integer 
+	Parameter DEPTH bound to: 2'b10 
+INFO: [Synth 8-6157] synthesizing module 'top_start_for_split_1_1_8_9_U0_shiftReg' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_split_1_1_8_9_U0.v:8]
+	Parameter DATA_WIDTH bound to: 1 - type: integer 
+	Parameter ADDR_WIDTH bound to: 1 - type: integer 
+	Parameter DEPTH bound to: 2'b10 
+INFO: [Synth 8-6155] done synthesizing module 'top_start_for_split_1_1_8_9_U0_shiftReg' (59#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_split_1_1_8_9_U0.v:8]
+INFO: [Synth 8-6155] done synthesizing module 'top_start_for_split_1_1_8_9_U0' (60#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_split_1_1_8_9_U0.v:42]
+INFO: [Synth 8-6157] synthesizing module 'top_start_for_mul_1_2_8_9_128_U0' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_mul_1_2_8_9_128_U0.v:42]
+	Parameter MEM_STYLE bound to: shiftreg - type: string 
+	Parameter DATA_WIDTH bound to: 1 - type: integer 
+	Parameter ADDR_WIDTH bound to: 1 - type: integer 
+	Parameter DEPTH bound to: 2'b10 
+INFO: [Synth 8-6157] synthesizing module 'top_start_for_mul_1_2_8_9_128_U0_shiftReg' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_mul_1_2_8_9_128_U0.v:8]
+	Parameter DATA_WIDTH bound to: 1 - type: integer 
+	Parameter ADDR_WIDTH bound to: 1 - type: integer 
+	Parameter DEPTH bound to: 2'b10 
+INFO: [Synth 8-6155] done synthesizing module 'top_start_for_mul_1_2_8_9_128_U0_shiftReg' (61#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_mul_1_2_8_9_128_U0.v:8]
+INFO: [Synth 8-6155] done synthesizing module 'top_start_for_mul_1_2_8_9_128_U0' (62#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_mul_1_2_8_9_128_U0.v:42]
+INFO: [Synth 8-6157] synthesizing module 'top_start_for_broadcast_1_1_2_8_1152_U0' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_broadcast_1_1_2_8_1152_U0.v:42]
+	Parameter MEM_STYLE bound to: shiftreg - type: string 
+	Parameter DATA_WIDTH bound to: 1 - type: integer 
+	Parameter ADDR_WIDTH bound to: 1 - type: integer 
+	Parameter DEPTH bound to: 2'b10 
+INFO: [Synth 8-6157] synthesizing module 'top_start_for_broadcast_1_1_2_8_1152_U0_shiftReg' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_broadcast_1_1_2_8_1152_U0.v:8]
+	Parameter DATA_WIDTH bound to: 1 - type: integer 
+	Parameter ADDR_WIDTH bound to: 1 - type: integer 
+	Parameter DEPTH bound to: 2'b10 
+INFO: [Synth 8-6155] done synthesizing module 'top_start_for_broadcast_1_1_2_8_1152_U0_shiftReg' (63#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_broadcast_1_1_2_8_1152_U0.v:8]
+INFO: [Synth 8-6155] done synthesizing module 'top_start_for_broadcast_1_1_2_8_1152_U0' (64#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_broadcast_1_1_2_8_1152_U0.v:42]
+INFO: [Synth 8-6157] synthesizing module 'top_start_for_add_2_16_9_128_U0' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_add_2_16_9_128_U0.v:42]
+	Parameter MEM_STYLE bound to: shiftreg - type: string 
+	Parameter DATA_WIDTH bound to: 1 - type: integer 
+	Parameter ADDR_WIDTH bound to: 1 - type: integer 
+	Parameter DEPTH bound to: 2'b10 
+INFO: [Synth 8-6157] synthesizing module 'top_start_for_add_2_16_9_128_U0_shiftReg' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_add_2_16_9_128_U0.v:8]
+	Parameter DATA_WIDTH bound to: 1 - type: integer 
+	Parameter ADDR_WIDTH bound to: 1 - type: integer 
+	Parameter DEPTH bound to: 2'b10 
+INFO: [Synth 8-6155] done synthesizing module 'top_start_for_add_2_16_9_128_U0_shiftReg' (65#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_add_2_16_9_128_U0.v:8]
+INFO: [Synth 8-6155] done synthesizing module 'top_start_for_add_2_16_9_128_U0' (66#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_add_2_16_9_128_U0.v:42]
+INFO: [Synth 8-6157] synthesizing module 'top_start_for_merge_1_2_16_128_U0' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_merge_1_2_16_128_U0.v:42]
+	Parameter MEM_STYLE bound to: shiftreg - type: string 
+	Parameter DATA_WIDTH bound to: 1 - type: integer 
+	Parameter ADDR_WIDTH bound to: 1 - type: integer 
+	Parameter DEPTH bound to: 2'b10 
+INFO: [Synth 8-6157] synthesizing module 'top_start_for_merge_1_2_16_128_U0_shiftReg' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_merge_1_2_16_128_U0.v:8]
+	Parameter DATA_WIDTH bound to: 1 - type: integer 
+	Parameter ADDR_WIDTH bound to: 1 - type: integer 
+	Parameter DEPTH bound to: 2'b10 
+INFO: [Synth 8-6155] done synthesizing module 'top_start_for_merge_1_2_16_128_U0_shiftReg' (67#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_merge_1_2_16_128_U0.v:8]
+INFO: [Synth 8-6155] done synthesizing module 'top_start_for_merge_1_2_16_128_U0' (68#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_merge_1_2_16_128_U0.v:42]
+INFO: [Synth 8-6157] synthesizing module 'top_start_for_serialize_2_16_128_U0' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_serialize_2_16_128_U0.v:42]
+	Parameter MEM_STYLE bound to: shiftreg - type: string 
+	Parameter DATA_WIDTH bound to: 1 - type: integer 
+	Parameter ADDR_WIDTH bound to: 1 - type: integer 
+	Parameter DEPTH bound to: 2'b10 
+INFO: [Synth 8-6157] synthesizing module 'top_start_for_serialize_2_16_128_U0_shiftReg' [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_serialize_2_16_128_U0.v:8]
+	Parameter DATA_WIDTH bound to: 1 - type: integer 
+	Parameter ADDR_WIDTH bound to: 1 - type: integer 
+	Parameter DEPTH bound to: 2'b10 
+INFO: [Synth 8-6155] done synthesizing module 'top_start_for_serialize_2_16_128_U0_shiftReg' (69#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_serialize_2_16_128_U0.v:8]
+INFO: [Synth 8-6155] done synthesizing module 'top_start_for_serialize_2_16_128_U0' (70#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top_start_for_serialize_2_16_128_U0.v:42]
+INFO: [Synth 8-6155] done synthesizing module 'top' (71#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ipshared/2b36/hdl/verilog/top.v:12]
+INFO: [Synth 8-6155] done synthesizing module 'bd_0_hls_inst_0' (72#1) [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ip/bd_0_hls_inst_0/synth/bd_0_hls_inst_0.v:62]
+---------------------------------------------------------------------------------
+Finished RTL Elaboration : Time (s): cpu = 00:00:07 ; elapsed = 00:00:09 . Memory (MB): peak = 3130.535 ; gain = 371.664 ; free physical = 426599 ; free virtual = 505592
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Handling Custom Attributes
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:09 ; elapsed = 00:00:11 . Memory (MB): peak = 3142.410 ; gain = 383.539 ; free physical = 426626 ; free virtual = 505615
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:09 ; elapsed = 00:00:11 . Memory (MB): peak = 3142.410 ; gain = 383.539 ; free physical = 426626 ; free virtual = 505615
+---------------------------------------------------------------------------------
+Netlist sorting complete. Time (s): cpu = 00:00:00.55 ; elapsed = 00:00:00.56 . Memory (MB): peak = 3142.410 ; gain = 0.000 ; free physical = 426557 ; free virtual = 505547
+INFO: [Project 1-570] Preparing netlist for logic optimization
+
+Processing XDC Constraints
+Initializing timing engine
+Parsing XDC File [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ip/bd_0_hls_inst_0/constraints/top_ooc.xdc] for cell 'inst'
+Finished Parsing XDC File [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.gen/sources_1/bd/bd_0/ip/bd_0_hls_inst_0/constraints/top_ooc.xdc] for cell 'inst'
+Parsing XDC File [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.runs/bd_0_hls_inst_0_synth_1/dont_touch.xdc]
+Finished Parsing XDC File [/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.runs/bd_0_hls_inst_0_synth_1/dont_touch.xdc]
+Completed Processing XDC Constraints
+
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.01 . Memory (MB): peak = 3448.473 ; gain = 0.000 ; free physical = 426318 ; free virtual = 505323
+INFO: [Project 1-111] Unisim Transformation Summary:
+No Unisim elements were transformed.
+
+Constraint Validation Runtime : Time (s): cpu = 00:00:02 ; elapsed = 00:00:00.68 . Memory (MB): peak = 3470.285 ; gain = 21.812 ; free physical = 426312 ; free virtual = 505316
+---------------------------------------------------------------------------------
+Finished Constraint Validation : Time (s): cpu = 00:00:28 ; elapsed = 00:00:28 . Memory (MB): peak = 3470.285 ; gain = 711.414 ; free physical = 426562 ; free virtual = 505568
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Loading Part and Timing Information
+---------------------------------------------------------------------------------
+Loading part: xcu200-fsgd2104-2-e
+INFO: [Synth 8-6742] Reading net delay rules and data
+---------------------------------------------------------------------------------
+Finished Loading Part and Timing Information : Time (s): cpu = 00:00:28 ; elapsed = 00:00:28 . Memory (MB): peak = 3470.285 ; gain = 711.414 ; free physical = 426562 ; free virtual = 505568
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Applying 'set_property' XDC Constraints
+---------------------------------------------------------------------------------
+Applied set_property KEEP_HIERARCHY = SOFT for inst. (constraint file  /mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.runs/bd_0_hls_inst_0_synth_1/dont_touch.xdc, line 9).
+---------------------------------------------------------------------------------
+Finished applying 'set_property' XDC Constraints : Time (s): cpu = 00:00:28 ; elapsed = 00:00:28 . Memory (MB): peak = 3470.285 ; gain = 711.414 ; free physical = 426563 ; free virtual = 505568
+---------------------------------------------------------------------------------
+INFO: [Synth 8-802] inferred FSM for state register 'wstate_reg' in module 'top_control_s_axi'
+INFO: [Synth 8-802] inferred FSM for state register 'rstate_reg' in module 'top_control_s_axi'
+INFO: [Synth 8-802] inferred FSM for state register 'state_reg' in module 'top_gmem2_m_axi_reg_slice'
+INFO: [Synth 8-802] inferred FSM for state register 'state_reg' in module 'top_gmem2_m_axi_reg_slice__parameterized0'
+INFO: [Synth 8-802] inferred FSM for state register 'state_reg' in module 'top_gmem_m_axi_reg_slice'
+INFO: [Synth 8-802] inferred FSM for state register 'state_reg' in module 'top_gmem_m_axi_reg_slice__parameterized0'
+INFO: [Synth 8-802] inferred FSM for state register 'state_reg' in module 'top_gmem1_m_axi_reg_slice'
+INFO: [Synth 8-802] inferred FSM for state register 'state_reg' in module 'top_gmem1_m_axi_reg_slice__parameterized0'
+INFO: [Synth 8-4490] FSM extraction disabled for register 'ap_CS_fsm_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'ap_CS_fsm_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'ap_CS_fsm_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'ap_CS_fsm_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'ap_CS_fsm_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'ap_CS_fsm_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'ap_CS_fsm_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'ap_CS_fsm_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'ap_CS_fsm_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'ap_CS_fsm_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'ap_CS_fsm_reg' through user attribute
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                  iSTATE |                             0001 |                               11
+*
+                  WRIDLE |                             0010 |                               00
+                  WRDATA |                             0100 |                               01
+                  WRRESP |                             1000 |                               10
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'wstate_reg' using encoding 'one-hot' in module 'top_control_s_axi'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                  iSTATE |                              001 |                               10
+*
+                  RDIDLE |                              010 |                               00
+                  RDDATA |                              100 |                               01
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'rstate_reg' using encoding 'one-hot' in module 'top_control_s_axi'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                    ZERO |                               00 |                               10
+                     ONE |                               10 |                               11
+                     TWO |                               01 |                               01
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'state_reg' using encoding 'sequential' in module 'top_gmem2_m_axi_reg_slice'
+INFO: [Synth 8-5779] Default cascade height of 1 will be used for BRAM '"top_gmem2_m_axi_buffer:/mem_reg"'.
+INFO: [Synth 8-7030] Implemented Non-Cascaded Block Ram (cascade_height = 1) of width 18 for RAM "top_gmem2_m_axi_buffer:/mem_reg"
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                    ZERO |                               00 |                               10
+                     ONE |                               10 |                               11
+                     TWO |                               01 |                               01
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'state_reg' using encoding 'sequential' in module 'top_gmem2_m_axi_reg_slice__parameterized0'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                    ZERO |                               00 |                               10
+                     ONE |                               10 |                               11
+                     TWO |                               01 |                               01
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'state_reg' using encoding 'sequential' in module 'top_gmem_m_axi_reg_slice'
+INFO: [Synth 8-5779] Default cascade height of 1 will be used for BRAM '"top_gmem_m_axi_buffer:/mem_reg"'.
+INFO: [Synth 8-7030] Implemented Non-Cascaded Block Ram (cascade_height = 1) of width 9 for RAM "top_gmem_m_axi_buffer:/mem_reg"
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                    ZERO |                               00 |                               10
+                     ONE |                               10 |                               11
+                     TWO |                               01 |                               01
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'state_reg' using encoding 'sequential' in module 'top_gmem_m_axi_reg_slice__parameterized0'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                    ZERO |                               00 |                               10
+                     ONE |                               10 |                               11
+                     TWO |                               01 |                               01
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'state_reg' using encoding 'sequential' in module 'top_gmem1_m_axi_reg_slice'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                    ZERO |                               00 |                               10
+                     ONE |                               10 |                               11
+                     TWO |                               01 |                               01
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'state_reg' using encoding 'sequential' in module 'top_gmem1_m_axi_reg_slice__parameterized0'
+INFO: [Synth 8-5779] Default cascade height of 1 will be used for BRAM '"top_mul_1_2_8_9_128_s_xs_V_ram:/ram_reg"'.
+INFO: [Synth 8-7030] Implemented Non-Cascaded Block Ram (cascade_height = 1) of width 8 for RAM "top_mul_1_2_8_9_128_s_xs_V_ram:/ram_reg"
+INFO: [Synth 8-3971] The signal "top_mul_1_2_8_9_128_s_xs_V_ram:/ram_reg" was recognized as a true dual port RAM template.
+INFO: [Synth 8-6904] The RAM "top_mul_1_2_8_9_128_s_ys_V_ram:/ram_reg" of size (depth=2 x width=16) is automatically implemented using LUTRAM. BRAM implementation would be inefficient 
+INFO: [Synth 8-5759] Cascade height of 1 specified for RAM '"top_add_2_16_9_128_s_buff_ram:/ram_reg"'. This RAM won't be implemented using URAM cascade chain
+WARNING: [Synth 8-5790] Small sized RAM "top_add_2_16_9_128_s_buff_ram:/ram_reg" will be implemented using URAM because of explicit ram_style = "ultra" attribute.
+INFO: [Synth 8-5759] Cascade height of 1 specified for RAM '"top_add_2_16_9_128_s_buff_ram:/ram_reg"'. This RAM won't be implemented using URAM cascade chain
+WARNING: [Synth 8-5790] Small sized RAM "top_add_2_16_9_128_s_buff_ram:/ram_reg" will be implemented using URAM because of explicit ram_style = "ultra" attribute.
+INFO: [Synth 8-6833] Ram_style="hls_ultra" specified on RAM ("top_add_2_16_9_128_s_buff_ram:/ram_reg"). This will be implemented using Non-Cascaded URAMs that could result in higher LUTs an MUX utilization. 
+INFO: [Synth 8-5782] User specified cascade height of 1 will be used for URAM '"top_add_2_16_9_128_s_buff_ram:/ram_reg"'.
+---------------------------------------------------------------------------------
+Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:33 ; elapsed = 00:00:33 . Memory (MB): peak = 3470.285 ; gain = 711.414 ; free physical = 426554 ; free virtual = 505565
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start RTL Component Statistics 
+---------------------------------------------------------------------------------
+Detailed RTL Component Info : 
++---Adders : 
+	   2 Input   64 Bit       Adders := 12    
+	   2 Input   52 Bit       Adders := 6     
+	   2 Input   32 Bit       Adders := 9     
+	   2 Input   16 Bit       Adders := 2     
+	   2 Input   12 Bit       Adders := 6     
+	   2 Input   11 Bit       Adders := 2     
+	   2 Input    9 Bit       Adders := 9     
+	   2 Input    8 Bit       Adders := 29    
+	   2 Input    7 Bit       Adders := 14    
+	   2 Input    6 Bit       Adders := 4     
+	   2 Input    4 Bit       Adders := 13    
+	   2 Input    2 Bit       Adders := 20    
+	   2 Input    1 Bit       Adders := 2     
++---XORs : 
+	   2 Input    512 Bit         XORs := 1     
+	   2 Input      1 Bit         XORs := 11    
++---Registers : 
+	              576 Bit    Registers := 3     
+	              515 Bit    Registers := 3     
+	              514 Bit    Registers := 2     
+	              512 Bit    Registers := 6     
+	               96 Bit    Registers := 18    
+	               74 Bit    Registers := 1     
+	               73 Bit    Registers := 1     
+	               71 Bit    Registers := 1     
+	               64 Bit    Registers := 37    
+	               58 Bit    Registers := 1     
+	               52 Bit    Registers := 6     
+	               35 Bit    Registers := 6     
+	               32 Bit    Registers := 41    
+	               18 Bit    Registers := 5     
+	               16 Bit    Registers := 12    
+	               12 Bit    Registers := 2     
+	               11 Bit    Registers := 2     
+	               10 Bit    Registers := 12    
+	                9 Bit    Registers := 7     
+	                8 Bit    Registers := 45    
+	                7 Bit    Registers := 20    
+	                6 Bit    Registers := 8     
+	                4 Bit    Registers := 16    
+	                3 Bit    Registers := 4     
+	                2 Bit    Registers := 51    
+	                1 Bit    Registers := 294   
++---RAMs : 
+	             144K Bit	(256 X 576 bit)          RAMs := 1     
+	             128K Bit	(256 X 515 bit)          RAMs := 1     
+	               8K Bit	(256 X 35 bit)          RAMs := 2     
+	               4K Bit	(256 X 18 bit)          RAMs := 1     
+	               4K Bit	(128 X 32 bit)          RAMs := 1     
+	               2K Bit	(256 X 9 bit)          RAMs := 1     
+	               32 Bit	(2 X 16 bit)          RAMs := 1     
+	               16 Bit	(2 X 8 bit)          RAMs := 1     
++---Muxes : 
+	   2 Input  576 Bit        Muxes := 1     
+	   2 Input  515 Bit        Muxes := 1     
+	   2 Input  514 Bit        Muxes := 1     
+	   2 Input  512 Bit        Muxes := 1     
+	   2 Input   96 Bit        Muxes := 6     
+	   3 Input   74 Bit        Muxes := 1     
+	  75 Input   74 Bit        Muxes := 1     
+	   3 Input   73 Bit        Muxes := 1     
+	  74 Input   73 Bit        Muxes := 1     
+	   2 Input   71 Bit        Muxes := 1     
+	  72 Input   71 Bit        Muxes := 1     
+	   2 Input   64 Bit        Muxes := 26    
+	   2 Input   52 Bit        Muxes := 6     
+	   2 Input   35 Bit        Muxes := 2     
+	   2 Input   32 Bit        Muxes := 12    
+	   2 Input   18 Bit        Muxes := 2     
+	   2 Input   16 Bit        Muxes := 3     
+	   4 Input   12 Bit        Muxes := 6     
+	   2 Input   10 Bit        Muxes := 9     
+	   2 Input    9 Bit        Muxes := 4     
+	   2 Input    8 Bit        Muxes := 30    
+	   4 Input    8 Bit        Muxes := 6     
+	   2 Input    7 Bit        Muxes := 4     
+	   3 Input    7 Bit        Muxes := 2     
+	   2 Input    6 Bit        Muxes := 8     
+	   2 Input    5 Bit        Muxes := 1     
+	   3 Input    5 Bit        Muxes := 1     
+	   4 Input    4 Bit        Muxes := 1     
+	   2 Input    4 Bit        Muxes := 16    
+	   3 Input    4 Bit        Muxes := 2     
+	   3 Input    3 Bit        Muxes := 2     
+	   2 Input    3 Bit        Muxes := 8     
+	   4 Input    3 Bit        Muxes := 2     
+	   6 Input    3 Bit        Muxes := 4     
+	   2 Input    2 Bit        Muxes := 144   
+	   3 Input    2 Bit        Muxes := 28    
+	   5 Input    2 Bit        Muxes := 9     
+	   2 Input    1 Bit        Muxes := 361   
+	   4 Input    1 Bit        Muxes := 1     
+---------------------------------------------------------------------------------
+Finished RTL Component Statistics 
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Part Resource Summary
+---------------------------------------------------------------------------------
+Part Resources:
+DSPs: 6840 (col length:120)
+BRAMs: 4320 (col length: RAMB18 360 RAMB36 180)
+---------------------------------------------------------------------------------
+Finished Part Resource Summary
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Cross Boundary and Area Optimization
+---------------------------------------------------------------------------------
+DSP Report: Generating DSP ret_reg_539_reg, operation Mode is: (A2*B2)'.
+DSP Report: register ret_reg_539_reg is absorbed into DSP ret_reg_539_reg.
+DSP Report: register ret_reg_539_reg is absorbed into DSP ret_reg_539_reg.
+DSP Report: register ret_reg_539_reg is absorbed into DSP ret_reg_539_reg.
+DSP Report: operator mul_8ns_8ns_16_1_1_U22/top_mul_8ns_8ns_16_1_1_Mul_DSP_0_U/p is absorbed into DSP ret_reg_539_reg.
+INFO: [Synth 8-6904] The RAM "inst/mul_1_2_8_9_128_U0/ys_V_U/top_mul_1_2_8_9_128_s_ys_V_ram_U/ram_reg" of size (depth=2 x width=16) is automatically implemented using LUTRAM. BRAM implementation would be inefficient 
+warning: Removed RAM bus_write/buff_wdata/mem_reg due to inactive write enable
+warning: Removed RAM bus_write/buff_wdata/mem_reg due to inactive write enable
+RAM ("inst/mul_1_2_8_9_128_U0/xs_V_U/top_mul_1_2_8_9_128_s_xs_V_ram_U/ram_reg") is too shallow (depth = 2) to use URAM. Choosing BRAM instead of URAM 
+INFO: [Synth 8-5779] Default cascade height of 1 will be used for BRAM '"inst/mul_1_2_8_9_128_U0/xs_V_U/top_mul_1_2_8_9_128_s_xs_V_ram_U/ram_reg"'.
+INFO: [Synth 8-7030] Implemented Non-Cascaded Block Ram (cascade_height = 1) of width 8 for RAM "inst/mul_1_2_8_9_128_U0/xs_V_U/top_mul_1_2_8_9_128_s_xs_V_ram_U/ram_reg"
+INFO: [Synth 8-3971] The signal "inst/mul_1_2_8_9_128_U0/xs_V_U/top_mul_1_2_8_9_128_s_xs_V_ram_U/ram_reg" was recognized as a true dual port RAM template.
+INFO: [Synth 8-6904] The RAM "inst/mul_1_2_8_9_128_U0/ys_V_U/top_mul_1_2_8_9_128_s_ys_V_ram_U/ram_reg" of size (depth=2 x width=16) is automatically implemented using LUTRAM. BRAM implementation would be inefficient 
+INFO: [Synth 8-5759] Cascade height of 1 specified for RAM '"inst/add_2_16_9_128_U0/buff_U/top_add_2_16_9_128_s_buff_ram_U/ram_reg"'. This RAM won't be implemented using URAM cascade chain
+WARNING: [Synth 8-5790] Small sized RAM "inst/add_2_16_9_128_U0/buff_U/top_add_2_16_9_128_s_buff_ram_U/ram_reg" will be implemented using URAM because of explicit ram_style = "ultra" attribute.
+INFO: [Synth 8-6833] Ram_style="hls_ultra" specified on RAM ("inst/add_2_16_9_128_U0/buff_U/top_add_2_16_9_128_s_buff_ram_U/ram_reg"). This will be implemented using Non-Cascaded URAMs that could result in higher LUTs an MUX utilization. 
+INFO: [Synth 8-5782] User specified cascade height of 1 will be used for URAM '"inst/add_2_16_9_128_U0/buff_U/top_add_2_16_9_128_s_buff_ram_U/ram_reg"'.
+INFO: [Synth 8-5759] Cascade height of 1 specified for RAM '"inst/add_2_16_9_128_U0/buff_U/top_add_2_16_9_128_s_buff_ram_U/ram_reg"'. This RAM won't be implemented using URAM cascade chain
+WARNING: [Synth 8-5790] Small sized RAM "inst/add_2_16_9_128_U0/buff_U/top_add_2_16_9_128_s_buff_ram_U/ram_reg" will be implemented using URAM because of explicit ram_style = "ultra" attribute.
+INFO: [Synth 8-6833] Ram_style="hls_ultra" specified on RAM ("inst/add_2_16_9_128_U0/buff_U/top_add_2_16_9_128_s_buff_ram_U/ram_reg"). This will be implemented using Non-Cascaded URAMs that could result in higher LUTs an MUX utilization. 
+INFO: [Synth 8-5782] User specified cascade height of 1 will be used for URAM '"inst/add_2_16_9_128_U0/buff_U/top_add_2_16_9_128_s_buff_ram_U/ram_reg"'.
+---------------------------------------------------------------------------------
+Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:01:01 ; elapsed = 00:01:02 . Memory (MB): peak = 3470.285 ; gain = 711.414 ; free physical = 426513 ; free virtual = 505546
+---------------------------------------------------------------------------------
+WARNING: [Synth 8-6057] Memory: "buff_U/top_add_2_16_9_128_s_buff_ram_U/ram_reg" defined in module: "inst/add_2_16_9_128_U0" implemented as Ultra-Ram has no pipeline registers. It is recommended to use pipeline registers to achieve high performance.
+---------------------------------------------------------------------------------
+Start ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+
+Ultra RAM: Preliminary Mapping	Report (see note below)
++-----------------------+------------------------------------------------+------------------------+---+---+------------------------+---+---+------------------+---------+--------------+--------------------------+-------------+
+|Module Name            | RTL Object                                     | PORT A (Depth x Width) | W | R | PORT B (Depth x Width) | W | R | Ports driving FF | URAM288 | Matrix Shape | FF provided for Pipeline | FF absorbed | 
++-----------------------+------------------------------------------------+------------------------+---+---+------------------------+---+---+------------------+---------+--------------+--------------------------+-------------+
+|inst/add_2_16_9_128_U0 | buff_U/top_add_2_16_9_128_s_buff_ram_U/ram_reg | 128 x 32               |   | R | 128 x 32               | W |   | Port A and B     | 1       | 1x1          | 0                        | 0           | 
++-----------------------+------------------------------------------------+------------------------+---+---+------------------------+---+---+------------------+---------+--------------+--------------------------+-------------+
+
+Note: The table above is a preliminary report that shows the Ultra RAMs at the current stage of the synthesis flow. Some Ultra RAMs may be reimplemented as non Ultra RAM primitives later in the synthesis flow. Multiple instantiated Ultra RAMs are reported only once. Fields "FF provided for Pipeline" and "FF absorbed" respectively indicate number of registers available for pipelining and number of registers absorbed in the URAM matrix for pipelining. 
+
+Block RAM: Preliminary Mapping	Report (see note below)
++------------------------+-------------------------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+-----------------+
+|Module Name             | RTL Object                                      | PORT A (Depth x Width) | W | R | PORT B (Depth x Width) | W | R | Ports driving FF | RAMB18 | RAMB36 | Cascade Heights | 
++------------------------+-------------------------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+-----------------+
+|inst/gmem2_m_axi_U      | bus_read/buff_rdata/mem_reg                     | 256 x 35(READ_FIRST)   | W |   | 256 x 35(WRITE_FIRST)  |   | R | Port A and B     | 1      | 0      |                 | 
+|inst/gmem_m_axi_U       | bus_read/buff_rdata/mem_reg                     | 256 x 35(READ_FIRST)   | W |   | 256 x 35(WRITE_FIRST)  |   | R | Port A and B     | 1      | 0      |                 | 
+|inst/gmem1_m_axi_U      | bus_write/buff_wdata/mem_reg                    | 256 x 576(READ_FIRST)  | W |   | 256 x 576(WRITE_FIRST) |   | R | Port A and B     | 0      | 8      |                 | 
+|inst/mul_1_2_8_9_128_U0 | xs_V_U/top_mul_1_2_8_9_128_s_xs_V_ram_U/ram_reg | 2 x 8(READ_FIRST)      | W | R | 2 x 8(READ_FIRST)      | W | R | Port A and B     | 1      | 0      | 1               | 
++------------------------+-------------------------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+-----------------+
+
+Note: The table above is a preliminary report that shows the Block RAMs at the current stage of the synthesis flow. Some Block RAMs may be reimplemented as non Block RAM primitives later in the synthesis flow. Multiple instantiated Block RAMs are reported only once. 
+
+Distributed RAM: Preliminary Mapping	Report (see note below)
++------------------------+-------------------------------------------------+-----------+----------------------+----------------+
+|Module Name             | RTL Object                                      | Inference | Size (Depth x Width) | Primitives     | 
++------------------------+-------------------------------------------------+-----------+----------------------+----------------+
+|inst/mul_1_2_8_9_128_U0 | ys_V_U/top_mul_1_2_8_9_128_s_ys_V_ram_U/ram_reg | Implied   | 2 x 16               | RAM16X1D x 16	 | 
++------------------------+-------------------------------------------------+-----------+----------------------+----------------+
+
+Note: The table above is a preliminary report that shows the Distributed RAMs at the current stage of the synthesis flow. Some Distributed RAMs may be reimplemented as non Distributed RAM primitives later in the synthesis flow. Multiple instantiated RAMs are reported only once.
+
+DSP: Preliminary Mapping	Report (see note below)
++----------------------+-------------+--------+--------+--------+--------+--------+------+------+------+------+-------+------+------+
+|Module Name           | DSP Mapping | A Size | B Size | C Size | D Size | P Size | AREG | BREG | CREG | DREG | ADREG | MREG | PREG | 
++----------------------+-------------+--------+--------+--------+--------+--------+------+------+------+------+-------+------+------+
+|top_mul_1_2_8_9_128_s | (A2*B2)'    | 9      | 9      | -      | -      | 18     | 1    | 1    | -    | -    | -     | 1    | 0    | 
++----------------------+-------------+--------+--------+--------+--------+--------+------+------+------+------+-------+------+------+
+
+Note: The table above is a preliminary report that shows the DSPs inferred at the current stage of the synthesis flow. Some DSP may be reimplemented as non DSP primitives later in the synthesis flow. Multiple instantiated DSPs are reported only once.
+---------------------------------------------------------------------------------
+Finished ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Applying XDC Timing Constraints
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Applying XDC Timing Constraints : Time (s): cpu = 00:01:13 ; elapsed = 00:01:23 . Memory (MB): peak = 3543.488 ; gain = 784.617 ; free physical = 426061 ; free virtual = 505116
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Timing Optimization
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Timing Optimization : Time (s): cpu = 00:01:17 ; elapsed = 00:01:27 . Memory (MB): peak = 3606.730 ; gain = 847.859 ; free physical = 426010 ; free virtual = 505065
+---------------------------------------------------------------------------------
+WARNING: [Synth 8-6057] Memory: "buff_U/top_add_2_16_9_128_s_buff_ram_U/ram_reg" defined in module: "inst/add_2_16_9_128_U0" implemented as Ultra-Ram has no pipeline registers. It is recommended to use pipeline registers to achieve high performance.
+---------------------------------------------------------------------------------
+Start ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+
+Ultra RAM: Final Mapping	Report (see note below)
++-----------------------+------------------------------------------------+------------------------+---+---+------------------------+---+---+------------------+---------+--------------+--------------------------+-------------+
+|Module Name            | RTL Object                                     | PORT A (Depth x Width) | W | R | PORT B (Depth x Width) | W | R | Ports driving FF | URAM288 | Matrix Shape | FF provided for Pipeline | FF absorbed | 
++-----------------------+------------------------------------------------+------------------------+---+---+------------------------+---+---+------------------+---------+--------------+--------------------------+-------------+
+|inst/add_2_16_9_128_U0 | buff_U/top_add_2_16_9_128_s_buff_ram_U/ram_reg | 128 x 32               |   | R | 128 x 32               | W |   | Port A and B     | 1       | 1x1          | 0                        | 0           | 
++-----------------------+------------------------------------------------+------------------------+---+---+------------------------+---+---+------------------+---------+--------------+--------------------------+-------------+
+
+
+Block RAM: Final Mapping	Report
++------------------------+-------------------------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+-----------------+
+|Module Name             | RTL Object                                      | PORT A (Depth x Width) | W | R | PORT B (Depth x Width) | W | R | Ports driving FF | RAMB18 | RAMB36 | Cascade Heights | 
++------------------------+-------------------------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+-----------------+
+|inst/gmem2_m_axi_U      | bus_read/buff_rdata/mem_reg                     | 256 x 35(READ_FIRST)   | W |   | 256 x 35(WRITE_FIRST)  |   | R | Port A and B     | 1      | 0      |                 | 
+|inst/gmem_m_axi_U       | bus_read/buff_rdata/mem_reg                     | 256 x 35(READ_FIRST)   | W |   | 256 x 35(WRITE_FIRST)  |   | R | Port A and B     | 1      | 0      |                 | 
+|inst/gmem1_m_axi_U      | bus_write/buff_wdata/mem_reg                    | 256 x 576(READ_FIRST)  | W |   | 256 x 576(WRITE_FIRST) |   | R | Port A and B     | 0      | 8      |                 | 
+|inst/mul_1_2_8_9_128_U0 | xs_V_U/top_mul_1_2_8_9_128_s_xs_V_ram_U/ram_reg | 2 x 8(READ_FIRST)      | W | R | 2 x 8(READ_FIRST)      | W | R | Port A and B     | 1      | 0      | 1               | 
++------------------------+-------------------------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+-----------------+
+
+
+Distributed RAM: Final Mapping	Report
++------------------------+-------------------------------------------------+-----------+----------------------+----------------+
+|Module Name             | RTL Object                                      | Inference | Size (Depth x Width) | Primitives     | 
++------------------------+-------------------------------------------------+-----------+----------------------+----------------+
+|inst/mul_1_2_8_9_128_U0 | ys_V_U/top_mul_1_2_8_9_128_s_ys_V_ram_U/ram_reg | Implied   | 2 x 16               | RAM16X1D x 16	 | 
++------------------------+-------------------------------------------------+-----------+----------------------+----------------+
+
+---------------------------------------------------------------------------------
+Finished ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Technology Mapping
+---------------------------------------------------------------------------------
+INFO: [Synth 8-7052] The timing for the instance inst/gmem2_m_axi_U/bus_read/buff_rdata/mem_reg (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance inst/gmem_m_axi_U/bus_read/buff_rdata/mem_reg (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance inst/gmem1_m_axi_U/bus_write/buff_wdata/mem_reg_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance inst/gmem1_m_axi_U/bus_write/buff_wdata/mem_reg_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance inst/gmem1_m_axi_U/bus_write/buff_wdata/mem_reg_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance inst/gmem1_m_axi_U/bus_write/buff_wdata/mem_reg_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance inst/gmem1_m_axi_U/bus_write/buff_wdata/mem_reg_4 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance inst/gmem1_m_axi_U/bus_write/buff_wdata/mem_reg_5 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance inst/gmem1_m_axi_U/bus_write/buff_wdata/mem_reg_6 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance inst/gmem1_m_axi_U/bus_write/buff_wdata/mem_reg_7 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance inst/mul_1_2_8_9_128_U0/xs_V_U/top_mul_1_2_8_9_128_s_xs_V_ram_U/ram_reg_bram_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance inst/mul_1_2_8_9_128_U0/xs_V_U/top_mul_1_2_8_9_128_s_xs_V_ram_U/ram_reg_bram_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance inst/add_2_16_9_128_U0/buff_U/top_add_2_16_9_128_s_buff_ram_U/ram_reg_uram_0 (implemented as a Ultra RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+---------------------------------------------------------------------------------
+Finished Technology Mapping : Time (s): cpu = 00:01:22 ; elapsed = 00:01:32 . Memory (MB): peak = 3630.754 ; gain = 871.883 ; free physical = 426005 ; free virtual = 505060
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Flattening Before IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Flattening Before IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Final Netlist Cleanup
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Final Netlist Cleanup
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished IO Insertion : Time (s): cpu = 00:01:26 ; elapsed = 00:01:36 . Memory (MB): peak = 3633.723 ; gain = 874.852 ; free physical = 426002 ; free virtual = 505058
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Instances
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Instances : Time (s): cpu = 00:01:26 ; elapsed = 00:01:36 . Memory (MB): peak = 3633.723 ; gain = 874.852 ; free physical = 426002 ; free virtual = 505058
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Rebuilding User Hierarchy
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Rebuilding User Hierarchy : Time (s): cpu = 00:01:27 ; elapsed = 00:01:37 . Memory (MB): peak = 3633.723 ; gain = 874.852 ; free physical = 426001 ; free virtual = 505057
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Ports
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Ports : Time (s): cpu = 00:01:27 ; elapsed = 00:01:37 . Memory (MB): peak = 3633.723 ; gain = 874.852 ; free physical = 426001 ; free virtual = 505057
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Handling Custom Attributes
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Handling Custom Attributes : Time (s): cpu = 00:01:28 ; elapsed = 00:01:38 . Memory (MB): peak = 3633.723 ; gain = 874.852 ; free physical = 426002 ; free virtual = 505058
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Nets
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Nets : Time (s): cpu = 00:01:28 ; elapsed = 00:01:38 . Memory (MB): peak = 3633.723 ; gain = 874.852 ; free physical = 426002 ; free virtual = 505058
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+
+Dynamic Shift Register Report:
++------------+----------------+--------+------------+--------+---------+--------+--------+--------+
+|Module Name | RTL Name       | Length | Data Width | SRL16E | SRLC32E | Mux F7 | Mux F8 | Mux F9 | 
++------------+----------------+--------+------------+--------+---------+--------+--------+--------+
+|dsrl        | mem_reg[68]    | 10     | 10         | 0      | 30      | 20     | 10     | 0      | 
+|dsrl__1     | mem_reg[68]    | 96     | 96         | 0      | 288     | 192    | 96     | 0      | 
+|dsrl__2     | mem_reg[14]    | 2      | 2          | 2      | 0       | 0      | 0      | 0      | 
+|dsrl__3     | mem_reg[68]    | 2      | 2          | 0      | 6       | 4      | 2      | 0      | 
+|dsrl__4     | mem_reg[68]    | 12     | 12         | 0      | 36      | 24     | 12     | 0      | 
+|dsrl__5     | mem_reg[68]    | 96     | 96         | 0      | 288     | 192    | 96     | 0      | 
+|dsrl__6     | mem_reg[14]    | 2      | 2          | 2      | 0       | 0      | 0      | 0      | 
+|dsrl__7     | mem_reg[68]    | 2      | 2          | 0      | 6       | 4      | 2      | 0      | 
+|dsrl__8     | mem_reg[68]    | 8      | 8          | 0      | 24      | 16     | 8      | 0      | 
+|dsrl__9     | mem_reg[68]    | 96     | 96         | 0      | 288     | 192    | 96     | 0      | 
+|dsrl__10    | mem_reg[14]    | 2      | 2          | 2      | 0       | 0      | 0      | 0      | 
+|dsrl__11    | mem_reg[68]    | 2      | 2          | 0      | 6       | 4      | 2      | 0      | 
+|dsrl__12    | SRL_SIG_reg[7] | 64     | 64         | 64     | 0       | 0      | 0      | 0      | 
+|dsrl__13    | SRL_SIG_reg[7] | 1      | 1          | 1      | 0       | 0      | 0      | 0      | 
++------------+----------------+--------+------------+--------+---------+--------+--------+--------+
+
+---------------------------------------------------------------------------------
+Finished ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Writing Synthesis Report
+---------------------------------------------------------------------------------
+
+Report BlackBoxes: 
++-+--------------+----------+
+| |BlackBox name |Instances |
++-+--------------+----------+
++-+--------------+----------+
+
+Report Cell Usage: 
++------+----------------+------+
+|      |Cell            |Count |
++------+----------------+------+
+|1     |CARRY8          |   122|
+|2     |DSP_ALU         |     1|
+|3     |DSP_A_B_DATA    |     1|
+|4     |DSP_C_DATA      |     1|
+|5     |DSP_MULTIPLIER  |     1|
+|6     |DSP_M_DATA      |     1|
+|7     |DSP_OUTPUT      |     1|
+|8     |DSP_PREADD      |     1|
+|9     |DSP_PREADD_DATA |     1|
+|10    |LUT1            |    80|
+|11    |LUT2            |   348|
+|12    |LUT3            |  1690|
+|13    |LUT4            |  1484|
+|14    |LUT5            |   347|
+|15    |LUT6            |  1168|
+|16    |MUXF7           |   207|
+|17    |RAM16X1D        |    16|
+|18    |RAMB18E2        |     3|
+|20    |RAMB36E2        |     8|
+|21    |SRL16E          |    60|
+|22    |SRLC32E         |   621|
+|23    |URAM288         |     1|
+|24    |FDRE            |  8145|
+|25    |FDSE            |    67|
++------+----------------+------+
+---------------------------------------------------------------------------------
+Finished Writing Synthesis Report : Time (s): cpu = 00:01:28 ; elapsed = 00:01:38 . Memory (MB): peak = 3633.723 ; gain = 874.852 ; free physical = 426002 ; free virtual = 505058
+---------------------------------------------------------------------------------
+Synthesis finished with 0 errors, 0 critical warnings and 6 warnings.
+Synthesis Optimization Runtime : Time (s): cpu = 00:01:13 ; elapsed = 00:01:26 . Memory (MB): peak = 3633.723 ; gain = 546.977 ; free physical = 426032 ; free virtual = 505087
+Synthesis Optimization Complete : Time (s): cpu = 00:01:28 ; elapsed = 00:01:38 . Memory (MB): peak = 3633.730 ; gain = 874.852 ; free physical = 426032 ; free virtual = 505087
+INFO: [Project 1-571] Translating synthesized netlist
+Netlist sorting complete. Time (s): cpu = 00:00:00.16 ; elapsed = 00:00:00.16 . Memory (MB): peak = 3647.660 ; gain = 0.000 ; free physical = 426115 ; free virtual = 505170
+INFO: [Netlist 29-17] Analyzing 346 Unisim elements for replacement
+INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
+INFO: [Project 1-570] Preparing netlist for logic optimization
+INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 3729.027 ; gain = 0.000 ; free physical = 426017 ; free virtual = 505073
+INFO: [Project 1-111] Unisim Transformation Summary:
+  A total of 17 instances were transformed.
+  DSP48E2 => DSP48E2 (DSP_ALU, DSP_A_B_DATA, DSP_C_DATA, DSP_MULTIPLIER, DSP_M_DATA, DSP_OUTPUT, DSP_PREADD, DSP_PREADD_DATA): 1 instance 
+  RAM16X1D => RAM32X1D (RAMD32(x2)): 16 instances
+
+INFO: [Common 17-83] Releasing license: Synthesis
+256 Infos, 12 Warnings, 0 Critical Warnings and 0 Errors encountered.
+synth_design completed successfully
+synth_design: Time (s): cpu = 00:01:45 ; elapsed = 00:01:55 . Memory (MB): peak = 3729.027 ; gain = 1312.031 ; free physical = 426197 ; free virtual = 505253
+INFO: [Common 17-1381] The checkpoint '/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.runs/bd_0_hls_inst_0_synth_1/bd_0_hls_inst_0.dcp' has been generated.
+WARNING: [Common 17-576] 'use_project_ipc' is deprecated. This option is deprecated and no longer used.
+INFO: [Coretcl 2-1648] Added synthesis output to IP cache for IP bd_0_hls_inst_0, cache-ID = 5bc18e6b8dee5988
+INFO: [Coretcl 2-1174] Renamed 75 cell refs.
+INFO: [Common 17-1381] The checkpoint '/mnt/beegfs/gap/laumecha/prueba_booth/solution1/impl/verilog/project.runs/bd_0_hls_inst_0_synth_1/bd_0_hls_inst_0.dcp' has been generated.
+INFO: [runtcl-4] Executing : report_utilization -file bd_0_hls_inst_0_utilization_synth.rpt -pb bd_0_hls_inst_0_utilization_synth.pb
+INFO: [Common 17-206] Exiting Vivado at Thu Apr 28 16:01:32 2022...

@@ -1,0 +1,121 @@
+
+
+================================================================
+== Vitis HLS Report for 'first_swap_8_s'
+================================================================
+* Date:           Thu Apr 28 15:57:39 2022
+
+* Version:        2020.2 (Build 3064766 on Wed Nov 18 09:12:47 MST 2020)
+* Project:        prueba_booth
+* Solution:       solution1 (Vitis Kernel Flow Target)
+* Product family: virtexuplus
+* Target device:  xcu200-fsgd2104-2-e
+
+
+================================================================
+== Performance Estimates
+================================================================
++ Timing: 
+    * Summary: 
+    +--------+---------+----------+------------+
+    |  Clock |  Target | Estimated| Uncertainty|
+    +--------+---------+----------+------------+
+    |ap_clk  |  3.33 ns|  1.551 ns|     0.90 ns|
+    +--------+---------+----------+------------+
+
++ Latency: 
+    * Summary: 
+    +---------+---------+----------+----------+-----+-----+---------+
+    |  Latency (cycles) |  Latency (absolute) |  Interval | Pipeline|
+    |   min   |   max   |    min   |    max   | min | max |   Type  |
+    +---------+---------+----------+----------+-----+-----+---------+
+    |        0|        0|      0 ns|      0 ns|    1|    1|      yes|
+    +---------+---------+----------+----------+-----+-----+---------+
+
+    + Detail: 
+        * Instance: 
+        N/A
+
+        * Loop: 
+        N/A
+
+============================================================
++ Verbose Summary: Synthesis Manager
+============================================================
+InlineROM: 1
+ExposeGlobal: 0
+============================================================
++ Verbose Summary: CDFG Model
+============================================================
+IsTopModel: 0
+ResetActiveHigh: 1
+IsCombinational: 0
+IsDatapathOnly: 0
+HasWiredReturn: 1
+HasMFsm: 2
+HasVarLatency: 0
+IsPipeline: 1
+IsRtlPipelined: 0
+IsInstanceOverlapped: 0
+IsDontTouch: 0
+HasImplIP: 0
+IsGatedGlobalClock: 0
+
++ Individual pipeline summary: 
+  * Pipeline-0: initiation interval (II) = 1, depth = 1
+
+
+============================================================
++ Verbose Summary: Schedule
+============================================================
+* Number of FSM states : 1
+* Pipeline : 1
+  Pipeline-0 : II = 1, D = 1, States = { 1 }
+* Dataflow Pipeline: 0
+
+* FSM state transitions: 
+1 --> 
+
+* FSM state operations: 
+
+State 1 <SV = 0> <Delay = 1.55>
+ST_1 : Operation 2 [1/1] (0.00ns)   --->   "%p_read_1 = read i8 @_ssdm_op_Read.ap_auto.i8, i8 %p_read1" [prueba_booth/src/premults.cpp:5]   --->   Operation 2 'read' 'p_read_1' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 3 [1/1] (0.00ns)   --->   "%p_read_2 = read i8 @_ssdm_op_Read.ap_auto.i8, i8 %p_read" [prueba_booth/src/premults.cpp:5]   --->   Operation 3 'read' 'p_read_2' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 4 [1/1] (0.00ns)   --->   "%output_addr = getelementptr i8 %output_r, i64 0, i64 0" [prueba_booth/src/premults.cpp:5]   --->   Operation 4 'getelementptr' 'output_addr' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 5 [1/1] (0.58ns)   --->   "%icmp_ln870 = icmp_eq  i8 %p_read_2, i8 0"   --->   Operation 5 'icmp' 'icmp_ln870' <Predicate = true> <Delay = 0.58> <CoreInst = "Cmp">   --->   Core 9 'Cmp' <Latency = 0> <II = 1> <Delay = 0.58> <FuncUnit> <Opcode : 'icmp'> <InPorts = 2> <OutPorts = 1>
+ST_1 : Operation 6 [1/1] (0.00ns)   --->   "%output_addr_1 = getelementptr i8 %output_r, i64 0, i64 1" [prueba_booth/src/premults.cpp:9]   --->   Operation 6 'getelementptr' 'output_addr_1' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 7 [1/1] (0.30ns)   --->   "%select_ln7 = select i1 %icmp_ln870, i8 %p_read_1, i8 %p_read_2" [prueba_booth/src/premults.cpp:7]   --->   Operation 7 'select' 'select_ln7' <Predicate = true> <Delay = 0.30> <CoreInst = "Sel">   --->   Core 73 'Sel' <Latency = 0> <II = 1> <Delay = 0.30> <FuncUnit> <Opcode : 'select'> <InPorts = 3> <OutPorts = 1>
+ST_1 : Operation 8 [1/1] (0.30ns)   --->   "%select_ln7_1 = select i1 %icmp_ln870, i8 0, i8 %p_read_1" [prueba_booth/src/premults.cpp:7]   --->   Operation 8 'select' 'select_ln7_1' <Predicate = true> <Delay = 0.30> <CoreInst = "Sel">   --->   Core 73 'Sel' <Latency = 0> <II = 1> <Delay = 0.30> <FuncUnit> <Opcode : 'select'> <InPorts = 3> <OutPorts = 1>
+ST_1 : Operation 9 [1/1] (0.66ns)   --->   "%store_ln12 = store i8 %select_ln7, i1 %output_addr" [prueba_booth/src/premults.cpp:12]   --->   Operation 9 'store' 'store_ln12' <Predicate = true> <Delay = 0.66> <CoreInst = "RAM">   --->   Core 83 'RAM' <Latency = 1> <II = 1> <Delay = 0.66> <Storage> <Opcode : 'load' 'store'> <Ports = 2> <Width = 8> <Depth = 2> <RAM>
+ST_1 : Operation 10 [1/1] (0.66ns)   --->   "%store_ln9 = store i8 %select_ln7_1, i1 %output_addr_1" [prueba_booth/src/premults.cpp:9]   --->   Operation 10 'store' 'store_ln9' <Predicate = true> <Delay = 0.66> <CoreInst = "RAM">   --->   Core 83 'RAM' <Latency = 1> <II = 1> <Delay = 0.66> <Storage> <Opcode : 'load' 'store'> <Ports = 2> <Width = 8> <Depth = 2> <RAM>
+ST_1 : Operation 11 [1/1] (0.00ns)   --->   "%ret_ln16 = ret i1 %icmp_ln870" [prueba_booth/src/premults.cpp:16]   --->   Operation 11 'ret' 'ret_ln16' <Predicate = true> <Delay = 0.00>
+
+
+============================================================
++ Verbose Summary: Timing violations
+============================================================
+Target clock period: 3.33ns, clock uncertainty: 0.899ns.
+
+ <State 1>: 1.55ns
+The critical path consists of the following:
+	wire read on port 'p_read' (prueba_booth/src/premults.cpp:5) [5]  (0 ns)
+	'icmp' operation ('icmp_ln870') [7]  (0.581 ns)
+	'select' operation ('select_ln7', prueba_booth/src/premults.cpp:7) [9]  (0.303 ns)
+	'store' operation ('store_ln12', prueba_booth/src/premults.cpp:12) of variable 'select_ln7', prueba_booth/src/premults.cpp:7 on array 'output_r' [11]  (0.667 ns)
+
+
+============================================================
++ Verbose Summary: Binding
+============================================================
+N/A
+* FSMD analyzer results:
+  - Output states:
+ - Input state : 
+  - Chain level:
+	State 1
+
+
+============================================================
++ Verbose Summary: Datapath Resource usage 
+============================================================
+N/A

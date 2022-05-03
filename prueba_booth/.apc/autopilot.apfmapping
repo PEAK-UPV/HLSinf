@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<autopilotfilemapping:AutoPilotFileMapping xmlns:autopilotfilemapping="www.autoesl.com/autopilotfilemapping">
+  <source>
+    <originFiles name="top.h" path="/mnt/beegfs/gap/laumecha/prueba_booth/src/top.h"/>
+    <originFiles name="premults.cpp" path="/mnt/beegfs/gap/laumecha/prueba_booth/src/premults.cpp"/>
+  </source>
+  <testbench>
+    <originFiles name="tb.cpp" path="/mnt/beegfs/gap/laumecha/prueba_booth/src/tb.cpp"/>
+    <originFiles name="opencl.cpp" path="/mnt/beegfs/gap/laumecha/prueba_booth/src/opencl.cpp"/>
+    <originFiles name="tb.h" path="/mnt/beegfs/gap/laumecha/prueba_booth/src/tb.h"/>
+  </testbench>
+</autopilotfilemapping:AutoPilotFileMapping>

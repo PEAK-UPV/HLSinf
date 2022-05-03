@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cdfg:DBCdfg xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cdfg="http://www.autoesl.com/DBCdfg" timeStamp="1651154264000">
+  <ports id="1" name="out_r" type="PortType" originalName="out" coreName="FIFO_SRL" coreId="3417571744" bitwidth="32" direction="DirOut" iftype="IfTypeRom">
+    <dataInputObjs>write</dataInputObjs>
+  </ports>
+  <ports id="2" name="in_V_V" type="PortType" originalName="in.V.V" coreName="FIFO_SRL" coreId="3417842848" bitwidth="32" iftype="IfTypeRom">
+    <dataOutputObjs>read</dataOutputObjs>
+  </ports>
+  <edges id="21" edge_type="CtrlEdge" source_obj="//@regions.0/@basic_blocks.0" sink_obj="//@blocks.0/@node_objs.0"/>
+  <edges id="24" edge_type="CtrlEdge" source_obj="//@blocks.0" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.0"/>
+  <edges id="25" source_obj="//@regions.0/@basic_blocks.0/@node_objs.1" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.0" is_back_edge="1"/>
+  <edges id="26" edge_type="CtrlEdge" source_obj="//@regions.0/@basic_blocks.1" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.0" is_back_edge="1"/>
+  <edges id="27" source_obj="//@regions.0/@basic_blocks.0/@node_objs.0" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.1"/>
+  <edges id="30" source_obj="//@regions.0/@basic_blocks.0/@node_objs.0" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.2"/>
+  <edges id="33" source_obj="//@regions.0/@basic_blocks.0/@node_objs.2" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.3"/>
+  <edges id="34" edge_type="CtrlEdge" source_obj="//@regions.0/@basic_blocks.1" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.3"/>
+  <edges id="35" edge_type="CtrlEdge" source_obj="//@blocks.1" sink_obj="//@regions.0/@basic_blocks.0/@node_objs.3"/>
+  <edges id="38" source_obj="//@ports.1" sink_obj="//@regions.0/@basic_blocks.1/@node_objs.0"/>
+  <edges id="41" source_obj="//@regions.0/@basic_blocks.1/@node_objs.1" sink_obj="//@ports.0"/>
+  <edges id="42" source_obj="//@regions.0/@basic_blocks.1/@node_objs.0" sink_obj="//@regions.0/@basic_blocks.1/@node_objs.1"/>
+  <edges id="43" edge_type="CtrlEdge" source_obj="//@regions.0/@basic_blocks.0" sink_obj="//@regions.0/@basic_blocks.1/@node_objs.2"/>
+  <edges id="107" edge_type="CtrlEdge" source_obj="//@blocks.0" sink_obj="//@regions.0/@basic_blocks.0"/>
+  <edges id="108" edge_type="CtrlEdge" source_obj="//@regions.0/@basic_blocks.0" sink_obj="//@blocks.1"/>
+  <edges id="109" edge_type="CtrlEdge" source_obj="//@regions.0/@basic_blocks.0" sink_obj="//@regions.0/@basic_blocks.1"/>
+  <edges id="110" edge_type="CtrlEdge" source_obj="//@regions.0/@basic_blocks.1" sink_obj="//@regions.0/@basic_blocks.0" is_back_edge="1"/>
+  <blocks id="6" name="block_6" type="BlockType">
+    <controlOutputObjs>phi</controlOutputObjs>
+    <controlOutputObjs>block_12</controlOutputObjs>
+    <node_objs xsi:type="cdfg:CdfgNode" id="5" name="br_ln404" lineNumber="404" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="0" contextFuncName="merge_1_2_16_128_s" opcode="br" m_display="0" m_delay="0.38" m_topoIndex="1" m_clusterGroupNumber="-1">
+      <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="404" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="merge&amp;lt;1, 2, 16, 128&amp;gt;"/>
+      <controlInputObjs>block_12</controlInputObjs>
+    </node_objs>
+    <fileValidLineNumbers fileName="prueba_booth/src/premults.cpp">
+      <validLinenumbers>404</validLinenumbers>
+    </fileValidLineNumbers>
+  </blocks>
+  <blocks id="20" name="block_20" type="BlockType">
+    <controlInputObjs>block_12</controlInputObjs>
+    <controlOutputObjs>br</controlOutputObjs>
+    <node_objs xsi:type="cdfg:CdfgNode" id="19" name="_ln411" lineNumber="411" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="132" contextFuncName="merge_1_2_16_128_s" opcode="ret" nodeLabel="3.0" m_display="0" m_topoIndex="9" m_clusterGroupNumber="-1">
+      <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="411" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="merge&amp;lt;1, 2, 16, 128&amp;gt;"/>
+    </node_objs>
+    <fileValidLineNumbers fileName="prueba_booth/src/premults.cpp">
+      <validLinenumbers>411</validLinenumbers>
+    </fileValidLineNumbers>
+  </blocks>
+  <regions anchor_node="-1" region_type="8" interval="1" typeName="Pipeline" id="67" pipe_depth="2" RegionName="VITIS_LOOP_404_2">
+    <basic_blocks id="12" name="block_12" type="BlockType">
+      <controlInputObjs>block_6</controlInputObjs>
+      <controlInputObjs>.split</controlInputObjs>
+      <controlOutputObjs>br</controlOutputObjs>
+      <controlOutputObjs>br</controlOutputObjs>
+      <controlOutputObjs>block_20</controlOutputObjs>
+      <controlOutputObjs>.split</controlOutputObjs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="7" name="it" originalName="it" coreId="4294967295" bitwidth="8" opcode="phi" nodeLabel="1.0" m_display="0" m_topoIndex="2" m_clusterGroupNumber="-1">
+        <dataInputObjs>add</dataInputObjs>
+        <dataOutputObjs>add</dataOutputObjs>
+        <dataOutputObjs>icmp</dataOutputObjs>
+        <controlInputObjs>block_6</controlInputObjs>
+        <controlInputObjs>.split</controlInputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="8" name="it_1" lineNumber="404" originalName="it" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." rtlName="it_1_fu_67_p2" coreName="Adder" implIndex="fabric" control="auto" opType="add" coreId="1" contextFuncName="merge_1_2_16_128_s" bitwidth="8" opcode="add" nodeLabel="1.0" m_display="0" m_delay="0.7" m_topoIndex="3" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="404" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="merge&amp;lt;1, 2, 16, 128&amp;gt;"/>
+        <dataInputObjs>phi</dataInputObjs>
+        <dataOutputObjs>phi</dataOutputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="9" name="icmp_ln404" lineNumber="404" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." rtlName="icmp_ln404_fu_73_p2" opType="icmp" coreId="0" contextFuncName="merge_1_2_16_128_s" bitwidth="1" opcode="icmp" nodeLabel="1.0" m_display="0" m_delay="0.58" m_topoIndex="4" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="404" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="merge&amp;lt;1, 2, 16, 128&amp;gt;"/>
+        <dataInputObjs>phi</dataInputObjs>
+        <dataOutputObjs>br</dataOutputObjs>
+        <constName>empty</constName>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="11" name="br_ln404" lineNumber="404" fileName="prueba_booth/src/premults.cpp" fileDirectory=".." coreId="0" contextFuncName="merge_1_2_16_128_s" opcode="br" nodeLabel="1.0" m_display="0" m_topoIndex="5" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="prueba_booth/src/premults.cpp" linenumber="404" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="merge&amp;lt;1, 2, 16, 128&amp;gt;"/>
+        <dataInputObjs>icmp</dataInputObjs>
+        <controlInputObjs>.split</controlInputObjs>
+        <controlInputObjs>block_20</controlInputObjs>
+      </node_objs>
+      <fileValidLineNumbers fileName="prueba_booth/src/premults.cpp">
+        <validLinenumbers>404</validLinenumbers>
+      </fileValidLineNumbers>
+    </basic_blocks>
+    <basic_blocks id="18" name=".split" type="BlockType">
+      <controlInputObjs>block_12</controlInputObjs>
+      <controlOutputObjs>phi</controlOutputObjs>
+      <controlOutputObjs>br</controlOutputObjs>
+      <controlOutputObjs>block_12</controlOutputObjs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="15" name="in_V_V_read" lineNumber="145" fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h" fileDirectory=".." coreName="FIFO_SRL" implIndex="srl" control="auto" opType="fifo" coreId="81" contextFuncName="read" bitwidth="32" opcode="read" nodeLabel="2.0" m_display="0" m_delay="1.21" m_topoIndex="6" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h" linenumber="145" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="read"/>
+        <dataInputObjs>in_V_V</dataInputObjs>
+        <dataOutputObjs>write</dataOutputObjs>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="16" name="out_r_write_ln174" lineNumber="174" fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h" fileDirectory=".." coreName="FIFO_SRL" implIndex="srl" control="auto" opType="fifo" coreId="81" contextFuncName="write" opcode="write" nodeLabel="2.0" m_display="0" m_delay="1.21" m_topoIndex="7" m_clusterGroupNumber="-1">
+        <inlineStackInfo fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h" linenumber="174" fileDirectory="/mnt/beegfs/gap/laumecha" functionName="write"/>
+        <dataInputObjs>read</dataInputObjs>
+        <dataOutputObjs>out_r</dataOutputObjs>
+      </node_objs>
+      <node_objs xsi:type="cdfg:CdfgNode" id="17" name="br_ln0" coreId="49" opcode="br" nodeLabel="2.0" m_display="0" m_topoIndex="8" m_clusterGroupNumber="-1">
+        <controlInputObjs>block_12</controlInputObjs>
+      </node_objs>
+      <fileValidLineNumbers fileName="/tools/Xilinx/Vitis_HLS/2020.2/common/technology/autopilot/hls_stream_39.h">
+        <validLinenumbers>145</validLinenumbers>
+        <validLinenumbers>174</validLinenumbers>
+      </fileValidLineNumbers>
+    </basic_blocks>
+  </regions>
+  <ScheduleInfo time="0"/>
+  <ScheduleInfo time="1"/>
+  <ScheduleInfo time="2"/>
+  <ScheduleInfo time="3"/>
+  <regnodes realName="it_reg_56">
+    <nodeIds>7</nodeIds>
+  </regnodes>
+  <regnodes realName="it_1_reg_79">
+    <nodeIds>8</nodeIds>
+  </regnodes>
+  <regnodes realName="icmp_ln404_reg_84">
+    <nodeIds>9</nodeIds>
+  </regnodes>
+  <expressionNodes realName="it_phi_fu_60">
+    <nodeIds>7</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="icmp_ln404_fu_73">
+    <nodeIds>9</nodeIds>
+  </expressionNodes>
+  <expressionNodes realName="it_1_fu_67">
+    <nodeIds>8</nodeIds>
+  </expressionNodes>
+  <ioNodes realName="write_ln174_write_fu_48">
+    <nodeIds>16</nodeIds>
+  </ioNodes>
+  <ioNodes realName="in_V_V_read_read_fu_42">
+    <nodeIds>15</nodeIds>
+  </ioNodes>
+  <ioPorts name="in_V_V">
+    <contents name="read">
+      <nodeIds>15</nodeIds>
+    </contents>
+  </ioPorts>
+  <ioPorts name="out_r">
+    <contents name="write">
+      <nodeIds>16</nodeIds>
+    </contents>
+  </ioPorts>
+  <fsm>
+    <states id="1">
+      <operations id="3" stage="1" latency="1"/>
+      <operations id="4" stage="1" latency="1"/>
+      <operations id="5" stage="1" latency="1"/>
+    </states>
+    <states id="2">
+      <operations id="7" stage="1" latency="1"/>
+      <operations id="8" stage="1" latency="1"/>
+      <operations id="9" stage="1" latency="1"/>
+      <operations id="10" stage="1" latency="1"/>
+      <operations id="11" stage="1" latency="1"/>
+    </states>
+    <states id="3">
+      <operations id="13" stage="1" latency="1"/>
+      <operations id="14" stage="1" latency="1"/>
+      <operations id="15" stage="1" latency="1"/>
+      <operations id="16" stage="1" latency="1"/>
+      <operations id="17" stage="1" latency="1"/>
+    </states>
+    <states id="4">
+      <operations id="19" stage="1" latency="1"/>
+    </states>
+    <transitions inState="1" outState="2">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="3" outState="2">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="2" outState="4">
+      <condition id="-1"/>
+    </transitions>
+    <transitions inState="2" outState="3">
+      <condition id="-1"/>
+    </transitions>
+  </fsm>
+  <CFGRegionsRoot>
+    <cfgRegions mId="1" mTag="merge_1_2_16_128_s" mII="-1" mDepth="-1" mMinTripCount="-1" mMaxTripCount="-1" mMinLatency="130" mMaxLatency="130">
+      <subRegions>2</subRegions>
+      <subRegions>3</subRegions>
+      <subRegions>4</subRegions>
+      <mDfPipe/>
+    </cfgRegions>
+    <cfgRegions mId="2" mTag="Entry" mII="-1" mDepth="-1" mMinTripCount="-1" mMaxTripCount="-1">
+      <basicBlocks>6</basicBlocks>
+      <mDfPipe/>
+    </cfgRegions>
+    <cfgRegions mId="3" mTag="VITIS_LOOP_404_2" mII="1" mDepth="2" mMinTripCount="128" mMaxTripCount="128" mMinLatency="128" mMaxLatency="128" mType="1">
+      <basicBlocks>12</basicBlocks>
+      <basicBlocks>18</basicBlocks>
+      <mDfPipe/>
+    </cfgRegions>
+    <cfgRegions mId="4" mTag="Return" mII="-1" mDepth="-1" mMinTripCount="-1" mMaxTripCount="-1">
+      <basicBlocks>20</basicBlocks>
+      <mDfPipe/>
+    </cfgRegions>
+  </CFGRegionsRoot>
+</cdfg:DBCdfg>

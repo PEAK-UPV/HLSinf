@@ -1,0 +1,134 @@
+
+
+================================================================
+== Vitis HLS Report for 'last_swap_8_s'
+================================================================
+* Date:           Thu Apr 28 15:57:39 2022
+
+* Version:        2020.2 (Build 3064766 on Wed Nov 18 09:12:47 MST 2020)
+* Project:        prueba_booth
+* Solution:       solution1 (Vitis Kernel Flow Target)
+* Product family: virtexuplus
+* Target device:  xcu200-fsgd2104-2-e
+
+
+================================================================
+== Performance Estimates
+================================================================
++ Timing: 
+    * Summary: 
+    +--------+---------+----------+------------+
+    |  Clock |  Target | Estimated| Uncertainty|
+    +--------+---------+----------+------------+
+    |ap_clk  |  3.33 ns|  1.664 ns|     0.90 ns|
+    +--------+---------+----------+------------+
+
++ Latency: 
+    * Summary: 
+    +---------+---------+----------+----------+-----+-----+---------+
+    |  Latency (cycles) |  Latency (absolute) |  Interval | Pipeline|
+    |   min   |   max   |    min   |    max   | min | max |   Type  |
+    +---------+---------+----------+----------+-----+-----+---------+
+    |        1|        1|  3.330 ns|  3.330 ns|    1|    1|      yes|
+    +---------+---------+----------+----------+-----+-----+---------+
+
+    + Detail: 
+        * Instance: 
+        N/A
+
+        * Loop: 
+        N/A
+
+============================================================
++ Verbose Summary: Synthesis Manager
+============================================================
+InlineROM: 1
+ExposeGlobal: 0
+============================================================
++ Verbose Summary: CDFG Model
+============================================================
+IsTopModel: 0
+ResetActiveHigh: 1
+IsCombinational: 0
+IsDatapathOnly: 0
+HasWiredReturn: 1
+HasMFsm: 2
+HasVarLatency: 0
+IsPipeline: 1
+IsRtlPipelined: 1
+IsInstanceOverlapped: 0
+IsDontTouch: 0
+HasImplIP: 0
+IsGatedGlobalClock: 0
+
++ Individual pipeline summary: 
+  * Pipeline-0: initiation interval (II) = 1, depth = 2
+
+
+============================================================
++ Verbose Summary: Schedule
+============================================================
+* Number of FSM states : 2
+* Pipeline : 1
+  Pipeline-0 : II = 1, D = 2, States = { 1 2 }
+* Dataflow Pipeline: 0
+
+* FSM state transitions: 
+1 --> 2 
+2 --> 
+
+* FSM state operations: 
+
+State 1 <SV = 0> <Delay = 1.66>
+ST_1 : Operation 3 [1/1] (0.00ns)   --->   "%swap_read = read i32 @_ssdm_op_Read.ap_auto.i32, i32 %swap" [prueba_booth/src/premults.cpp:18]   --->   Operation 3 'read' 'swap_read' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 4 [1/1] (0.85ns)   --->   "%icmp_ln20 = icmp_eq  i32 %swap_read, i32 0" [prueba_booth/src/premults.cpp:20]   --->   Operation 4 'icmp' 'icmp_ln20' <Predicate = true> <Delay = 0.85> <CoreInst = "Cmp">   --->   Core 9 'Cmp' <Latency = 0> <II = 1> <Delay = 0.85> <FuncUnit> <Opcode : 'icmp'> <InPorts = 2> <OutPorts = 1>
+ST_1 : Operation 5 [1/1] (0.12ns)   --->   "%xor_ln20 = xor i1 %icmp_ln20, i1 1" [prueba_booth/src/premults.cpp:20]   --->   Operation 5 'xor' 'xor_ln20' <Predicate = true> <Delay = 0.12> <CoreInst = "LogicGate">   --->   Core 74 'LogicGate' <Latency = 0> <II = 1> <Delay = 0.12> <FuncUnit> <Opcode : 'and' 'or' 'xor'> <InPorts = 2> <OutPorts = 1>
+ST_1 : Operation 6 [1/1] (0.00ns)   --->   "%zext_ln18 = zext i1 %xor_ln20" [prueba_booth/src/premults.cpp:18]   --->   Operation 6 'zext' 'zext_ln18' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 7 [1/1] (0.00ns)   --->   "%input_addr = getelementptr i16 %input_r, i64 0, i64 %zext_ln18" [prueba_booth/src/premults.cpp:18]   --->   Operation 7 'getelementptr' 'input_addr' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 8 [2/2] (0.68ns)   --->   "%input_load = load i1 %input_addr" [prueba_booth/src/premults.cpp:20]   --->   Operation 8 'load' 'input_load' <Predicate = true> <Delay = 0.68> <CoreInst = "RAM">   --->   Core 83 'RAM' <Latency = 1> <II = 1> <Delay = 0.68> <Storage> <Opcode : 'load' 'store'> <Ports = 2> <Width = 16> <Depth = 2> <RAM>
+ST_1 : Operation 9 [1/1] (0.00ns)   --->   "%zext_ln20 = zext i1 %icmp_ln20" [prueba_booth/src/premults.cpp:20]   --->   Operation 9 'zext' 'zext_ln20' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 10 [1/1] (0.00ns)   --->   "%input_addr_1 = getelementptr i16 %input_r, i64 0, i64 %zext_ln20" [prueba_booth/src/premults.cpp:21]   --->   Operation 10 'getelementptr' 'input_addr_1' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 11 [2/2] (0.68ns)   --->   "%input_load_1 = load i1 %input_addr_1" [prueba_booth/src/premults.cpp:20]   --->   Operation 11 'load' 'input_load_1' <Predicate = true> <Delay = 0.68> <CoreInst = "RAM">   --->   Core 83 'RAM' <Latency = 1> <II = 1> <Delay = 0.68> <Storage> <Opcode : 'load' 'store'> <Ports = 2> <Width = 16> <Depth = 2> <RAM>
+
+State 2 <SV = 1> <Delay = 0.68>
+ST_2 : Operation 12 [1/2] (0.68ns)   --->   "%input_load = load i1 %input_addr" [prueba_booth/src/premults.cpp:20]   --->   Operation 12 'load' 'input_load' <Predicate = true> <Delay = 0.68> <CoreInst = "RAM">   --->   Core 83 'RAM' <Latency = 1> <II = 1> <Delay = 0.68> <Storage> <Opcode : 'load' 'store'> <Ports = 2> <Width = 16> <Depth = 2> <RAM>
+ST_2 : Operation 13 [1/2] (0.68ns)   --->   "%input_load_1 = load i1 %input_addr_1" [prueba_booth/src/premults.cpp:20]   --->   Operation 13 'load' 'input_load_1' <Predicate = true> <Delay = 0.68> <CoreInst = "RAM">   --->   Core 83 'RAM' <Latency = 1> <II = 1> <Delay = 0.68> <Storage> <Opcode : 'load' 'store'> <Ports = 2> <Width = 16> <Depth = 2> <RAM>
+ST_2 : Operation 14 [1/1] (0.00ns)   --->   "%mrv = insertvalue i32 <undef>, i16 %input_load" [prueba_booth/src/premults.cpp:27]   --->   Operation 14 'insertvalue' 'mrv' <Predicate = true> <Delay = 0.00>
+ST_2 : Operation 15 [1/1] (0.00ns)   --->   "%mrv_1 = insertvalue i32 %mrv, i16 %input_load_1" [prueba_booth/src/premults.cpp:27]   --->   Operation 15 'insertvalue' 'mrv_1' <Predicate = true> <Delay = 0.00>
+ST_2 : Operation 16 [1/1] (0.00ns)   --->   "%ret_ln27 = ret i32 %mrv_1" [prueba_booth/src/premults.cpp:27]   --->   Operation 16 'ret' 'ret_ln27' <Predicate = true> <Delay = 0.00>
+
+
+============================================================
++ Verbose Summary: Timing violations
+============================================================
+Target clock period: 3.33ns, clock uncertainty: 0.899ns.
+
+ <State 1>: 1.66ns
+The critical path consists of the following:
+	wire read on port 'swap' (prueba_booth/src/premults.cpp:18) [3]  (0 ns)
+	'icmp' operation ('icmp_ln20', prueba_booth/src/premults.cpp:20) [4]  (0.859 ns)
+	'xor' operation ('xor_ln20', prueba_booth/src/premults.cpp:20) [5]  (0.122 ns)
+	'getelementptr' operation ('input_addr', prueba_booth/src/premults.cpp:18) [7]  (0 ns)
+	'load' operation ('input_load', prueba_booth/src/premults.cpp:20) on array 'input_r' [8]  (0.683 ns)
+
+ <State 2>: 0.683ns
+The critical path consists of the following:
+	'load' operation ('input_load', prueba_booth/src/premults.cpp:20) on array 'input_r' [8]  (0.683 ns)
+
+
+============================================================
++ Verbose Summary: Binding
+============================================================
+N/A
+* FSMD analyzer results:
+  - Output states:
+ - Input state : 
+  - Chain level:
+	State 1
+	State 2
+
+
+============================================================
++ Verbose Summary: Datapath Resource usage 
+============================================================
+N/A
