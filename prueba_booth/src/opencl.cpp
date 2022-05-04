@@ -80,27 +80,27 @@ void fn_init_fpga() {
 void allocate_buffers() {
   // Now we allocate those buffers in the FPGA (for OpenCL)
   cl_int err;
-  data_in_ddr0.flags  =  0 | XCL_MEM_TOPOLOGY;
+  data_in_ddr0.flags  =  32 | XCL_MEM_TOPOLOGY;
   data_in_ddr0.obj = x[0];
   data_in_ddr0.param = 0;
 
-  data_in_ddr1.flags  =  0 | XCL_MEM_TOPOLOGY;
+  data_in_ddr1.flags  =  32 | XCL_MEM_TOPOLOGY;
   data_in_ddr1.obj = x[1];
   data_in_ddr1.param = 0;
 
-  data_in_ddr2.flags  =  0 | XCL_MEM_TOPOLOGY;
+  data_in_ddr2.flags  =  32 | XCL_MEM_TOPOLOGY;
   data_in_ddr2.obj = x[2];
   data_in_ddr2.param = 0;
 
-  data_in_ddr3.flags  =  0 | XCL_MEM_TOPOLOGY;
+  data_in_ddr3.flags  =  32 | XCL_MEM_TOPOLOGY;
   data_in_ddr3.obj = x[3];
   data_in_ddr3.param = 0;
 
-  out_ddr.flags  = 0 | XCL_MEM_TOPOLOGY;
+  out_ddr.flags  = 32 | XCL_MEM_TOPOLOGY;
   out_ddr.obj = y;
   out_ddr.param = 0;
 
-  kernel_ddr.flags  = 0 | XCL_MEM_TOPOLOGY;
+  kernel_ddr.flags  = 32 | XCL_MEM_TOPOLOGY;
   kernel_ddr.obj = w;
   kernel_ddr.param = 0;
 
