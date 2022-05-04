@@ -8,8 +8,8 @@
 #define PRAGMA_SUB(x) _Pragma (#x)
 #define DO_PRAGMA(x) PRAGMA_SUB(x)
 
-#define H                16
-#define W                16
+#define H                256
+#define W                256
 #define KH               3
 #define KW               3
 #define I                1

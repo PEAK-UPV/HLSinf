@@ -166,9 +166,13 @@ int main(int argc, char* argv[]) {
   printf("H %d W %d I %d O %d, KHxKW %dx%d -> %s\n", H, W, I, O, KH, KW, failed?"FAILED!":"SUCCESS");
 
   for (int i=0; i<I; i++) free(x[i]);
+  printf("free1\n");
   free(w);
+  printf("free2\n");
   free(y);
+  printf("free3\n");
   free(y_cpu);
+  printf("free4\n");
 
   return failed;
 

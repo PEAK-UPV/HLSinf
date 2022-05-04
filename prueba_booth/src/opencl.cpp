@@ -105,9 +105,12 @@ void allocate_buffers() {
   kernel_ddr.param = 0;
 
   OCL_CHECK(err, buffer_i0      = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_x_in_bytes, &data_in_ddr0, &err));
-  if (I>1) OCL_CHECK(err, buffer_i1      = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_x_in_bytes, &data_in_ddr1, &err));
-  if (I>2) OCL_CHECK(err, buffer_i2      = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_x_in_bytes, &data_in_ddr2, &err));
-  if (I>3) OCL_CHECK(err, buffer_i3      = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_x_in_bytes, &data_in_ddr3, &err));
+  if (I>1) {OCL_CHECK(err, buffer_i1      = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_x_in_bytes, &data_in_ddr1, &err));} 
+  else {OCL_CHECK(err, buffer_i1 = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, 1, &data_in_ddr1, &err))};
+  if (I>2) {OCL_CHECK(err, buffer_i2      = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_x_in_bytes, &data_in_ddr2, &err));}
+  else {OCL_CHECK(err, buffer_i2 = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, 1, &data_in_ddr2, &err))};
+  if (I>3) {OCL_CHECK(err, buffer_i3      = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_x_in_bytes, &data_in_ddr3, &err));} 
+  else {OCL_CHECK(err, buffer_i3 = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, 1, &data_in_ddr3, &err))};
   OCL_CHECK(err, buffer_o    = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_WRITE_ONLY  | CL_MEM_USE_HOST_PTR , size_y_in_bytes, &out_ddr, &err));
   OCL_CHECK(err, buffer_k    = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_w_in_bytes, &kernel_ddr, &err));
 }
@@ -159,12 +162,19 @@ void run_kernel() {
 	//  top(x0, x1, x2, x3, (ap_uint<8*O*I> *)w, (ap_uint<512> *)y);
 	cl_int err;
 	int arg = 0;
+	printf("1\n");
 	OCL_CHECK(err, err = kernel_conv2d.setArg(arg++, *buffer_i0));
+	printf("2\n");
 	OCL_CHECK(err, err = kernel_conv2d.setArg(arg++, *buffer_i1));
+	printf("3\n");
 	OCL_CHECK(err, err = kernel_conv2d.setArg(arg++, *buffer_i2));
+	printf("4\n");
 	OCL_CHECK(err, err = kernel_conv2d.setArg(arg++, *buffer_i3));
+	printf("5\n");
 	OCL_CHECK(err, err = kernel_conv2d.setArg(arg++, *buffer_k));
+	printf("6\n");
 	OCL_CHECK(err, err = kernel_conv2d.setArg(arg++, *buffer_o));
+	printf("hola\n");
     OCL_CHECK(err, err = q.enqueueNDRangeKernel(kernel_conv2d, 0, 1, 1, NULL, &kernel_events));
     set_callback(kernel_events, "ooo_queue");
     OCL_CHECK(err, err = kernel_events.wait());
