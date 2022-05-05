@@ -424,13 +424,13 @@ template <int num_its> void write(ap_uint<512> *ptr, hls::stream<ap_uint<512>> &
 }
 
 extern "C" {
-void top(ap_uint<READ_GROUP_SIZE*DATA_SIZE> *x0, ap_uint<READ_GROUP_SIZE*DATA_SIZE> *x1, ap_uint<READ_GROUP_SIZE*DATA_SIZE> *x2, ap_uint<READ_GROUP_SIZE*DATA_SIZE> *x3, ap_uint<I*O*DATA_SIZE> *w, ap_uint<512> *y) {
+void top(ap_uint<READ_GROUP_SIZE*DATA_SIZE> *x0, /*ap_uint<READ_GROUP_SIZE*DATA_SIZE> *x1, ap_uint<READ_GROUP_SIZE*DATA_SIZE> *x2, ap_uint<READ_GROUP_SIZE*DATA_SIZE> *x3, */ap_uint<I*O*DATA_SIZE> *w, ap_uint<512> *y) {
   #pragma hls interface m_axi port=w offset=slave bundle=gmem
   #pragma hls interface m_axi port=y offset=slave bundle=gmem1
   #pragma hls interface m_axi port=x0 offset=slave bundle=gmem2
-  #pragma hls interface m_axi port=x1 offset=slave bundle=gmem3
-  #pragma hls interface m_axi port=x2 offset=slave bundle=gmem4
-  #pragma hls interface m_axi port=x3 offset=slave bundle=gmem5
+//  #pragma hls interface m_axi port=x1 offset=slave bundle=gmem3
+//  #pragma hls interface m_axi port=x2 offset=slave bundle=gmem4
+//  #pragma hls interface m_axi port=x3 offset=slave bundle=gmem5
 
 	printf("top kernel in...\n");
 
@@ -451,9 +451,9 @@ void top(ap_uint<READ_GROUP_SIZE*DATA_SIZE> *x0, ap_uint<READ_GROUP_SIZE*DATA_SI
   hls::stream<ap_uint<DATA_SIZE*READ_GROUP_SIZE>> st_read_x[I];
   hls::stream<ap_uint<DATA_SIZE*READ_GROUP_SIZE*I>> st_x1[O];
   if (I>=1) read_x<READ_GROUP_SIZE, DATA_SIZE>(x0, st_read_x[0]);
-  if (I>=2) read_x<READ_GROUP_SIZE, DATA_SIZE>(x1, st_read_x[1]);
-  if (I>=3) read_x<READ_GROUP_SIZE, DATA_SIZE>(x2, st_read_x[2]);
-  if (I>=4) read_x<READ_GROUP_SIZE, DATA_SIZE>(x3, st_read_x[3]);
+//  if (I>=2) read_x<READ_GROUP_SIZE, DATA_SIZE>(x1, st_read_x[1]);
+//  if (I>=3) read_x<READ_GROUP_SIZE, DATA_SIZE>(x2, st_read_x[2]);
+//  if (I>=4) read_x<READ_GROUP_SIZE, DATA_SIZE>(x3, st_read_x[3]);
 
   broadcast<I, O, READ_GROUP_SIZE, DATA_SIZE, KH * KH * H * W / READ_GROUP_SIZE>(st_read_x, st_x1);
 
@@ -469,3 +469,4 @@ void top(ap_uint<READ_GROUP_SIZE*DATA_SIZE> *x0, ap_uint<READ_GROUP_SIZE*DATA_SI
   write<O*H*W*2*DATA_SIZE/512>(y, st_serialize);
 }
 }
+
