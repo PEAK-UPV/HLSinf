@@ -193,6 +193,10 @@ template<int num_input_channels, int items_per_read, int num_bits, int num_its1,
 	ap_uint<num_bits> op1;
 	ap_uint<2*num_bits> y;
 	#pragma HLS BIND_OP variable=y op=mul impl=dsp
+#pragma HLS array_partition variable=ys complete
+#pragma HLS array_partition variable=yf complete
+#pragma HLS array_partition variable=x complete
+#pragma HLS array_partition variable=xs complete
 
 	int free_slots = 2;
 	int end = 0;
