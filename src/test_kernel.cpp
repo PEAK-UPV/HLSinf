@@ -100,6 +100,9 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
     #ifdef USE_ADD
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_add));
     #endif
+    #ifdef USE_ADD_RELU
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, apply_add_relu));
+    #endif
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, min_clip));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, max_clip));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, dir_shift));
@@ -143,6 +146,9 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
 		    enable_clipping, enable_shift, 
         #ifdef USE_ADD
         enable_add, 
+        #endif
+        #ifdef USE_ADD_RELU
+	apply_add_relu,
         #endif
         min_clip, max_clip, dir_shift, pos_shift, enable_upsize, write_to_weight_buffer, read_from_weight_buffer, first_row_weight_buffer, read_from_mem, read_from_b0, read_from_b1, write_to_mem, write_to_b0, write_to_b1);
     #endif

@@ -9,7 +9,7 @@
 
 #include "conv2D.h"
 #include <hls_stream.h>
-#include "add_data.cpp"
+//#include "add_data.cpp"
 
 int fn_get_read_b0(int read_from_b0, int read_from_mem, int input_fits_in_b0, int o_iter) {
 	return read_from_b0 || (read_from_mem && input_fits_in_b0 && (o_iter != 0));
@@ -102,6 +102,9 @@ void k_conv2D(read_block_t *ptr_data,
             #ifdef USE_ADD
             int enable_add, 
             #endif
+            #ifdef USE_ADD_RELU
+	    int apply_add_relu,
+            #endif
             int min_clip, int max_clip, int dir_shift, int pos_shift, int enable_upsize, int write_to_weight_buffer, int read_from_weight_buffer, int first_row_weight_buffer,
 			int read_from_mem, int read_from_b0, int read_from_b1, int write_to_mem, int write_to_b0, int write_to_b1) {
 
@@ -148,6 +151,10 @@ void k_conv2D(read_block_t *ptr_data,
 
   #ifdef DEBUG_VERBOSE
   printf("kernel starts...\n");
+  #endif
+
+  #ifndef USE_ADD_RELU
+  int apply_add_relu = 0;
   #endif
 
   // non dataflow variables
@@ -320,7 +327,7 @@ void k_conv2D(read_block_t *ptr_data,
     #ifdef USE_BATCH_NORM
       batch_norm(enable_batch_norm, num_bn_pixels, out_pooling, out_read_batch_norm, out_batch_norm);
       #ifdef USE_ADD
-        add_data<dout_st, dout_st, dout_st>(enable_add, num_add_pixels, out_read_data_add, out_batch_norm, out_add); 
+        add_data<dout_st, dout_st, dout_st>(enable_add, num_add_pixels, apply_add_relu, out_read_data_add, out_batch_norm, out_add); 
         upsize<dout_st, dout_st>(enable_upsize, write_rows, write_cols, out_add, to_write);
       #else
         upsize(enable_upsize, write_rows, write_cols, out_pooling, to_write);
@@ -328,13 +335,13 @@ void k_conv2D(read_block_t *ptr_data,
       #endif
     #else
       #ifdef USE_ADD
-        add_data<dout_st, pool_st, dout_st>(enable_add, num_add_pixels, out_read_data_add, out_pooling, out_add); 
+        add_data<dout_st, pool_st, dout_st>(enable_add, num_add_pixels, apply_add_relu, out_read_data_add, out_pooling, out_add); 
         upsize<dout_st, dout_st>(enable_upsize, write_rows, write_cols, out_add, to_write);
       #else
         upsize<pool_st, dout_st>(enable_upsize, write_rows, write_cols, out_pooling, to_write);
       #endif
     #endif
-	write_data_channels_gihwcpi(write_pixels, o_iter_write_offset, ptr_out, to_write, write_to_obuf, out_write);
+    write_data_channels_gihwcpi(write_pixels, o_iter_write_offset, ptr_out, to_write, write_to_obuf, out_write);
     demux(demux_enable, demux_accesses, demux_sel, out_write, out_demux_0, out_demux_1);
 
  } // end o_iter

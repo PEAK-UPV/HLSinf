@@ -246,8 +246,8 @@ void print_configuration() {
   printf("====================================================================================================================\n");
   printf("| In: %3d x %3d x %3d | Out: %3d x %3d x %3d | Kernel: %3d x %3d  | Pad (TBLR): %1d x %1d x %1d x %1d | Stride: %3d x %3d  |\n", H, W, I, HO, WO, O, KH, KW, PT, PB, PL, PR, SH, SW);
   printf("|------------------------------------------------------------------------------------------------------------------|\n");
-  printf("| ReLU: %s | STM: %s | MaxP: %s | AvgP: %s | BN: %s |Add: %s | Clip: %s (%2d:%2d) | Shift: %s (%s,%2d) | Upsize %s|\n", enable_relu?"Yes":"No ", enable_stm?"Yes":"No ",
-  		    enable_maxpooling?"Y":"N", enable_avgpooling?"Y":"N", enable_batch_norm?"Y":"N", enable_add?"Y":"N", enable_clipping?"Y":"N", min_clip, max_clip, enable_shift?"Y":"N", dir_shift==LEFT_DIRECTION?"LEFT ":"RIGHT", pos_shift, enable_upsize?"Y":"N");
+  printf("| ReLU:%s | STM:%s | MaxP:%s | AvgP:%s | BN:%s | Add:%s ReLU:%s | Clip:%s (%2d:%2d) | Shift:%s (%s,%2d) | Upsize:%s     |\n", enable_relu?"Yes":"No ", enable_stm?"Yes":"No ",
+  		    enable_maxpooling?"Y":"N", enable_avgpooling?"Y":"N", enable_batch_norm?"Y":"N", enable_add?"Y":"N", apply_add_relu?"Y":"N", enable_clipping?"Y":"N", min_clip, max_clip, enable_shift?"Y":"N", dir_shift==LEFT_DIRECTION?"LEFT ":"RIGHT", pos_shift, enable_upsize?"Y":"N");
   printf("====================================================================================================================\n");
 }
 

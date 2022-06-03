@@ -61,6 +61,7 @@ extern int enable_stm;  			 	 // enables applying the STM functions
 extern float relu_factor;
 extern int enable_shift;				 // enables applying shift to the output
 extern int enable_add; 				     // enables add module
+extern int apply_add_relu;               // relu activation to the output of the add module
 extern int dir_shift;			         // shift direction (left or right)
 extern int pos_shift;					 // positions to shift
 extern int enable_clipping;			     // enables applying clipping to the output

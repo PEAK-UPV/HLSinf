@@ -73,6 +73,7 @@ int enable_shift = 0;			 // enables applying shift to the output
 int enable_stm = 1;			 	 // enables applying the STM functions
 int enable_batch_norm = 0;		 // enables applying batch normalization
 int enable_add = 0; 			 // enables add module
+int apply_add_relu = 0;                  // applies relu activation to the output of add module
 int enable_upsize = 0;                   // enables upsize (resize)
 int dir_shift = 0;     			 // shift direction (left or right)
 int pos_shift = 0;				 // positions to shift
@@ -154,6 +155,13 @@ void compute(int *enable, int *from_file, int *cpu, int *retval) {
 		   enable_add = 0;
 	   }
 	   #endif
+
+           #ifndef USE_ADD_RELU
+	   if (apply_add_relu) {
+	     print_message("Add_ReLU not supported (disabled)");
+	     apply_add_relu = 0;
+           }
+           #endif
 
 	   #ifndef USE_STM
 	   if (enable_stm) {

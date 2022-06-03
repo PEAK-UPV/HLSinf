@@ -23,12 +23,12 @@ int open_test_file() {
 }
 
 int read_test_file(int *enable, int *from_files, int *cpu) {
- int n = fscanf(fp, "ENABLE %d FROM_FILES %d CPU %d DET %d %dx%dx%dx%d PT %d PB %d PL %d PR %d SH %d SW %d RELU %d RELU_FACTOR %f STM %d MAXPOOL %d AVGPOOL %d BN %d ADD %d SHIFT %d DIRECTION_SHIFT %d POS_SHIFT %d CLIP %d MINCLIP %d MAXCLIP %d UPSIZE %d\n",
+ int n = fscanf(fp, "ENABLE %d FROM_FILES %d CPU %d DET %d %dx%dx%dx%d PT %d PB %d PL %d PR %d SH %d SW %d RELU %d RELU_FACTOR %f STM %d MAXPOOL %d AVGPOOL %d BN %d ADD %d ADD_RELU %d SHIFT %d DIRECTION_SHIFT %d POS_SHIFT %d CLIP %d MINCLIP %d MAXCLIP %d UPSIZE %d\n",
             enable, from_files, cpu, &deterministic_input_values, &H, &W, &I, &O, &PT, &PB, &PL, &PR,
-	    &SH, &SW, &enable_relu, &relu_factor, &enable_stm, &enable_maxpooling, &enable_avgpooling, &enable_batch_norm, &enable_add, &enable_shift, &dir_shift, &pos_shift,
+	    &SH, &SW, &enable_relu, &relu_factor, &enable_stm, &enable_maxpooling, &enable_avgpooling, &enable_batch_norm, &enable_add, &apply_add_relu, &enable_shift, &dir_shift, &pos_shift,
 	    &enable_clipping, &min_clip, &max_clip, &enable_upsize);
 
- if (n != 28) return 1;
+ if (n != 29) return 1;
 
  // derived arguments
  rows = H;
