@@ -157,22 +157,22 @@ void weight_buffer(int I_ITER, int write_to_buff, int read_from_buff, int offset
   #endif
 
   if (!read_from_buff) {
-	for (int p=0; p<I_ITER; p++) {
+    for (int p=0; p<I_ITER; p++) {
       DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE / CPI)
-	  for (int cpo=0; cpo < CPO; cpo++) {
+      for (int cpo=0; cpo < CPO; cpo++) {
         for (int cpi=0; cpi < CPI; cpi++) {
           for (int x=0; x<9; x++) {
             #pragma HLS pipeline II=1
-        	w_t px = in.read();
-        	px_buff.pixel[cpi][x] = px;
+            w_t px = in.read();
+            px_buff.pixel[cpi][x] = px;
           }
         }
         if (write_to_buff) {
-        	int index = offset_buff + (p * CPO) + cpo;
-        	buffer[index] = px_buff;
+          int index = offset_buff + (p * CPO) + cpo;
+          buffer[index] = px_buff;
         }
         out << px_buff;
-	  }
+      }
     }
   } else {
     for (int p=0; p<I_ITER; p++) {
@@ -216,6 +216,7 @@ void prepare_weight_filters(int I_ITER, hls::stream<w2_st> &in, hls::stream<w_st
 	  w_st px_out;
 	  for (int cpo=0; cpo<CPO; cpo++) {
         #pragma HLS pipeline II=1
+
 	    w2_st px_in;
 	    px_in = in.read();
 	    for (int cpi=0; cpi<CPI; cpi++) {

@@ -25,10 +25,9 @@ void allocate_buffers() {
   // input data add buffer
   #ifdef USE_ADD
   if (enable_add) {
-    int num_bytes = HO_final * WO_final * O_output * sizeof(din_t);
-    if (enable_upsize) num_bytes = num_bytes * 4;
-	  posix_memalign((void **)&data_in_add, 4096, num_bytes);
-	  posix_memalign((void **)&out_add_cpu, 4096, num_bytes);
+    int num_bytes = HO_add * WO_add * O_kernel * sizeof(din_t);
+    posix_memalign((void **)&data_in_add, 4096, num_bytes);
+    posix_memalign((void **)&out_add_cpu, 4096, num_bytes);
   }
   #endif
 
@@ -50,33 +49,32 @@ void allocate_buffers() {
 
   // batch norm values buffer
   #ifdef USE_BATCH_NORM
-  size_t size_bnvalues_in_bytes = (O_output * 4) * sizeof(bn_t);
+  size_t size_bnvalues_in_bytes = (O_kernel * 4) * sizeof(bn_t);
   posix_memalign((void **)&batch_norm_values, 4096, size_bnvalues_in_bytes);
-  posix_memalign((void **)&out_batch_norm_cpu, 4096, HO_final * WO_final * O_output * sizeof(bn_t));
+  posix_memalign((void **)&out_batch_norm_cpu, 4096, HO_bn * WO_bn * O_kernel * sizeof(bn_t));
   #endif
 
   // output buffer for fpga
   size_t size_output_in_bytes;
   size_output_in_bytes = O_output * WO_final * HO_final * sizeof(write_data_t);
-  if (enable_upsize) size_output_in_bytes *= 4;
   posix_memalign((void **)&out, 4096, size_output_in_bytes);
 
   // output buffer for cpu
-  posix_memalign((void **)&out_conv_cpu, 4096, O_output * WO * HO * sizeof(conv_t));
+  posix_memalign((void **)&out_conv_cpu, 4096, O_output * WO_conv * HO_conv * sizeof(conv_t));
 
   // output for relu function
   if (enable_relu) {
-    posix_memalign((void **)&out_relu_cpu, 4096, O_output * WO * HO * sizeof(relu_t));
+    posix_memalign((void **)&out_relu_cpu, 4096, O_output * WO_relu * HO_relu * sizeof(relu_t));
   }
 
   // output for STM functions
     if (enable_stm) {
-      posix_memalign((void **)&out_stm_cpu, 4096, O_output * WO * HO * sizeof(stm_t));
+      posix_memalign((void **)&out_stm_cpu, 4096, O_output * WO_stm * HO_stm * sizeof(stm_t));
    }
 
   // output for pool function
   if ((enable_maxpooling) || (enable_avgpooling)) {
-	  posix_memalign((void **)&out_pool_cpu, 4096, O_output * (WO/2) * (HO/2) * sizeof(pool_t));
+	  posix_memalign((void **)&out_pool_cpu, 4096, O_output * WO_pool * HO_pool * sizeof(pool_t));
   }
 
   // final output for cpu

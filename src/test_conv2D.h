@@ -47,8 +47,24 @@ extern int W;                            // Width of the data
 extern int H;                            // Height of the data
 extern int I;                            // Number of input channels
 extern int O;                            // Number of output channels
-extern int HO;						     // Output width of the conv
-extern int WO;							 // Output height of the conv
+
+extern int HO_conv;
+extern int WO_conv;
+extern int HO_relu;
+extern int WO_relu;
+extern int HO_stm;
+extern int WO_stm;
+extern int HO_pool;
+extern int WO_pool;
+extern int HO_bn;
+extern int WO_bn;
+extern int HO_add;
+extern int WO_add;
+extern int HI_upsize;
+extern int WI_upsize;
+extern int HO_upsize;
+extern int WO_upsize;
+
 extern int HO_final;                     // HO at the output of the kernel
 extern int WO_final;                     // WO at the output of the kernel
 extern int I_kernel;					 // Number of input channels for the kernel (filter) - padding
@@ -68,7 +84,10 @@ extern int enable_clipping;			     // enables applying clipping to the output
 extern int enable_maxpooling;			 // enables the maxpooling layer
 extern int enable_avgpooling;			 // enables the avgpooling layer
 extern int enable_batch_norm;		     // enables applying batch normalization
+extern int enable_batch_norm_relu;
+extern float batch_norm_relu_factor;
 extern int enable_upsize;                // enables upsize (resize)
+extern int upsize_factor;
 extern int min_clip;				 	 // minimum clip value
 extern int max_clip;				 	 // maximum clip value
 extern int i_iter;						 // number of input iterations
@@ -154,7 +173,7 @@ void print_weight_buffer_stats(read_filter_t *p, int size);
 void print_bias_buffer_stats(read_bias_t *p, int size);
 void print_data_in_buffer_stats(dout_t *p, int size);
 void print_batchnorm_buffer_stats(dout_t *p, int size);
-void print_output_buffer_stats(write_data_t *p, int size);
+void print_output_buffer_stats(write_data_t *p, char *str, int size);
 
 int input_data_address(int i, int h, int w);
 int output_data_address(int o, int h, int w, int height, int width);

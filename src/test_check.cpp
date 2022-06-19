@@ -19,8 +19,8 @@ int check_result(dout_t *max_difference, int *num_elements_differ) {
   *max_difference = dout_t(0);
   float epsilon = EPSILON_VALUE;
 
-  int rows = enable_upsize ? HO_final * 2 : HO_final;
-  int cols = enable_upsize ? WO_final * 2 : WO_final;
+  int rows = HO_final;
+  int cols = WO_final;
 
 
   for (int cout = 0; cout < O_output; cout++) {
@@ -34,11 +34,11 @@ int check_result(dout_t *max_difference, int *num_elements_differ) {
           found_row_diff = 1;
           found_channel_diff = 1;
           (*num_elements_differ)++;
-	        if (w==0) printf("difference at cout %d h %d w %d %6.4f cpu %6.4f fpga\n", cout, h, w, float(cpu_out[addr_out]), float(out[addr_out]));
+	     //   if (w==0) printf("difference at cout %d h %d w %d %6.4f cpu %6.4f fpga\n", cout, h, w, float(cpu_out[addr_out]), float(out[addr_out]));
           if (*max_difference < diff) *max_difference = diff;
         }
       }
-      if (found_row_diff) printf("found diff at channel %d, row %d\n", cout, h);
+//      if (found_row_diff) printf("found diff at channel %d, row %d\n", cout, h);
     }
   }
   return (*num_elements_differ != 0);

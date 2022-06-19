@@ -89,7 +89,7 @@ void print_batchnorm_buffer_stats(dout_t *p, int size) {
   printf("Min %8.4f Max %8.4f Avg %8.4f\n", min, max, avg);
 }
 
-void print_output_buffer_stats(write_data_t *p, int size) {
+void print_output_buffer_stats(write_data_t *p, char *str, int size) {
   float min =  999999;
   float max = -999999;
   double sum = 0.f;
@@ -101,7 +101,10 @@ void print_output_buffer_stats(write_data_t *p, int size) {
     sum += v;
   }
   float avg = sum / (float)size;
-  printf("Min %8.4f Max %8.4f Avg %8.4f\n", min, max, avg);
+
+  char str2[200];
+  sprintf(str2, "%s: Min %8.4f Max %8.4f Avg %8.4f", str, min, max, avg);
+  print_message(str2);
 }
 
 void print_bias() {
@@ -203,11 +206,11 @@ void print_input_add() {
 
   int Hmax = HO_final;
   int Wmax = WO_final;
-  if (H > 5) Hmax = 5;
-  if (W > 5) Wmax = 5;
+//  if (H > 5) Hmax = 5;
+//  if (W > 5) Wmax = 5;
 
   printf("Input ADD:\n");
-  for (int i=0; i<I_input; i++) {
+  for (int i=0; i<O_kernel; i++) {
     printf("channel %d:\n", i);
 	for (int h=0; h<Hmax; h++) {
 	  for (int w=0; w<Wmax; w++) {
@@ -227,10 +230,10 @@ void print_output(int only_cpu) {
   printf("Output:\n");
   for (int o=0; o<O; o++) {
     printf("channel %d:\n", o);
-    int rows = enable_upsize ? HO_final * 2 : HO_final;
-    int cols = enable_upsize ? WO_final * 2 : WO_final;
-    if (rows > 5) rows = 5;
-    if (cols > 5) cols = 5;
+    int rows = HO_final;
+    int cols = WO_final;
+  //  if (rows > 5) rows = 5;
+  //  if (cols > 5) cols = 5;
     for (int h=0; h<rows; h++) {
       for (int w=0; w<cols; w++) {
         int addr_o = output_data_address(o, h, w, rows, cols);
@@ -243,27 +246,28 @@ void print_output(int only_cpu) {
 
 void print_configuration() {
   printf("\n");
-  printf("====================================================================================================================\n");
-  printf("| In: %3d x %3d x %3d | Out: %3d x %3d x %3d | Kernel: %3d x %3d  | Pad (TBLR): %1d x %1d x %1d x %1d | Stride: %3d x %3d  |\n", H, W, I, HO, WO, O, KH, KW, PT, PB, PL, PR, SH, SW);
-  printf("|------------------------------------------------------------------------------------------------------------------|\n");
-  printf("| ReLU:%s | STM:%s | MaxP:%s | AvgP:%s | BN:%s | Add:%s ReLU:%s | Clip:%s (%2d:%2d) | Shift:%s (%s,%2d) | Upsize:%s     |\n", enable_relu?"Yes":"No ", enable_stm?"Yes":"No ",
-  		    enable_maxpooling?"Y":"N", enable_avgpooling?"Y":"N", enable_batch_norm?"Y":"N", enable_add?"Y":"N", apply_add_relu?"Y":"N", enable_clipping?"Y":"N", min_clip, max_clip, enable_shift?"Y":"N", dir_shift==LEFT_DIRECTION?"LEFT ":"RIGHT", pos_shift, enable_upsize?"Y":"N");
-  printf("====================================================================================================================\n");
+  printf("==========================================================================================================================================\n");
+  printf("| In: %3d x %3d x %3d | Out: %3d x %3d x %3d | Kernel: %3d x %3d  | Pad (TBLR): %1d x %1d x %1d x %1d | Stride: %3d x %3d                        |\n", H, W, I, HO_final, WO_final, O, KH, KW, PT, PB, PL, PR, SH, SW);
+  printf("|----------------------------------------------------------------------------------------------------------------------------------------|\n");
+  printf("| ReLU:%s | STM:%s | MaxP:%s | AvgP:%s | BN:%s ReLU:%s Factor:%6.2f | Add:%s (%3d x %3d) | ReLU:%s | Clip:%s (%2d:%2d) | Shift:%s (%s,%2d) | Upsize:%s (%1d)  |\n", enable_relu?"Yes":"No ", enable_stm?"Yes":"No ",
+  		    enable_maxpooling?"Y":"N", enable_avgpooling?"Y":"N", enable_batch_norm?"Y":"N", enable_batch_norm_relu?"Y":"N", batch_norm_relu_factor, enable_add?"Y":"N", HO_add, WO_add, apply_add_relu?"Y":"N", 
+		    enable_clipping?"Y":"N", min_clip, max_clip, enable_shift?"Y":"N", dir_shift==LEFT_DIRECTION?"LEFT ":"RIGHT", pos_shift, enable_upsize?"Y":"N", upsize_factor);
+  printf("|----------------------------------------------------------------------------------------------------------------------------------------|\n");
 }
 
 void print_timings(unsigned long long time, unsigned long long time_per_iteration, unsigned long long expected_time, float efficiency) {
 
-  printf("| Time %8lld usec  |  Time per iteration %8lld usec  |  Expected time %8lld usec  |   Efficiency %6.4f   |\n", time, time_per_iteration, expected_time, efficiency);
-  printf("====================================================================================================================\n");
+  printf("| Time %8lld usec  |  Time per iteration %8lld usec  |  Expected time %8lld usec  |   Efficiency %6.4f                         |\n", time, time_per_iteration, expected_time, efficiency);
+  printf("|----------------------------------------------------------------------------------------------------------------------------------------|\n");
 }
 
 void print_check(int result, float max_difference, int num_differences) {
-    if (result) printf("| FAIL                    |            max diff %20.18f           |        num differences %d          |\n", max_difference, num_differences);
-    else        printf("| SUCCESS                                                                                                          |\n");
-    printf("====================================================================================================================\n");
+    if (result) printf("| FAIL                    |            max diff %20.18f           |        num differences %8d                         |\n", max_difference, num_differences);
+    else        printf("| SUCCESS                                                                                                                                |\n");
+    printf("==========================================================================================================================================\n");
 }
 
 void print_message(const char *str) {
-    printf("| %-112s |\n", str);
-    printf("====================================================================================================================\n");
+  printf("| %-134s |\n", str);
+  printf("|----------------------------------------------------------------------------------------------------------------------------------------|\n");
 }

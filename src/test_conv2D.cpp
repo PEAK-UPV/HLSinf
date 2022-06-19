@@ -54,12 +54,30 @@ int PR = PR_SIM;                 // Right padding
 int SH = SH_SIM;                 // Vertical stride
 int SW = SW_SIM;                 // Horizontal stride
 int F;                           // Number of frames of the data
+
+// input
 int W = W_SIM;                   // Width of the data
 int H = H_SIM;                   // Height of the data
 int I = I_SIM;                   // Number of input channels
+
 int O = O_SIM;                   // Number of output channels
-int HO = H_SIM;       			 // Output height
-int WO = W_SIM;    				 // Output width
+int HO_conv;
+int WO_conv;
+int HO_relu;
+int WO_relu;
+int HO_stm;
+int WO_stm;
+int HO_pool;
+int WO_pool;
+int HO_bn;
+int WO_bn;
+int HO_add;
+int WO_add;
+int HI_upsize;
+int WI_upsize;
+int HO_upsize;
+int WO_upsize;
+
 int HO_final = H_SIM;            // HO at the output of the kernel
 int WO_final = W_SIM;            // WO at the output of the kernel
 int I_kernel = I_SIM;  			 // Number of input channels for the kernel (filter) - padding
@@ -72,9 +90,12 @@ float relu_factor = 0;
 int enable_shift = 0;			 // enables applying shift to the output
 int enable_stm = 1;			 	 // enables applying the STM functions
 int enable_batch_norm = 0;		 // enables applying batch normalization
+int enable_batch_norm_relu = 0;
+float batch_norm_relu_factor = 0;
 int enable_add = 0; 			 // enables add module
 int apply_add_relu = 0;                  // applies relu activation to the output of add module
 int enable_upsize = 0;                   // enables upsize (resize)
+int upsize_factor = 0;
 int dir_shift = 0;     			 // shift direction (left or right)
 int pos_shift = 0;				 // positions to shift
 int enable_clipping = 0;		 // enables applying clipping to the output
@@ -182,7 +203,7 @@ void compute(int *enable, int *from_file, int *cpu, int *retval) {
 	   	 *enable = 0;
 	   }
 
-	   if ((enable_maxpooling || enable_avgpooling) && ((HO % 2) || (WO % 2))) {
+	   if ((enable_maxpooling || enable_avgpooling) && ((HO_pool % 2) || (WO_pool % 2))) {
 		 print_message("Pooling not allowed with outut convolution with no even rows and columns (skipped)");
 		 *enable = 0;
 	   }
@@ -197,7 +218,7 @@ void compute(int *enable, int *from_file, int *cpu, int *retval) {
 	   // Check, output must be at least as large as one write block
 
        #ifdef IHW_DATA_FORMAT
-	   if (HO * WO * O < WRITE_BLOCK_SIZE) {
+	   if (HO_final * WO_final * O < WRITE_BLOCK_SIZE) {
 		 print_message("Output too small (skipped)");
 		 *enable = 0;
 	   }
@@ -207,7 +228,7 @@ void compute(int *enable, int *from_file, int *cpu, int *retval) {
 		 *enable = 0;
 	   }
 
-	   if (((HO * WO * (DATA_TYPE_WIDTH / 8)) % WRITE_BLOCK_SIZE) != 0) {
+	   if (((HO_final * WO_final * (DATA_TYPE_WIDTH / 8)) % WRITE_BLOCK_SIZE) != 0) {
 		 print_message("Output channel size must be multiple of write block size (skipped)");
 		 *enable = 0;
 	   }
@@ -244,8 +265,6 @@ void compute(int *enable, int *from_file, int *cpu, int *retval) {
 
 	     compute();
 
-		 printf("compute terminated\n");
-
 	     // timing
          struct timeval prof_t2;
 	     gettimeofday(&prof_t2, NULL);
@@ -271,11 +290,11 @@ void compute(int *enable, int *from_file, int *cpu, int *retval) {
          copy_from_fpga();
          #endif
 
-		 printf("output fpga : "); print_output_buffer_stats(out, O_output * HO_final * WO_final);
+		 print_output_buffer_stats(out, "output fpga : ", O_output * HO_final * WO_final);
 
 	     if (*cpu) cpu_conv2D();
 
-		 printf("output cpu : "); print_output_buffer_stats(cpu_out, O_output * HO_final * WO_final);
+		 print_output_buffer_stats(cpu_out, "output cpu : ", O_output * HO_final * WO_final);
 
 	     if (*cpu || *from_file) {
            int num_differences;
@@ -319,21 +338,18 @@ int main(int argc, char **argv) {
   } else {
 	printf("File-based test...\n");
 	deterministic_input_values = 0;
-    parse_arguments(argc, argv);
+        parse_arguments(argc, argv);
+        #ifdef OPENCL_TEST
+        fn_init_fpga();
+        #endif
 
-    #ifdef OPENCL_TEST
-    fn_init_fpga();
-    #endif
+        if (open_test_file() == 1) return 1;
 
-    if (open_test_file() == 1) return 1;
-
-    while (!read_test_file(&enable, &from_file, &cpu)) {
-
-	  compute(&enable, &from_file, &cpu, &retval);
-      if (enable) global_retval = global_retval || retval;
-    }
-
-    close_test_file();
+        while (!read_test_file(&enable, &from_file, &cpu)) {
+ 	  compute(&enable, &from_file, &cpu, &retval);
+          if (enable) global_retval = global_retval || retval;
+        }
+        close_test_file();
   }
 
  if(global_retval == 0){

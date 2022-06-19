@@ -20,12 +20,12 @@ int fn_get_write_b0(int write_to_b0, int read_from_mem, int input_fits_in_b0, in
 }
 
 #ifdef USE_UPSIZE
-template <class in_st, class out_st> void upsize(int enable, int H, int W, hls::stream<in_st> &in, hls::stream<out_st> &out) {
+template <class in_st, class out_st> void upsize(int enable, int factor, int H, int W, hls::stream<in_st> &in, hls::stream<out_st> &out) {
 
   out_st buff[WMAX];
 
   #ifdef DEBUG_UPSIZE
-  printf("UPSIZE: begin\n");
+  printf("UPSIZE: begin (factor %d)\n", factor);
   #endif
 
   if (enable) {
@@ -40,17 +40,21 @@ template <class in_st, class out_st> void upsize(int enable, int H, int W, hls::
           buff[w].pixel[cpo] = px.pixel[cpo];
         }
       }
-      for (int r = 0; r < 2; r++) {
-        for (int w = 0; w<2*W; w++) {
+      for (int r = 0; r < factor; r++) {
+	DO_PRAGMA(HLS loop_tripcount min=1 max=4)
+        for (int w = 0; w<W; w++) {
           DO_PRAGMA(HLS loop_tripcount min=1 max=W_REFERENCE)
-          out << buff[w/2];
-          #ifdef DEBUG_UPSIZE
-          #ifdef DEBUG_VERBOSE
-          printf("UPSIZE: r %d w %d -> ", r, w);
-          for (int c=0; c<CPO; c++) printf(" %f ", buff[w/2].pixel[c]);
-          printf("\n");
-          #endif
-          #endif
+	  for (int rw = 0; rw < factor; rw++) {
+	    DO_PRAGMA(HLS loop_tripcount min=1 max=W_REFERENCE)
+            out << buff[w];
+            #ifdef DEBUG_UPSIZE
+//            #ifdef DEBUG_VERBOSE
+            printf("UPSIZE: h %d r %d w %d rw %d -> ", h, r, w, rw);
+            for (int c=0; c<CPO; c++) printf(" %f ", buff[w].pixel[c]);
+            printf("\n");
+  //          #endif
+            #endif
+	  }
         }
       }
     }
@@ -66,7 +70,7 @@ template <class in_st, class out_st> void upsize(int enable, int H, int W, hls::
           DO_PRAGMA(HLS UNROLL)
           px_out.pixel[cpo] = px.pixel[cpo];
         }
-	      out << px_out;
+	out << px_out;
       }
     }
   }
@@ -88,6 +92,10 @@ void k_conv2D(read_block_t *ptr_data,
             #ifdef USE_BATCH_NORM 
             int enable_batch_norm,
             #endif
+            #ifdef USE_BATCH_NORM_RELU
+            int enable_batch_norm_relu,
+            float batch_norm_relu_factor,
+            #endif
             #ifdef DIRECT_CONV
             read_filter_t *ptr_kernel,
             #endif
@@ -105,7 +113,7 @@ void k_conv2D(read_block_t *ptr_data,
             #ifdef USE_ADD_RELU
 	    int apply_add_relu,
             #endif
-            int min_clip, int max_clip, int dir_shift, int pos_shift, int enable_upsize, int write_to_weight_buffer, int read_from_weight_buffer, int first_row_weight_buffer,
+            int min_clip, int max_clip, int dir_shift, int pos_shift, int upsize_factor, int write_to_weight_buffer, int read_from_weight_buffer, int first_row_weight_buffer,
 			int read_from_mem, int read_from_b0, int read_from_b1, int write_to_mem, int write_to_b0, int write_to_b1) {
 
 	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_data         depth=DATA_IN_PORT_DEPTH    offset=slave bundle=gmem)
@@ -157,6 +165,14 @@ void k_conv2D(read_block_t *ptr_data,
   int apply_add_relu = 0;
   #endif
 
+
+  int enable_upsize = (upsize_factor != 1);
+
+  #ifndef USE_BATCH_NORM_RELU
+  int enable_batch_norm_relu = 0;
+  int batch_norm_relu_factor = 0;
+  #endif
+
   // non dataflow variables
   int O_ITER = o_iter_last - o_iter_first + 1;                                                                           // number of output iterations to perform
                                                                                                                          // output convolution geometry:
@@ -171,12 +187,13 @@ void k_conv2D(read_block_t *ptr_data,
   int read_pixels_add          = enable_pooling ? (HO_conv / 2) * (WO_conv / 2) : HO_conv * WO_conv;                     // pixels to read for add module (before upsize)
   int num_bn_pixels            = read_pixels_add;                                                                        // number of pixels for BN layer
   int num_add_pixels           = read_pixels_add;                                                                        // number of pixels for ADD layer
-  int write_pixels             = (enable_upsize)? write_pixels_tmp * 4 : write_pixels_tmp;                               // pixels to write per channel (final, after upsize)
+  int write_pixels             = enable_upsize ? write_pixels_tmp * upsize_factor * upsize_factor : write_pixels_tmp;               // pixels to write per channel (final, after upsize)
   int write_rows               = enable_pooling ? HO_conv / 2 : HO_conv;                                                 // number of rows of pixels for UPSIZE layer
+
   int write_cols               = enable_pooling ? WO_conv / 2 : WO_conv;                                                 // number of cols of pixels for UPSIZE layer
   #else
   int write_pixels             = HO_conv * WO_conv;
-  if (enable_upsize) write_pixels = write_pixels * 4;
+  if (enable_upsize) write_pixels = write_pixels * upsize_factor * upsize_factor;
   int read_pixels_add          = HO_conv * WO_conv;
   int num_bn_pixels            = read_pixels_add;
   int num_add_pixels           = read_pixels_add;
@@ -187,7 +204,7 @@ void k_conv2D(read_block_t *ptr_data,
   int read_pixels_total        = read_pixels * I_ITER;                                                                   // number of pixels to read (complete input)
   int offset_data_in_group_cpi = H * W;                                                                                  // input data offset for a CPI group (H * W)
   int offset_read_add_group_cpo = HO * WO;                                                                               // input ADD data offset for a CPI group (HO * WO)
-  int offset_data_out_group_cpo = (enable_upsize) ?  HO * WO * 4 : HO * WO;                                              // output data offset for a CPO group
+  int offset_data_out_group_cpo = (enable_upsize) ?  HO * WO * upsize_factor * upsize_factor : HO * WO;                  // output data offset for a CPO group
                                                                                                                          // WEIGHTS BUFFER
   int enable_read_kernel        = !read_from_weight_buffer;                                                              // read enable for weight buffer (weights have been previously stored)
                                                                                                                          // DATA BUFFER 0 and DATA BUFFER 1
@@ -325,20 +342,19 @@ void k_conv2D(read_block_t *ptr_data,
     stm(enable_stm, num_output_conv_pixels, out_relu, out_stm); 
     pooling(HI_pooling, WI_pooling, enable_maxpooling, enable_avgpooling, out_stm, out_pooling);
     #ifdef USE_BATCH_NORM
-      batch_norm(enable_batch_norm, num_bn_pixels, out_pooling, out_read_batch_norm, out_batch_norm);
+      batch_norm(enable_batch_norm, num_bn_pixels, enable_batch_norm_relu, batch_norm_relu_factor, out_pooling, out_read_batch_norm, out_batch_norm);
       #ifdef USE_ADD
         add_data<dout_st, dout_st, dout_st>(enable_add, num_add_pixels, apply_add_relu, out_read_data_add, out_batch_norm, out_add); 
-        upsize<dout_st, dout_st>(enable_upsize, write_rows, write_cols, out_add, to_write);
+        upsize<dout_st, dout_st>(enable_upsize, upsize_factor, write_rows, write_cols, out_add, to_write);
       #else
-        upsize(enable_upsize, write_rows, write_cols, out_pooling, to_write);
-        upsize<pool_st, dout_st>(enable_upsize, write_rows, write_cols, out_pooling, to_write);
+        upsize<pool_st, dout_st>(enable_upsize, upsize_factor, write_rows, write_cols, out_pooling, to_write);
       #endif
     #else
       #ifdef USE_ADD
         add_data<dout_st, pool_st, dout_st>(enable_add, num_add_pixels, apply_add_relu, out_read_data_add, out_pooling, out_add); 
-        upsize<dout_st, dout_st>(enable_upsize, write_rows, write_cols, out_add, to_write);
+        upsize<dout_st, dout_st>(enable_upsize, upsize_factor, write_rows, write_cols, out_add, to_write);
       #else
-        upsize<pool_st, dout_st>(enable_upsize, write_rows, write_cols, out_pooling, to_write);
+        upsize<pool_st, dout_st>(enable_upsize, upsize_factor, write_rows, write_cols, out_pooling, to_write);
       #endif
     #endif
     write_data_channels_gihwcpi(write_pixels, o_iter_write_offset, ptr_out, to_write, write_to_obuf, out_write);

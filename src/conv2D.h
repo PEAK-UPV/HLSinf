@@ -866,7 +866,197 @@
 #define write_data_t             float
 #endif
 
+// Configuration 1.19: U200, 4x4, FP32: DIRECT_CONV, RELU, POOLING, ADD, ADD_RELU, BN, BN_RELU, UPSIZE
+#ifdef HLSINF_1_19
+#define ALVEO_U200
+#define DIRECT_CONV
+#define USE_RELU
+//#define USE_CLIPPING
+//#define USE_SHIFT
+#define USE_POOLING
+#define USE_BATCH_NORM
+#define USE_BATCH_NORM_RELU
+//#define USE_STM
+#define USE_ADD
+#define USE_ADD_RELU
+#define USE_UPSIZE
+#define PRUEBA_MUL_2
+#define FLOAT_DATA_TYPE               // we use float numbers as input data
+#define CPI                          4 
+#define CPO                          4
+#define LOG2_CPO                     2
+#define WMAX                      1024  
+#define HMAX                       256
+#define READ_BURST_SIZE             16
+#define STREAMS_DEPTH               16
+#define DATA_BUFFER_SIZE         16384 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define WEIGHT_BUFFER_SIZE        4096 
+#define EPSILON_VALUE           0.0001
+#define MIN_DATA_TYPE_VALUE   -9999999
+#define READ_BLOCK_SIZE             16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define WRITE_BLOCK_SIZE            16   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define din_t                    float
+#define conv_cvt_t               float 
+#define conv_mul_t               float
+#define relu_t                   float
+#define stm_t                    float
+#define pool_cvt_t               float
+#define pool_t                   float
+#define bn_t                     float
+#define add_t                    float
+#define w_t                      float
+#define b_t                      float
+#define conv_t                   float
+#define dout_t                   float
+#define read_bias_t              float
+#define read_data_t              float
+#define read_filter_t            float
+#define write_data_t             float
+#endif
 
+// Configuration 1.20: U200, 16x16, API<8>: DIRECT_CONV, RELU, POOLING, ADD, ADD_RELU, UPSIZE
+#ifdef HLSINF_1_20
+#define ALVEO_U200
+#define DIRECT_CONV
+#define USE_RELU
+#define USE_CLIPPING
+//#define USE_SHIFT
+#define USE_POOLING
+//#define USE_BATCH_NORM
+//#define USE_BATCH_NORM_RELU
+//#define USE_STM
+#define USE_ADD
+#define USE_ADD_RELU
+#define USE_UPSIZE
+#define PRUEBA_MUL_2
+#define FLOAT_DATA_TYPE               // we use float numbers as input data
+#define CPI                         16
+#define CPO                         16
+#define LOG2_CPO                     4
+#define WMAX                      1024  
+#define HMAX                       256
+#define READ_BURST_SIZE             16
+#define STREAMS_DEPTH               16
+#define DATA_BUFFER_SIZE         16384 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define WEIGHT_BUFFER_SIZE        4096 
+#define EPSILON_VALUE           0.0001
+#define MIN_DATA_TYPE_VALUE   -9999999
+#define READ_BLOCK_SIZE             16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define WRITE_BLOCK_SIZE            16   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define din_t                    ap_int<8>
+#define conv_cvt_t               ap_int<8>
+#define conv_mul_t               ap_int<8>
+#define relu_t                   ap_int<8>
+#define stm_t                    ap_int<8>
+#define pool_cvt_t               ap_int<8>
+#define pool_t                   ap_int<8>
+#define bn_t                     ap_int<8>
+#define add_t                    ap_int<8>
+#define w_t                      ap_int<8>
+#define b_t                      ap_int<8>
+#define conv_t                   ap_int<8>
+#define dout_t                   ap_int<8> 
+#define read_bias_t              float
+#define read_data_t              float
+#define read_filter_t            float
+#define write_data_t             float
+#endif
+
+// Configuration 1.21: U200, 8x8, FP32 (internally apf<16/8>: DIRECT_CONV, RELU, POOLING, ADD, ADD_RELU, BN, BN_RELU, UPSIZE
+#ifdef HLSINF_1_21
+#define ALVEO_U200
+#define DIRECT_CONV
+#define USE_RELU
+//#define USE_CLIPPING
+//#define USE_SHIFT
+#define USE_POOLING
+#define USE_BATCH_NORM
+#define USE_BATCH_NORM_RELU
+//#define USE_STM
+#define USE_ADD
+#define USE_ADD_RELU
+#define USE_UPSIZE
+#define PRUEBA_MUL_2
+#define FLOAT_DATA_TYPE               // we use float numbers as input data
+#define CPI                          8
+#define CPO                          8
+#define LOG2_CPO                     3
+#define WMAX                      1024
+#define HMAX                       256
+#define READ_BURST_SIZE             16
+#define STREAMS_DEPTH               16
+#define DATA_BUFFER_SIZE         16384 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define WEIGHT_BUFFER_SIZE        4096
+#define EPSILON_VALUE           0.0001
+#define MIN_DATA_TYPE_VALUE   -9999999
+#define READ_BLOCK_SIZE             16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define WRITE_BLOCK_SIZE            16   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define din_t                    ap_fixed<16,8,AP_RND_ZERO,AP_SAT>
+#define conv_cvt_t               ap_fixed<16,8,AP_RND_ZERO,AP_SAT>
+#define conv_mul_t               ap_fixed<16,8,AP_RND_ZERO,AP_SAT>
+#define relu_t                   ap_fixed<16,8,AP_RND_ZERO,AP_SAT>
+#define stm_t                    ap_fixed<16,8,AP_RND_ZERO,AP_SAT>
+#define pool_cvt_t               ap_fixed<16,8,AP_RND_ZERO,AP_SAT>
+#define pool_t                   ap_fixed<16,8,AP_RND_ZERO,AP_SAT>
+#define bn_t                     ap_fixed<16,8,AP_RND_ZERO,AP_SAT>
+#define add_t                    ap_fixed<16,8,AP_RND_ZERO,AP_SAT>
+#define w_t                      ap_fixed<16,8,AP_RND_ZERO,AP_SAT>
+#define b_t                      ap_fixed<16,8,AP_RND_ZERO,AP_SAT>
+#define conv_t                   ap_fixed<16,8,AP_RND_ZERO,AP_SAT>
+#define dout_t                   ap_fixed<16,8,AP_RND_ZERO,AP_SAT>
+#define read_bias_t              float
+#define read_data_t              float
+#define read_filter_t            float
+#define write_data_t             float
+#endif
+
+// Configuration 1.22: U200, 16x16, FP32 (internally api<8>: DIRECT_CONV, RELU, POOLING, ADD, ADD_RELU, BN, BN_RELU, UPSIZE
+#ifdef HLSINF_1_22
+#define ALVEO_U200
+#define DIRECT_CONV
+#define USE_RELU
+//#define USE_CLIPPING
+//#define USE_SHIFT
+#define USE_POOLING
+#define USE_BATCH_NORM
+#define USE_BATCH_NORM_RELU
+//#define USE_STM
+#define USE_ADD
+#define USE_ADD_RELU
+#define USE_UPSIZE
+#define PRUEBA_MUL_2
+#define FLOAT_DATA_TYPE               // we use float numbers as input data
+#define CPI                         16
+#define CPO                         16
+#define LOG2_CPO                     4
+#define WMAX                      1024
+#define HMAX                       256
+#define READ_BURST_SIZE             16
+#define STREAMS_DEPTH               16
+#define DATA_BUFFER_SIZE         16384 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define WEIGHT_BUFFER_SIZE        4096
+#define EPSILON_VALUE           0.0001
+#define MIN_DATA_TYPE_VALUE   -9999999
+#define READ_BLOCK_SIZE             16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define WRITE_BLOCK_SIZE            16   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define din_t                    ap_int<8>
+#define conv_cvt_t               ap_int<8>
+#define conv_mul_t               ap_int<8>
+#define relu_t                   ap_int<8>
+#define stm_t                    ap_int<8>
+#define pool_cvt_t               ap_int<8>
+#define pool_t                   ap_int<8>
+#define bn_t                     ap_int<8>
+#define add_t                    ap_int<8>
+#define w_t                      ap_int<8>
+#define b_t                      ap_int<8>
+#define conv_t                   ap_int<8>
+#define dout_t                   ap_int<8> 
+#define read_bias_t              float
+#define read_data_t              float
+#define read_filter_t            float
+#define write_data_t             float
+#endif
 
 // Configuration TEST: U200, 4x4, FP32: DWS_CONV, RELU, POOLING, UPSIZE
 #ifdef HLSINF_TEST2
@@ -1199,17 +1389,21 @@ extern "C" void k_conv2D(read_block_t *ptr_data,
                          #ifdef USE_BATCH_NORM 
                          int enable_batch_norm,
                          #endif
+                         #ifdef USE_BATCH_NORM_RELU
+                         int enable_batch_norm_relu,
+                         float batch_norm_relu_factor,
+                         #endif
                          #ifdef DIRECT_CONV
                          read_filter_t *ptr_kernel,
                          #endif
                          #ifdef DWS_CONV
-						 w_t *ptr_dw_kernel, w_pw_t *ptr_pw_kernel,
+			 w_t *ptr_dw_kernel, w_pw_t *ptr_pw_kernel,
                          #endif
                          read_bias_st *ptr_bias,
                          #ifdef USE_BATCH_NORM
                          bnp_st *b_ptr, 
                          #endif
-                         write_block_t *ptr_out, 
+			 write_block_t *ptr_out, 
                          int read_offset, int write_offset, int enable_maxpooling, int enable_avgpooling,
 						 int enable_clipping, int enable_shift, 
                          #ifdef USE_ADD
@@ -1219,7 +1413,7 @@ extern "C" void k_conv2D(read_block_t *ptr_data,
 			 int apply_add_relu,
                          #endif
                          int min_clip, int max_clip, 
-                         int dir_shift, int pos_shift, int enable_upsize,
+                         int dir_shift, int pos_shift, int upsize_factor,
                          int write_to_weight_buffer, int read_from_weight_buffer, int first_row_weight_buffer,
  						 int read_from_mem, int read_from_b0, int read_from_b1, int write_to_mem, int write_to_b0, int write_to_b1);
 
@@ -1240,7 +1434,7 @@ void demux                        (int enable, int num_accesses, int sel, hls::s
 void relu                         (int enable_relu, int enable_clipping, int enable_shift, float relu_factor, int min_clip, int max_clip, int direction_shift, int pos_shift, int num_pixels, hls::stream<conv_st> &in, hls::stream<relu_st> &out);
 void stm                          (int enable_stm, int num_pixels, hls::stream<relu_st> &in, hls::stream<stm_st> &out);
 void pooling                      (int H, int W, int enable_maxpooling, int enable_avgpooling, hls::stream<stm_st> &input, hls::stream<pool_st> &output);
-void batch_norm                   (int enable_batch_norm, int num_pixels, hls::stream<pool_st> &in, hls::stream<bnp_st> &bn_values, hls::stream<dout_st> &out);
+void batch_norm                   (int enable_batch_norm, int num_pixels, int enable_relu, float relu_factor, hls::stream<pool_st> &in, hls::stream<bnp_st> &bn_values, hls::stream<dout_st> &out);
 template <class in1_st, class in2_st, class out_st> void add_data(int enable_add, int num_pixels, int apply_relu, hls::stream<in1_st> &in_r, hls::stream<in2_st> &in_stm, hls::stream<out_st> &out);
 void padding                      (int H, int W, int PT, int PB, int PL, int PR, int I_ITER, hls::stream<din_st> &in, hls::stream<din_st> &out);
 void add                          (int num_pixels, int I_ITER, hls::stream<conv_mul_st> &in, hls::stream<b_st> &b_in, hls::stream<conv_st> &out);

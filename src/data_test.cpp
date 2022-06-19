@@ -21,6 +21,7 @@ void read_from_file(char *file, int size, int data_size, void *buf) {
 }
 
 void init_data(int from_file) {
+
   std::random_device rd;
   std::mt19937 gen(rd());
 
@@ -38,7 +39,7 @@ void init_data(int from_file) {
     printf("bias (file)   : "); print_bias_buffer_stats(bias, O);
     if (enable_add) {printf("add    : "); print_data_in_buffer_stats(data_in_add, O_output * HO_final * WO_final);}
     if (enable_batch_norm) {printf("bn_v (file)   : "); print_batchnorm_buffer_stats(batch_norm_values, O_output * 4);}
-    printf("output (file) : "); print_output_buffer_stats(cpu_out, O_output * HO_final * WO_final);
+    print_output_buffer_stats(cpu_out, "output (file) :", O_output * HO_final * WO_final);
     return;
   }
 
@@ -46,11 +47,11 @@ void init_data(int from_file) {
   #if defined(FLOAT_DATA_TYPE)
   std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
   std::uniform_real_distribution<float> dist_filters(-2.0f, 2.0f);
-  std::uniform_real_distribution<float> dist_bias(-1000.0f, 1000.0f);
+  std::uniform_real_distribution<float> dist_bias(-1.0f, 1.0f);
   #else
   std::uniform_int_distribution<int> dist(0, 255);
   std::uniform_int_distribution<int> dist_filters(-125, 127);
-  std::uniform_int_distribution<int> dist_bias(-32700, 32700);
+  std::uniform_int_distribution<int> dist_bias(-125, 127);
   #endif
   
   // input data
@@ -72,10 +73,10 @@ void init_data(int from_file) {
   //input add data
   if(enable_add) {
 	  addr = 0;
-	  for (int o=0; o<O_output; o++) {
-		  for (int h=0; h<HO_final; h++) {
-			  for (int w=0; w<WO_final; w++) {
-				  addr = output_data_address(o, h, w, HO_final, WO_final);
+	  for (int o=0; o<O_kernel; o++) {
+		  for (int h=0; h<HO_add; h++) {
+			  for (int w=0; w<WO_add; w++) {
+				  addr = output_data_address(o, h, w, HO_add, WO_add);
 				  if (o<O) {
 					  data_in_add[addr] = deterministic_input_values?o:dist(gen);
 				  } else {
@@ -102,7 +103,7 @@ void init_data(int from_file) {
                        (ki * KH * KW) +
                        (kh * KW) +
                        kw;
-          if ((i<I) && (o<O)) kernel[addr_k] = deterministic_input_values?(i % 20):dist_filters(gen);
+          if ((i<I) && (o<O)) kernel[addr_k] = deterministic_input_values?kernel_id:dist_filters(gen);
           else kernel[addr_k] = 0;
 	    }
 	  }
@@ -114,10 +115,10 @@ void init_data(int from_file) {
   // Generating values for batch normalization layer
   for (int cout=0; cout<O_output; cout++) {
 	  if (cout < O) {
-      batch_norm_values[cout*4+0] = 0;
-      batch_norm_values[cout*4+1] = 1;
-      batch_norm_values[cout*4+2] = 0;
-      batch_norm_values[cout*4+3] = 1;
+      batch_norm_values[cout*4+0] = 1;
+      batch_norm_values[cout*4+1] = 2;
+      batch_norm_values[cout*4+2] = 3;
+      batch_norm_values[cout*4+3] = 4;
 		  //batch_norm_values[cout] = deterministic_input_values?(cout%20)-10:dist(gen);
 	  } else {
 		  batch_norm_values[cout*4+0] = 0;
@@ -129,7 +130,7 @@ void init_data(int from_file) {
   #endif
 
   for (int cout=0; cout<O_output; cout++) {
-    if (cout < O) bias[cout] = deterministic_input_values?(cout%20)-10:dist_bias(gen);
+    if (cout < O) bias[cout] = deterministic_input_values?((cout+1)%20):dist_bias(gen);
     else bias[cout] = 0;
   }
 }

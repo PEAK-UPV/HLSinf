@@ -90,6 +90,10 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
     #ifdef USE_BATCH_NORM
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_batch_norm_val[0]));
     #endif
+    #ifdef USE_BATCH_NORM_RELU
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_batch_norm_relu));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, batch_norm_relu_factor));
+    #endif
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_o[0]));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, read_offset_p));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, write_offset_p));
@@ -107,7 +111,7 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, max_clip));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, dir_shift));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, pos_shift));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_upsize));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, upsize_factor));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, write_to_weight_buffer));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, read_from_weight_buffer));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, first_row_weight_buffer));
@@ -130,6 +134,10 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
         #ifdef USE_BATCH_NORM
         enable_batch_norm,
         #endif
+        #ifdef USE_BATCH_NORM_RELU
+	enable_batch_norm_relu,
+	batch_norm_relu_factor,
+        #endif
         #ifdef DIRECT_CONV
 		    kernel, 
         #endif
@@ -150,7 +158,7 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
         #ifdef USE_ADD_RELU
 	apply_add_relu,
         #endif
-        min_clip, max_clip, dir_shift, pos_shift, enable_upsize, write_to_weight_buffer, read_from_weight_buffer, first_row_weight_buffer, read_from_mem, read_from_b0, read_from_b1, write_to_mem, write_to_b0, write_to_b1);
+        min_clip, max_clip, dir_shift, pos_shift, upsize_factor, write_to_weight_buffer, read_from_weight_buffer, first_row_weight_buffer, read_from_mem, read_from_b0, read_from_b1, write_to_mem, write_to_b0, write_to_b1);
     #endif
   }
 
@@ -167,9 +175,10 @@ void compute() {
 
   char str[200];
   // Let's check if the input geometry must beWW decomposed in multiple frames
-  if (HO > HMAX) {
+  if (HO_conv > HMAX) {
+    printf("frame!!!\n"); exit(1);
     //
-    int num_frames = ceil( (float) HO / (float) HMAX);
+    int num_frames = ceil( (float) HO_conv / (float) HMAX);
     sprintf(str, "Launching multiframes mode (%d frames)...", num_frames);
     print_message(str);
     // 
@@ -182,7 +191,7 @@ void compute() {
 
       // rows to be produced in this frame
       int output_rows_frame = HMAX;
-      if ((fr == num_frames-1) && ((HMAX * num_frames) != HO)) output_rows_frame = HO % HMAX;
+      if ((fr == num_frames-1) && ((HMAX * num_frames) != HO_conv)) output_rows_frame = HO_conv % HMAX;
 
       // padding
       int PT_frame = (fr==0) ? PT : 0;
@@ -202,8 +211,8 @@ void compute() {
 
       // read and write offsets
       int read_offset_frame = row_i * W;
-      printf("fr %d HMAX %d WO %d\n", fr, HMAX, WO);
-      int write_offset_frame = (fr * HMAX * WO);
+      printf("fr %d HMAX %d WO %d\n", fr, HMAX, WO_conv);
+      int write_offset_frame = (fr * HMAX * WO_conv);
 
       sprintf(str, "Frame %d: HxW = %3dx%3d, Pad = %1d-%1d-%1d-%1d, off_rd %d, off_wr %d, rows_to_read %d", fr, H, W, PT_frame, PB_frame, PL_frame, PR_frame, read_offset_frame, write_offset_frame, rows_to_read);
       print_message(str);

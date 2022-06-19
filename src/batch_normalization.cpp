@@ -16,7 +16,7 @@
 
 #define EPS		1e-5
 
-void batch_norm(int enable_batch_norm, int num_pixels, hls::stream<pool_st> &in, hls::stream<bnp_st> &bn_values, hls::stream<dout_st> &out) {
+void batch_norm(int enable_batch_norm, int num_pixels, int enable_relu, float relu_factor, hls::stream<pool_st> &in, hls::stream<bnp_st> &bn_values, hls::stream<dout_st> &out) {
 
 	#ifdef DEBUG_BATCH_NORM
 	printf("Batch Norm: start\n");
@@ -59,8 +59,10 @@ void batch_norm(int enable_batch_norm, int num_pixels, hls::stream<pool_st> &in,
 				// y = gamma * xn - beta
 				v_batchnorm = bn_values_in.values[(cpo*4)+1] * xn + bn_values_in.values[cpo*4];
 
+				if (enable_relu) {
+				  if (v_batchnorm < 0) v_batchnorm = v_batchnorm * (bn_t)relu_factor;
+                                }
 				data_out.pixel[cpo] = v_batchnorm;
-				
 			} else {
 				data_out.pixel[cpo] = v_in;
 			}
