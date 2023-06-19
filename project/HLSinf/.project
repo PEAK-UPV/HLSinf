@@ -27,169 +27,394 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>ap_int_base.h</name>
-			<type>1</type>
-			<location>/opt/Xilinx/Vitis/2020.1/common/technology/autopilot/ap_int_base.h</location>
-		</link>
-		<link>
-			<name>hls_stream_39.h</name>
-			<type>1</type>
-			<location>/opt/Xilinx/Vitis/2020.1/common/technology/autopilot/hls_stream_39.h</location>
-		</link>
-		<link>
 			<name>source</name>
 			<type>2</type>
-			<location>/home/jflich/git/HLSinf/project/HLSinf/.apc/.src</location>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/.apc/.src</location>
 		</link>
 		<link>
 			<name>testbench</name>
 			<type>2</type>
-			<location>/home/jflich/git/HLSinf/project/HLSinf/.apc/.tb</location>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/.apc/.tb</location>
 		</link>
 		<link>
 			<name>AlveoU200/constraints</name>
 			<type>2</type>
-			<location>/home/jflich/git/HLSinf/project/HLSinf/AlveoU200/.tcls</location>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/AlveoU200/.tcls</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_16x16_DIRECT_MIXEDPRECISION_TEST/constraints</name>
+			<type>2</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_16x16_DIRECT_MIXEDPRECISION_TEST/.tcls</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_4x4_DIRECT_FP32/constraints</name>
+			<type>2</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_4x4_DIRECT_FP32/.tcls</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_4x4_DIRECT_FP32_TEST/constraints</name>
+			<type>2</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_4x4_DIRECT_FP32_TEST/.tcls</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_4x4_DIRECT_MIXEDPRECISION_TEST/constraints</name>
+			<type>2</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_4x4_DIRECT_MIXEDPRECISION_TEST/.tcls</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_4x4_DIRECT_STM_FP32/constraints</name>
+			<type>2</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_4x4_DIRECT_STM_FP32/.tcls</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_8x8_DIRECT_APF8/constraints</name>
+			<type>2</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_8x8_DIRECT_APF8/.tcls</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_8x8_DIRECT_MIXEDPRECISION_TEST/constraints</name>
+			<type>2</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_8x8_DIRECT_MIXEDPRECISION_TEST/.tcls</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U280_4x4_DIRECT_FP32/constraints</name>
+			<type>2</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U280_4x4_DIRECT_FP32/.tcls</location>
+		</link>
+		<link>
+			<name>HLSINF_1_0/constraints</name>
+			<type>2</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/HLSINF_1_0/.tcls</location>
+		</link>
+		<link>
+			<name>HLSINF_1_1/constraints</name>
+			<type>2</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/HLSINF_1_1/.tcls</location>
+		</link>
+		<link>
+			<name>kcu115/constraints</name>
+			<type>2</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/kcu115/.tcls</location>
 		</link>
 		<link>
 			<name>source/add.cpp</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/add.cpp</location>
+			<location>/nfs/drodagu/HLSinf/src/add.cpp</location>
+		</link>
+		<link>
+			<name>source/add_data.cpp</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/src/add_data.cpp</location>
+		</link>
+		<link>
+			<name>source/batch_normalization.cpp</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/src/batch_normalization.cpp</location>
 		</link>
 		<link>
 			<name>source/conv2D.h</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/conv2D.h</location>
+			<location>/nfs/drodagu/HLSinf/src/conv2D.h</location>
 		</link>
 		<link>
 			<name>source/cvt.cpp</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/cvt.cpp</location>
+			<location>/nfs/drodagu/HLSinf/src/cvt.cpp</location>
 		</link>
 		<link>
 			<name>source/direct_convolution.cpp</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/direct_convolution.cpp</location>
+			<location>/nfs/drodagu/HLSinf/src/direct_convolution.cpp</location>
 		</link>
 		<link>
 			<name>source/dws_convolution.cpp</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/dws_convolution.cpp</location>
+			<location>/nfs/drodagu/HLSinf/src/dws_convolution.cpp</location>
 		</link>
 		<link>
 			<name>source/join_split.cpp</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/join_split.cpp</location>
+			<location>/nfs/drodagu/HLSinf/src/join_split.cpp</location>
 		</link>
 		<link>
 			<name>source/k_conv2D.cpp</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/k_conv2D.cpp</location>
+			<location>/nfs/drodagu/HLSinf/src/k_conv2D.cpp</location>
 		</link>
 		<link>
 			<name>source/mul.cpp</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/mul.cpp</location>
+			<location>/nfs/drodagu/HLSinf/src/mul.cpp</location>
 		</link>
 		<link>
 			<name>source/padding.cpp</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/padding.cpp</location>
+			<location>/nfs/drodagu/HLSinf/src/padding.cpp</location>
 		</link>
 		<link>
 			<name>source/pooling.cpp</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/pooling.cpp</location>
+			<location>/nfs/drodagu/HLSinf/src/pooling.cpp</location>
 		</link>
 		<link>
 			<name>source/read.cpp</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/read.cpp</location>
+			<location>/nfs/drodagu/HLSinf/src/read.cpp</location>
 		</link>
 		<link>
 			<name>source/relu.cpp</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/relu.cpp</location>
+			<location>/nfs/drodagu/HLSinf/src/relu.cpp</location>
 		</link>
 		<link>
 			<name>source/serialization.cpp</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/serialization.cpp</location>
+			<location>/nfs/drodagu/HLSinf/src/serialization.cpp</location>
+		</link>
+		<link>
+			<name>source/stm.cpp</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/src/stm.cpp</location>
 		</link>
 		<link>
 			<name>source/winograd_convolution.cpp</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/winograd_convolution.cpp</location>
+			<location>/nfs/drodagu/HLSinf/src/winograd_convolution.cpp</location>
 		</link>
 		<link>
 			<name>source/write.cpp</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/write.cpp</location>
+			<location>/nfs/drodagu/HLSinf/src/write.cpp</location>
 		</link>
 		<link>
 			<name>testbench/data_test.cpp</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/data_test.cpp</location>
+			<location>/nfs/drodagu/HLSinf/src/data_test.cpp</location>
 		</link>
 		<link>
 			<name>testbench/test_arguments.cpp</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/test_arguments.cpp</location>
+			<location>/nfs/drodagu/HLSinf/src/test_arguments.cpp</location>
 		</link>
 		<link>
 			<name>testbench/test_buffers.cpp</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/test_buffers.cpp</location>
+			<location>/nfs/drodagu/HLSinf/src/test_buffers.cpp</location>
 		</link>
 		<link>
 			<name>testbench/test_check.cpp</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/test_check.cpp</location>
+			<location>/nfs/drodagu/HLSinf/src/test_check.cpp</location>
 		</link>
 		<link>
 			<name>testbench/test_conv2D.cpp</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/test_conv2D.cpp</location>
+			<location>/nfs/drodagu/HLSinf/src/test_conv2D.cpp</location>
 		</link>
 		<link>
 			<name>testbench/test_conv2D.h</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/test_conv2D.h</location>
+			<location>/nfs/drodagu/HLSinf/src/test_conv2D.h</location>
 		</link>
 		<link>
 			<name>testbench/test_cpu.cpp</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/test_cpu.cpp</location>
+			<location>/nfs/drodagu/HLSinf/src/test_cpu.cpp</location>
 		</link>
 		<link>
 			<name>testbench/test_file.cpp</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/test_file.cpp</location>
+			<location>/nfs/drodagu/HLSinf/src/test_file.cpp</location>
 		</link>
 		<link>
 			<name>testbench/test_kernel.cpp</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/test_kernel.cpp</location>
+			<location>/nfs/drodagu/HLSinf/src/test_kernel.cpp</location>
 		</link>
 		<link>
 			<name>testbench/test_print.cpp</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/src/test_print.cpp</location>
+			<location>/nfs/drodagu/HLSinf/src/test_print.cpp</location>
 		</link>
 		<link>
 			<name>AlveoU200/constraints/.xml.directive</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/project/HLSinf/AlveoU200/AlveoU200.directive</location>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/AlveoU200/AlveoU200.directive</location>
 		</link>
 		<link>
 			<name>AlveoU200/constraints/directives.tcl</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/project/HLSinf/AlveoU200/directives.tcl</location>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/AlveoU200/directives.tcl</location>
 		</link>
 		<link>
 			<name>AlveoU200/constraints/script.tcl</name>
 			<type>1</type>
-			<location>/home/jflich/git/HLSinf/project/HLSinf/AlveoU200/script.tcl</location>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/AlveoU200/script.tcl</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_16x16_DIRECT_MIXEDPRECISION_TEST/constraints/.xml.directive</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_16x16_DIRECT_MIXEDPRECISION_TEST/CONF_ALVEO_U200_16x16_DIRECT_MIXEDPRECISION_TEST.directive</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_16x16_DIRECT_MIXEDPRECISION_TEST/constraints/directives.tcl</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_16x16_DIRECT_MIXEDPRECISION_TEST/directives.tcl</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_16x16_DIRECT_MIXEDPRECISION_TEST/constraints/script.tcl</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_16x16_DIRECT_MIXEDPRECISION_TEST/script.tcl</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_4x4_DIRECT_FP32/constraints/.xml.directive</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_4x4_DIRECT_FP32/CONF_ALVEO_U200_4x4_DIRECT_FP32.directive</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_4x4_DIRECT_FP32/constraints/directives.tcl</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_4x4_DIRECT_FP32/directives.tcl</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_4x4_DIRECT_FP32/constraints/script.tcl</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_4x4_DIRECT_FP32/script.tcl</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_4x4_DIRECT_FP32_TEST/constraints/.xml.directive</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_4x4_DIRECT_FP32_TEST/CONF_ALVEO_U200_4x4_DIRECT_FP32_TEST.directive</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_4x4_DIRECT_FP32_TEST/constraints/directives.tcl</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_4x4_DIRECT_FP32_TEST/directives.tcl</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_4x4_DIRECT_FP32_TEST/constraints/script.tcl</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_4x4_DIRECT_FP32_TEST/script.tcl</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_4x4_DIRECT_MIXEDPRECISION_TEST/constraints/.xml.directive</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_4x4_DIRECT_MIXEDPRECISION_TEST/CONF_ALVEO_U200_4x4_DIRECT_MIXEDPRECISION_TEST.directive</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_4x4_DIRECT_MIXEDPRECISION_TEST/constraints/directives.tcl</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_4x4_DIRECT_MIXEDPRECISION_TEST/directives.tcl</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_4x4_DIRECT_MIXEDPRECISION_TEST/constraints/script.tcl</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_4x4_DIRECT_MIXEDPRECISION_TEST/script.tcl</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_4x4_DIRECT_STM_FP32/constraints/.xml.directive</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_4x4_DIRECT_STM_FP32/CONF_ALVEO_U200_4x4_DIRECT_STM_FP32.directive</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_4x4_DIRECT_STM_FP32/constraints/directives.tcl</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_4x4_DIRECT_STM_FP32/directives.tcl</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_4x4_DIRECT_STM_FP32/constraints/script.tcl</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_4x4_DIRECT_STM_FP32/script.tcl</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_8x8_DIRECT_APF8/constraints/.xml.directive</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_8x8_DIRECT_APF8/CONF_ALVEO_U200_8x8_DIRECT_APF8.directive</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_8x8_DIRECT_APF8/constraints/directives.tcl</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_8x8_DIRECT_APF8/directives.tcl</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_8x8_DIRECT_APF8/constraints/script.tcl</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_8x8_DIRECT_APF8/script.tcl</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_8x8_DIRECT_MIXEDPRECISION_TEST/constraints/.xml.directive</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_8x8_DIRECT_MIXEDPRECISION_TEST/CONF_ALVEO_U200_8x8_DIRECT_MIXEDPRECISION_TEST.directive</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_8x8_DIRECT_MIXEDPRECISION_TEST/constraints/directives.tcl</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_8x8_DIRECT_MIXEDPRECISION_TEST/directives.tcl</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U200_8x8_DIRECT_MIXEDPRECISION_TEST/constraints/script.tcl</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U200_8x8_DIRECT_MIXEDPRECISION_TEST/script.tcl</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U280_4x4_DIRECT_FP32/constraints/.xml.directive</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U280_4x4_DIRECT_FP32/CONF_ALVEO_U280_4x4_DIRECT_FP32.directive</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U280_4x4_DIRECT_FP32/constraints/directives.tcl</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U280_4x4_DIRECT_FP32/directives.tcl</location>
+		</link>
+		<link>
+			<name>CONF_ALVEO_U280_4x4_DIRECT_FP32/constraints/script.tcl</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/CONF_ALVEO_U280_4x4_DIRECT_FP32/script.tcl</location>
+		</link>
+		<link>
+			<name>HLSINF_1_0/constraints/.xml.directive</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/HLSINF_1_0/HLSINF_1_0.directive</location>
+		</link>
+		<link>
+			<name>HLSINF_1_0/constraints/directives.tcl</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/HLSINF_1_0/directives.tcl</location>
+		</link>
+		<link>
+			<name>HLSINF_1_0/constraints/script.tcl</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/HLSINF_1_0/script.tcl</location>
+		</link>
+		<link>
+			<name>HLSINF_1_1/constraints/.xml.directive</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/HLSINF_1_1/HLSINF_1_1.directive</location>
+		</link>
+		<link>
+			<name>HLSINF_1_1/constraints/directives.tcl</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/HLSINF_1_1/directives.tcl</location>
+		</link>
+		<link>
+			<name>HLSINF_1_1/constraints/script.tcl</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/HLSINF_1_1/script.tcl</location>
+		</link>
+		<link>
+			<name>kcu115/constraints/.xml.directive</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/kcu115/kcu115.directive</location>
+		</link>
+		<link>
+			<name>kcu115/constraints/directives.tcl</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/kcu115/directives.tcl</location>
+		</link>
+		<link>
+			<name>kcu115/constraints/script.tcl</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/project/HLSinf/kcu115/script.tcl</location>
 		</link>
 	</linkedResources>
 </projectDescription>

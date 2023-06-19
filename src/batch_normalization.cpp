@@ -29,8 +29,10 @@ void batch_norm(int enable_batch_norm, int num_pixels, hls::stream<pool_st> &in,
 	DO_PRAGMA(HLS ARRAY_PARTITION variable=bn_values_in complete dim=0)
 	DO_PRAGMA(HLS ARRAY_PARTITION variable=data_out complete dim=0)
 
-	// Reading batch normalization values
-	bn_values_in = bn_values.read();
+	if (enable_batch_norm) {
+		// Reading batch normalization values
+		bn_values_in = bn_values.read();
+	}
 
 	loop_batch_norm_pixels:
 	for (int i = 0; i < data_size; i++) {
@@ -48,7 +50,7 @@ void batch_norm(int enable_batch_norm, int num_pixels, hls::stream<pool_st> &in,
 			bn_t v_in, std, xn, v_batchnorm;
 			v_in = data_in.pixel[cpo];
 
-			if(enable_batch_norm) {
+			if (enable_batch_norm) {
 				// Apply normalization
 				// std = sqrt(run_var + eps)
 				std = hls::sqrtf(bn_values_in.values[(cpo*4)+3] + EPS);

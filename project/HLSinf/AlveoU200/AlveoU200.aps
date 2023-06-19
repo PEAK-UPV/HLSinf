@@ -13,6 +13,7 @@
         <library name="DefaultPlatform" value="xilinx/virtexuplus/virtexuplus_fpv7"/>
     </libraryList>
     <flowTarget value="vitis"/>
+    <synthesis askAgain="true"/>
     <clockList>
         <clock default="false" name="default" period="3.33"/>
     </clockList>

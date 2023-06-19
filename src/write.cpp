@@ -37,7 +37,7 @@ void write_data_channels_gihwcpi(int num_pixels, int offset, write_block_t *ptr,
   for (int i = 0; i < num_pixels; i++) {
 	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=W_REFERENCE*H_REFERENCE)
     #pragma HLS pipeline
-	  dout_st bx = in.read();
+	dout_st bx = in.read();
     ptr[offset+i] = bx;
   }
 

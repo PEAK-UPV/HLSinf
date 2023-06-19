@@ -91,7 +91,7 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
     #else
     k_conv2D((read_block_t *)data_in, (write_block_t *)data_in_add, 
 		    H, W, HO_final, WO_final, rows_p, PT_p, PB_p, PL_p, PR_p, SH, SW, I_input, O_output, i_iter, 
-		    o_iter_first, o_iter_last, 
+		    o_iter_first, o_iter_last, o_iter,
 		    enable_relu, enable_stm, relu_factor, enable_batch_norm,
 		  kernel,
 		   (b_st *)bias, (bnp_st *)batch_norm_values, (write_block_t *)out, 

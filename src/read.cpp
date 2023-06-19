@@ -55,10 +55,12 @@ void read_bias(int offset_bias, b_st *b_ptr, hls::stream<b_st> &out) {
 //
 // All the bias are read and sent through the out stream
 //
-void read_batch_norm(int offset_batchnorm, bnp_st *b_ptr, hls::stream<bnp_st> &out) {
+void read_batch_norm(int enable_batch_norm, int offset_batchnorm, bnp_st *b_ptr, hls::stream<bnp_st> &out) {
   #ifdef DEBUG_READ_BATCH_NORM
   printf("DEBUG_READ_BATCH_NORM: start\n");
   #endif
+
+  if (!enable_batch_norm) return;
 
   bnp_st batch_norm;
   #pragma HLS ARRAY_PARTITION variable=batch_norm complete dim=0
@@ -133,6 +135,7 @@ void read_kernel(int I_ITER, int offset_kernel, w_t *k_ptr, hls::stream<w_st> &k
   #endif
 }
 
+
 // ---------------------------------------------------------------------------------------
 // read_data_channels_gihwcpi. Reads all input data assuming GIxHxWxCPI input data format
 // Read pixels are sent out through the output stream
@@ -157,22 +160,26 @@ void read_data_channels_gihwcpi(int num_pixels, int offset, int I_ITER, int cpi_
 
   if (!enable) return;
 
-  read_data_channels_loop_i_iter:
-  for (int iter = 0; iter < I_ITER; iter++) {
-    DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE / CPI)
-    int offset_global = offset + (cpi_group_offset * iter);
+  int total_num_pixels = num_pixels * I_ITER;
+
+  //read_data_channels_loop_i_iter:
+  //for (int iter = 0; iter < I_ITER; iter++) {
+  //  DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE / CPI)
+
+    //offset_global = offset + (cpi_group_offset * iter);
+
 #ifdef DEBUG_READ_DATA
 #ifdef DEBUG_VERBOSE
     printf("offset global for iteration %d = %d\n", iter, offset_global);
 #endif
 #endif
     read_data_channels_loop_pixels:
-    for (int i = 0; i < num_pixels; i++) {
+    for (int i = 0; i < total_num_pixels; i++) {
       DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max = H_REFERENCE * W_REFERENCE)
       DO_PRAGMA(HLS pipeline)
 
       din_st px;
-      px = ptr[offset_global+i];
+      px = ptr[offset+i];
       out << px;
       #ifdef DEBUG_READ_DATA
       #ifdef DEBUG_VERBOSE
@@ -182,7 +189,7 @@ void read_data_channels_gihwcpi(int num_pixels, int offset, int I_ITER, int cpi_
       #endif
       #endif
     }
-  }
+  //}
 
   #ifdef DEBUG_READ_DATA
   printf("READ_DATA: ends (gihwcpi format)\n");

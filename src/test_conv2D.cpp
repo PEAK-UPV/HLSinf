@@ -290,7 +290,7 @@ int main(int argc, char **argv) {
 	printf("Co-simulation test...\n");
 	enable = 1;
 	from_file = 0;
-	cpu = 1;
+	cpu = 0;
 	deterministic_input_values = 1;
 	for (int i=0; i<INSTANCES_SIM; i++) compute(&enable, &from_file, &cpu, &retval);
     global_retval = retval;

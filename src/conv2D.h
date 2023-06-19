@@ -214,6 +214,45 @@
 #define dout_t                   float
 #endif
 
+// Configuration 2.0: KCU115, 16x16, APUINT8: DIRECT_CONV, RELU, STM, CLIPPING, POOLING, BATCH_NORM, ADD, UPSIZE
+#ifdef HLSINF_2_0
+#define KCU115
+#define DIRECT_CONV
+#define USE_RELU
+#define USE_CLIPPING
+//#define USE_SHIFT
+#define USE_POOLING
+#define USE_BATCH_NORM
+//#define USE_STM
+#define USE_UPSIZE
+//#define FLOAT_DATA_TYPE               // we use float numbers as input data
+#define CPI                         16
+#define CPO                         16
+#define LOG2_CPO                     4
+#define WMAX                       256
+#define HMAX                       256
+#define READ_BURST_SIZE             64
+#define STREAMS_DEPTH               16
+#define INPUT_BUFFER_SIZE        16384 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define EPSILON_VALUE          0.00001
+#define MIN_DATA_TYPE_VALUE   		 0
+#define READ_BLOCK_SIZE             64   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define WRITE_BLOCK_SIZE            64   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define din_t                    ap_uint<8>
+#define conv_cvt_t               ap_uint<8>
+#define conv_mul_t               ap_uint<8>
+#define relu_t                   ap_uint<8>
+#define stm_t                    ap_uint<8>
+#define pool_cvt_t               ap_uint<8>
+#define pool_t                   ap_uint<8>
+#define bn_t                     ap_uint<8>
+#define add_t                    ap_uint<8>
+#define w_t                      ap_uint<8>
+#define b_t                      ap_uint<8>
+#define conv_t                   ap_uint<8>
+#define dout_t                   ap_uint<8>
+#endif
+
 // ***********************************************************************************************************
 // ***********************************************************************************************************
 // ***********************************************************************************************************
@@ -305,7 +344,7 @@
 
 // ----------------------------------------------------------------------------------------------------------
 // Data types
-struct din_st      {din_t      pixel[CPI];};
+struct din_st      {din_t      pixel[CPI];} __attribute__((aligned (16)));
 struct conv_cvt_st {din_st     pixel[9];};
 struct conv_mul_st {conv_mul_t pixel[CPO];};
 struct conv_st     {conv_t     pixel[CPO];};
@@ -313,13 +352,13 @@ struct relu_st     {relu_t     pixel[CPO];};
 struct stm_st      {stm_t      pixel[CPO];};
 struct pool_cvt_st {pool_cvt_t pixel[4];};
 struct pool_st     {pool_t     pixel[CPO];};
-struct bn_st       {bn_t       pixel[CPO];};
+struct bn_st       {bn_t       pixel[CPO];} __attribute__((aligned (16)));
 struct add_st      {add_t      pixel[CPO];};
-struct dout_st     {dout_t     pixel[CPO];};
+struct dout_st     {dout_t     pixel[CPO];} __attribute__((aligned (16)));
 struct w_st        {w_t        pixel[CPO][CPI][9];};
 struct w_in_st     {w_t        pixel[9];};
-struct b_st        {b_t        pixel[CPO];};
-struct bnp_st      {bn_t       values[CPO*4];};
+struct b_st        {b_t        pixel[CPO];} __attribute__((aligned (16)));
+struct bnp_st      {bn_t       values[CPO*4];} __attribute__((aligned (64)));
 
 // -----------------------------------------------------------------------------------------------------------
 // Read and write block struct
@@ -335,7 +374,7 @@ struct bnp_st      {bn_t       values[CPO*4];};
 // function prototypes
 extern "C" void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, 
                          int H, int W, int HO, int WO, int rows, int PT, int PB, int PL, int PR, int SH, int SW, 
-                         int I, int O, int I_ITER, int o_iter_first, int o_iter_last, 
+                         int I, int O, int I_ITER, int o_iter_first, int o_iter_last, int O_ITER,
                          int enable_relu, int enable_stm, float relu_factor, int enable_batch_norm,
                          w_t *ptr_kernel,
             			 b_st *ptr_bias, bnp_st *b_ptr, write_block_t *ptr_out, 
@@ -344,7 +383,7 @@ extern "C" void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add,
                          int dir_shift, int pos_shift, int enable_upsize);
 
 void read_bias                    (int offset_bias, b_st *b_ptr, hls::stream<b_st> &out);
-void read_batch_norm              (int offset_batchnorm, bnp_st *b_ptr, hls::stream<bnp_st> &out);
+void read_batch_norm              (int enable_batch_norm, int offset_batchnorm, bnp_st *b_ptr, hls::stream<bnp_st> &out);
 void read_kernel                  (int I_ITER, int offset_kernel, w_t *k_ptr, hls::stream<w_st> &k_out);
 void read_data_channels_gihwcpi   (int num_pixels, int offset, int I_ITER, int cpi_group_offset, read_block_t *ptr, hls::stream<din_st> &out, int enable);
 void read_input_add_gihwcpi       (int num_pixels, int offset, write_block_t *ptr, hls::stream<dout_st> &out, int enable);

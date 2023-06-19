@@ -35,7 +35,7 @@ void add(int num_pixels, int I_ITER, hls::stream<conv_mul_st> &in, hls::stream<b
 
   // Buffer for all data and CPO channels
   static conv_st buff_o_channels[WMAX*HMAX];
-  DO_PRAGMA(HLS AGGREGATE variable=buffer_o_channels)
+  DO_PRAGMA(HLS AGGREGATE variable=buff_o_channels)
   #ifdef ALVEO_U200
   DO_PRAGMA(HLS bind_storage variable=buffer_o_channels type=ram_t2p impl=uram)
   #endif
