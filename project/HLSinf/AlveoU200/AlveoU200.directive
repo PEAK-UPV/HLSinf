@@ -70,6 +70,31 @@
                 <option name="name" value="k_conv2D"/>
             </pragma>
         </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="TOP">
+                <option name="name" value="k_conv2D"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="TOP">
+                <option name="name" value="k_conv2D"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="TOP">
+                <option name="name" value="k_conv2D"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="TOP">
+                <option name="name" value="k_conv2D"/>
+            </pragma>
+        </directive>
+        <directive functionName="k_conv2D" label="" functionLabel="">
+            <pragma name="TOP">
+                <option name="name" value="k_conv2D"/>
+            </pragma>
+        </directive>
     </sourceFile>
 </AutoPilot:ProjectResources>
 

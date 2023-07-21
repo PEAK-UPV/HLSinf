@@ -46,12 +46,13 @@ void init_data(int from_file) {
   
   // input data
   int addr;
+
   for (int i=0; i<I_input; i++) {
     for (int h=0; h<H; h++) {
       for (int w=0; w<W; w++) {
     	addr = input_data_address(i, h, w);
     	if (i<I) {
-          data_in[addr] = deterministic_input_values?i+1:dist(gen);
+          data_in[addr] = deterministic_input_values?1:dist(gen);
     	} else {
     	  data_in[addr] = 0;
     	}
@@ -59,6 +60,7 @@ void init_data(int from_file) {
       }
     }
   }
+
 
   //input add data
   if(enable_add) {
@@ -79,27 +81,22 @@ void init_data(int from_file) {
   }
 
   int kernel_id = 1;
-  for (int i=0; i<I_kernel; i++) {
     for (int o=0; o<O_kernel; o++) {
-      for (int kh=0; kh<KH; kh++) {
-        for (int kw=0; kw<KW; kw++) {
-          int gi = i / CPI;
-          int ki = i % CPI;
-          int go = o / CPO;
-          int ko = o % CPO;
-          int addr_k = (go * GI * CPO * CPI * KH * KW) +
-                       (gi * CPO * CPI * KH * KW) +
-                       (ko * CPI * KH * KW) +
-                       (ki * KH * KW) +
-                       (kh * KW) +
-                       kw;
-          if ((i<I) && (o<O)) kernel[addr_k] = deterministic_input_values?(i % 20):dist_filters(gen);
-          else kernel[addr_k] = 0;
-	    }
-	  }
-      kernel_id++;
+      for (int i=0; i<I_kernel; i++) {
+        for (int kh=0; kh<KH; kh++) {
+          for (int kw=0; kw<KW; kw++) {
+            int addr_k = (o * I_kernel * KH * KW) +
+                         (i * KH * KW) +
+                         (kh * KW) +
+                         kw;
+            if ((i<I) && (o<O)) kernel[addr_k] = deterministic_input_values?(i % 20):dist_filters(gen);
+            else kernel[addr_k] = 0;
+  	    }
+  	  }
+        kernel_id++;
+      }
     }
-  }
+
 
   #ifdef USE_BATCH_NORM
   // Generating values for batch normalization layer

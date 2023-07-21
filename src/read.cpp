@@ -19,7 +19,8 @@
 //
 // All the bias are read and sent through the out stream
 //
-void read_bias(int offset_bias, b_st *b_ptr, hls::stream<b_st> &out) {
+
+void read_bias(int O_ITER, int offset_bias, b_st *b_ptr, hls::stream<b_st> &out) {
 
   #ifdef DEBUG_READ_BIAS
   printf("READ_BIAS: start\n");
@@ -28,15 +29,17 @@ void read_bias(int offset_bias, b_st *b_ptr, hls::stream<b_st> &out) {
   b_st bias;
   #pragma HLS ARRAY_PARTITION variable=bias complete dim=0
 
-  bias = b_ptr[offset_bias];
-  out << bias;
+  for (uint iter = 0; iter < O_ITER; iter++) {
+	  bias = b_ptr[offset_bias+iter];
+	  out << bias;
 
-  #ifdef DEBUG_READ_BIAS
-  printf("READ_BIAS: offset_bias = %d\n", offset_bias);
-  printf("READ_BIAS: bias = ");
-  for (int c=0; c<CPO; c++) printf(" %f ", float(bias.pixel[c]));
-  printf("\n");
-  #endif
+	  #ifdef DEBUG_READ_BIAS
+	  printf("READ_BIAS: offset_bias = %d\n", offset_bias);
+	  printf("READ_BIAS: bias = ");
+	  for (int c=0; c<CPO; c++) printf(" %f ", float(bias.pixel[c]));
+	  printf("\n");
+	  #endif
+  }
 
   #ifdef DEBUG_READ_BIAS
   printf("READ_BIAS: end\n");
@@ -86,6 +89,7 @@ void read_batch_norm(int enable_batch_norm, int offset_batchnorm, bnp_st *b_ptr,
 //
 // Arguments:
 //   I_ITER              : Number of input iterations (I / CPI)
+//   O_ITER				 : Number of output iterations (O / CPO)
 //   k_ptr               : pointer to kernels
 //   offset_kernel       : offset to kernels
 //   k_out               : output stream
@@ -95,8 +99,8 @@ void read_batch_norm(int enable_batch_norm, int offset_batchnorm, bnp_st *b_ptr,
 // kernels in the same order they are read through the output stream.
 // kernels are sent in frame structures (3x3 grid)
 //
-void read_kernel(int I_ITER, int offset_kernel, w_t *k_ptr, hls::stream<w_st> &k_out){
 
+void read_kernel(int I_ITER, int O_ITER, int offset_kernel, w_t *k_ptr, hls::stream<w_st> &k_out) {
   #ifdef DEBUG_READ_KERNEL
   printf("READ_KERNEL: start\n");
   #endif
@@ -104,11 +108,13 @@ void read_kernel(int I_ITER, int offset_kernel, w_t *k_ptr, hls::stream<w_st> &k
   w_st k;
   int cnt = 0;
   #pragma HLS array_partition variable=k complete dim=0
+  uint iters = I_ITER * O_ITER;
 
-  for (int i=0; i<I_ITER; i++) {
+  for (int i=0; i<iters; i++) {
 	  DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE/CPI)
 	  DO_PRAGMA(HLS LOOP_FLATTEN OFF)
 
+	  // TODO: Could be optimize
 	  for (int cpo=0; cpo < CPO; cpo++) {
 		  for (int cpi=0; cpi < CPI; cpi++) {
 			  for (int p=0; p<9; p++) {
@@ -135,66 +141,51 @@ void read_kernel(int I_ITER, int offset_kernel, w_t *k_ptr, hls::stream<w_st> &k
   #endif
 }
 
-
 // ---------------------------------------------------------------------------------------
-// read_data_channels_gihwcpi. Reads all input data assuming GIxHxWxCPI input data format
+// read_input. Reads all input data assuming HxWxI data format
 // Read pixels are sent out through the output stream
 //
 // Arguments:
-//   num_pixels          : Number of pixels to read in total (each pixel is CPI wide)
-//   offset              : offsets within input data to read (offset aligned to CPI wide pixels)
+//   num_pixels          : Number of pixels to read in total (each pixel is I wide)
+//   offset              : offsets within input data to read
+//   I_ITER				 : Number of input iterations (I / CPI)
 //   ptr                 : pointer to input data
 //   out                 : output stream
 //   enable              : enable for the read operation
 //
 
-void read_data_channels_gihwcpi(int num_pixels, int offset, int I_ITER, int cpi_group_offset, read_block_t *ptr, hls::stream<din_st> &out, int enable) {
+void read_input(int num_pixels, int offset, int I_ITER, read_block_t *ptr, hls::stream<din_st> &out) {
+	#ifdef DEBUG_READ_DATA
+    std::cout << "READ_DATA: starts (HxWxI) format" << std::endl;
+    std::cout << "num_pixels : " << num_pixels << std::endl;
+    std::cout << "offset 	   : " << offset << std::endl;
+    std::cout << "ptr 	   : " << ptr << std::endl;
+    #endif
 
-  #ifdef DEBUG_READ_DATA
-  printf("READ_DATA: starts (gihwcpi format)\n");
-  printf("  num_pixels : %d\n", num_pixels);
-  printf("  offset     : %d\n", offset);
-  printf("  cpi_group_offset : %d\n", cpi_group_offset);
-  printf("  ptr        : %p\n", ptr);
-  #endif
+    uint total_num_pixels = num_pixels * I_ITER;
 
-  if (!enable) return;
-
-  int total_num_pixels = num_pixels * I_ITER;
-
-  //read_data_channels_loop_i_iter:
-  //for (int iter = 0; iter < I_ITER; iter++) {
-  //  DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE / CPI)
-
-    //offset_global = offset + (cpi_group_offset * iter);
-
-#ifdef DEBUG_READ_DATA
-#ifdef DEBUG_VERBOSE
-    printf("offset global for iteration %d = %d\n", iter, offset_global);
-#endif
-#endif
-    read_data_channels_loop_pixels:
+    read_data_channels_loop_i_iter:
     for (int i = 0; i < total_num_pixels; i++) {
-      DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max = H_REFERENCE * W_REFERENCE)
-      DO_PRAGMA(HLS pipeline)
+    	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=H_REFERENCE*W_REFERENCE)
+		#pragma HLS PIPELINE II=1
 
-      din_st px;
-      px = ptr[offset+i];
-      out << px;
-      #ifdef DEBUG_READ_DATA
-      #ifdef DEBUG_VERBOSE
-      printf("data read : %d : ", i);
-      for (int x=0; x<CPI; x++) printf("%f ", float(px.pixel[x]));
-      printf("\n");
-      #endif
-      #endif
+		din_st px;
+    	px = ptr[offset+i];
+    	out << px;
+
+		#ifdef DEBUG_READ_DATA
+		#ifdef VERBOSE
+		std::cout << "data read: " << i << "   ";
+		for (int cpi = 0; cpi < CPI; cpi++)
+			std::cout << px.pixel[cpi] << " ";
+		std::cout << std::endl;
+    	#endif
+		#endif
     }
-  //}
 
-  #ifdef DEBUG_READ_DATA
-  printf("READ_DATA: ends (gihwcpi format)\n");
-  #endif
-
+	#ifdef DEBUG_READ_DATA
+    std::cout << "READ_DATA: ends (HWI format)" << std::endl;
+    #endif
 }
 
 // ---------------------------------------------------------------------------------------

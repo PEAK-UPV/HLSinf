@@ -5,26 +5,14 @@
     <downStreamTool>
         <DownStreamTool name="vivado"/>
     </downStreamTool>
-    <targetInfo>
-        <TargetInfo value="xcu200:-fsgd2104:-2-e"/>
-    </targetInfo>
-    <libraryList>
-        <library name="DefaultPlatform" value="xilinx/virtexuplus/virtexuplus"/>
-        <library name="DefaultPlatform" value="xilinx/virtexuplus/virtexuplus_fpv7"/>
-    </libraryList>
-    <flowTarget value="vitis"/>
     <synthesis askAgain="true"/>
-    <clockList>
-        <clock default="false" name="default" period="3.33"/>
-    </clockList>
     <config>
         <config_interface default_interface="kernel" default_slave_interface="s_axilite" m_axi_alignment_byte_size="64" m_axi_latency="64" m_axi_max_widen_bitwidth="512" m_axi_offset="slave"/>
         <config_rtl register_reset_num="3"/>
     </config>
     <UIConfigurations>
-        <UIAutosynConf boardInfo="Alveo U200 Data Center Accelerator Card (xcu200-fsgd2104-2-e) " hideTrivialOp="true" isBasedOnBoard="true" isSolutionDirty="false" isStopAskAgain="false" showDetailDesignViewer="false">
+        <UIAutosynConf boardInfo="Alveo U200 Data Center Accelerator Card (xcu200-fsgd2104-2-e) " hideTrivialOp="true" isBasedOnBoard="true" isSolutionDirty="true" isStopAskAgain="false" showDetailDesignViewer="false">
             <Platform>xilinx/virtexuplus/virtexuplus</Platform>
-            <Platform>xilinx/virtexuplus/virtexuplus_fpv7</Platform>
             <customLibs/>
         </UIAutosynConf>
         <UIIPPackagerConf AskAgain="true" DescriptionButton="false" LibraryButton="false" RTLLanguage="verilog" UseNetList="none" VendorButton="false" VersionButton="false" evaluateRTL="false" setup="false">
@@ -74,5 +62,15 @@
     <project>
         <value string="HLSinf"/>
     </project>
+    <flowTarget value="vitis"/>
+    <targetInfo>
+        <TargetInfo value="xcu200:-fsgd2104:-2-e"/>
+    </targetInfo>
+    <libraryList>
+        <library value="xilinx/virtexuplus/virtexuplus" name="DefaultPlatform"/>
+    </libraryList>
+    <clockList>
+        <clock default="false" name="default" period="3.33"/>
+    </clockList>
 </solution>
 

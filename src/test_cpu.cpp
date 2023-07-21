@@ -42,16 +42,12 @@ int filter_address_dws_conv(int i, int o) {
 }
 
 int input_data_address(int i, int h, int w) {
-	int gi = i / CPI;
-	int ii = i % CPI;
-	int addr = (gi * H * W * CPI) + (h * W * CPI) + (w * CPI) + ii;
+	int addr = (h * W * I_input) + (w * I_input) + i;
 	return addr;
 }
 
 int output_data_address(int o, int h, int w, int height, int width) {
-	int go = o / CPO;
-	int oo = o % CPO;
-	int addr = (go * height * width * CPO) + (h * width * CPO) + (w * CPO) + oo;
+	int addr = (h * width * O_output) + (w * O_output) + o;
 	return addr;
 }
 

@@ -14,99 +14,68 @@
 // It adds also the corresponding bias.
 //
 // Arguments:
-//   H     : Height of input channel
-//   W     : Width of input channel
-//   I_ITER: Number of input iterations (I / CPI)
-//   in    : input streams data
-//   b_in  : input stream bias
-//   out   : output stream
+//   num_pixels     : Height of input channel
+//   I_ITER			: Number of input iterations (I / CPI)
+//   O_ITER			: Number of output iterations (O /CPO)
+//   in    			: input streams data
+//   b_in  			: input stream bias
+//   out   			: output stream
 //
-void add(int num_pixels, int I_ITER, hls::stream<conv_mul_st> &in, hls::stream<b_st> &b_in, hls::stream<conv_st> &out) {
 
-  #ifdef DEBUG_ADD
-  printf("add: start\n");
-  #endif
+void add (int num_pixels, int I_ITER, int O_ITER, hls::stream<conv_mul_st> &in, hls::stream <b_st> &b_in, hls::stream<dout_st> &out) {
+    #ifdef DEBUG_ADD
+    std::cout << "add: start" << std::endl;
+    #endif
 
-  b_st bias;
-  DO_PRAGMA(HLS ARRAY_PARTITION variable=bias dim=0 complete)
+    b_st bias;
+    #pragma HLS ARRAY_PARTITION variable=bias type=complete dim=0
 
-  // number of iterations by CPI || CPO channels
-  int num_iterations = num_pixels;
+    // number of iterations by CPO channels
+    int num_iterations = num_pixels * O_ITER;
 
-  // Buffer for all data and CPO channels
-  static conv_st buff_o_channels[WMAX*HMAX];
-  DO_PRAGMA(HLS AGGREGATE variable=buff_o_channels)
-  #ifdef ALVEO_U200
-  DO_PRAGMA(HLS bind_storage variable=buffer_o_channels type=ram_t2p impl=uram)
-  #endif
-  #ifdef ALVEO_U280
-  DO_PRAGMA(HLS bind_storage variable=buffer_o_channels type=ram_t2p impl=uram)
-  #endif
+    //conv_st o_channels;
+    dout_st o_channels;
+    #pragma HLS AGGREGATE variable=o_channels
+
+    // All input data have effect into output add
+    add_i_iter_loop:
+    for (int it = 0; it < num_iterations; it++) {
+        #pragma HLS LOOP_TRIPCOUNT min=1 max=W_REFERENCE*H_REFERENCE
+        #pragma HLS LOOP_FLATTEN off
+
+    	dout_st data_out;
+
+	    // We receive bias in packs of CPO
+	    bias = b_in.read();
+
+	    #ifdef DEBUG_ADD
+	    #ifdef DEBUG_VERBOSE
+	    for (int b = 0; b < CPO; b++) {
+		    std::cout << "Bias[" << b << "] = " << float(bias.pixel[b]) << std::endl;
+	    }
+	    std::cout << "add: bias received" << std::endl;
+	    #endif
+	    #endif
 
 
-  // We receive bias in packs of CPO
-  bias = b_in.read();
+	    add_load_data_it_loop:
+	    for (int i_iter = 0; i_iter < I_ITER; i_iter++) {
+		    #pragma HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE/CPI
+	    	conv_mul_st px;
+	    	b_st data_in;
+	    	dout_st data_out;
+		    px = in.read();
 
-  #ifdef DEBUG_ADD
-  #ifdef DEBUG_VERBOSE
-  for (int b=0; b<CPO; b++) {
-    printf("Bias[%d] = %6.4f \n", b, float(bias.pixel[b]));
-  }
-  printf("add: bias received\n");
-  for(int cpo = 0; cpo<CPO; cpo++){
-    printf("Channel cpo = %d: ", cpo);
-    for(int it = 0; it<num_iterations; it++){
-      printf("%6.2f ", float(buff_o_channels[it].pixel[cpo]));
+		    if (i_iter == 0) data_in = bias; else data_in = *(b_st *)&o_channels;
+
+		    add_load_data_cpo_loop:
+		    for (int cpo = 0; cpo < CPO; cpo++) {
+		        #pragma HLS UNROLL
+			    data_out.pixel[cpo] = data_in.pixel[cpo] + px.pixel[cpo];
+		    }
+
+		    o_channels = data_out;
+	    }
+	    out << data_out;
     }
-    printf("\n");
-  }
-  #endif
-  #endif
-
-  // All input data have effect into output add
-  add_i_iter_loop:
-  for (int i_iter = 0; i_iter < I_ITER; i_iter++){
-    DO_PRAGMA(HLS loop_tripcount  min=1 max=I_REFERENCE/CPI)
-    conv_st data_out;
-    #pragma HLS loop_flatten off
-    add_load_data_it_loop:
-    for(int it = 0; it<num_iterations; it++){
-      DO_PRAGMA(HLS loop_tripcount  min=1 max=W_REFERENCE*H_REFERENCE)
-      conv_mul_st px;
-      px = in.read();
-      b_st data_in;
-      conv_st data_out;
-
-      if (i_iter == 0) data_in = bias; else data_in = *(b_st *)&buff_o_channels[it];
-
-      add_load_data_cpo_loop:
-      for (int cpo=0; cpo<CPO; cpo++) {
-        DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO)
-        #pragma HLS unroll
-        data_out.pixel[cpo] = data_in.pixel[cpo] + px.pixel[cpo];
-      }
-      buff_o_channels[it] = data_out;
-
-      if(i_iter ==(I_ITER-1)){
-
-        out << data_out;
-      }
-    }
-  } //i_iter
-
-  #ifdef DEBUG_ADD
-  #ifdef DEBUG_VERBOSE
-  for (int cpo=0; cpo<CPO; cpo++) {
-    printf("CH %d: ", cpo);
-    for (int it=0; it<num_iterations; it++) {
-      printf("%6.2f ", float(buff_o_channels[it].pixel[cpo]));
-    }
-    printf("\n");
-  }
-  #endif
-  #endif
-
-  #ifdef DEBUG_ADD
-  printf("add: end\n");
-  #endif
 }

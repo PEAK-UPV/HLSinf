@@ -107,6 +107,11 @@
 			<location>/nfs/drodagu/HLSinf/src/add_data.cpp</location>
 		</link>
 		<link>
+			<name>source/aggregate.cpp</name>
+			<type>1</type>
+			<location>/nfs/drodagu/HLSinf/src/aggregate.cpp</location>
+		</link>
+		<link>
 			<name>source/batch_normalization.cpp</name>
 			<type>1</type>
 			<location>/nfs/drodagu/HLSinf/src/batch_normalization.cpp</location>
@@ -132,9 +137,9 @@
 			<location>/nfs/drodagu/HLSinf/src/dws_convolution.cpp</location>
 		</link>
 		<link>
-			<name>source/join_split.cpp</name>
+			<name>source/filters_buffer.cpp</name>
 			<type>1</type>
-			<location>/nfs/drodagu/HLSinf/src/join_split.cpp</location>
+			<location>/nfs/drodagu/HLSinf/src/filters_buffer.cpp</location>
 		</link>
 		<link>
 			<name>source/k_conv2D.cpp</name>

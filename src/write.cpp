@@ -25,7 +25,7 @@
 // On every cycle the module receives BLOCK_SIZE pixels to write into memory
 //
 
-void write_data_channels_gihwcpi(int num_pixels, int offset, write_block_t *ptr, hls::stream<dout_st> &in) {
+void write_data_channels_gihwcpi(int num_pixels, int O_ITER, int offset, write_block_t *ptr, hls::stream<dout_st> &in) {
 
   #ifdef DEBUG_WRITE_DATA
   printf("WRITE_DATA: starts (gihwcpi data format)\n");
@@ -33,12 +33,19 @@ void write_data_channels_gihwcpi(int num_pixels, int offset, write_block_t *ptr,
   printf("  offset %d\n", offset);
   #endif
 
+  uint total_num_pixels = num_pixels * O_ITER;
+
   write_data_channels_loop_pixels:
-  for (int i = 0; i < num_pixels; i++) {
+  for (int i = 0; i < total_num_pixels; i++) {
 	DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=W_REFERENCE*H_REFERENCE)
     #pragma HLS pipeline
 	dout_st bx = in.read();
     ptr[offset+i] = bx;
+    #ifdef DEBUG_WRITE_DATA
+    printf("data write : %d : ", i);
+    for (int x=0; x<CPO; x++) printf("%f ", float(bx.pixel[x]));
+    printf("\n");
+    #endif
   }
 
 }
