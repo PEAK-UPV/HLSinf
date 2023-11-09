@@ -28,7 +28,7 @@
 // Each configuration is optimized for the specific targeted board
 // -----------------------------------------------------------------------------------------------------------
 
-//#define HLSINF_1_0  // U200, 4x4,  FP32:             DIRECT_CONV, RELU, STM, CLIPPING,        POOLING, BN, ADD, UPSIZE
+#define HLSINF_0_0  // U200, 4x4,  FP32:             DIRECT_CONV, RELU, STM, CLIPPING,        POOLING, BN, ADD, UPSIZE
 //#define HLSINF_1_1  // U200, 8x8,  MIXED PRECISSION: DIRECT_CONV, RELU,      CLIPPING, SHIFT, POOLING, BN, ADD, UPSIZE
 //#define HLSINF_1_2  // U200, 16x8, MIXED PRECISSION: DIRECT_CONV, RELU,      CLIPPING, SHIFT, POOLING, BN, ADD, UPSIZE
 //#define HLSINF_1_3  // U200, 8x4,  FP32:             DIRECT_CONV, RELU, STM, CLIPPING,        POOLING, BN, ADD, UPSIZE
@@ -64,7 +64,7 @@
 // -----------------------------------------------------------------------------------------------------------
 
 // Configuration 1.0: U200, 4x4, FP32: DIRECT_CONV, RELU, STM, CLIPPING, POOLING, BATCH_NORM, ADD, UPSIZE
-#ifdef HLSINF_1_0
+#ifdef HLSINF_0_0
 #define ALVEO_U200
 #define DIRECT_CONV
 #define USE_RELU
@@ -115,11 +115,11 @@
 #define CPI                               8
 #define CPO                               8
 #define LOG2_CPO                          3
-#define WMAX                           1024 
+#define WMAX                           1024
 #define HMAX                            256
 #define READ_BURST_SIZE                  16
 #define STREAMS_DEPTH                    16
-#define INPUT_BUFFER_SIZE             32768 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define INPUT_BUFFER_SIZE             8192 // 32 rows x 32 cols x (512/CPI) pixels_in
 #define EPSILON_VALUE               0.00001
 #define MIN_DATA_TYPE_VALUE               0
 #define READ_BLOCK_SIZE                  64   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
@@ -150,13 +150,13 @@
 #define USE_BATCH_NORM
 //#define USE_STM
 #define CPI                              16
-#define CPO                               8
-#define LOG2_CPO                          3
-#define WMAX                            256
-#define HMAX                            128
+#define CPO                              16
+#define LOG2_CPO                          4
+#define WMAX                           1024
+#define HMAX                            256
 #define READ_BURST_SIZE                  16
 #define STREAMS_DEPTH                    16
-#define INPUT_BUFFER_SIZE              8192 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define INPUT_BUFFER_SIZE             32768 // 32 rows x 32 cols x (512/CPI) pixels_in
 #define EPSILON_VALUE               0.00001
 #define MIN_DATA_TYPE_VALUE               0
 #define READ_BLOCK_SIZE                  64   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
