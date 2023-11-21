@@ -70,6 +70,7 @@
 #define USE_RELU
 #define USE_CLIPPING
 //#define USE_SHIFT
+#define OPENCL_TEST
 #define USE_POOLING
 #define USE_BATCH_NORM
 #define USE_STM
@@ -78,7 +79,7 @@
 #define CPO                          4
 #define LOG2_CPO                     2
 #define WMAX                      1024 
-#define HMAX                       128 
+#define HMAX                       256
 #define READ_BURST_SIZE             16
 #define STREAMS_DEPTH               16
 #define INPUT_BUFFER_SIZE        16384 // 32 rows x 32 cols x (512/CPI) pixels_in
@@ -341,7 +342,7 @@ extern "C" void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add,
             			 b_st *ptr_bias, bnp_st *b_ptr, write_block_t *ptr_out, 
                          int read_offset, int write_offset, int enable_maxpooling, int enable_avgpooling,
 						 int enable_clipping, int enable_shift, int enable_add, int min_clip, int max_clip, 
-                         int dir_shift, int pos_shift, int enable_upsize);
+                         int dir_shift, int pos_shift, int enable_upsize, int foultTolerance, int* error);
 
 void read_bias                    (int offset_bias, b_st *b_ptr, hls::stream<b_st> &out);
 void read_batch_norm              (int offset_batchnorm, bnp_st *b_ptr, hls::stream<bnp_st> &out);
@@ -349,7 +350,7 @@ void read_kernel                  (int I_ITER, int offset_kernel, w_t *k_ptr, hl
 void read_data_channels_gihwcpi   (int num_pixels, int offset, int I_ITER, int cpi_group_offset, read_block_t *ptr, hls::stream<din_st> &out, int enable);
 void read_input_add_gihwcpi       (int num_pixels, int offset, write_block_t *ptr, hls::stream<dout_st> &out, int enable);
 void write_data_channels_gihwcpi  (int num_pixels, int offset, write_block_t *ptr, hls::stream<dout_st> &in);
-void direct_conv                  (int H, int W, int PT, int PB, int PL, int PR, int SH, int SW, int num_output_conv_pixels, int I_ITER, hls::stream<din_st> &in, hls::stream<w_st> &k_in, hls::stream<b_st> &b_in, hls::stream<conv_st> &out);
+void direct_conv                  (int H, int W, int PT, int PB, int PL, int PR, int SH, int SW, int num_output_conv_pixels, int I_ITER, hls::stream<din_st> &in, hls::stream<w_st> &k_in, hls::stream<b_st> &b_in, hls::stream<conv_st> &out, int foultTolerance, int &errorFlag);
 void input_buffer                 (int num_pixels, int write_to_buff, int read_from_buff, hls::stream<din_st> &in, hls::stream<din_st> &out);
 void relu                         (int enable_relu, int enable_clipping, int enable_shift, float relu_factor, int min_clip, int max_clip, int direction_shift, int pos_shift, int num_pixels, hls::stream<conv_st> &in, hls::stream<relu_st> &out);
 void stm                          (int enable_stm, int num_pixels, hls::stream<relu_st> &in, hls::stream<stm_st> &out);
@@ -358,7 +359,7 @@ void batch_norm                   (int enable_batch_norm, int num_pixels, hls::s
 void add_data                     (int enable_add, int num_pixels, hls::stream<dout_st> &in_r, hls::stream<dout_st> &in_stm, hls::stream<dout_st> &out);
 void padding                      (int H, int W, int PT, int PB, int PL, int PR, int I_ITER, hls::stream<din_st> &in, hls::stream<din_st> &out);
 void add                          (int num_pixels, int I_ITER, hls::stream<conv_mul_st> &in, hls::stream<b_st> &b_in, hls::stream<conv_st> &out);
-void mul                          (int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::stream<w_st> &k_in, hls::stream<conv_mul_st> &out);
+void mul                          (int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::stream<w_st> &k_in, hls::stream<conv_mul_st> &out, int foultTolerance, int &flag);
 void cvt                          (int H, int W, int SH, int SW, int I_ITER, hls::stream<din_st> &in, hls::stream<conv_cvt_st> &out);
 
 // -----------------------------------------------------------------------------------------------------------

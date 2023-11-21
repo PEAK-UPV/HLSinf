@@ -73,7 +73,8 @@ int enable_shift = 0;			 // enables applying shift to the output
 int enable_stm = 1;			 	 // enables applying the STM functions
 int enable_batch_norm = 0;		 // enables applying batch normalization
 int enable_add = 0; 			 // enables add module
-int enable_upsize = 0;                   // enables upsize (resize)
+int enable_upsize = 0;           // enables upsize (resize)
+int enable_fault_tolerance = 1;  // enables fault tolerance mode
 int dir_shift = 0;     			 // shift direction (left or right)
 int pos_shift = 0;				 // positions to shift
 int enable_clipping = 0;		 // enables applying clipping to the output
@@ -88,6 +89,7 @@ int GI = I_SIM/CPI;				 // number of groups for input channels
 int GO = O_SIM/CPO;				 // number of groups for output channels
 char *input_data_file;           // input data file with configurations to test
 int deterministic_input_values;  // whether input data is randomly generated or not (deterministic needed in co-simulation)
+int flag_error = 0;				 // Integer to knowing if there is any fault in multiplication opetations
 
 // buffers
 din_t *data_in;               // Input data buffer (format I x W x H)
@@ -123,6 +125,7 @@ cl::Buffer *buffer_k[MAX_CONVS];              // Conv kernel buffers
 cl::Buffer *buffer_bias[MAX_CONVS];           // Conv bias buffers
 cl::Buffer *buffer_k_dw[MAX_CONVS];           // Conv kernel buffers (deepwise)
 cl::Buffer *buffer_k_pw[MAX_CONVS];           // Conv kernel buffers (pointwise)
+cl::Buffer *intToDevice;					  // Error Flag
 // DDR assignment
 cl_mem_ext_ptr_t data_in_ddr;                 // input data buffer
 cl_mem_ext_ptr_t data_in_add_ddr;             // input data add buffer
@@ -228,6 +231,7 @@ void compute(int *enable, int *from_file, int *cpu, int *retval) {
 	     compute();
 
 		 printf("compute terminated\n");
+		 printf("fault tolerance mode: %d -> faults processing the data: %d\n", enable_fault_tolerance, flag_error);
 
 	     // timing
          struct timeval prof_t2;

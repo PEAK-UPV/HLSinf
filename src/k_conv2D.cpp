@@ -95,13 +95,14 @@ void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W,
             int enable_relu, int enable_stm, float relu_factor,int enable_batch_norm,
             w_t *ptr_kernel,
             b_st *ptr_bias, bnp_st *b_ptr, write_block_t *ptr_out, int read_offset, int write_offset, int enable_maxpooling, int enable_avgpooling,
-						int enable_clipping, int enable_shift, int enable_add, int min_clip, int max_clip, int dir_shift, int pos_shift, int enable_upsize){
+						int enable_clipping, int enable_shift, int enable_add, int min_clip, int max_clip, int dir_shift, int pos_shift, int enable_upsize, int foultTolerance, int *error){
 	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_kernel    depth=KERNEL_PORT_DEPTH    offset=slave bundle=gmem1)
 	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_data      depth=DATA_IN_PORT_DEPTH   num_read_outstanding=CPI  offset=slave bundle=gmem)
 	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_data_add  depth=DATA_IN_PORT_DEPTH   num_read_outstanding=CPI  offset=slave bundle=gmem5)
 	DO_PRAGMA(HLS INTERFACE m_axi port=b_ptr         depth=BATCH_MORM_VAL_DEPTH                           offset=slave bundle=gmem6)
-  DO_PRAGMA(HLS INTERFACE m_axi port=ptr_bias      depth=BIAS_PORT_DEPTH                                offset=slave bundle=gmem2)
+	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_bias      depth=BIAS_PORT_DEPTH                                offset=slave bundle=gmem2)
 	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_out       depth=DATA_OUT_PORT_DEPTH  num_write_outstanding=CPO offset=slave bundle=gmem3)
+	DO_PRAGMA(HLS INTERFACE m_axi port=error  offset=slave bundle=gmem7)
 
 	DO_PRAGMA(HLS shared variable=I)
 	DO_PRAGMA(HLS shared variable=O)
@@ -111,6 +112,7 @@ void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W,
 	DO_PRAGMA(HLS shared variable=enable_maxpooling)
 	DO_PRAGMA(HLS shared variable=enable_avgpooling)
 	DO_PRAGMA(HLS shared variable=rows)
+	DO_PRAGMA(HLS shared variable=foultTolerance)
 
 	DO_PRAGMA(HLS shared variable=H)
 	DO_PRAGMA(HLS shared variable=W)
@@ -261,7 +263,7 @@ void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W,
     DO_PRAGMA(HLS ARRAY_PARTITION variable=offset_read_data_channel_i dim=0 complete)
     DO_PRAGMA(HLS ARRAY_PARTITION variable=offset_write_data_channel_i dim=0 complete)
     DO_PRAGMA(HLS ARRAY_PARTITION variable=block_offset_write_data_channel_i dim=0 complete)
-	  DO_PRAGMA(HLS ARRAY_PARTITION variable=num_channel_write_blocks dim=0 complete)
+	DO_PRAGMA(HLS ARRAY_PARTITION variable=num_channel_write_blocks dim=0 complete)
 
     // we compute the enable_write signals
     set_write_enables(enable_write, o_channel, O);
@@ -286,7 +288,7 @@ void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, int H, int W,
 
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // direct convolution
-    direct_conv(rows, W, PT, PB, PL, PR, SH, SW, num_output_conv_pixels, I_ITER, out_read_data_1, out_read_kernel, out_read_bias, out_conv);
+    direct_conv(rows, W, PT, PB, PL, PR, SH, SW, num_output_conv_pixels, I_ITER, out_read_data_1, out_read_kernel, out_read_bias, out_conv, foultTolerance, *error);
 
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // Relu, Clipping, shift, pooling, batch normalization, add, and upsize

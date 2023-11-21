@@ -68,6 +68,7 @@ extern int enable_maxpooling;			 // enables the maxpooling layer
 extern int enable_avgpooling;			 // enables the avgpooling layer
 extern int enable_batch_norm;		 // enables applying batch normalization
 extern int enable_upsize;                // enables upsize (resize)
+extern int enable_fault_tolerance;  // enables fault tolerance mode
 extern int min_clip;				 	 // minimum clip value
 extern int max_clip;				 	 // maximum clip value
 extern int i_iter;						 // number of input iterations
@@ -75,6 +76,7 @@ extern int o_iter;						 // number of output iterations
 extern int global_offset;				 // global offset for the output data for the kernel
 extern int GI;							 // number of groups for input channels
 extern int GO;							 // number of groups for output channels
+extern int flag_error;					 // Integer to knowing if there is any fault in multiplication opetations
 
 extern din_t *data_in;               // Input data buffer (format I x W x H)
 extern din_t *data_in_add;           // Input data buffer for add module(format I x W x H)
@@ -112,6 +114,7 @@ extern cl::Buffer *buffer_k[MAX_CONVS];              // Conv kernel buffers
 extern cl::Buffer *buffer_k_dw[MAX_CONVS];           // Conv kernel buffers (deepwise)
 extern cl::Buffer *buffer_k_pw[MAX_CONVS];           // Conv kernel buffers (pointwise)
 extern cl::Buffer *buffer_bias[MAX_CONVS];           // Conv bias buffers
+extern cl::Buffer *intToDevice;					  	 // Error Flag
 // DDR assignment
 extern cl_mem_ext_ptr_t data_in_ddr;                  // input data buffer
 extern cl_mem_ext_ptr_t data_in_add_ddr;              // input data add buffer
