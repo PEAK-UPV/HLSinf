@@ -87,7 +87,7 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, pos_shift));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_upsize));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_fault_tolerance));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, flag_error));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *intToDevice));
     OCL_CHECK(err, err = q.enqueueNDRangeKernel(kernel_conv2d[k], 0, 1, 1, NULL, &kernel_events[k]));
     set_callback(kernel_events[k], "ooo_queue");
     #else

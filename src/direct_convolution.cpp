@@ -29,7 +29,14 @@ void direct_conv(int H, int W, int PT, int PB, int PL, int PR, int SH, int SW, i
   // streams
   static hls::stream<din_st>  str_pad_cvt;  // padding->cvt
   static hls::stream<conv_cvt_st>     str_cvt_mul;  // cvt->mul
+#ifdef FAULT_DETECTION
   static hls::stream<conv_mul_st> str_mul_add;  // mul->add
+#endif
+#ifdef FAULT_CORRECTION
+  static hls::stream<fc_add_st> str_mul_add;  // mul->add
+  static hls::stream<fc_mul_st> str_mul_mul;  // mul->mul correction faults
+  DO_PRAGMA(HLS stream variable=str_mul_mul depth=STREAMS_DEPTH)
+#endif
   DO_PRAGMA(HLS stream variable=str_pad_cvt depth=STREAMS_DEPTH)
   DO_PRAGMA(HLS stream variable=str_cvt_mul depth=STREAMS_DEPTH)
   DO_PRAGMA(HLS stream variable=str_mul_add depth=STREAMS_DEPTH)
@@ -37,7 +44,12 @@ void direct_conv(int H, int W, int PT, int PB, int PL, int PR, int SH, int SW, i
   // topology
   #pragma HLS dataflow
   padding(H, W, PT, PB, PL, PR, I_ITER, in, str_pad_cvt);   // padding
-  cvt(H+PT+PB, W+PL+PR, I_ITER, SH, SW, str_pad_cvt, str_cvt_mul);       									// cvt
-  mul(num_output_conv_pixels, I_ITER, str_cvt_mul, k_in, str_mul_add, foultTolerance, errorFlag); 									// mul
+  cvt(H+PT+PB, W+PL+PR, I_ITER, SH, SW, str_pad_cvt, str_cvt_mul); // cvt
+#ifdef FAULT_DETECTION
+  mul(num_output_conv_pixels, I_ITER, str_cvt_mul, k_in, str_mul_add, foultTolerance, errorFlag);
+#endif
+#ifdef FAULT_CORRECTION
+  mul(num_output_conv_pixels, I_ITER, str_cvt_mul, k_in, str_mul_mul, str_mul_add, foultTolerance, errorFlag); 									// mul
+#endif
   add(num_output_conv_pixels, I_ITER, str_mul_add, b_in, out);         									// add
 }

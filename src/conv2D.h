@@ -28,7 +28,7 @@
 // Each configuration is optimized for the specific targeted board
 // -----------------------------------------------------------------------------------------------------------
 
-#define HLSINF_0_0  // U200, 4x4,  FP32:             DIRECT_CONV, RELU, STM, CLIPPING,        POOLING, BN, ADD, UPSIZE
+//#define HLSINF_1_0  // U200, 4x4,  FP32:             DIRECT_CONV, RELU, STM, CLIPPING,        POOLING, BN, ADD, UPSIZE
 //#define HLSINF_1_1  // U200, 8x8,  MIXED PRECISSION: DIRECT_CONV, RELU,      CLIPPING, SHIFT, POOLING, BN, ADD, UPSIZE
 //#define HLSINF_1_2  // U200, 16x8, MIXED PRECISSION: DIRECT_CONV, RELU,      CLIPPING, SHIFT, POOLING, BN, ADD, UPSIZE
 //#define HLSINF_1_3  // U200, 8x4,  FP32:             DIRECT_CONV, RELU, STM, CLIPPING,        POOLING, BN, ADD, UPSIZE
@@ -64,13 +64,14 @@
 // -----------------------------------------------------------------------------------------------------------
 
 // Configuration 1.0: U200, 4x4, FP32: DIRECT_CONV, RELU, STM, CLIPPING, POOLING, BATCH_NORM, ADD, UPSIZE
-#ifdef HLSINF_0_0
+#ifdef HLSINF_1_0
 #define ALVEO_U200
 #define DIRECT_CONV
 #define USE_RELU
 #define USE_CLIPPING
 //#define USE_SHIFT
-#define OPENCL_TEST
+#define FAULT_DETECTION
+//#define FAULT_CORRECTION
 #define USE_POOLING
 #define USE_BATCH_NORM
 #define USE_STM
@@ -79,7 +80,7 @@
 #define CPO                          4
 #define LOG2_CPO                     2
 #define WMAX                      1024 
-#define HMAX                       256
+#define HMAX                       128
 #define READ_BURST_SIZE             16
 #define STREAMS_DEPTH               16
 #define INPUT_BUFFER_SIZE        16384 // 32 rows x 32 cols x (512/CPI) pixels_in
@@ -321,6 +322,11 @@ struct w_st        {w_t        pixel[CPO][CPI][9];};
 struct w_in_st     {w_t        pixel[9];};
 struct b_st        {b_t        pixel[CPO];};
 struct bnp_st      {bn_t       values[CPO*4];};
+struct fc_mul_st   {int 	    addr;
+					w_st 	    kernel;
+					conv_cvt_st data;};
+struct fc_add_st   {int 	    addr;
+					conv_cvt_st data;};
 
 // -----------------------------------------------------------------------------------------------------------
 // Read and write block struct
@@ -358,8 +364,14 @@ void pooling                      (int H, int W, int enable_maxpooling, int enab
 void batch_norm                   (int enable_batch_norm, int num_pixels, hls::stream<pool_st> &in, hls::stream<bnp_st> &bn_values, hls::stream<dout_st> &out);
 void add_data                     (int enable_add, int num_pixels, hls::stream<dout_st> &in_r, hls::stream<dout_st> &in_stm, hls::stream<dout_st> &out);
 void padding                      (int H, int W, int PT, int PB, int PL, int PR, int I_ITER, hls::stream<din_st> &in, hls::stream<din_st> &out);
+#ifdef FAULT_DETECTION
 void add                          (int num_pixels, int I_ITER, hls::stream<conv_mul_st> &in, hls::stream<b_st> &b_in, hls::stream<conv_st> &out);
 void mul                          (int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::stream<w_st> &k_in, hls::stream<conv_mul_st> &out, int foultTolerance, int &flag);
+#endif
+#ifdef FAULT_CORRECTION
+void add                          (int num_pixels, int I_ITER, hls::stream<fc_add_st> &in, hls::stream<b_st> &b_in, hls::stream<conv_st> &out);
+void mul                          (int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::stream<w_st> &k_in, hls::stream<fc_mul_st> &in_correction, hls::stream<fc_add_st> &out, int foultTolerance, int &flag);
+#endif
 void cvt                          (int H, int W, int SH, int SW, int I_ITER, hls::stream<din_st> &in, hls::stream<conv_cvt_st> &out);
 
 // -----------------------------------------------------------------------------------------------------------

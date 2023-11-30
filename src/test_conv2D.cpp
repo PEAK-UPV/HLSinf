@@ -230,9 +230,6 @@ void compute(int *enable, int *from_file, int *cpu, int *retval) {
 
 	     compute();
 
-		 printf("compute terminated\n");
-		 printf("fault tolerance mode: %d -> faults processing the data: %d\n", enable_fault_tolerance, flag_error);
-
 	     // timing
          struct timeval prof_t2;
 	     gettimeofday(&prof_t2, NULL);
@@ -253,6 +250,9 @@ void compute(int *enable, int *from_file, int *cpu, int *retval) {
          double diff = time_end-time_start;
          std::cout<< "TIME KERNEL = " << (diff/1000000)<<" ms \n"<<std::endl;
          #endif
+
+    	 printf("compute terminated\n");
+    	 printf("fault tolerance mode: %d -> faults processing the data: %d\n", enable_fault_tolerance, flag_error);
 
 	     if (*cpu) cpu_conv2D();
 
@@ -317,6 +317,7 @@ int main(int argc, char **argv) {
 
     close_test_file();
   }
+
 
  if(global_retval == 0){
    printf("    *** *** *** *** \n");
