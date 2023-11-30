@@ -78,6 +78,7 @@
 #define DIRECT_CONV
 #define USE_RELU
 #define USE_CLIPPING
+#define FAULT_DETECTION
 //#define USE_SHIFT
 #define USE_POOLING
 #define USE_BATCH_NORM
