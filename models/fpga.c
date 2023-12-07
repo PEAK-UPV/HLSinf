@@ -13,6 +13,7 @@
 #include "nodes.h"
 #include "initializers.h"
 #include "in_out.h"
+#include "main.h"
 
 // defines
 #define MAX_KERNELS 20
@@ -123,7 +124,7 @@ void allocate_buffers() {
   }
 }
 
-void dealocate_buffers() {
+void deallocate_buffers() {
   // we deallocate buffers of nodes, initializers, and inputs
   for (int n=0; n<num_nodes; n++) if (aNode[n].valid) free(aNode[n].buffer);
   for (int i=0; i<num_initializers; i++) if (aInitializer[i].valid) free(aInitializer[i].buffer);

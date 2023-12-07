@@ -5,4 +5,5 @@
  */
 
 // global variables
-extern int verbose;
+void fn_read_run_graph();
+void run_graph();

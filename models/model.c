@@ -112,30 +112,30 @@ void fn_process_input_line(char *line, size_t len) {
 
   if (!strcmp(item, "node")) {
     aNode[num_nodes].valid = true;
-    aNode[num_nodes].name = malloc(sizeof(char) * (strlen(name)+1));
+    aNode[num_nodes].name = (char*)malloc(sizeof(char) * (strlen(name)+1));
     strcpy(aNode[num_nodes].name, name);
     // node type
     offset = fn_get_item_line(line, len, offset, item);
-    aNode[num_nodes].type = malloc(sizeof(char) * (strlen(item)+1));
+    aNode[num_nodes].type = (char*)malloc(sizeof(char) * (strlen(item)+1));
     strcpy(aNode[num_nodes].type, item);
     // number of inputs
     offset = fn_get_item_line(line, len, offset, item);
     aNode[num_nodes].num_inputs = atoi(item);
     // parents
-    aNode[num_nodes].inputs = malloc(sizeof(char*) * aNode[num_nodes].num_inputs);
+    aNode[num_nodes].inputs = (char**)malloc(sizeof(char*) * aNode[num_nodes].num_inputs);
     for (int i = 0; i<aNode[num_nodes].num_inputs; i++) {
       offset = fn_get_item_line(line, len, offset, item);
-      aNode[num_nodes].inputs[i] = malloc(sizeof(char) * (strlen(item) + 1));
+      aNode[num_nodes].inputs[i] = (char*)malloc(sizeof(char) * (strlen(item) + 1));
       strcpy(aNode[num_nodes].inputs[i], item);
     }
     // number of outputs
     offset = fn_get_item_line(line, len, offset, item);
     aNode[num_nodes].num_outputs  = atoi(item);
     // childs
-    aNode[num_nodes].outputs = malloc(sizeof(char*) * aNode[num_nodes].num_outputs);
+    aNode[num_nodes].outputs = (char**)malloc(sizeof(char*) * aNode[num_nodes].num_outputs);
     for (int o = 0; o<aNode[num_nodes].num_outputs; o++) {
       offset = fn_get_item_line(line, len, offset, item);
-      aNode[num_nodes].outputs[o] = malloc(sizeof(char) * (strlen(item) + 1));
+      aNode[num_nodes].outputs[o] = (char*)malloc(sizeof(char) * (strlen(item) + 1));
       strcpy(aNode[num_nodes].outputs[o], item);
     }
     // if we have a conv then we read the conv parameters (dh, dw, kh, kw, pt, pb, pl, pr, sh, sw, g)
@@ -174,7 +174,7 @@ void fn_process_input_line(char *line, size_t len) {
 
   if (!strcmp(item, "initializer")) {
     aInitializer[num_initializers].valid = true;
-    aInitializer[num_initializers].name = malloc(sizeof(char) * (strlen(name)+1));
+    aInitializer[num_initializers].name = (char*)malloc(sizeof(char) * (strlen(name)+1));
     strcpy(aInitializer[num_initializers].name, name);
     // type
     if (strstr(name, "weight")!=NULL) strcpy(aInitializer[num_initializers].type, "weight");
@@ -188,7 +188,7 @@ void fn_process_input_line(char *line, size_t len) {
     offset = fn_get_item_line(line, len, offset, item);
     aInitializer[num_initializers].num_dimensions = atoi(item);
     // dimensions
-    aInitializer[num_initializers].dimensions = malloc(sizeof(int) * aInitializer[num_initializers].num_dimensions);
+    aInitializer[num_initializers].dimensions = (int*)malloc(sizeof(int) * aInitializer[num_initializers].num_dimensions);
     for (int d=0;d<aInitializer[num_initializers].num_dimensions; d++) {
       offset = fn_get_item_line(line, len, offset, item);
       aInitializer[num_initializers].dimensions[d] = atoi(item);
@@ -198,20 +198,20 @@ void fn_process_input_line(char *line, size_t len) {
 
   if (!strcmp(item, "inputs")) {
     aInput[num_inputs].valid = true;
-    aInput[num_inputs].name = malloc(sizeof(char) * (strlen(name)+1));
+    aInput[num_inputs].name = (char*)malloc(sizeof(char) * (strlen(name)+1));
     strcpy(aInput[num_inputs].name, name);
     // number of dimensions
     offset = fn_get_item_line(line, len, offset, item);
     aInput[num_inputs].num_dimensions = atoi(item);
     // dimensions
-    aInput[num_inputs].dimensions = malloc(sizeof(int) * aInput[num_inputs].num_dimensions);
+    aInput[num_inputs].dimensions = (int*)malloc(sizeof(int) * aInput[num_inputs].num_dimensions);
     for (int d=0; d<aInput[num_inputs].num_dimensions; d++) {
       offset = fn_get_item_line(line, len, offset, item);
       aInput[num_inputs].dimensions[d] = atoi(item);
     }
     // data type
     offset = fn_get_item_line(line, len, offset, item);
-    aInput[num_inputs].data_type = malloc(sizeof(char) * (strlen(item) + 1));
+    aInput[num_inputs].data_type = (char*)malloc(sizeof(char) * (strlen(item) + 1));
     strcpy(aInput[num_inputs].data_type, item);
     //
     num_inputs++;
@@ -219,7 +219,7 @@ void fn_process_input_line(char *line, size_t len) {
 
   if (!strcmp(item, "outputs")) {
     aOutput[num_outputs].valid = true;
-    aOutput[num_outputs].name = malloc(sizeof(char) * (strlen(name)+1));
+    aOutput[num_outputs].name = (char*)malloc(sizeof(char) * (strlen(name)+1));
     strcpy(aOutput[num_outputs].name, name);
     //
     num_outputs++;

@@ -8,4 +8,5 @@ g++ -c utils.c         -I/opt/xilinx/xrt/include -I/opt/Xilinx/Vivado/2020.2/inc
 g++ -c runner.c        -I/opt/xilinx/xrt/include -I/opt/Xilinx/Vivado/2020.2/include -g -std=c++11 -I./../opencl/common/includes/xcl2
 g++ -c fpga.c          -I/opt/xilinx/xrt/include -I/opt/Xilinx/Vivado/2020.2/include -g -std=c++11 -I./../opencl/common/includes/xcl2
 g++ -c model.c         -I/opt/xilinx/xrt/include -I/opt/Xilinx/Vivado/2020.2/include -g -std=c++11 -I./../opencl/common/includes/xcl2
-g++ runner.o fpga.o fig.o in_out.o nodes.o initializers.o main.o model.o parsers.o utils.o -o txt2hlsinf -lOpenCL -lpthrad -lrt -lstdc++
+g++ -c ../opencl/common/includes/xcl2/xcl2.cpp -I/opt/xilinx/xrt/include -I/opt/Xilinx/Vivado/2020.2/include -g -std=c++11 -I./../opencl/common/includes/xcl2
+g++ xcl2.o runner.o fpga.o fig.o in_out.o nodes.o initializers.o main.o model.o parsers.o utils.o -o txt2hlsinf -lOpenCL -lpthread -lrt -lstdc++ -L/opt/xilinx/xrt/lib

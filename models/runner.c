@@ -14,22 +14,21 @@
 #include "in_out.h"
 #include "nodes.h"
 #include "initializers.h"
-
+#include "main.h"
 
 // global variables
-int           verbose;
-char         *run_graph_file_name;
-char         *xclbin_file_name;
+int max_execution_order;
+
 
 /*
  *
- * fn_process_input_line()
+ * fn_process_input_line2()
  *
  * processes a text line with the configuration to run
  * This function obtains all the arguments from the line and builds the execution model
  *
  */
-void fn_process_input_line(char *line, size_t len) {
+void fn_process_input_line2(char *line, size_t len) {
   char item[200];
   int offset = 0;
 
@@ -46,6 +45,7 @@ void fn_process_input_line(char *line, size_t len) {
     // we get the run order
     offset = fn_get_item_line(line, len, offset, item);
     aNode[num_nodes].run_order = atoi(item);
+    max_execution_order = max(max_execution_order, aNode[num_nodes].run_order);
 
     // now we have the node type to run
     offset = fn_get_item_line(line, len, offset, item);
@@ -156,6 +156,23 @@ void fn_process_input_line(char *line, size_t len) {
     aOutput[num_outputs].valid = true;
     num_outputs++;
   }
+
+  if (is_initializer) {
+    // name
+    offset = fn_get_item_line(line, len, offset, item);
+    aInitializer[num_initializers].name = (char*)malloc(sizeof(char) * (strlen(item)+1));
+    strcpy(aInitializer[num_initializers].name, item);
+    // dimensions
+    offset = fn_get_item_line(line, len, offset, item);
+    aInitializer[num_initializers].num_dimensions = atoi(item);
+    aInitializer[num_initializers].dimensions = (int *)malloc(sizeof(int) * aInitializer[num_initializers].num_dimensions);
+    for (int d=0; d<aInitializer[num_initializers].num_dimensions; d++) {
+      offset = fn_get_item_line(line, len, offset, item);
+      aInitializer[num_initializers].dimensions[d] = atoi(item);
+    }
+    aInitializer[num_initializers].valid = true;
+    num_initializers++;
+  }
 }
 
 /*
@@ -170,9 +187,9 @@ void fn_read_run_graph() {
   size_t len = 0;
   ssize_t read;
 
-  if (verbose) printf("reading run graph (%s)...\n", run_graph_file_name);
+  if (verbose) printf("reading run graph (%s)...\n", input_file_name);
 
-  if ((fd = fopen(run_graph_file_name, "r"))==NULL) {
+  if ((fd = fopen(input_file_name, "r"))==NULL) {
     printf("Error, could not open input file\n");
     exit(1);
   }
@@ -182,7 +199,8 @@ void fn_read_run_graph() {
   num_inputs = 0;
   num_outputs = 0;
   num_initializers = 0;
-  while ((read = getline(&line, &len, fd)) != -1) fn_process_input_line(line, len);
+  max_execution_order = -1;
+  while ((read = getline(&line, &len, fd)) != -1) fn_process_input_line2(line, len);
 
   fclose(fd);
   if (line) free(line);
@@ -191,20 +209,23 @@ void fn_read_run_graph() {
 }
 
 /*
- * fn_parse_arguments()
+ * run_graph()
  *
- * parses the arguments
+ * This function runs the graph on the FPGA
  *
  */
-void fn_parse_arguments(int argc, char *argv[]) {
+void run_graph() {
+  
+  if (verbose) printf("running graph\n");
 
-  if (argc!=4) {
-    printf("usage: <%s> <run_graph> <xclbin> <verbose>\n", argv[0]);
-    exit(1);
+  // we read the node graph in execution order
+  for (int order=0; order < max_execution_order; order++) {
+    for (int n=0; n<num_nodes; n++) {
+      if ((aNode[n].valid) && (aNode[n].run_order == order)) {
+        if (verbose) printf("  running order: %3d node: %3d (%-50s)\n", order, n, aNode[n].name);
+      }
+    }
   }
-  run_graph_file_name = (char*)malloc(sizeof(char) * (strlen(argv[1])+1));
-  strcpy(run_graph_file_name, argv[1]);
-  xclbin_file_name = (char*)malloc(sizeof(char) * (strlen(argv[2])+1));
-  strcpy(xclbin_file_name, argv[2]);
-  verbose = atoi(argv[3]);
+
+  if (verbose) printf("  completed\n");
 }
