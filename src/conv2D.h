@@ -33,6 +33,9 @@
 //#define HLSINF_1_2  // U200, 16x8, MIXED PRECISSION: DIRECT_CONV, RELU,      CLIPPING, SHIFT, POOLING, BN, ADD, UPSIZE
 //#define HLSINF_1_3  // U200, 8x4,  FP32:             DIRECT_CONV, RELU, STM, CLIPPING,        POOLING, BN, ADD, UPSIZE
 
+//#define HLSINF_2_1    // U200, 4x4,  FP32:             DIRECT_CONV, RELU, STM, CLIPPING,        POOLING, BN, ADD, UPSIZE
+#define HLSINF_2_2    // KCU115, 4x4,  APUINT8:             DIRECT_CONV, RELU, STM, CLIPPING,        POOLING, BN, ADD, UPSIZE
+
 // -----------------------------------------------------------------------------------------------------------
 // defines for debug (DEBUG_ALL activates all debug defines)
 // -----------------------------------------------------------------------------------------------------------
@@ -41,6 +44,7 @@
 //#define DEBUG_READ_BIAS
 //#define DEBUG_READ_KERNEL
 //#define DEBUG_READ_DATA
+//#define DEBUG_READ_ADD_DATA
 //#define DEBUG_READ_BATCH_NORM
 //#define DEBUG_SERIALIZE
 //#define DEBUG_JOIN
@@ -106,42 +110,79 @@
 
 // Configuration 2.1: U200, 4x4, FLOAT: DIRECT_CONV, RELU, CLIPPING, POOLING, BATCH_NORM, ADD, UPSIZE
 #ifdef HLSINF_2_1
-#define ALVEO_U200
+//#define ALVEO_U200
+#define KCU115
 #define DIRECT_CONV
 #define USE_RELU
 #define USE_CLIPPING
 #define USE_POOLING
-//#define USE_BATCH_NORM
+#define USE_BATCH_NORM
 #define USE_UPSIZE
 #define FLOAT_DATA_TYPE                  // we use float numbers as input data
 #define CPI                          4
 #define CPO                          4
 #define LOG2_CPO                     2
-#define WMAX                       256
-#define HMAX                       256
-#define IMAX					   256
-#define OMAX					   256
-#define FILTERS_BUFFER_SIZE		   	((IMAX/CPI) * (OMAX/CPO))   // Groups of CPI and CPO filters
-#define STREAMS_DEPTH               16
-#define EPSILON_VALUE          0.00001
-#define MIN_DATA_TYPE_VALUE   -9999999
-#define din_t                    float
-#define conv_cvt_t               float
-#define conv_mul_t               float
-#define relu_t                   float
-#define stm_t                    float
-#define pool_cvt_t               float
-#define pool_t                   float
-#define bn_t                     float
-#define add_t                    float
-#define w_t                      float
-#define b_t                      float
-#define conv_t                   float
-#define dout_t                   float
+#define WMAX                         256
+#define HMAX                         256
+#define IMAX					     512
+#define OMAX					     512
+#define FILTERS_BUFFER_SIZE		   	 ((IMAX/CPI) * (OMAX/CPO))   // Groups of CPI and CPO filters
+#define STREAMS_DEPTH                32
+#define EPSILON_VALUE                0.00001
+#define MIN_DATA_TYPE_VALUE			 -9999999
+#define din_t                        float
+#define conv_cvt_t                   float
+#define conv_mul_t                   float
+#define relu_t                       float
+#define stm_t                        float
+#define pool_cvt_t                   float
+#define pool_t                       float
+#define bn_t                         float
+#define add_t                        float
+#define w_t                          float
+#define b_t                          float
+#define conv_t                       float
+#define dout_t                       float
+#endif
+
+// Configuration 2.1: KCU115, 4x4, MIX PRECISION: DIRECT_CONV, RELU, CLIPPING, POOLING, BATCH_NORM, ADD, UPSIZE
+#ifdef HLSINF_2_2
+//#define ALVEO_U200
+#define KCU115
+#define DIRECT_CONV
+#define USE_RELU
+#define USE_CLIPPING
+#define USE_POOLING
+#define USE_BATCH_NORM
+#define USE_UPSIZE
+#define CPI                          4
+#define CPO                          4
+#define LOG2_CPO                     2
+#define WMAX                         256
+#define HMAX                         256
+#define IMAX					     512
+#define OMAX					     512
+#define FILTERS_BUFFER_SIZE		   	 ((IMAX/CPI) * (OMAX/CPO))   // Groups of CPI and CPO filters
+#define STREAMS_DEPTH                16
+#define EPSILON_VALUE                0.00001
+#define MIN_DATA_TYPE_VALUE			 0
+#define din_t                        ap_uint<8>
+#define conv_cvt_t                   ap_uint<8>
+#define conv_mul_t                   ap_int<32>
+#define relu_t                       ap_uint<8>
+#define stm_t                        ap_uint<8>
+#define pool_cvt_t                   ap_uint<8>
+#define pool_t                       ap_uint<8>
+#define bn_t                         ap_uint<8>
+#define add_t                        ap_uint<8>
+#define w_t                          ap_int<8>
+#define b_t                          ap_int<32>
+#define conv_t                       ap_int<32>
+#define dout_t                       ap_uint<8>
 #endif
 
 
-// ***********************************************************************************************************
+// ******************************************* ****************************************************************
 // ***********************************************************************************************************
 // ***********************************************************************************************************
 // What follows is the definition of data types (do not change!!!!!!)
@@ -160,8 +201,8 @@
 // -----------------------------------------------------------------------------------------------------------
 // defines for C simulation and C/RTL co-simulation
 // -----------------------------------------------------------------------------------------------------------
-#define W_SIM         256 //WMAX
-#define H_SIM         256 //HMAX
+#define W_SIM         8 //WMAX
+#define H_SIM         8 //HMAX
 #define I_SIM         CPI //I_REFERENCE
 #define O_SIM         CPO //O_REFERENCE
 #define PT_SIM        1   
@@ -232,7 +273,7 @@
 
 // ----------------------------------------------------------------------------------------------------------
 // Data types
-struct din_st      {din_t      pixel[CPI];} __attribute__((aligned (16)));
+struct din_st      {din_t      pixel[CPI];} __attribute__((aligned (CPI*sizeof(din_t))));
 struct cvt_in_st   {din_st     pixel[(IMAX/CPI)];};
 struct conv_cvt_st {din_st     pixel[9];};
 struct conv_mul_st {conv_mul_t pixel[CPO];};
@@ -241,13 +282,13 @@ struct relu_st     {relu_t     pixel[CPO];};
 struct stm_st      {stm_t      pixel[CPO];};
 struct pool_cvt_st {pool_cvt_t pixel[4];};
 struct pool_st     {pool_t     pixel[CPO];};
-struct bn_st       {bn_t       pixel[CPO];} __attribute__((aligned (16)));
+struct bn_st       {bn_t       pixel[CPO];};
 struct add_st      {add_t      pixel[CPO];};
-struct dout_st     {dout_t     pixel[CPO];} __attribute__((aligned (16)));
+struct dout_st     {dout_t     pixel[CPO];} __attribute__((aligned (CPO*sizeof(dout_t))));
 struct w_st        {w_t        pixel[CPO][CPI][9];};
 struct w_in_st     {w_t        pixel[9];};
-struct b_st        {b_t        pixel[CPO];} __attribute__((aligned (16)));
-struct bnp_st      {bn_t       values[CPO*4];} __attribute__((aligned (64)));
+struct b_st        {b_t        pixel[CPO];} __attribute__((aligned (CPO*sizeof(b_t))));
+struct bnp_st      {bn_t       values[CPO*4];} __attribute__((aligned (CPO*4*sizeof(bn_t))));
 
 // -----------------------------------------------------------------------------------------------------------
 // Read and write block struct
@@ -261,36 +302,36 @@ struct bnp_st      {bn_t       values[CPO*4];} __attribute__((aligned (64)));
 
 // -----------------------------------------------------------------------------------------------------------
 // function prototypes
-extern "C" void k_conv2D(read_block_t *ptr_data, write_block_t *ptr_data_add, 
-                         int H, int W, int HO, int WO, int rows, int PT, int PB, int PL, int PR, int SH, int SW, 
-                         int I, int O, int I_ITER, int o_iter_first, int o_iter_last, int O_ITER,
-                         int enable_relu, int enable_stm, float relu_factor, int enable_batch_norm,
+extern "C" void k_conv2D(read_block_t *ptr_data, hls::stream<read_block_t> &input_stream, write_block_t *ptr_data_add,
+                         int H, int W, int HO, int WO, int rows, int PT, int PB, int PL, int PR, int SH, int SW,
+                         int I, int O, int I_ITER, int o_iter_first, int o_iter_last, int O_ITER, int enable_instream,
+                         int enable_outstream, int enable_relu, int enable_stm, float relu_factor, int enable_batch_norm,
                          w_t *ptr_kernel,
-            			 b_st *ptr_bias, bnp_st *b_ptr, write_block_t *ptr_out, 
+            			 b_st *ptr_bias, bnp_st *b_ptr, write_block_t *ptr_out, hls::stream<write_block_t> &output_stream,
                          int read_offset, int write_offset, int enable_maxpooling, int enable_avgpooling,
-						 int enable_clipping, int enable_shift, int enable_add, int min_clip, int max_clip, 
+						 int enable_clipping, int enable_shift, int enable_add, int min_clip, int max_clip,
                          int dir_shift, int pos_shift, int enable_upsize);
+
 
 void read_batch_norm              (int enable_batch_norm, int offset_batchnorm, bnp_st *b_ptr, hls::stream<bnp_st> &out);
 void read_bias                    (int O_ITER, int offset_bias, b_st *b_ptr, hls::stream<b_st> &out);
-void read_kernel                  (int I_ITER, int O_ITER, int offset_kernel, w_t *k_ptr, hls::stream<w_st> &k_out);
-void read_input					  (int num_pixels, int offset, int I_ITER, read_block_t *ptr, hls::stream<din_st> &out);
+void read_kernel                  (int I, int I_ITER, int O_ITER, int o_iter_first, w_t *k_ptr, hls::stream<w_st> &k_out);
+void read_input					  (int rows, int W, int offset, int I_ITER, int enable_instream, read_block_t *ptr, hls::stream<read_block_t> &input_stream, hls::stream<din_st> &out);
 void bias_buffer				  (int num_data_frames, int O_ITER, hls::stream<b_st> &in, hls::stream<b_st> &out);
 void kernel_buffer				  (int num_data_frames, int I_ITER, int O_ITER, hls::stream<w_st> &in, hls::stream<w_st> &out);
-void aggregate					  (int H, int W, int I_ITER, hls::stream<din_st> &in, hls::stream<cvt_in_st> &out);
-void read_input_add_gihwcpi       (int num_pixels, int offset, write_block_t *ptr, hls::stream<dout_st> &out, int enable);
-void write_data_channels_gihwcpi  (int num_pixels, int O_ITER, int offset, write_block_t *ptr, hls::stream<dout_st> &in);
-void direct_conv                  (int H, int W, int PT, int PB, int PL, int PR, int SH, int SW, int num_output_conv_pixels, int I_ITER, int O_ITER, hls::stream<din_st> &in, hls::stream<w_st> &k_in, hls::stream<b_st> &b_in, hls::stream<dout_st> &out);
+void read_input_add		          (int enbable_add, int num_pixels, int O_ITER, int offset, write_block_t *ptr, hls::stream<dout_st> &out);
+void write_data					  (int num_pixels, int O_ITER, int offset, int enable_outstream, write_block_t *ptr, hls::stream<write_block_t> &output_stream, hls::stream<dout_st> &in);
+void direct_conv                  (int H, int W, int PT, int PB, int PL, int PR, int SH, int SW, int num_output_conv_pixels, int I_ITER, int O_ITER, hls::stream<din_st> &in, hls::stream<w_st> &k_in, hls::stream<b_st> &b_in, hls::stream<conv_st> &out);
 void input_buffer                 (int num_pixels, int write_to_buff, int read_from_buff, hls::stream<din_st> &in, hls::stream<din_st> &out);
-void relu                         (int enable_relu, int enable_clipping, int enable_shift, float relu_factor, int min_clip, int max_clip, int direction_shift, int pos_shift, int num_pixels, hls::stream<conv_st> &in, hls::stream<relu_st> &out);
+void relu                         (int enable_relu, int enable_clipping, int enable_shift, float relu_factor, int min_clip, int max_clip, int direction_shift, int pos_shift, int num_pixels, int O_ITER, hls::stream<conv_st> &in, hls::stream<relu_st> &out);
 void stm                          (int enable_stm, int num_pixels, hls::stream<relu_st> &in, hls::stream<stm_st> &out);
-void pooling                      (int H, int W, int enable_maxpooling, int enable_avgpooling, hls::stream<stm_st> &input, hls::stream<pool_st> &output);
-void batch_norm                   (int enable_batch_norm, int num_pixels, hls::stream<pool_st> &in, hls::stream<bnp_st> &bn_values, hls::stream<dout_st> &out);
-void add_data                     (int enable_add, int num_pixels, hls::stream<dout_st> &in_r, hls::stream<dout_st> &in_stm, hls::stream<dout_st> &out);
+void pooling                      (int H, int W, int O_ITER, int enable_maxpooling, int enable_avgpooling, hls::stream<relu_st> &input, hls::stream<pool_st> &output);
+void batch_norm                   (int enable_batch_norm, int num_pixels, int O_ITER, hls::stream<pool_st> &in, hls::stream<bnp_st> &bn_values, hls::stream<dout_st> &out);
+void add_data                     (int enable_add, int num_pixels, int O_ITER, hls::stream<dout_st> &in_read_data, hls::stream<dout_st> &in_batch_norm, hls::stream<dout_st> &out);
 void padding                      (int H, int W, int PT, int PB, int PL, int PR, int I_ITER, hls::stream<din_st> &in, hls::stream<din_st> &out);
-void add                          (int num_pixels, int I_ITER, int O_ITER, hls::stream<conv_mul_st> &in, hls::stream<b_st> &b_in, hls::stream<dout_st> &out);
+void add                          (int num_pixels, int I_ITER, int O_ITER, hls::stream<conv_mul_st> &in, hls::stream<b_st> &b_in, hls::stream<conv_st> &out);
 void mul                          (int num_data_frames, int I_ITER, int O_ITER, hls::stream<conv_cvt_st> &in, hls::stream<w_st> &k_in, hls::stream<conv_mul_st> &out);
-void cvt                          (int H, int W, int SH, int SW, int I_ITER, int O_ITER, hls::stream<cvt_in_st> &in, hls::stream<conv_cvt_st> &out);
+void cvt                          (int H, int W, int SH, int SW, int I_ITER, hls::stream<din_st> &in, hls::stream<conv_cvt_st> &out);
 
 // -----------------------------------------------------------------------------------------------------------
 // What follows are macros used in the code

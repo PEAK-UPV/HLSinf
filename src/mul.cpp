@@ -29,33 +29,36 @@ void mul(int num_data_frames, int I_ITER, int O_ITER, hls::stream<conv_cvt_st> &
     #endif
 
     w_st kernel;
-    #pragma HLS ARRAY_PARTITION variable=kernel type=complete dim=0
+    #pragma HLS ARRAY_PARTITION variable=kernel type=complete
 
     // Frame
     conv_cvt_st data_in;
+	#pragma HLS ARRAY_PARTITION variable=data_in type=complete
 
-    static conv_mul_t sum[CPO];
-    DO_PRAGMA(HLS ARRAY_PARTITION variable=sum dim=0 block factor=CPO)
+    conv_mul_t sum[CPO];
+	#pragma HLS ARRAY_PARTITION variable=sum type=complete
 
     conv_mul_st p_out;
 
-    int num_iter = I_ITER * O_ITER * num_data_frames;
+    uint num_iter = I_ITER * O_ITER * num_data_frames;
+    uint o_iter = 0;
 
     mul_loop_1:
-    for(int i = 0; i < num_iter; i++) {
+    for(int it = 0; it < num_iter; it++) {
     	DO_PRAGMA(HLS loop_tripcount  min=1 max=W_REFERENCE*H_REFERENCE*I_REFERENCE/CPI)
     	#pragma HLS PIPELINE II=1
 
-    	// Load filters
-    	kernel = k_in.read();
-        #ifdef DEBUG_MUL
+		// Load filters
+		kernel = k_in.read();
+
+    	#ifdef DEBUG_MUL
         #ifdef DEBUG_VERBOSE
         printf("MUL: kernel read\n");
-        for(int i=0; i<CPI; i++) {
-        	for(int o=0; o<CPO; o++) {
-        		printf("kernel cpi=%d cpo=%d\n", i, o);
+        for(int cpi=0; cpi<CPI; cpi++) {
+        	for(int cpo=0; cpo<CPO; cpo++) {
+        		printf("kernel cpi=%d cpo=%d\n", cpi, cpo);
         		for (int p=0; p<9; p++) {
-        			printf(" %f ", float(kernel.pixel[o][i][p]));
+        			printf(" %f ", float(kernel.pixel[cpo][cpi][p]));
         			if((p+1)%3==0)printf("\n");
         		}
         		printf("\n");
@@ -63,8 +66,6 @@ void mul(int num_data_frames, int I_ITER, int O_ITER, hls::stream<conv_cvt_st> &
         }
     	#endif
     	#endif
-
-        data_in = in.read();
 
 		#ifdef DEBUG_MUL
         std::cout << "mul: frame read: - " << i << std::endl;
@@ -75,6 +76,16 @@ void mul(int num_data_frames, int I_ITER, int O_ITER, hls::stream<conv_cvt_st> &
         	std::cout << "  " << float(data_in.pixel[6].pixel[cpi]) << " " << float(data_in.pixel[7].pixel[cpi]) << " " << float(data_in.pixel[8].pixel[cpi]) << std::endl;
         }
 		#endif
+
+        mul_loop_2:
+		for (int i = 0; i < CPO; i++) {
+			#pragma HLS UNROLL
+			sum[i] = 0;
+		}
+
+		if (o_iter == 0) {
+			data_in = in.read();
+		}
 
         loop_mul_cpi:
 		for (int cpi=0; cpi<CPI; cpi++) {
@@ -104,18 +115,23 @@ void mul(int num_data_frames, int I_ITER, int O_ITER, hls::stream<conv_cvt_st> &
 				for (int cpo=0; cpo<CPO; cpo++) {
 					DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO)
           	    	#pragma HLS UNROLL
-        			sum[cpo] += data_in.pixel[j].pixel[cpi] * kernel.pixel[cpo][cpi][j];
+					sum[cpo] += data_in.pixel[j].pixel[cpi] * kernel.pixel[cpo][cpi][j];
 				}
 				#endif
 			}
 		}
 
-	    for(int i=0; i<CPO; i++){
-	    	DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO)
-      	    #pragma HLS UNROLL
-    		p_out.pixel[i] = sum[i];
-	    	sum[i] = 0;
-        }
+		for(int i = 0; i < CPO; i++) {
+			#pragma HLS UNROLL
+			p_out.pixel[i] = sum[i];
+		}
+
+		out << p_out;
+
+		o_iter++;
+		if (o_iter == O_ITER) {
+			o_iter = 0;
+		}
 
 	    #ifdef DEBUG_MUL
     	#ifdef DEBUG_VERBOSE
@@ -125,7 +141,6 @@ void mul(int num_data_frames, int I_ITER, int O_ITER, hls::stream<conv_cvt_st> &
         printf("\n");
     	#endif
     	#endif
-        out << p_out;
     }
 
   	#ifdef DEBUG_MUL

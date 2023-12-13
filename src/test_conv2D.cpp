@@ -60,6 +60,8 @@ int I = I_SIM;                   // Number of input channels
 int O = O_SIM;                   // Number of output channels
 int HO = H_SIM;       			 // Output height
 int WO = W_SIM;    				 // Output width
+int HO_pool;
+int WO_pool;
 int HO_final = H_SIM;            // HO at the output of the kernel
 int WO_final = W_SIM;            // WO at the output of the kernel
 int I_kernel = I_SIM;  			 // Number of input channels for the kernel (filter) - padding

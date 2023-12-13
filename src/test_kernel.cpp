@@ -90,12 +90,15 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
     set_callback(kernel_events[k], "ooo_queue");
     #else
 
-    k_conv2D((read_block_t *)data_in, (write_block_t *)data_in_add, 
+    hls::stream<read_block_t> instream;
+    hls::stream<write_block_t> outstream;
+
+    k_conv2D((read_block_t *)data_in, instream, (write_block_t *)data_in_add,
 		      H, W, HO_final, WO_final, rows_p, PT_p, PB_p, PL_p, PR_p, SH, SW, I_input, O_output, i_iter,
-		      o_iter_first, o_iter_last, o_iter,
+		      o_iter_first, o_iter_last, o_iter, 0, 0,
 		      enable_relu, enable_stm, relu_factor, enable_batch_norm,
 		      kernel,
-		      (b_st *)bias, (bnp_st *)batch_norm_values, (write_block_t *)out,
+		      (b_st *)bias, (bnp_st *)batch_norm_values, (write_block_t *)out, outstream,
 		      read_offset_p, write_offset_p,
 		      enable_maxpooling, enable_avgpooling,
 		      enable_clipping, enable_shift, enable_add, min_clip, max_clip, dir_shift, pos_shift, enable_upsize);

@@ -20,9 +20,12 @@
 #include "conv2D.h"
 
 struct frame_pool_t {
-	stm_st pixel[KW_POOLING * KH_POOLING];
+	relu_st pixel[KW_POOLING * KH_POOLING];
 };
 
+struct pooling_st   {
+	relu_st     pixel[(OMAX/CPO)];
+};
 
 /*
 * Convert module for the pooling layer
@@ -40,23 +43,32 @@ struct frame_pool_t {
 *	In case enable_pooling is not set, the module bypasses the input
 *	to the output, sending the pixel on the first position of the output frame.
 */
-static void pool_cvt(int H, int W, int enable_pooling, hls::stream<stm_st> &in, hls::stream<frame_pool_t> &out) {
+
+static void pool_cvt(int H, int W, int O_ITER, int enable_pooling, hls::stream<relu_st> &in, hls::stream<frame_pool_t> &out) {
 
 	frame_pool_t kernel;
-	stm_st  buffer0[WMAX];
-	stm_st  buffer1[WMAX];
-	int          row0;
-	int          shift_frame;
-	int          send_frame;
-	int          odd_col = 0;       // whether we are in an odd col (so to be able to send a frame)
-	int          pin_row = 0;
-	int          pin_col = 0;
-	int          row_write;			// either 0 or 1 (we assume 2x2 kernel)
-	int          size_channel = H * W;
-	int          iterations = size_channel;
-	stm_st  pixel;
-	stm_st  p0, p1, p2, p3;
-	stm_st  pix_b0, pix_b1;
+	pooling_st  buffer0[WMAX];
+	pooling_st  buffer1[WMAX]; // Quizas quitar
+
+	uint          send_frame;
+	uint          pin_col = 0;
+	uint		  column = 1;
+
+	uint          row0_write = 1;			// either 0 or 1 (we assume 2x2 kernel)
+	uint		  row1_write = 0;
+	uint		  row0_write_aux = 0;
+	uint		  row1_write_aux = 0;
+
+	uint          size_channel = H * W;
+	uint          iterations = size_channel * O_ITER;
+
+	uint 		  initial_interval =  (W * O_ITER) + (1 * O_ITER);
+	uint		  ii_counter = 0;
+	uint		  row_counter = 0;
+	uint		  o_iter = 0;
+
+	relu_st       pixel;
+
     #ifdef ALVEO_U200
 	DO_PRAGMA(HLS bind_storage variable=buffer0 type=ram_2p impl=uram)
 	DO_PRAGMA(HLS bind_storage variable=buffer1 type=ram_2p impl=uram)
@@ -65,8 +77,12 @@ static void pool_cvt(int H, int W, int enable_pooling, hls::stream<stm_st> &in, 
     DO_PRAGMA(HLS bind_storage variable=buffer0 type=ram_2p impl=uram)
     DO_PRAGMA(HLS bind_storage variable=buffer1 type=ram_2p impl=uram)
     #endif
-    DO_PRAGMA(HLS AGGREGATE variable=buffer0)
-    DO_PRAGMA(HLS AGGREGATE variable=buffer1)
+
+	#pragma HLS ARRAY_RESHAPE variable=buffer0 type=complete dim=3
+	#pragma HLS ARRAY_RESHAPE variable=buffer1 type=complete dim=3
+
+	#pragma HLS AGGREGATE variable=pixel
+	#pragma HLS ARRAY_PARTITION variable=kernel type=complete
 
     #ifdef DEBUG_POOL
 	printf("DEBUG_POOL: starts (cvt)\n");
@@ -75,11 +91,11 @@ static void pool_cvt(int H, int W, int enable_pooling, hls::stream<stm_st> &in, 
 
 
 	cvt_pooling_iterations:
-	for (int i=0; i < iterations; i++) {
-		DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=(I_REFERENCE/CPI) * W_REFERENCE * H_REFERENCE)
-		#pragma HLS PIPELINE
+	for (int it = 0; it < iterations; it++) {
+		DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=(O_REFERENCE/CPO) * W_REFERENCE * H_REFERENCE)
+		#pragma HLS LOOP_FLATTEN off
 
-		// Let's read CPI pixels
+		// Let's read CPO pixels
 		pixel = in.read();
 
         #ifdef DEBUG_POOL
@@ -91,58 +107,62 @@ static void pool_cvt(int H, int W, int enable_pooling, hls::stream<stm_st> &in, 
         #endif
 
 		if (enable_pooling) {
+			// Let's write on the buffer
+			if (row0_write) buffer0[pin_col].pixel[o_iter] = pixel;
+			if (row1_write) buffer1[pin_col].pixel[o_iter] = pixel;
 
-		  row_write = pin_row % 2;
+			row_counter++;
+			ii_counter++;
 
-  		  // Let's compute shift and send flag variables
-		  shift_frame = (pin_row > 0) & (pin_col > 1);
-		  send_frame = row_write & odd_col;
-		  row0 = (row_write == 0);
+			uint send_frame = (ii_counter > initial_interval) & (row_counter > O_ITER);
 
-		  // Let's write on the buffer and at the same time
-		  // we set the two pixels pix_b0 and pix_b1
-	      if (row_write==0) {
-	    	  buffer0[pin_col] = pixel;
-	    	  pix_b0 = pixel;
-	    	  pix_b1 = buffer1[pin_col];
-	      } else {
-	    	  buffer1[pin_col] = pixel;
-	    	  pix_b0 = buffer0[pin_col];
-	    	  pix_b1 = pixel;
-	      }
+		    if (send_frame) {
+				kernel.pixel[0] = buffer0[column-1].pixel[o_iter]; kernel.pixel[1] = buffer0[column].pixel[o_iter];
+				kernel.pixel[2] = buffer1[column-1].pixel[o_iter]; kernel.pixel[3] = pixel;
 
-		  /* p0 p1 */
-		  if (shift_frame) {p0 = p1;} else if (pin_col == 0) p0 = pix_b0;
-		  p1 = pix_b0;
+				out << kernel;
 
-		  /* p2 p3 */
-		  if (shift_frame) {p2 = p3;} else if (!pin_col) p2 = pix_b1;
-		  p3 = pix_b1;
+				#ifdef DEBUG_POOL
+				#ifdef DEBUG_VERBOSE
+				printf("DEBUG_POOL: Send Frame:\n");
+				for (int x = 0; x < CPI; x++) {
+					std::cout << "  cpo : " << x << std::endl;
+					std::cout << "     " << float(kernel.pixel[0].pixel[x]) << " " << float(kernel.pixel[1].pixel[x]) << std::endl;
+					std::cout << "     " << float(kernel.pixel[2].pixel[x]) << " " << float(kernel.pixel[3].pixel[x]) << std::endl;
+				}
+				#endif
+				#endif
+		    }
 
-  		  /* Control the iteration count */
-		  pin_col++;
-		  odd_col = (odd_col + 1) % 2;
-		  if (pin_col == W) {
-			pin_col = 0;
-			odd_col = 0;
-			pin_row++;
-			if (pin_row == H) pin_row = 0;
-		  }
+		    o_iter++;
+		    if (send_frame && (o_iter == O_ITER)) {
+		    	row_counter = 0;
+		    	/* SW = 2 */
+		    	column = column + 2;
 
-		  if (send_frame) {
-     	    kernel.pixel[0] = p0; kernel.pixel[1] = p1;
-			kernel.pixel[2] = p2; kernel.pixel[3] = p3;
-			out << kernel;
-            #ifdef DEBUG_POOL
-            #ifdef DEBUG_VERBOSE
-			printf("DEBUG_POOL: Send Frame:\n");
-			for (int x=0; x<CPO; x++) printf(" cpo %d: %f %f %f %f\n", x, float(p0.pixel[x]), float(p1.pixel[x]), float(p2.pixel[x]), float(p3.pixel[x]));
-            #endif
-            #endif
-		  }
+		    	if (column > W) {
+		    		column = 1;
+		    		ii_counter = 0;
+		    	}
+		    }
+
+			/* Control the iteration count */
+		    if (o_iter == O_ITER) {
+		    	o_iter = 0;
+		    	pin_col++;
+				if (pin_col == W) {
+					pin_col = 0;
+
+					row0_write_aux = row0_write;
+					row1_write_aux = row1_write;
+
+					row0_write = row1_write_aux;
+					row1_write = row0_write_aux;
+				}
+		    }
 		} else {
-          kernel.pixel[0] = pixel;
-          out << kernel;
+			kernel.pixel[0] = pixel;
+			out << kernel;
 		}
 	}
 
@@ -165,14 +185,14 @@ static void pool_cvt(int H, int W, int enable_pooling, hls::stream<stm_st> &in, 
 *
 *   If no enable is active then the module bypasses the first pixel of the incomming frame to the output stream
 */
-static void pool_pooling(int HO, int WO, int enable_maxpooling, int enable_avgpooling, hls::stream<frame_pool_t> &in, hls::stream<pool_st> &out) {
+static void pool_pooling(int HO, int WO, int O_ITER, int enable_maxpooling, int enable_avgpooling, hls::stream<frame_pool_t> &in, hls::stream<pool_st> &out) {
 	
 	frame_pool_t kernel;
 	pool_st out_pix;
 	
 	int size_out = HO * WO;
 	int size_kernel = KH_POOLING * KW_POOLING;
-	int iterations = size_out;
+	int iterations = size_out * O_ITER;
 	int enable_pooling = enable_maxpooling | enable_avgpooling;
 
     #ifdef DEBUG_POOL
@@ -189,17 +209,17 @@ static void pool_pooling(int HO, int WO, int enable_maxpooling, int enable_avgpo
 
         #ifdef DEBUG_POOL
         #ifdef DEBUG_VERBOSE
-		printf("DEBUG_POOL: read ");
+		printf("DEBUG_POOL: read \n");
 		for (int x=0; x<CPO; x++) {
 			printf("cpo %d: ", x);
-			for (int xx=0; xx<size_kernel; xx++) printf(" %f", float(kernel.pixel[xx].pixel[x]));
+			for (int xx=0; xx<size_kernel; xx++) printf("   %f", float(kernel.pixel[xx].pixel[x]));
 			printf("\n");
 		}
         #endif
         #endif
 
         pooling_loop_cpo:
-		for (int cpo=0; cpo < CPO; cpo++) {
+		for (int cpo = 0; cpo < CPO; cpo++) {
           #pragma HLS UNROLL
 
 		  pool_t maxpool_value = MIN_DATA_TYPE_VALUE;
@@ -222,7 +242,7 @@ static void pool_pooling(int HO, int WO, int enable_maxpooling, int enable_avgpo
 		out << out_pix;
         #ifdef DEBUG_POOL
         #ifdef DEBUG_VERBOSE
-		printf("DEBUG_POOL: send pixel: ");
+		printf("DEBUG_POOL: send pixel: \n");
 		for (int x=0; x<CPO; x++) printf(" %f", float(out_pix.pixel[x]));
         #endif
         #endif
@@ -233,7 +253,7 @@ static void pool_pooling(int HO, int WO, int enable_maxpooling, int enable_avgpo
     #endif
 }
 
-void pooling(int H, int W, int enable_maxpooling, int enable_avgpooling, hls::stream<stm_st> &input, hls::stream<pool_st> &output) {
+void pooling(int H, int W, int O_ITER, int enable_maxpooling, int enable_avgpooling, hls::stream<relu_st> &input, hls::stream<pool_st> &output) {
 
 	static hls::stream<frame_pool_t> stream_pool("pool");
     DO_PRAGMA(HLS STREAM variable=stream_pool depth=STREAMS_DEPTH)
@@ -244,6 +264,6 @@ void pooling(int H, int W, int enable_maxpooling, int enable_avgpooling, hls::st
 	int HO = enable_pooling ? ((H - KH_POOLING)/SH_POOLING + 1) : H;
 
 	#pragma HLS DATAFLOW
-	pool_cvt(H, W, enable_pooling, input, stream_pool);
-	pool_pooling(HO, WO, enable_maxpooling, enable_avgpooling, stream_pool, output);
+	pool_cvt(H, W, O_ITER, enable_pooling, input, stream_pool);
+	pool_pooling(HO, WO, O_ITER, enable_maxpooling, enable_avgpooling, stream_pool, output);
 }

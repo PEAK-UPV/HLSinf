@@ -41,8 +41,19 @@ int read_test_file(int *enable, int *from_files, int *cpu) {
  GO = O_kernel / CPO;
  HO = (H + PT + PB - KH + SH) / SH;  // HO = ceil((H + padding - (KH-1)) / SH)
  WO = (W + PL + PR - KW + SW) / SW;  // WO = ceil((W + padding - (KW-1)) / SW)
- if (enable_maxpooling | enable_avgpooling) HO_final = HO / 2; else HO_final = HO;
- if (enable_maxpooling | enable_avgpooling) WO_final = WO / 2; else WO_final = WO;
+// if (enable_maxpooling | enable_avgpooling) HO_final = HO / 2; else HO_final = HO;
+// if (enable_maxpooling | enable_avgpooling) WO_final = WO / 2; else WO_final = WO;
+
+ if (enable_maxpooling | enable_avgpooling) {
+	 HO_pool = HO / 2;
+	 WO_pool = WO / 2;
+ } else {
+	 HO_pool = HO;
+	 WO_pool = WO;
+ }
+
+ HO_final = HO_pool;
+ WO_final = WO_pool;
 
  I_input = ((I + (CPI - 1)) / CPI) * CPI;
  O_output = ((O + (CPO - 1)) / CPO) * CPO;

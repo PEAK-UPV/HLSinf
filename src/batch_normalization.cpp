@@ -14,7 +14,7 @@
 
 #define EPS		1e-5
 
-void batch_norm(int enable_batch_norm, int num_pixels, hls::stream<pool_st> &in, hls::stream<bnp_st> &bn_values, hls::stream<dout_st> &out) {
+void batch_norm(int enable_batch_norm, int num_pixels, int O_ITER, hls::stream<pool_st> &in, hls::stream<bnp_st> &bn_values, hls::stream<dout_st> &out) {
 
 	#ifdef DEBUG_BATCH_NORM
 	printf("Batch Norm: start\n");
@@ -23,7 +23,7 @@ void batch_norm(int enable_batch_norm, int num_pixels, hls::stream<pool_st> &in,
 	pool_st data_in;
 	bnp_st bn_values_in;
 	dout_st data_out;
-	int data_size = num_pixels;
+	int iterations = num_pixels * O_ITER;
 
 	DO_PRAGMA(HLS ARRAY_PARTITION variable=data_in complete dim=0)
 	DO_PRAGMA(HLS ARRAY_PARTITION variable=bn_values_in complete dim=0)
@@ -35,7 +35,7 @@ void batch_norm(int enable_batch_norm, int num_pixels, hls::stream<pool_st> &in,
 	}
 
 	loop_batch_norm_pixels:
-	for (int i = 0; i < data_size; i++) {
+	for (int i = 0; i < iterations; i++) {
 		DO_PRAGMA(HLS loop_tripcount min=1 max=W_REFERENCE*H_REFERENCE)
 		#pragma HLS PIPELINE II=1
 

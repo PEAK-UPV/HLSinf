@@ -27,6 +27,8 @@
 
 using std::vector;
 
+//#define GEN_BIN
+
 // constants
 #define MAX_CONVS        8  // Maximum number of convolutional layers
 #define MAX_KERNELS      4  // Maximum number of kernels implemented
@@ -49,6 +51,8 @@ extern int I;                            // Number of input channels
 extern int O;                            // Number of output channels
 extern int HO;						     // Output width of the conv
 extern int WO;							 // Output height of the conv
+extern int HO_pool;
+extern int WO_pool;
 extern int HO_final;                     // HO at the output of the kernel
 extern int WO_final;                     // WO at the output of the kernel
 extern int I_kernel;					 // Number of input channels for the kernel (filter) - padding
@@ -137,6 +141,7 @@ void print_input_add();
 void print_output(int only_cpu);
 void print_kernel();
 int check_result(dout_t *max_difference, int *num_elements_differ);
+void write_to_file(char *file, int size, int data_size, void *buf);
 void init_data(int from_file);
 int open_test_file();
 int read_test_file(int *enable, int *from_file, int *cpu);

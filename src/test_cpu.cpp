@@ -19,8 +19,9 @@ int filter_address_direct_conv(int i, int o, int kh, int kw) {
     int go = o / CPO;
     int ko = o % CPO;
     // addr_k for direct convs or winograd convs
-    int addr_k = (go * GI * CPO * CPI * KH * KW) +
-                 (gi * CPO * CPI * KH * KW) +
+    // Modified in the new version
+    int addr_k = (gi * GO * CPO * CPI * KH * KW) +
+                 (go * CPO * CPI * KH * KW) +
                  (ko * CPI * KH * KW) +
                  (ki * KH * KW) +
                  (kh * KW) +
@@ -52,9 +53,7 @@ int output_data_address(int o, int h, int w, int height, int width) {
 }
 
 int output_data_address_div(int o, int h, int w) {
-	int go = o / CPO;
-	int oo = o % CPO;
-	int addr = (go * (HO/2) * (WO/2) * CPO) + (h * (WO/2) * CPO) + (w * CPO) + oo;
+	int addr = (h * (WO/2) * O_output) + (w * O_output) + o;
 	return addr;
 }
 
@@ -178,22 +177,25 @@ void cpu_conv2D() {
       for (int h=0; h<HO; h=h+2) {
     	for (int w=0; w<WO; w=w+2) {
           int addr_out = output_data_address_div(o, h/2, w/2);
-    	  pool_t max_v = -9999999;
+    	  pool_t max_v = MIN_DATA_TYPE_VALUE;
+//    	  printf("\n");
     	  for (int kh=0; kh<2; kh++) {
     		for (int kw=0; kw<2; kw++) {
-    		  int h_in = h + kh;
-    		  int w_in = w + kw;
-          int addr_in = output_data_address(o, h_in, w_in, HO, WO);
-	      //printf("cpu: o %d h_in %d w_in %d value %f\n", o, h_in, w_in, out_conv_cpu[addr_in]);
+    		  int h_in = (h) + kh;
+    		  int w_in = (w) + kw;
+    		  int addr_in = output_data_address(o, h_in, w_in, HO, WO);
+//    		  printf("cpu: addr_in %d\n", addr_in);
+//    		  printf("cpu: o %d h_in %d w_in %d value %d value2 %d\n", o, h_in, w_in, pool_t(out_conv_cpu[addr_in]), out_conv_cpu[addr_in]);
               if(enable_stm) {
                 if (out_stm_cpu[addr_in] > max_v) max_v = out_stm_cpu[addr_in];
               } else if (enable_relu) {
                 if (out_relu_cpu[addr_in] > max_v) max_v = out_relu_cpu[addr_in];
- 	      } else {
-                if (out_conv_cpu[addr_in] > max_v) max_v = out_conv_cpu[addr_in];
+              } else {
+                if (pool_t(out_conv_cpu[addr_in]) > max_v) max_v = pool_t(out_conv_cpu[addr_in]);
+//                printf("out_conv_cpu %d max_v %d\n", pool_t(out_conv_cpu[addr_in]), max_v);
               }
-    	  }
-	  }
+    	    }
+	      }
     	  out_pool_cpu[addr_out] = max_v;
     	}
       }
@@ -277,7 +279,7 @@ void cpu_conv2D() {
     for (int h = 0; h < HO_final; h++) {
       for (int w = 0; w < WO_final; w++) {
         int addr_out = output_data_address(cout, h, w, HO_final, WO_final);
-	      dout_t v;
+	    dout_t v;
         if (enable_add) v = out_add_cpu[addr_out];
         else if (enable_batch_norm) v = out_batch_norm_cpu[addr_out];
         else if (enable_avgpooling | enable_maxpooling) v = out_pool_cpu[addr_out];
@@ -285,21 +287,24 @@ void cpu_conv2D() {
         else if (enable_relu) v = out_relu_cpu[addr_out];
         else v = out_conv_cpu[addr_out];
 
-	if (enable_upsize) {
-	  for (int row = 0; row < 2; row++) {
-	    for (int col = 0; col < 2; col++) {
-  	      int h_upsize = (h * 2) + row;
-	      int w_upsize = (w * 2) + col;
-              int addr_upsize_out = output_data_address(cout, h_upsize, w_upsize, HO_final*2, WO_final*2);
-	      cpu_out[addr_upsize_out] = v;
-	    }
-	  }
-	} else {
-	  int addr_out = output_data_address(cout, h, w, HO_final, WO_final);
-    	  cpu_out[addr_out] = v;
-	}
+		if (enable_upsize) {
+		  for (int row = 0; row < 2; row++) {
+			for (int col = 0; col < 2; col++) {
+			  int h_upsize = (h * 2) + row;
+			  int w_upsize = (w * 2) + col;
+		      int addr_upsize_out = output_data_address(cout, h_upsize, w_upsize, HO_final*2, WO_final*2);
+			  cpu_out[addr_upsize_out] = v;
+			}
+		  }
+		} else {
+		  int addr_out = output_data_address(cout, h, w, HO_final, WO_final);
+	      cpu_out[addr_out] = v;
+		}
       }
     }
   }
 
+  #ifdef GEN_BIN
+  write_to_file("/home/drodagu/Documentos/output.bin", O_output * HO_final * WO_final, sizeof(dout_t), (void *)cpu_out);
+  #endif
 }

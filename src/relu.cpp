@@ -30,7 +30,7 @@
 //
 
 void relu(int enable_relu, int enable_clipping, int enable_shift, float relu_factor, int min_clip, int max_clip, int direction_shift, int pos_shift,
-		  int num_pixels, hls::stream<conv_st> &in, hls::stream<relu_st> &out) {
+		  int num_pixels, int O_ITER, hls::stream<conv_st> &in, hls::stream<relu_st> &out) {
 
   #ifdef DEBUG_RELU
   printf("relu: start\n");
@@ -38,12 +38,12 @@ void relu(int enable_relu, int enable_clipping, int enable_shift, float relu_fac
 
   conv_st data_in;
   relu_st data_out;
-  int data_size = num_pixels;
+  int iterations = num_pixels * O_ITER;
   DO_PRAGMA(HLS ARRAY_PARTITION variable=data_in complete dim=0)
   DO_PRAGMA(HLS ARRAY_PARTITION variable=data_out complete dim=0)
 
   loop_relu_pixels:
-  for (int i=0; i < data_size; i++) {
+  for (int i=0; i < iterations; i++) {
     DO_PRAGMA(HLS loop_tripcount  min=1 max=W_REFERENCE*H_REFERENCE)
     #pragma HLS PIPELINE II=1
 
@@ -55,28 +55,29 @@ void relu(int enable_relu, int enable_clipping, int enable_shift, float relu_fac
       DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO)
       #pragma HLS UNROLL
 
-	conv_t v_in;
+	  conv_t v_in;
       conv_t v_shift, v_clipping;
       conv_t v_relu;
 
       v_in = data_in.pixel[cpo];
 
       // shift
-#ifdef USE_SHIFT
+      #ifdef USE_SHIFT
       v_shift = v_in;
       if (enable_shift) {
     	  if (direction_shift == LEFT_DIRECTION) v_shift = v_in << pos_shift;
     	  if (direction_shift == RIGHT_DIRECTION) v_shift = v_in >> pos_shift;
       }
-#else
+      #else
       v_shift = v_in;
-#endif
+      #endif
 
       #ifdef DEBUG_RELU
-//      #ifdef DEBUG_VERBOSE
+      //#ifdef DEBUG_VERBOSE
       printf("SHIFT(pixel %d, cpo %d): in %f out %f\n", i, cpo, float(v_in), float(v_shift));
-//      #endif
+      //#endif
       #endif
+
       // clipping
       v_clipping = v_shift;
       if (enable_clipping) {
@@ -88,22 +89,22 @@ void relu(int enable_relu, int enable_clipping, int enable_shift, float relu_fac
       }
 
       #ifdef DEBUG_RELU
-  //    #ifdef DEBUG_VERBOSE
+      //#ifdef DEBUG_VERBOSE
       printf("CLIP(pixel %d, cpo %d): in %f out %f\n", i, cpo, float(v_shift), float(v_clipping));
-    //  #endif
+      //#endif
       #endif
 
       // relu
-#ifdef USE_RELU
+      #ifdef USE_RELU
       v_relu = v_clipping;
       #ifdef FLOAT_DATA_TYPE
-        if(enable_relu && (v_relu < 0)) v_relu = relu_factor * v_clipping;
+      if(enable_relu && (v_relu < 0)) v_relu = relu_factor * v_clipping;
       #else 
-        if(enable_relu && (v_relu < 0)) v_relu = v_clipping;
+      if(enable_relu && (v_relu < 0)) v_relu = v_clipping;
       #endif
-#else
+      #else
       v_relu = v_clipping;
-#endif
+      #endif
       data_out.pixel[cpo] = v_relu;
 
       #ifdef DEBUG_RELU
@@ -115,12 +116,12 @@ void relu(int enable_relu, int enable_clipping, int enable_shift, float relu_fac
     }
 
     #ifdef DEBUG_RELU
-    //#ifdef DEBUG_VERBOSE
+    #ifdef DEBUG_VERBOSE
     printf("RELU (pixel %d):\n", i);
     for (int x=0; x<CPI; x++) {
     	printf("  cpi %d : in %f out %f\n", x, float(data_in.pixel[x]), float(data_out.pixel[x]));
     }
-    //#endif
+    #endif
     #endif
 
     out << data_out;

@@ -24,39 +24,42 @@ void kernel_buffer(int num_data_frames, int I_ITER, int O_ITER,  hls::stream<w_s
 	std::cout << "FILTERS_BUFFER: starts" << std::endl;
 	#endif
 
-	w_st k_in;
-	w_st k_out;
-	uint num_k = I_ITER * O_ITER;
-	uint num_iter = I_ITER * O_ITER * num_data_frames;
-	uint k_offset;
-
 	// Buffer declaration
 	static w_st buffer[FILTERS_BUFFER_SIZE];
 
-	// TODO: Optimize
-	//#pragma HLS AGGREGATE variable=buffer
+	#pragma HLS ARRAY_RESHAPE variable=buffer type=complete dim=4
 
 	#ifdef ALVEO_U200
 	#pragma HLS BIND_STORAGE variable=buffer type=ram_t2p impl=uram
 	#endif
-	// TODO: Optimize for Kintex
 
-	filters_buffer_store_loop:
-	for (uint w = 0; w < num_k; w++) {
-		#pragma HLS LOOP_TRIPCOUNT min=1 max=(IMAX/CPI)*(OMAX/CPO)
-		#pragma HLS PIPELINE II=1
+	uint num_k = I_ITER * O_ITER;
+	uint num_iters = I_ITER * O_ITER * num_data_frames;
 
-		k_in = in.read();
-		buffer[w] = k_in;
-	}
+	filters_buffer_loop:
+	for (uint it = 0, buf_read = 0; it < num_iters; it++) {
+		// Read filters from stream
+		if (it < num_k) {
+			w_st k_in;
+			k_in = in.read();
+			buffer[it] = k_in;
 
-	filters_buffer_load_loop:
-	for (uint it = 0; it < num_iter; it++) {
-		#pragma HLS LOOP_TRIPCOUNT min=1 max=W_REFERENCE*H_REFERENCE*(I_REFERENCE/CPI)
-		#pragma HLS PIPELINE II=1
-		k_offset = it % num_k;
-		k_out = buffer[k_offset];
-		out << k_out;
+			// Send filter through the stream
+			out << k_in;
+		} else {
+			w_st k_out;
+			k_out = buffer[buf_read];
+			out << k_out;
+
+			/*
+			* This is more resource efficient than having -> uint k_offset = it % num_k
+			*/
+			if (buf_read == num_k-1) {
+				buf_read = 0;
+			} else {
+				buf_read++;
+			}
+		}
 	}
 
 	#ifdef DEBUG_FILTERS_BUFFER
@@ -82,7 +85,6 @@ void bias_buffer(int num_data_frames, int O_ITER, hls::stream<b_st> &in, hls::st
 
 	b_st b_in;
 	b_st b_out;
-	uint b_offset;
 
 	// Buffer declaration
 	static b_st buffer[(OMAX/CPO)];
@@ -92,26 +94,29 @@ void bias_buffer(int num_data_frames, int O_ITER, hls::stream<b_st> &in, hls::st
 	#ifdef ALVEO_U200
 	#pragma HLS BIND_STORAGE variable=buffer type=ram_t2p impl=uram
 	#endif
-	// TODO: Optimize for Kintex
 
 	uint num_iter = O_ITER * num_data_frames;
 
-	bias_buffer_store_loop:
-	for (uint b = 0; b < O_ITER; b++) {
-		#pragma HLS LOOP_TRIPCOUNT min=1 max=O_REFERENCE/CPO
-		#pragma HLS PIPELINE II=1
-
-		b_in = in.read();
-		buffer[b] = b_in;
-	}
-
 	bias_buffer_load_loop:
-	for (uint it = 0; it < num_iter; it++) {
+	for (uint it = 0, b_offset = 0; it < num_iter; it++) {
 		#pragma HLS LOOP_TRIPCOUNT min=1 max=W_REFERENCE*H_REFERENCE*(I_REFERENCE/CPI)
 		#pragma HLS PIPELINE II=1
-		b_offset = it % O_ITER;
-		b_out = buffer[b_offset];
-		out << b_out;
+		if (it < O_ITER) {
+			b_in = in.read();
+			buffer[it] = b_in;
+			out << b_in;
+		} else {
+			b_out = buffer[b_offset];
+			out << b_out;
+			/*
+			 * This is more resource efficient than having -> b_offset = it % O_ITER
+			*/
+			if (b_offset == O_ITER-1) {
+				b_offset = 0;
+			} else {
+				b_offset++;
+			}
+		}
 	}
 
 	#ifdef DEBUG_FILTERS_BUFFER
