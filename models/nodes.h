@@ -58,6 +58,9 @@ struct st_node {
  float *data;
  cl_mem_ext_ptr_t buffer_ddr;
  cl::Buffer *buffer;
+ // parameters for statistics
+ int num_runs;
+ unsigned long long accumulated_runtime;
 };
 
 // global variables

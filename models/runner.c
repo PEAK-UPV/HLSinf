@@ -257,18 +257,47 @@ void run_graph() {
   
   if (verbose) printf("running graph\n");
 
-  // we read the node graph in execution order
+  // every node will run and we will collect stats for every node. We will
+  // acount for the number of runs of the node and the accumulated time for the node
+  // we first reset the run statistics
+  for (int n=0; n<num_nodes; n++) {aNode[n].num_runs = 0; aNode[n].accumulated_runtime = 0;}
+
+  // now we read the node graph in execution order collecting statistics
   for (int order=0; order < max_execution_order; order++) {
+    //
     for (int n=0; n<num_nodes; n++) {
+      //
       if ((aNode[n].valid) && (aNode[n].run_order == order)) {
+        //
         if (verbose) printf("  running: node: %3d order: %3d name: %-50s\n", n, order, aNode[n].name);
-	if (!strcmp(aNode[n].type, "HLSinf")) fn_run_node_on_fpga(n);
-	else fn_run_node_on_cpu(n);
+        //
+        fn_start_timer();
+        //
+	      if (!strcmp(aNode[n].type, "HLSinf")) fn_run_node_on_fpga(n);
+	      else fn_run_node_on_cpu(n);
+        //
+        fn_stop_timmer();
+        //
+        aNode[n].num_runs++;
+        aNode[n].accumulated_runtime += fn_get_timmer();
       }
     }
   }
 
   if (verbose) printf("  completed\n");
+
+  // now we print statistics for every node
+  printf("\nGraph timing statistics:\n");
+  printf("| %-50s |           |               |               |\n", "Node");
+  for (int n=0; n<num_nodes; n++) {
+    if (aNode[n].valid) {
+      int nr = aNode[n].num_runs;
+      unsigned long long crt = aNode[n].accumulated_runtime;
+      unsigned long long art = (crt / nr);
+      printf("| %-50s | %-10d | %-15ulld | %-15ulld|\n", aNode[name], crt, art);)
+    }
+  }
+
 }
 
 /*

@@ -57,3 +57,30 @@ void fn_input_buffer_stats(int i, float *min, float *max, float *avg, size_t *nu
   *num_items = _num_items;
 }
 
+/*
+ *
+ * fn_start_timer()
+ *
+ * This function starts a timer (basically, annotates the current time) 
+ */
+void fn_start_timer() {}
+
+/*
+ *
+ * fn_stop_timer()
+ * 
+ * This function stops a timer (basically, annotates the current time and computes
+ * the difference with the start timer counter
+ * 
+ */
+void fn_stop_timer() {}
+
+/*
+ *
+ * fn_get_timer()
+ * 
+ * This function returns the timer obtained
+ * 
+ */
+unsined long long fn_get_timer() { return 0; }
+
