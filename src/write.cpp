@@ -37,23 +37,30 @@ void write_data_channels_gihwcpi(int num_pixels, int offset, write_block_t *ptr,
   if (write_to_obuf) {
     write_to_obuff_loop_pixels:
     for (int i = 0; i < num_pixels; i++) {
-	    DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=W_REFERENCE*H_REFERENCE)
+      DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=W_REFERENCE*H_REFERENCE)
       #pragma HLS pipeline
-	    dout_st bx = in.read();
+      dout_st bx = in.read();
       out << bx;
     }
+    #ifdef DEBUG_WRITE_DATA
+    printf("write to obuf\n");
+    #endif
   } else {
     write_data_channels_loop_pixels:
     for (int i = 0; i < num_pixels; i++) {
-	  DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=W_REFERENCE*H_REFERENCE)
+      DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=W_REFERENCE*H_REFERENCE)
       #pragma HLS pipeline
-	  dout_st bx = in.read();
-	  write_block_t bx_out;
-	  for (int cpo=0; cpo<CPO; cpo++) {
+      dout_st bx = in.read();
+      write_block_t bx_out;
+      for (int cpo=0; cpo<CPO; cpo++) {
         #pragma HLS unroll
-		bx_out.pixel[cpo] = write_data_t(bx.pixel[cpo]);
-	  }
+        bx_out.pixel[cpo] = write_data_t(bx.pixel[cpo]);
+      }
       ptr[offset+i] = bx_out;
+      #ifdef DEBUG_WRITE_DATA
+      for (int cpo=0; cpo<CPO; cpo++) printf(" %6.4f", bx_out.pixel[cpo]);
+      printf("\n");
+      #endif
     }
   }
 }

@@ -73,10 +73,10 @@ void mul(int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::str
       printf("MUL: kernel read\n");
       for(int i=0; i<CPI; i++){
         for(int o=0; o<CPO; o++){
-          printf("kernel cpi=%d cpo=%d\n", i, o);
+          printf("kernel cpi=%d cpo=%d: ", i, o);
           for (int p=0; p<9; p++){
             printf(" %f ", float(kernel.pixel[o][i][p]));
-            if((p+1)%3==0)printf("\n");
+            //if((p+1)%3==0)printf("\n");
           }
           printf("\n");
         }
@@ -94,13 +94,10 @@ void mul(int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::str
 
     data_in = in.read();
     #ifdef DEBUG_MUL
-    printf("mult: frame received:\n");
     for (int xx=0; xx<CPI; xx++) {
-      printf("CPI %d : ", xx);
-      for (int x=0; x<KW*KH; x++) printf("%f ", float(data_in.pixel[x].pixel[xx]));
-      printf("\n");
+      for (int x=0; x<KW*KH; x++) printf("%6.4f ", float(data_in.pixel[x].pixel[xx]));
+      printf(",");
     }
-    printf("\n");
     #endif
 
 #ifdef PRUEBA_MUL_2
@@ -206,8 +203,9 @@ void mul(int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::str
     }
     #ifdef DEBUG_MUL
     //#ifdef DEBUG_VERBOSE
+    printf("->");
     for(int i = 0;i<CPO;i++) {
-      printf("mult result: p_out.pixel[%d] = %6.2f  ", i, float(p_out.pixel[i]));
+      printf(" %6.2f", float(p_out.pixel[i]));
     }
     printf("\n");
     //#endif

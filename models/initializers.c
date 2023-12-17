@@ -133,6 +133,19 @@ int is_running_var_initializer(char *name) {
   return false; 
 }
 
+/*
+ * is_bn_initializer()
+ *
+ * returns whether a name is a bn initializer
+ *
+ */
+int is_bn_initializer(char *name) {
+  if (!is_initializer(name)) return false;
+  int i = fn_get_initializer_by_name(name);
+  if (i==-1) return false;
+  if (!strcmp(aInitializer[i].type, "bn")) return true;
+  return false;
+}
 
 /*
  * fn_read_initializers_data()
@@ -157,10 +170,22 @@ void fn_read_initializers_data() {
       char filename[100];
       sprintf(filename, "%s.data", aInitializer[i].name);
       if ((fd = fopen(filename, "r")) == NULL) {printf("Error, could not open initializer file %s\n", aInitializer[i].name); exit(1);}
+      // first row is the number of items
       read = getline(&line, &len, fd);
       int num_items = atoi(line);
       if (verbose) printf("  initializer: %-50s num_items: %12d file: %-50s\n", aInitializer[i].name, num_items, filename);
-      aInitializer[i].data = (float*)malloc(sizeof(float) * num_items);
+      // now we read the number of dimensions
+      read = getline(&line, &len, fd);
+      aInitializer[i].num_dimensions = atoi(line);
+      aInitializer[i].dimensions = (int*)malloc(sizeof(int) * aInitializer[i].num_dimensions);
+      // now we read each dimension
+      for (int d=0; d<aInitializer[i].num_dimensions; d++) {
+	read = getline(&line, &len, fd);
+	aInitializer[i].dimensions[d] = atoi(line);
+      }
+      // now we read the data
+      posix_memalign((void**)&aInitializer[i].data, 4096, sizeof(float) * num_items);
+      //aInitializer[i].data = (float*)malloc(sizeof(float) * num_items);
       for (int d = 0; d < num_items; d++) {
         read = getline(&line, &len, fd);
 	if (read == -1) {printf("error, while reading initializer %s\n", aInitializer[i].name); exit(1);}
@@ -354,6 +379,26 @@ char *get_bias_initializer_name_from_node(int n) {
 }
 
 /*
+ * get_bias_initializer_entry_from_node()
+ *
+ * Returns the bias initializer id from
+ * a node passed as an argument as id
+ *
+ * If not found it returns -1
+ */
+int get_bias_initializer_entry_from_node(int n) {
+  if (n == -1) return -1;
+  if (!aNode[n].valid) return -1;
+
+  // we seep all its inputs and check whether they are initializers
+  for (int i=0; i<aNode[n].num_inputs; i++) {
+    if (is_bias_initializer(aNode[n].inputs[i])) return fn_get_initializer_by_name(aNode[n].inputs[i]);
+  }
+  return -1;
+}
+
+
+/*
  * get_gamma_initializer_name_from_node()
  *
  * Returns the gamma initializer name from
@@ -483,7 +528,42 @@ int get_running_var_initializer_id_from_node(int n) {
   int i = fn_get_initializer_by_name(get_running_var_initializer_name_from_node(n));
   return i;
 }
+
 /*
+ * get_bn_initializer_name_from_node()
+ *
+ * Returns the bn initializer name from
+ * a node passed as an argument as id
+ *
+ * If not found it returns NULL
+ */
+char *get_bn_initializer_name_from_node(int n) {
+  if (n == -1) return NULL;
+  if (!aNode[n].valid) return NULL;
+
+  // we sweep all its inputs and check whether they are initializers
+  for (int i=0; i<aNode[n].num_inputs; i++) {
+    if (is_bn_initializer(aNode[n].inputs[i])) return aNode[n].inputs[i];
+  }
+  return NULL;
+}
+
+/*
+ * get_bn_initializer_id_from_node()
+ *
+ * Returns the bn initializer id from a node
+ * passed as an argument as id
+ *
+ * If not found it returns -1
+ *
+ */
+int get_bn_initializer_id_from_node(int n) {
+  int i = fn_get_initializer_by_name(get_bn_initializer_name_from_node(n));
+  return i;
+} 
+
+/*
+ *
  * fn_pad_weight_initializer_1x1_to_3x3()
  *
  * This function adapts by padding a OxIx1x1 weight filter to a 
@@ -503,6 +583,8 @@ void fn_pad_weight_initializer_1x1_to_3x3(char *name) {
   int KW = aInitializer[i].dimensions[3];
   int KH_new = 3;
   int KW_new = 3;
+
+  if (verbose) printf("      pading 1x1 weight initializer to 3x3: name: %s OxIxKHxKW: %3dx%3dx%3dx%3d\n", name, O, I, KH, KW);
 
   size_t new_size = KH_new * KW_new * O * I;
   float *p = (float*)malloc(sizeof(float) * new_size);

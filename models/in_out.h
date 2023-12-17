@@ -20,6 +20,7 @@ struct st_input {
   int *dimensions;
   char *data_type;
   // info for running
+  float *data;
   cl_mem_ext_ptr_t buffer_ddr;
   cl::Buffer *buffer;
 };
@@ -37,5 +38,6 @@ extern struct st_output  aOutput[MAX_OUTPUTS];
 
 // function prototypes
 int is_model_input(char *name);
+int get_model_input_id(char *name);
 void fn_change_output_model_name(int o, char *name);
 int get_model_output_id(char *name);

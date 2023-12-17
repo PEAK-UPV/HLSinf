@@ -79,6 +79,10 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
     #ifdef USE_BATCH_NORM
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_batch_norm));
     #endif
+    #ifdef USE_BATCH_NORM_RELU
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_batch_norm_relu));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, batch_norm_relu_factor));
+    #endif    
     #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_k[0]));
     #endif
@@ -89,10 +93,6 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_bias[0]));
     #ifdef USE_BATCH_NORM
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_batch_norm_val[0]));
-    #endif
-    #ifdef USE_BATCH_NORM_RELU
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_batch_norm_relu));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, batch_norm_relu_factor));
     #endif
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_o[0]));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, read_offset_p));

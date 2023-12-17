@@ -15,6 +15,8 @@
 #include "nodes.h"
 #include "initializers.h"
 #include "main.h"
+#include "fpga.h"
+#include "cpu.h"
 
 // global variables
 int max_execution_order;
@@ -32,7 +34,15 @@ void fn_process_input_line2(char *line, size_t len) {
   char item[200];
   int offset = 0;
 
-  if (verbose) printf("  line: %s", line);  // we do not add \n since the line already has one
+  if (verbose) {
+    char sz_line[200];
+    if (strlen(line) < 200) printf("  line: %s", line);  // the line has already a \n
+    else {
+      strncpy(sz_line, line, 200);
+      sz_line[200] = '\0';
+      printf("  line: %s ...\n", sz_line);
+    }
+  }
 
   // we first get the line type: node, input, output, initializer
   offset = fn_get_item_line(line, len, offset, item);
@@ -86,18 +96,31 @@ void fn_process_input_line2(char *line, size_t len) {
     offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].HO = atoi(item);
     offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].WO = atoi(item);
 
+    // keyword (if is an hlsinf node)
+    if (!strcmp(aNode[num_nodes].type, "HLSinf")) {
+      offset = fn_get_item_line(line, len, offset, item);
+      aNode[num_nodes].keyword = (char*)malloc(sizeof(char) * (strlen(item)+1));
+      strcpy(aNode[num_nodes].keyword, item);
+    }
+    // input add
+    if (!strcmp(aNode[num_nodes].type, "HLSinf")) {
+      offset = fn_get_item_line(line, len, offset, item);
+      aNode[num_nodes].input_add = (char*)malloc(sizeof(char) * (strlen(item)+1));
+      strcpy(aNode[num_nodes].input_add, item);
+    }
+
     // if we have a conv then we read the conv parameters (dh, dw, kh, kw, pt, pb, pl, pr, sh, sw, g)
     if (!strcmp(aNode[num_nodes].type, "Conv")) {
       offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].dh = atoi(item);
       offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].dw = atoi(item);
       offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].kh = atoi(item);
       offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].kw = atoi(item);
+      offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].sh = atoi(item);
+      offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].sw = atoi(item);
       offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].pt = atoi(item);
       offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].pb = atoi(item);
       offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].pl = atoi(item);
       offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].pr = atoi(item);
-      offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].sh = atoi(item);
-      offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].sw = atoi(item);
       offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].g  = atoi(item);
     }
     // if we have a batchnormalization then we read the parameters epsilon and momentum
@@ -116,6 +139,7 @@ void fn_process_input_line2(char *line, size_t len) {
       offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].sh = atoi(item);
       offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].sw = atoi(item);
     }
+
     // if we have a HLSinf then we read all the parameters: kh, kw, pt, pb, pl, pr, sh, sw
     if (!strcmp(aNode[num_nodes].type, "HLSinf")) {
       offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].hlsinf_kh_conv = atoi(item);
@@ -162,6 +186,9 @@ void fn_process_input_line2(char *line, size_t len) {
     offset = fn_get_item_line(line, len, offset, item);
     aInitializer[num_initializers].name = (char*)malloc(sizeof(char) * (strlen(item)+1));
     strcpy(aInitializer[num_initializers].name, item);
+    // type
+    offset = fn_get_item_line(line, len, offset, item);
+    strcpy(aInitializer[num_initializers].type, item);
     // dimensions
     offset = fn_get_item_line(line, len, offset, item);
     aInitializer[num_initializers].num_dimensions = atoi(item);
@@ -169,6 +196,18 @@ void fn_process_input_line2(char *line, size_t len) {
     for (int d=0; d<aInitializer[num_initializers].num_dimensions; d++) {
       offset = fn_get_item_line(line, len, offset, item);
       aInitializer[num_initializers].dimensions[d] = atoi(item);
+    }
+    // data type
+    offset = fn_get_item_line(line, len, offset, item);
+    strcpy(aInitializer[num_initializers].data_type, item);
+    //
+    // now the data
+    int num_items = 1;
+    for (int d=0; d<aInitializer[num_initializers].num_dimensions; d++) num_items *= aInitializer[num_initializers].dimensions[d];
+    posix_memalign((void **)&aInitializer[num_initializers].data, 4096, num_items * sizeof(float));    
+    for (int x=0; x<num_items; x++) {
+      offset = fn_get_item_line(line, len, offset, item);
+      aInitializer[num_initializers].data[x] = atof(item);
     }
     aInitializer[num_initializers].valid = true;
     num_initializers++;
@@ -222,10 +261,30 @@ void run_graph() {
   for (int order=0; order < max_execution_order; order++) {
     for (int n=0; n<num_nodes; n++) {
       if ((aNode[n].valid) && (aNode[n].run_order == order)) {
-        if (verbose) printf("  running order: %3d node: %3d (%-50s)\n", order, n, aNode[n].name);
+        if (verbose) printf("  running: node: %3d order: %3d name: %-50s\n", n, order, aNode[n].name);
+	if (!strcmp(aNode[n].type, "HLSinf")) fn_run_node_on_fpga(n);
+	else fn_run_node_on_cpu(n);
       }
     }
   }
 
+  if (verbose) printf("  completed\n");
+}
+
+/*
+ * copy_initializers_to_fpga()
+ *
+ * copies all initializers to the fpga buffers
+ *
+ */
+void copy_initializers_to_fpga() {
+
+  if (verbose) printf("copying initializers to FPGA...\n");
+  for (int i=0; i<num_initializers; i++) {
+    if (aInitializer[i].valid) {
+      if (verbose) printf("  copying initializer %3d name %s\n", i, aInitializer[i].name);
+      copy_to_fpga(aInitializer[i].buffer);
+    }
+  }
   if (verbose) printf("  completed\n");
 }

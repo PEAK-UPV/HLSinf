@@ -40,6 +40,11 @@ void padding(int H, int W, int PT, int PB, int PL, int PR, int I_ITER, hls::stre
     zero.pixel[cpi] = 0.f;
   }
 
+#ifdef DEBUG_PADDING
+  int debug_iter = 0;
+  printf("data sent:\n");
+#endif
+
   num_iters = I_ITER * (H + PT + PB) * (W + PL + PR);
   h = 0;
   w = 0;
@@ -53,20 +58,24 @@ void padding(int H, int W, int PT, int PB, int PL, int PR, int I_ITER, hls::stre
     int enable4 = (w >= W+PL);
     if (enable1 | enable2 | enable3 | enable4) data = zero; else data = in.read();
     out << data;
-#ifdef DEBUG_PADDING
-	printf("PADDING: send data (i %d, h %d, w %d, |enableX %d): ", i, h, w, enable1|enable2|enable3|enable4);
-  for (int x=0; x<CPI; x++) printf(" %f", float(data.pixel[x]));
-  printf("\n");
-#endif
-	w = w+1;
-	if (w == W+PL+PR) {
-	  w = 0;
-	  h = h + 1;
-	  if (h == H+PT+PB) {
-		h = 0;
-	  }
-	}
+    #ifdef DEBUG_PADDING
+    for (int x=0; x<CPI; x++) printf(" %6.4f", float(data.pixel[x]));
+    debug_iter++;
+    if (debug_iter == 8) {debug_iter = 0; printf("\n");} else printf("-");
+    #endif
+    w = w+1;
+    if (w == W+PL+PR) {
+      w = 0;
+      h = h + 1;
+      if (h == H+PT+PB) {
+        h = 0;
+      }
+    }
   }
+
+  #ifdef DEBUG_PADDING
+  printf("\n");
+  #endif
 
   #ifdef DEBUG_PADDING
   printf("PADDING: end\n");

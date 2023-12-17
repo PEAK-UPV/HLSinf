@@ -101,7 +101,15 @@ void fn_process_input_line(char *line, size_t len) {
   char name[200];
   int offset = 0;
 
-  if (verbose) printf("  line: %s", line);  // we do not add \n since the line already has one
+  if (verbose) {
+    char sz_line[200];
+    if (strlen(line) < 200) printf("  line: %s", line);  // the line has already a \n
+    else {
+      strncpy(sz_line, line, 200);
+      sz_line[200] = '\0';
+      printf("  line: %s ...\n", sz_line);
+    }
+  }
 
   // first we get the item name
   offset = fn_get_item_line(line, len, offset, name);
@@ -191,7 +199,18 @@ void fn_process_input_line(char *line, size_t len) {
     aInitializer[num_initializers].dimensions = (int*)malloc(sizeof(int) * aInitializer[num_initializers].num_dimensions);
     for (int d=0;d<aInitializer[num_initializers].num_dimensions; d++) {
       offset = fn_get_item_line(line, len, offset, item);
-      aInitializer[num_initializers].dimensions[d] = atoi(item);
+      aInitializer[num_initializers].dimensions[d] = atof(item);
+    }
+    // data type
+    offset = fn_get_item_line(line, len, offset, item);
+    strcpy(aInitializer[num_initializers].data_type, item);
+    // now we read the data
+    int num_items = 1;
+    for (int d=0; d<aInitializer[num_initializers].num_dimensions; d++) num_items *= aInitializer[num_initializers].dimensions[d];
+    aInitializer[num_initializers].data = (float*)malloc(sizeof(float) * num_items);
+    for (int x=0; x<num_items; x++) {
+      offset = fn_get_item_line(line, len, offset, item);
+      aInitializer[num_initializers].data[x] = atof(item);
     }
     num_initializers++;
   }
@@ -259,29 +278,6 @@ void fn_read_input_model() {
 }
 
 /*
- * fn_generate_output_model
- *
- * generates the output model by processing the 
- * input model. It takes into account the HLSinf version and subversion
- */
-void fn_generate_output_model() {
-
-  if (verbose) printf("generating output model...\n");
-
-  // depending on the HLSinf version and subversion we call the specific generate function
-  switch(hlsinf_version) {
-    case 1:  switch(hlsinf_subversion) {
-	       case 0:  fn_generate_output_model_hlsinf_1_0(); break;
-	       default: printf("Error, HLSinf subversion not supported\n"); exit(1); break;
-	     }
-	     break;
-    default: printf("Error, HLSinf version not supported\n"); exit(1); break;
-  }
-
-  if (verbose) printf("  completed\n");
-}
-
-/*
  * fn_write_output_model
  *
  * writes the output model to disk
@@ -291,7 +287,7 @@ void fn_write_output_model() {
 
  if (verbose) printf("writing output model...\n");
 
- FILE *fd = fopen("model.hlsinf", "w");
+ FILE *fd = fopen(output_file_name, "w");
  if (fd == NULL) {printf("Error, could not open the output model for writting\n"); exit(1);}
 
  // we order the nodes
@@ -314,14 +310,16 @@ void fn_write_output_model() {
        for (int o=0; o<aNode[n].num_outputs; o++) fprintf(fd,",%s", aNode[n].outputs[o]);
        // data params
        fprintf(fd,",%d,%d,%d,%d,%d,%d", aNode[n].I, aNode[n].HI, aNode[n].WI, aNode[n].O, aNode[n].HO, aNode[n].WO);
+       // keyword
+       if (is_hlsinf(n)) fprintf(fd,",%s", aNode[n].keyword);
+       // input add
+       if (is_hlsinf(n)) fprintf(fd,",%s", (aNode[n].input_add == NULL)?" ":aNode[n].input_add);
        // params
-       if (is_hlsinf(n) && (aNode[n].has_conv)) fprintf(fd,",conv,%d,%d,%d,%d,%d,%d,%d,%d", aNode[n].hlsinf_kh_conv, aNode[n].hlsinf_kw_conv, aNode[n].hlsinf_sh_conv, aNode[n].hlsinf_sw_conv, aNode[n].hlsinf_pt_conv, aNode[n].hlsinf_pb_conv, aNode[n].hlsinf_pl_conv, aNode[n].hlsinf_pr_conv);
-       if (is_hlsinf(n) && (aNode[n].has_relu)) fprintf(fd,",relu");
-       if (is_hlsinf(n) && (aNode[n].has_bn)) fprintf(fd,",bn");
-       if (is_hlsinf(n) && (aNode[n].has_maxpool)) fprintf(fd,",maxpool,%d,%d,%d,%d", aNode[n].hlsinf_kh_maxpool, aNode[n].hlsinf_kw_maxpool, aNode[n].hlsinf_sh_maxpool, aNode[n].hlsinf_sw_maxpool);
-       if (is_hlsinf(n) && (aNode[n].has_add)) fprintf(fd,",add");
-       if (is_conv(n)) fprintf(fd,",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", aNode[n].dh,aNode[n].dw,aNode[n].kh,aNode[n].kw,aNode[n].sh,aNode[n].sw,aNode[n].pt,aNode[n].pb,aNode[n].pl,aNode[n].pr,aNode[n].sh,aNode[n].sw,aNode[n].g);
+       if (is_hlsinf(n)) fprintf(fd,",%d,%d,%d,%d,%d,%d,%d,%d", aNode[n].hlsinf_kh_conv, aNode[n].hlsinf_kw_conv, aNode[n].hlsinf_sh_conv, aNode[n].hlsinf_sw_conv, aNode[n].hlsinf_pt_conv, aNode[n].hlsinf_pb_conv, aNode[n].hlsinf_pl_conv, aNode[n].hlsinf_pr_conv);
+
+       if (is_conv(n)) fprintf(fd,",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", aNode[n].dh,aNode[n].dw,aNode[n].kh,aNode[n].kw,aNode[n].sh,aNode[n].sw,aNode[n].pt,aNode[n].pb,aNode[n].pl,aNode[n].pr,aNode[n].g);
        if (is_maxpool(n)) fprintf(fd,",%d,%d,%d,%d,%d,%d,%d,%d", aNode[n].kh, aNode[n].kw, aNode[n].sh, aNode[n].sw, aNode[n].pt, aNode[n].pb, aNode[n].pl, aNode[n].pr);
+       if (is_bn(n)) fprintf(fd,",%f,%f", aNode[n].epsilon, aNode[n].momentum);
        fprintf(fd, "\n");
      }
    }
@@ -340,13 +338,16 @@ void fn_write_output_model() {
  // we write also initializers
  for (int i=0; i<num_initializers; i++) {
    if (aInitializer[i].valid) {
-     fprintf(fd, "initializer,%s,%d", aInitializer[i].name, aInitializer[i].num_dimensions);
+     fprintf(fd, "initializer,%s,%s,%d", aInitializer[i].name, aInitializer[i].type, aInitializer[i].num_dimensions);
      for (int d=0; d<aInitializer[i].num_dimensions; d++) fprintf(fd, ",%d", aInitializer[i].dimensions[d]);
+     // data type
+     fprintf(fd, ",%s,",aInitializer[i].data_type);
+     // now the data
+     int num_items=1;
+     for (int d=0; d<aInitializer[i].num_dimensions; d++) num_items *= aInitializer[i].dimensions[d];
+     for (int x=0; x<num_items; x++) fprintf(fd, "%f,", aInitializer[i].data[x]);
      fprintf(fd, "\n");
    }
  }
  fclose(fd);
-
- // now we write the initializers
- fn_write_initializers_data();
 }

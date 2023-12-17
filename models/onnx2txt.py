@@ -13,27 +13,38 @@ if __name__ == '__main__':
 
     # path to ONNX model file
     old_model = sys.argv[1]
-    # sym, arg_params, aux_params = import_model(old_model)
+    new_model = sys.argv[2]
+
     onnxModel = onnx.load(old_model)
-#    print("LOAD")
     onnx.checker.check_model(onnxModel)
     nodes = onnxModel.graph.node
     initializers = onnxModel.graph.initializer
     inputs = onnxModel.graph.input
     outputs = onnxModel.graph.output
 
+    f = open(new_model, "w")
 
     # input buffers
     for obj in inputs:
         name = obj.name
         # deberiamos sacar de una forma mas uniforme las dimensiones
         num_dims=len(obj.type.tensor_type.shape.dim)-1
-        print(name,",inputs,",num_dims,",",obj.type.tensor_type.shape.dim[1].dim_value,",",obj.type.tensor_type.shape.dim[2].dim_value,",",obj.type.tensor_type.shape.dim[3].dim_value,",float32")
+        f.write(name)
+        f.write(",inputs,")
+        f.write(str(num_dims))
+        f.write(",")
+        f.write(str(obj.type.tensor_type.shape.dim[1].dim_value))
+        f.write(",")
+        f.write(str(obj.type.tensor_type.shape.dim[2].dim_value))
+        f.write(",")
+        f.write(str(obj.type.tensor_type.shape.dim[3].dim_value))
+        f.write(",float32\n")
 
     # output buffers 
     for obj in outputs:
         name = obj.name
-        print(name,",outputs")
+        f.write(name)
+        f.write(",outputs\n")
 
     # nodes
     for node in onnxModel.graph.node:
@@ -89,9 +100,24 @@ if __name__ == '__main__':
                     for i in a.ints:
                         strides = strides + " " + str(i) + ","
 
-        print(name,",node,",type,",",num_inputs,",",str_in,num_outputs,",",str_out,dilations,kernel_shape,pads,strides,group,epsilon,momentum)
-        
-        
+        f.write(name)
+        f.write(",node,")
+        f.write(type)
+        f.write(",")
+        f.write(str(num_inputs))
+        f.write(",")
+        f.write(str_in)
+        f.write(str(num_outputs))
+        f.write(",")
+        f.write(str_out)
+        f.write(dilations)
+        f.write(kernel_shape)
+        f.write(pads)
+        f.write(strides)
+        f.write(group)
+        f.write(epsilon)
+        f.write(momentum)
+        f.write("\n")
 
     # initializers
     for obj in onnxModel.graph.initializer:
@@ -103,4 +129,16 @@ if __name__ == '__main__':
         for i in obj.dims:
             str_dims = str_dims + str(i) + ","
         dims=obj.dims
-        print(name,",initializer,",num_dims, ",", str_dims, dtype)
+        f.write(name)
+        f.write(",initializer,")
+        f.write(str(num_dims))
+        f.write(",")
+        f.write(str_dims)
+        f.write(str(dtype))
+        for d in obj.float_data:
+            f.write(",")
+            f.write(str(d))
+        f.write("\n")
+
+    f.close()
+

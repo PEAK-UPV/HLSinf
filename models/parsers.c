@@ -1,19 +1,10 @@
 /*
  * parsers.c
  *
- * This file includes parser for the HLSinf 1.0 accelerator
+ * This file includes parser for the HLSinf accelerator
  *
  * The configuration of this accelerator is as follows:
  *
- *   Target platform                  : Alveo U200
- *   Supported layers (in this order) : 2dconv, relu, clipping, maxpool, bn, stm, add, upsize
- *   Data type                        : FP32 (all)
- *   CPI                              : 4
- *   CPO                              : 4
- *   WMAX (maximum number of columns) : 1024
- *   HMAX (maximum number of rows)    : 256
- *   Data buffer size                 : 16384 CPI pixels (32 rows x 32 cols x (512/CPI) pixels)
- *   Weight buffer size               : 4096
  *
  */
 
@@ -56,7 +47,7 @@ int fn_detect_pattern(int n, char *type0, char *type1, char *type2, char *type3,
   return false;
 }
 
-void fn_merge_nodes(int n0, int n1, int n2, int n3, int n4, char *name) {
+void fn_merge_nodes(int n0, int n1, int n2, int n3, int n4, char *keyword) {
 
   int conv_layer = is_conv(n0) ? n0 : is_conv(n1) ? n1 : is_conv(n2) ? n2 : is_conv(n3) ? n3 : is_conv(n4) ? n4 : -1;
   int relu_layer = is_relu(n0) ? n0 : is_relu(n1) ? n1 : is_relu(n2) ? n2 : is_relu(n3) ? n3 : is_relu(n4) ? n4 : -1;
@@ -75,8 +66,11 @@ void fn_merge_nodes(int n0, int n1, int n2, int n3, int n4, char *name) {
   num_nodes++;
 
   aNode[n].valid = true;
-  aNode[n].name = (char*)malloc(sizeof(char) * (strlen(name)+30));
-  sprintf(aNode[n].name, "%s_%0d", name, n);
+  aNode[n].name = (char*)malloc(sizeof(char) * (30));
+  sprintf(aNode[n].name, "HLSinf_%0d", n);
+  // keyword
+  aNode[n].keyword = (char*)malloc(sizeof(char) * (strlen(keyword)+1));
+  strcpy(aNode[n].keyword, keyword);
   // type
   aNode[n].type = (char*)malloc(sizeof(char) * (strlen("HLSinf")+1));
   strcpy(aNode[n].type, "HLSinf");
@@ -121,11 +115,24 @@ void fn_merge_nodes(int n0, int n1, int n2, int n3, int n4, char *name) {
   aNode[n].has_add  = merging_add;
   aNode[n].has_maxpool = merging_maxpool;
 
+  // input add
+  char *input_add = NULL;
+  if (is_add(n1)) input_add = get_data_input_name_from_node(n1, get_node_name(n0));
+  if (is_add(n2)) input_add = get_data_input_name_from_node(n2, get_node_name(n1));
+  if (is_add(n3)) input_add = get_data_input_name_from_node(n3, get_node_name(n2));
+  if (is_add(n4)) input_add = get_data_input_name_from_node(n4, get_node_name(n3));
+  if (input_add != NULL) {
+    aNode[n].input_add = (char*)malloc(sizeof(char) * (strlen(input_add)+1));
+    strcpy(aNode[n].input_add, input_add);
+  } else aNode[n].input_add = NULL;
+
   aNode[n].I = aNode[n0].I;
   aNode[n].HI = aNode[n0].HI;
   aNode[n].WI = aNode[n0].WI;
 
-  if (aNode[n].has_conv) aNode[n].O = aNode[conv_layer].O; else aNode[n].O = aNode[n0].O;
+  aNode[n].O = aNode[last_merged_node].O;
+  aNode[n].HO = aNode[last_merged_node].HO;
+  aNode[n].WO = aNode[last_merged_node].WO;
 
   if (aNode[n].has_conv) {
     aNode[n].hlsinf_kh_conv = aNode[conv_layer].kh;
@@ -196,7 +203,7 @@ void fn_check_supported() {
  * For weights: O x I x KH x KW is converted into GO x GI x CPO x CPI x KH x KW
  *
  */
-void fn_adapt_initializers(int CPI, int CPO) {
+void fn_adapt_initializers() {
 
   if (verbose) printf("  adapting initializers...\n");
 
@@ -340,34 +347,36 @@ void fn_adapt_conv1x1_to_conv3x3() {
  * As an additional argument the name of the new node out of the merge is passed
  *
  */
-void fn_find_and_merge(char *name0, char *name1, char *name2, char *name3, char *name4, char *new_name) {
+void fn_find_and_merge(char *name0, char *name1, char *name2, char *name3, char *name4, char *keyword) {
   int n0, n1, n2, n3, n4;
   if (verbose) printf("  merging %s-%s-%s-%s-%s pattern\n", name0, name1, name2, name3, name4);
   for (int n=0; n<num_nodes; n++) {
     n0 = -1; n1 = -1; n2 = -1; n3 = -1; n4 = -1;
     if (fn_detect_pattern(n, name0, name1, name2, name3, name4, &n0, &n1, &n2, &n3, &n4)) {
       if (verbose) printf("    merging nodes %d %d %d %d %d\n", n0, n1, n2, n3, n4);
-      fn_merge_nodes(n0, n1, n2, n3, n4, new_name);
+      fn_merge_nodes(n0, n1, n2, n3, n4, keyword);
     }
   }
   if (verbose) printf("    completed\n");
 }
 
-void fn_generate_output_model_hlsinf_1_0() {
+void fn_generate_output_model() {
+
+  if (verbose) printf("generating output model...\n");
 
   // we adapt convs1x1 to 3x3
-  fn_adapt_conv1x1_to_conv3x3();
+  if (adapt_1x1_to_3x3) fn_adapt_conv1x1_to_conv3x3();
 
   // first we check whether the layers can be supported in HLSinf 1.0
   fn_check_supported();
 
-  fn_find_and_merge((char*)"Conv", (char*)"BatchNormalization", (char*)"Relu", (char*)"MaxPool", NULL, (char*)"HLSinf_cbrm");
-  fn_find_and_merge((char*)"Conv", (char*)"BatchNormalization", (char*)"Add",  (char*)"Relu", NULL, (char*)"HLSinf_cbar");
-  fn_find_and_merge((char*)"Conv", (char*)"BatchNormalization", (char*)"Relu", NULL, NULL, (char*)"HLSinf_cbr");
-  fn_find_and_merge((char*)"Conv", (char*)"BatchNormalization", (char*)"Add", NULL, NULL, (char*)"HLSinf_cba");
-  fn_find_and_merge((char*)"Conv", (char*)"BatchNormalization", NULL, NULL, NULL, (char*)"HLSinf_cb");
-  fn_find_and_merge((char*)"BatchNormalization", (char*)"Relu", NULL, NULL, NULL, (char*)"HLSinf_br");
+  if (cbar_keyword)  fn_find_and_merge((char*)"Conv", (char*)"BatchNormalization", (char*)"Add",  (char*)"Relu", NULL, (char*)"cbar");	
+  if (cbr_keyword)   fn_find_and_merge((char*)"Conv", (char*)"BatchNormalization", (char*)"Relu", NULL,          NULL, (char*)"cbr");
+  if (cb_keyword)    fn_find_and_merge((char*)"Conv", (char*)"BatchNormalization", NULL,          NULL,          NULL, (char*)"cb");
+  if (c_keyword)     fn_find_and_merge((char*)"Conv", NULL, NULL, NULL, NULL, (char*)"c");
 
   // now we adapt the initializers accordingly
-  fn_adapt_initializers(4, 4);
+  fn_adapt_initializers();
+
+  if (verbose) printf("  completed\n");
 }

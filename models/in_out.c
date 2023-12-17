@@ -29,6 +29,18 @@ int is_model_input(char *name) {
 }
 
 /*
+ * get_mode_input_id()
+ *
+ * returns the input model id for a name
+ * if not found then -1 is returned
+ *
+ */
+int get_model_input_id(char *name) {
+  for (int i=0; i<num_inputs; i++) if (aInput[i].valid) if (!strcmp(aInput[i].name, name)) return i;
+  return -1;
+}
+
+/*
  * get_model_output_id()
  *
  * returns the output model id for a name

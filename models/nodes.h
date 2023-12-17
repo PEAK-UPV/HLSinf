@@ -42,6 +42,7 @@ struct st_node {
  int hlsinf_kw_maxpool;
  int hlsinf_sh_maxpool;
  int hlsinf_sw_maxpool;
+ char *input_add;
  // supported in HLSinf
  int supported;
  // input and output data geometry
@@ -52,7 +53,9 @@ struct st_node {
  int row;
  int col;
  // parameters for running
+ char *keyword;
  int run_order;
+ float *data;
  cl_mem_ext_ptr_t buffer_ddr;
  cl::Buffer *buffer;
 };

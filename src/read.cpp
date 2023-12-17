@@ -114,24 +114,24 @@ void read_kernel(int enable, int I_ITER, int offset_kernel, read_filter_t *k_ptr
   #pragma HLS array_partition variable=k complete dim=0
 
   for (int i=0; i<I_ITER; i++) {
-	  DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE/CPI)
-	  DO_PRAGMA(HLS LOOP_FLATTEN OFF)
-
-	  for (int cpo=0; cpo < CPO; cpo++) {
-		  for (int cpi=0; cpi < CPI; cpi++) {
-			  for (int p=0; p<9; p++) {
-				  #pragma HLS pipeline II=1
-				  k = k_ptr[offset_kernel+cnt];
-			      kk = w_t(k);
-			      k_out << kk;
-                  #ifdef DEBUG_READ_KERNEL
-    	          printf("READ_KERNEL: Kernel read for cpi=%d cpo=%d p %d: %6.4f\n", cpi, cpo, p, float(kk));
-                  #endif
-				  cnt = cnt + 1;
-			  }
-		  }
-	  }
-
+    DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max=I_REFERENCE/CPI)
+    DO_PRAGMA(HLS LOOP_FLATTEN OFF)
+    for (int cpo=0; cpo < CPO; cpo++) {
+      for (int cpi=0; cpi < CPI; cpi++) {
+        for (int p=0; p<9; p++) {
+          #pragma HLS pipeline II=1
+          k = k_ptr[offset_kernel+cnt];
+	  kk = w_t(k);
+	  k_out << kk;
+	  cnt = cnt + 1;
+	}
+        #ifdef DEBUG_READ_KERNEL
+	printf("READ_KERNEL: cpi %d cpo %d", cpi, cpo);
+	for (int p=0; p<9; p++) printf(" %-6.4f", float(k_ptr[offset_kernel+cnt-9+p]));
+	printf("\n");
+        #endif
+      }
+    }
   }
 
   #ifdef DEBUG_READ_KERNEL
@@ -306,6 +306,12 @@ void read_data_channels_gihwcpi(int num_pixels, int offset, int I_ITER, int cpi_
     printf("offset global for iteration %d = %d\n", iter, offset_global);
 #endif
 #endif
+
+    #ifdef DEBUG_READ_DATA
+    int debug_iter = 0;
+    printf("data read (iteration %d):\n", iter);
+    #endif
+
     read_data_channels_loop_pixels:
     for (int i = 0; i < num_pixels; i++) {
       DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max = H_REFERENCE * W_REFERENCE)
@@ -320,14 +326,18 @@ void read_data_channels_gihwcpi(int num_pixels, int offset, int I_ITER, int cpi_
       }
       out << px_out;
       #ifdef DEBUG_READ_DATA
-      //#ifdef DEBUG_VERBOSE
-      printf("data read : %d : ", i);
-      for (int x=0; x<CPI; x++) printf("%f ", float(px.pixel[x]));
-      printf("\n");
-      //#endif
+      for (int x=0; x<CPI; x++) printf("%6.4f ", float(px.pixel[x]));
+      debug_iter++;
+      if (debug_iter == 8) {debug_iter = 0; printf("\n");} else printf(",");
       #endif
     }
+
+    #ifdef DEBUG_READ_DATA
+    printf("\n");
+    #endif
   }
+
+
 
   #ifdef DEBUG_READ_DATA
   printf("READ_DATA: ends (gihwcpi format)\n");

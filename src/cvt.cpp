@@ -60,6 +60,12 @@ void cvt(int H, int W, int I_ITER, int SH, int SW, hls::stream<din_st> &in, hls:
   DO_PRAGMA(HLS bind_storage variable=buffer2 type=ram_s2p impl=bram)
   #endif
 
+#ifdef DEBUG_CVT
+#ifdef DEBUG_VERBOSE
+  printf("send (showing only CPI0):\n");
+#endif
+#endif
+
   // manually flattened loop (for the purposes of getting the expected pipelined design)
   int p = 0;
   int num_iters = I_ITER * num_pixels;
@@ -86,9 +92,9 @@ void cvt(int H, int W, int I_ITER, int SH, int SW, hls::stream<din_st> &in, hls:
     DO_PRAGMA(HLS ARRAY_PARTITION variable=pixel complete dim=0)
     pixel = in.read();
 #ifdef DEBUG_CVT
-    printf("CVT: read data (i %d pin_row %d pin_col %d stride_row %d stride_col %d):", i_iter, pin_row, pin_col, stride_row, stride_col);
-    for (int x=0; x<CPI; x++) printf(" %f", float(pixel.pixel[x]));
-    printf("\n");
+    //printf("CVT: read data (i %d pin_row %d pin_col %d stride_row %d stride_col %d):", i_iter, pin_row, pin_col, stride_row, stride_col);
+    //for (int x=0; x<CPI; x++) printf(" %f", float(pixel.pixel[x]));
+    //printf("\n");
 #endif
 
     // row buffer write (in which buffer row we write the pixel)
@@ -133,13 +139,16 @@ void cvt(int H, int W, int I_ITER, int SH, int SW, hls::stream<din_st> &in, hls:
       out << frame;
       #ifdef DEBUG_CVT
       #ifdef DEBUG_VERBOSE
-      printf("cvt: frame sent:\n");
-      for (int cpi=0; cpi<CPI; cpi++) {
-        printf("  cpi %d:\n", cpi);
-        printf("    %6.4f %6.4f %6.4f\n", float(frame.pixel[0].pixel[cpi]), float(frame.pixel[1].pixel[cpi]), float(frame.pixel[2].pixel[cpi]));
-        printf("    %6.4f %6.4f %6.4f\n", float(frame.pixel[3].pixel[cpi]), float(frame.pixel[4].pixel[cpi]), float(frame.pixel[5].pixel[cpi]));
-        printf("    %6.4f %6.4f %6.4f\n", float(frame.pixel[6].pixel[cpi]), float(frame.pixel[7].pixel[cpi]), float(frame.pixel[8].pixel[cpi]));
-      }
+      //for (int cpi=0; cpi<CPI; cpi++) {
+      //  printf("  cpi %d: ", cpi);
+      //  printf(" %6.4f %6.4f %6.4f", float(frame.pixel[0].pixel[cpi]), float(frame.pixel[1].pixel[cpi]), float(frame.pixel[2].pixel[cpi]));
+      //  printf(" %6.4f %6.4f %6.4f", float(frame.pixel[3].pixel[cpi]), float(frame.pixel[4].pixel[cpi]), float(frame.pixel[5].pixel[cpi]));
+      //  printf(" %6.4f %6.4f %6.4f", float(frame.pixel[6].pixel[cpi]), float(frame.pixel[7].pixel[cpi]), float(frame.pixel[8].pixel[cpi]));
+      //}
+      printf(" %6.4f %6.4f %6.4f", float(frame.pixel[0].pixel[0]), float(frame.pixel[1].pixel[0]), float(frame.pixel[2].pixel[0]));
+      printf(" %6.4f %6.4f %6.4f", float(frame.pixel[3].pixel[0]), float(frame.pixel[4].pixel[0]), float(frame.pixel[5].pixel[0]));
+      printf(" %6.4f %6.4f %6.4f", float(frame.pixel[6].pixel[0]), float(frame.pixel[7].pixel[0]), float(frame.pixel[8].pixel[0]));
+      printf("\n");
       #endif
       #endif
     }

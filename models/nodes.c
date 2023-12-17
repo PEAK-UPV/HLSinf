@@ -312,7 +312,7 @@ int fn_get_model_input_from_node(int n) {
   if (n == -1) return -1;
   if (!aNode[n].valid) return -1;
   for (int i=0; i<aNode[n].num_inputs; i++) {
-    if ((!is_initializer(aNode[n].inputs[i])) && (!is_node_by_name(aNode[n].inputs[i]))) return i;
+    if ((!is_initializer(aNode[n].inputs[i])) && (!is_node_by_name(aNode[n].inputs[i]))) return get_model_input_id(aNode[n].inputs[i]);
   }
   return -1;
 }
@@ -753,7 +753,7 @@ void fn_add_host_device_nodes() {
 	    // we set the geometry of nn from n
 	    aNode[nn].I  = aNode[n].O;
 	    aNode[nn].HI = aNode[n].HO;
-	    aNode[nn].WO = aNode[n].WO;
+	    aNode[nn].WI = aNode[n].WO;
 	    aNode[nn].O  = aNode[nn].I;
 	    aNode[nn].HO = aNode[nn].HI;
 	    aNode[nn].WO = aNode[nn].WI;
@@ -764,22 +764,22 @@ void fn_add_host_device_nodes() {
         // this is an host-based node, if one of its childs is a HLSinf layer then we add a h2d node between both
         int list[100];
         int nc = fn_get_child_nodes(aNode[n].name, list);
-        if (nc != 0) {
-          int child = list[0];
+	for (int c = 0; c<nc; c++) {
+          int child = list[c];
           if (is_hlsinf(child)) {
             if (verbose) printf("  adding h2d between nodes %d (%s) and %d (%s)\n", n, aNode[n].name, child, aNode[child].name);
             // we need to add a d2c node in between
             char name[100];
             sprintf(name, "h2d_%0d", num_nodes);
             int nn = fn_add_node(name, (char*)"h2d");
-            // we link all nodes pointing to n to point now to nn
-            fn_relink_node_inputs(aNode[n].name, aNode[nn].name);
+            // the child node now points to nn
+	    fn_change_input_in_node(child, aNode[n].name, aNode[nn].name);
 	    // now we add a link between nn and n
 	    add_input_to_node(nn, aNode[n].name);
             // we set the geometry of nn from n
             aNode[nn].I  = aNode[n].O;
             aNode[nn].HI = aNode[n].HO;
-            aNode[nn].WO = aNode[n].WO;
+            aNode[nn].WI = aNode[n].WO;
             aNode[nn].O  = aNode[nn].I;
             aNode[nn].HO = aNode[nn].HI;
             aNode[nn].WO = aNode[nn].WI;
