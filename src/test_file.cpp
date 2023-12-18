@@ -27,9 +27,7 @@ int read_test_file(int *enable, int *from_files, int *cpu) {
             enable, from_files, cpu, &deterministic_input_values, &H, &W, &I, &O, &PT, &PB, &PL, &PR,
 	    &SH, &SW, &enable_relu, &relu_factor, &enable_stm, &enable_maxpooling, &enable_avgpooling, &enable_batch_norm, &enable_batch_norm_relu, &batch_norm_relu_factor, &enable_add, &apply_add_relu, &enable_shift, &dir_shift, &pos_shift,
 	    &enable_clipping, &min_clip, &max_clip, &enable_upsize, &upsize_factor);
-
  if (n != 32) return 1;
-
  // derived arguments
  if (!enable_upsize) upsize_factor = 1;
  rows = H;

@@ -10,22 +10,6 @@
 #include "conv2D.h"
 
 #ifdef DIRECT_CONV
-
-#ifdef PRUEBA_MUL_2
-conv_mul_t conv_op(conv_mul_t x0, conv_mul_t x1, conv_mul_t x2, conv_mul_t x3, conv_mul_t x4, conv_mul_t x5, conv_mul_t x6, conv_mul_t x7, conv_mul_t x8,
-                   w_t w0, w_t w1, w_t w2, w_t w3, w_t w4, w_t w5, w_t w6, w_t w7, w_t w8) 
-{
-  conv_mul_t r1;
-  conv_mul_t r2;
-
-  #pragma HLS BIND_op variable=r1 op=mul impl=fabric
-  r1 = (x0 * w0) + (x1 * w1) + (x2 * w2);
-  #pragma HLS BIND_op variable=r2 op=mul impl=dsp
-  r2 = (x3 * w3) + (x4 * w4) + (x5 * w5) + (x6 * w6) + (x7 * w7) + (x8 * w8);
-  return r1 + r2;
-}
-#endif
-
 // ----------------------------------------------------------------------------------------
 // mul: This function performs the multiplication of an input frame with the stored kernels
 // and sends the produced pixels. Before normal operation it receives its kernels
@@ -39,7 +23,12 @@ conv_mul_t conv_op(conv_mul_t x0, conv_mul_t x1, conv_mul_t x2, conv_mul_t x3, c
 //
 // This module is used in the Direct Convolution method
 //
-void mul(int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::stream<w_st> &k_in, hls::stream<conv_mul_st> &out) {
+#ifdef FAULT_DETECTION
+void mul(int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::stream<w_st> &k_in, hls::stream<conv_mul_st> &out, int foultTolerance, int &flag) {
+#endif
+#ifdef FAULT_CORRECTION
+void mul(int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::stream<w_st> &k_in, hls::stream<fc_mul_st> &in_correction, hls::stream<fc_add_st> &out, int foultTolerance, int &flag) {
+#endif
 
   #ifdef DEBUG_MUL
   printf("mul: start\n");
@@ -56,17 +45,25 @@ void mul(int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::str
   DO_PRAGMA(HLS ARRAY_PARTITION variable=sum dim=0 block factor=CPO)
 
   conv_mul_st p_out;
+  conv_mul_st d_out;
 
   int load_kernel = 0;
-  int num_iter = I_ITER * num_data_frames;
+  int num_iter = foultTolerance ? I_ITER * num_data_frames *2 : I_ITER * num_data_frames;
   int iter_load_kernel = 0;
+  int fallo = 0;
+  int i = 0;
+  int cpo_used = 0;
 
+#ifdef FAULT_DETECTION
   mul_loop_1:
-  for(int i = 0; i < num_iter; i++){
-    DO_PRAGMA(HLS loop_tripcount  min=1 max=W_REFERENCE*H_REFERENCE*I_REFERENCE/CPI)
+  while(i < num_iter){
+	DO_PRAGMA(HLS loop_tripcount  min=1 max=W_REFERENCE*H_REFERENCE*I_REFERENCE/CPI)
+
     #pragma HLS PIPELINE II=1
+
+	bool impar = foultTolerance ? i & 0x1 : false;
     load_kernel = (iter_load_kernel == 0);
-    if (load_kernel){
+    if (load_kernel  && !impar){
       kernel = k_in.read();
       #ifdef DEBUG_MUL
       //#ifdef DEBUG_VERBOSE
@@ -86,13 +83,14 @@ void mul(int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::str
     }
 
     mul_loop_2:
-    for(int i=0; i<CPO; i++){
+    for(int c=0; c<CPO; c++){
       DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO)
       #pragma HLS UNROLL
-      sum[i] = 0;
+      sum[c] = 0;
     }
 
-    data_in = in.read();
+    if(!impar) data_in = in.read();
+
     #ifdef DEBUG_MUL
     printf("mult: frame received:\n");
     for (int xx=0; xx<CPI; xx++) {
@@ -103,60 +101,7 @@ void mul(int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::str
     printf("\n");
     #endif
 
-#ifdef PRUEBA_MUL_2
-    for (int cpi = 0; cpi < CPI; cpi++) {
-      #pragma HLS UNROLL
-      for (int cpo=0; cpo<CPO; cpo++) {
-        #pragma HLS UNROLL
-        sum[cpo] += conv_op(data_in.pixel[0].pixel[cpi], data_in.pixel[1].pixel[cpi], data_in.pixel[2].pixel[cpi],
-                            data_in.pixel[3].pixel[cpi], data_in.pixel[4].pixel[cpi], data_in.pixel[5].pixel[cpi],
-                            data_in.pixel[6].pixel[cpi], data_in.pixel[7].pixel[cpi], data_in.pixel[8].pixel[cpi],
-                            kernel.pixel[cpo][cpi][0], kernel.pixel[cpo][cpi][1], kernel.pixel[cpo][cpi][2], 
-                            kernel.pixel[cpo][cpi][3], kernel.pixel[cpo][cpi][4], kernel.pixel[cpo][cpi][5], 
-                            kernel.pixel[cpo][cpi][6], kernel.pixel[cpo][cpi][7], kernel.pixel[cpo][cpi][8]);
-      }
-    }
-#else
     
-
-#ifdef PRUEBA_MUL
-    struct conv_mul_st2 {conv_mul_t pixel[CPO][CPI][9]};
-    struct conv_mul_st3 {conv_mul_t pixel[CPO][CPI];};
-    conv_mul_st2 x;
-    DO_PRAGMA(HLS ARRAY_PARTITION variable=x dim=0 complete)
-    conv_mul_st3 xx;
-    DO_PRAGMA(HLS ARRAY_PARTITION variable=xx dim=0 complete)
-    loop_mul_cpo:
-    for (int cpo=0; cpo<CPO; cpo = cpo + 1) {
-      #pragma HLS UNROLL
-      for (int cpi = 0; cpi < CPI; cpi++) {
-        #pragma HLS UNROLL
-        for (int j = 0; j < KH*KW; j++) {
-          #pragma HLS UNROLL
-          x.pixel[cpo][cpi][j] = data_in.pixel[j].pixel[cpi] * kernel.pixel[cpo][cpi][j];
-        }
-      }
-    }
-    for (int cpo=0; cpo<CPO; cpo = cpo + 1) {
-      #pragma HLS UNROLL
-      for (int cpi = 0; cpi < CPI; cpi++) {
-        #pragma HLS UNROLL
-        for (int j = 0; j < KH*KW; j++) {
-          #pragma HLS UNROLL
-          xx.pixel[cpo][cpi] += x.pixel[cpo][cpi][j];
-        }
-      }
-    }
-    for (int cpo=0; cpo<CPO; cpo = cpo + 1) {
-      #pragma HLS UNROLL
-      for (int cpi = 0; cpi < CPI; cpi++) {
-        #pragma HLS UNROLL
-        sum[cpo] += xx.pixel[cpo][cpi];
-      }
-    }
-
-
-#else
     loop_mul_cpi:
     for (int cpi=0; cpi<CPI; cpi++) {
       DO_PRAGMA(HLS loop_tripcount  min=1 max=CPI)
@@ -165,44 +110,25 @@ void mul(int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::str
       for (int j=0; j<KW*KH; j++) {
         DO_PRAGMA(HLS loop_tripcount  min=1 max=KW*KH)
         #pragma HLS UNROLL
-#ifdef DSP_OPTIMIZATION
-        loop_mul_cpo:
-        for (int cpo=0; cpo<CPO; cpo = cpo + 2) {
-	        DO_PRAGMA(HLS loop_tripcount min=1 max=CPO/2)
-          #pragma HLS UNROLL
-	        ap_int<27> op1;
-          op1.range(26, 18) = kernel.pixel[cpo][cpi][j];
-          op1.range(17, 0) = 0;
-	        ap_uint<27> op2;
-	        op2 = kernel.pixel[cpo+1][cpi][j];
-	        ap_int<45> result;
-          #pragma HLS BIND_op variable=result op=mul impl=dsp
-	        result = (op1 + op2) * data_in.pixel[j].pixel[cpi];
-	        sum[cpo] += result.range(33, 18);
-	        sum[cpo+1] += result.range(15, 0);
-	}
-#else
-	loop_mul_cpo:
+		loop_mul_cpo:
         for (int cpo=0; cpo<CPO; cpo++) {
           DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO)
           #pragma HLS UNROLL
 	        conv_mul_t x;
 	        #pragma HLS BIND_op variable = x op=mul impl=dsp
-	        x = data_in.pixel[j].pixel[cpi] * kernel.pixel[cpo][cpi][j];
+            cpo_used = foultTolerance ? (!impar ? cpo/2 : (cpo + CPO / 2) / 2 + (CPO / 4)) : cpo;
+	        x = data_in.pixel[j].pixel[cpi] * kernel.pixel[cpo_used][cpi][j];
 	        sum[cpo] += x;
-          //sum[cpo] += data_in.pixel[j].pixel[cpi] * kernel.pixel[cpo][cpi][j];
         }
-#endif
       }
     }
 
-#endif
-#endif
 
-    for(int i=0; i<CPO; i++){
+    for(int s=0; s<CPO; s++){
       DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO)
       #pragma HLS UNROLL
-      p_out.pixel[i] = sum[i];
+      p_out.pixel[s] = sum[s];
+//      p_out.pixel[s] = s==0 ? -1 : sum[s];
     }
     #ifdef DEBUG_MUL
     //#ifdef DEBUG_VERBOSE
@@ -212,10 +138,152 @@ void mul(int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::str
     printf("\n");
     //#endif
     #endif
-    out << p_out;
-    iter_load_kernel++;
-    if (iter_load_kernel == num_data_frames) iter_load_kernel = 0;
+
+    int check = 0;
+    if (foultTolerance){
+		loop_check_cpo:
+		for(int p=0; p<CPO; p+=2){
+		  DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO/2)
+		  #pragma HLS UNROLL
+		  if(p_out.pixel[p] != p_out.pixel[p+1]) check++;
+		}
+    }
+
+    //actualizar flag al valor de check
+    if (check) flag = check;
+
+	loop_update_data:
+	for(int c=0; c<CPO; c++){
+	   DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO)
+	   #pragma HLS UNROLL
+	   if ((c < CPO/2) && !impar && foultTolerance) d_out.pixel[c] = p_out.pixel[c*2];
+	   if ((c >= CPO/2) && impar && foultTolerance) d_out.pixel[c] = p_out.pixel[(c-CPO/2)*2];
+	   if (!foultTolerance) d_out.pixel[c] = p_out.pixel[c];
+	}
+
+	if(impar || !foultTolerance){
+//		if(i < 2){
+//			printf("\ndout con i(%d):\n", i);
+//			for(int c=0; c<CPO; c++){
+//				printf("mult: p_out.pixel[%d] = %6.2f  ", i, float(d_out.pixel[c]));
+//			}
+//
+//		}
+	 out << d_out;
+	 iter_load_kernel++;
+	 if (iter_load_kernel == num_data_frames) iter_load_kernel = 0;
+	}
+	i++;
   }
+#endif
+#ifdef FAULT_CORRECTION
+mul_loop_1:
+while(i < num_iter + 10){
+  DO_PRAGMA(HLS loop_tripcount  min=1 max=W_REFERENCE*H_REFERENCE*I_REFERENCE/CPI*2 + 10)
+  #pragma HLS PIPELINE II=1
+
+	bool impar = foultTolerance ? i & 0x1 : false;
+
+	if ((iter_load_kernel == 0) && !impar){
+	  kernel = k_in.read();
+	  #ifdef DEBUG_MUL
+	  #ifdef DEBUG_VERBOSE
+	  printf("MUL: kernel read\n");
+	  for(int i=0; i<CPI; i++){
+		for(int o=0; o<CPO; o++){
+		  printf("kernel cpi=%d cpo=%d\n", i, o);
+		  for (int p=0; p<9; p++){
+			printf(" %f ", float(kernel.pixel[o][i][p]));
+			if((p+1)%3==0)printf("\n");
+		  }
+		  printf("\n");
+		}
+	  }
+	  #endif
+	  #endif
+	}
+
+  mul_loop_2:
+  for(int a=0; a<CPO; a++){
+    DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO)
+    #pragma HLS UNROLL
+    sum[a] = 0;
+  }
+
+  if(!impar) data_in = in.read();
+
+  loop_mul_cpi:
+  for (int cpi=0; cpi<CPI; cpi++) {
+    DO_PRAGMA(HLS loop_tripcount  min=1 max=CPI)
+    #pragma HLS UNROLL
+    loop_mul_j:
+    for (int j=0; j<KW*KH; j++) {
+      DO_PRAGMA(HLS loop_tripcount  min=1 max=KW*KH)
+      #pragma HLS UNROLL
+		loop_mul_cpo:
+		for (int cpo = 0; cpo < CPO; cpo++) {
+			DO_PRAGMA(HLS loop_tripcount min=1 max=CPO)
+			#pragma HLS UNROLL
+	    	 cpo_used = foultTolerance ? (!impar ? cpo/2 : (cpo + CPO / 2) / 2 + (CPO / 4)) : cpo;
+	    	 sum[cpo] += data_in.pixel[j].pixel[cpi] * kernel.pixel[cpo_used][cpi][j];
+		}
+
+    }
+  }
+
+  for(int s=0; s<CPO; s++){
+    DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO)
+    #pragma HLS UNROLL
+    p_out.pixel[s] = sum[s];
+//      if(i < 2) {
+//    	  printf("i: %d | sum[%d] = %6.2f\n", i, s, sum[s]);
+//      }
+  }
+  #ifdef DEBUG_MUL
+  #ifdef DEBUG_VERBOSE
+  for(int i = 0;i<CPO;i++) {
+    printf("mult: p_out.pixel[%d] = %6.2f  ", i, float(p_out.pixel[i]));
+  }
+  printf("\n");
+  #endif
+  #endif
+
+  int check = 0;
+  if (foultTolerance){
+		loop_check_cpo:
+		for(int p=0; p<CPO; p+=2){
+		  DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO/2)
+		  #pragma HLS UNROLL
+		  if(p_out.pixel[p] != p_out.pixel[p+1]) check++;
+		}
+  }
+
+  //actualizar flag al valor de check
+  if (check) {flag = check;}
+
+	loop_update_data:
+	for(int c=0; c<CPO; c++){
+	   DO_PRAGMA(HLS loop_tripcount  min=1 max=CPO)
+	   #pragma HLS UNROLL
+	   if ((c < CPO/2) && !impar && foultTolerance) d_out.pixel[c] = p_out.pixel[c*2];
+	   if ((c >= CPO/2) && impar && foultTolerance) d_out.pixel[c] = p_out.pixel[(c-CPO/2)*2];
+	   if (!foultTolerance) d_out.pixel[c] = p_out.pixel[c];
+	}
+
+	if(impar || !foultTolerance){
+//		if(i < 2){
+//			printf("\ndout con i(%d):\n", i);
+//			for(int c=0; c<CPO; c++){
+//				printf("mult: p_out.pixel[%d] = %6.2f  ", i, float(d_out.pixel[c]));
+//			}
+//
+//		}
+	 out << d_out;
+	 iter_load_kernel++;
+	 if (iter_load_kernel == num_data_frames) iter_load_kernel = 0;
+	}
+	i++;
+#endif
 
   #ifdef DEBUG_MUL
   printf("mul: end\n");

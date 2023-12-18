@@ -114,7 +114,7 @@ void k_conv2D(read_block_t *ptr_data,
 	    int apply_add_relu,
             #endif
             int min_clip, int max_clip, int dir_shift, int pos_shift, int upsize_factor, int write_to_weight_buffer, int read_from_weight_buffer, int first_row_weight_buffer,
-			int read_from_mem, int read_from_b0, int read_from_b1, int write_to_mem, int write_to_b0, int write_to_b1) {
+			int read_from_mem, int read_from_b0, int read_from_b1, int write_to_mem, int write_to_b0, int write_to_b1, int foultTolerance, int *error) {
 
 	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_data         depth=DATA_IN_PORT_DEPTH    offset=slave bundle=gmem)
     #ifdef DIRECT_CONV
@@ -132,6 +132,7 @@ void k_conv2D(read_block_t *ptr_data,
     #endif
     DO_PRAGMA(HLS INTERFACE m_axi port=ptr_bias         depth=BIAS_PORT_DEPTH       offset=slave bundle=gmem2)
 	DO_PRAGMA(HLS INTERFACE m_axi port=ptr_out          depth=DATA_OUT_PORT_DEPTH   offset=slave bundle=gmem3)
+	DO_PRAGMA(HLS INTERFACE m_axi port=error  offset=slave bundle=gmem7)
 
 	DO_PRAGMA(HLS shared variable=I)
 	DO_PRAGMA(HLS shared variable=O)
@@ -143,6 +144,7 @@ void k_conv2D(read_block_t *ptr_data,
 	DO_PRAGMA(HLS shared variable=rows)
 	DO_PRAGMA(HLS shared variable=H)
 	DO_PRAGMA(HLS shared variable=W)
+	DO_PRAGMA(HLS shared variable=foultTolerance)
 	DO_PRAGMA(HLS stable variable=I)
 	DO_PRAGMA(HLS stable variable=O)
 	DO_PRAGMA(HLS stable variable=I_ITER)
@@ -333,7 +335,7 @@ void k_conv2D(read_block_t *ptr_data,
     read_batch_norm(offset_bias, b_ptr, out_read_batch_norm);
     #endif
     #ifdef DIRECT_CONV
-    direct_conv(rows, W, PT, PB, PL, PR, SH, SW, num_output_conv_pixels, I_ITER, out_mux, out_read_kernel_3, out_read_bias, out_conv);
+    direct_conv(rows, W, PT, PB, PL, PR, SH, SW, num_output_conv_pixels, I_ITER, out_mux, out_read_kernel_3, out_read_bias, out_conv, foultTolerance, *error);
     #endif
     #ifdef DWS_CONV
     dws_conv(rows, W, PT, PB, PL, PR, SH, SW, num_output_conv_pixels, I_ITER, out_mux, out_read_kernel_dw, out_read_kernel_pw, out_read_bias, out_conv);

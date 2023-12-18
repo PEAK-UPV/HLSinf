@@ -30,7 +30,7 @@
 // -----------------------------------------------------------------------------------------------------------
 
 //#define HLSINF_1_15
-//#define HLSINF_1_0  // U200, 4x4,  FP32:             DIRECT_CONV, RELU, STM, CLIPPING,        POOLING, BN, ADD, UPSIZE
+#define HLSINF_1_0  // U200, 4x4,  FP32:             DIRECT_CONV, RELU, STM, CLIPPING,        POOLING, BN, ADD, UPSIZE
 //#define HLSINF_1_1  // U200, 8x8,  MIXED PRECISSION: DIRECT_CONV, RELU,      CLIPPING, SHIFT, POOLING, BN, ADD, UPSIZE
 //#define HLSINF_1_2  // U200, 16x8, MIXED PRECISSION: DIRECT_CONV, RELU,      CLIPPING, SHIFT, POOLING, BN, ADD, UPSIZE
 //#define HLSINF_1_3  // U200, 8x4,  FP32:             DIRECT_CONV, RELU, STM, CLIPPING,        POOLING, BN, ADD, UPSIZE
@@ -79,6 +79,8 @@
 #define USE_RELU
 #define USE_CLIPPING
 #define FAULT_DETECTION
+//#define OPENCL_TEST
+//#define FAULT_CORRECTION
 //#define USE_SHIFT
 #define USE_POOLING
 #define USE_BATCH_NORM
@@ -868,52 +870,52 @@
 #endif
 
 // Configuration 1.19: U200, 4x4, FP32: DIRECT_CONV, RELU, POOLING, ADD, ADD_RELU, BN, BN_RELU, UPSIZE
-#ifdef HLSINF_1_19
-#define ALVEO_U200
-#define DIRECT_CONV
-#define USE_RELU
-//#define USE_CLIPPING
-//#define USE_SHIFT
-#define USE_POOLING
-#define USE_BATCH_NORM
-#define USE_BATCH_NORM_RELU
-//#define USE_STM
-#define USE_ADD
-#define USE_ADD_RELU
-#define USE_UPSIZE
-#define PRUEBA_MUL_2
-#define FLOAT_DATA_TYPE               // we use float numbers as input data
-#define CPI                          4 
-#define CPO                          4
-#define LOG2_CPO                     2
-#define WMAX                      1024  
-#define HMAX                       256
-#define READ_BURST_SIZE             16
-#define STREAMS_DEPTH               16
-#define DATA_BUFFER_SIZE         16384 // 32 rows x 32 cols x (512/CPI) pixels_in
-#define WEIGHT_BUFFER_SIZE        4096 
-#define EPSILON_VALUE           0.0001
-#define MIN_DATA_TYPE_VALUE   -9999999
-#define READ_BLOCK_SIZE             16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
-#define WRITE_BLOCK_SIZE            16   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
-#define din_t                    float
-#define conv_cvt_t               float 
-#define conv_mul_t               float
-#define relu_t                   float
-#define stm_t                    float
-#define pool_cvt_t               float
-#define pool_t                   float
-#define bn_t                     float
-#define add_t                    float
-#define w_t                      float
-#define b_t                      float
-#define conv_t                   float
-#define dout_t                   float
-#define read_bias_t              float
-#define read_data_t              float
-#define read_filter_t            float
-#define write_data_t             float
-#endif
+//#ifdef HLSINF_1_19
+//#define ALVEO_U200
+//#define DIRECT_CONV
+//#define USE_RELU
+////#define USE_CLIPPING
+////#define USE_SHIFT
+//#define USE_POOLING
+//#define USE_BATCH_NORM
+//#define USE_BATCH_NORM_RELU
+////#define USE_STM
+//#define USE_ADD
+//#define USE_ADD_RELU
+//#define USE_UPSIZE
+//#define PRUEBA_MUL_2
+//#define FLOAT_DATA_TYPE               // we use float numbers as input data
+//#define CPI                          4
+//#define CPO                          4
+//#define LOG2_CPO                     2
+//#define WMAX                      1024
+//#define HMAX                       256
+//#define READ_BURST_SIZE             16
+//#define STREAMS_DEPTH               16
+//#define DATA_BUFFER_SIZE         16384 // 32 rows x 32 cols x (512/CPI) pixels_in
+//#define WEIGHT_BUFFER_SIZE        4096
+//#define EPSILON_VALUE           0.0001
+//#define MIN_DATA_TYPE_VALUE   -9999999
+//#define READ_BLOCK_SIZE             16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+//#define WRITE_BLOCK_SIZE            16   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+//#define din_t                    float
+//#define conv_cvt_t               float
+//#define conv_mul_t               float
+//#define relu_t                   float
+//#define stm_t                    float
+//#define pool_cvt_t               float
+//#define pool_t                   float
+//#define bn_t                     float
+//#define add_t                    float
+//#define w_t                      float
+//#define b_t                      float
+//#define conv_t                   float
+//#define dout_t                   float
+//#define read_bias_t              float
+//#define read_data_t              float
+//#define read_filter_t            float
+//#define write_data_t             float
+//#endif
 
 // Configuration 1.20: U200, 16x16, API<8>: DIRECT_CONV, RELU, POOLING, ADD, ADD_RELU, UPSIZE
 #ifdef HLSINF_1_20
@@ -1367,6 +1369,11 @@ struct read_bias_st {read_bias_t     pixel[CPO];};
 struct read_data_st {read_data_t     pixel[CPI];};
 struct read_filter_st {read_filter_t pixel[CPO][CPI][9];};
 struct write_data_st  {write_data_t  pixel[CPO];};
+struct fc_mul_st   {int 	    addr;
+					w_st 	    kernel;
+					conv_cvt_st data;};
+struct fc_add_st   {int 	    addr;
+					conv_cvt_st data;};
 
 // -----------------------------------------------------------------------------------------------------------
 // Read and write block struct
@@ -1416,7 +1423,7 @@ extern "C" void k_conv2D(read_block_t *ptr_data,
                          int min_clip, int max_clip, 
                          int dir_shift, int pos_shift, int upsize_factor,
                          int write_to_weight_buffer, int read_from_weight_buffer, int first_row_weight_buffer,
- 						 int read_from_mem, int read_from_b0, int read_from_b1, int write_to_mem, int write_to_b0, int write_to_b1);
+ 						 int read_from_mem, int read_from_b0, int read_from_b1, int write_to_mem, int write_to_b0, int write_to_b1, int foultTolerance, int* error);
 
 void read_bias                    (int offset_bias, read_bias_st *b_ptr, hls::stream<b_st> &out);
 void read_batch_norm              (int offset_batchnorm, bnp_st *b_ptr, hls::stream<bnp_st> &out);
@@ -1438,10 +1445,16 @@ void pooling                      (int H, int W, int enable_maxpooling, int enab
 void batch_norm                   (int enable_batch_norm, int num_pixels, int enable_relu, float relu_factor, hls::stream<pool_st> &in, hls::stream<bnp_st> &bn_values, hls::stream<dout_st> &out);
 template <class in1_st, class in2_st, class out_st> void add_data(int enable_add, int num_pixels, int apply_relu, hls::stream<in1_st> &in_r, hls::stream<in2_st> &in_stm, hls::stream<out_st> &out);
 void padding                      (int H, int W, int PT, int PB, int PL, int PR, int I_ITER, hls::stream<din_st> &in, hls::stream<din_st> &out);
-void add                          (int num_pixels, int I_ITER, hls::stream<conv_mul_st> &in, hls::stream<b_st> &b_in, hls::stream<conv_st> &out);
 #ifdef DIRECT_CONV
-void direct_conv                  (int H, int W, int PT, int PB, int PL, int PR, int SH, int SW, int num_output_conv_pixels, int I_ITER, hls::stream<din_st> &in, hls::stream<w_st> &k_in, hls::stream<b_st> &b_in, hls::stream<conv_st> &out);
-void mul                          (int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::stream<w_st> &k_in, hls::stream<conv_mul_st> &out);
+void direct_conv                  (int H, int W, int PT, int PB, int PL, int PR, int SH, int SW, int num_output_conv_pixels, int I_ITER, hls::stream<din_st> &in, hls::stream<w_st> &k_in, hls::stream<b_st> &b_in, hls::stream<conv_st> &out, int foultTolerance, int &errorFlag);
+#ifdef FAULT_DETECTION
+void mul                          (int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::stream<w_st> &k_in, hls::stream<conv_mul_st> &out, int foultTolerance, int &flag);
+void add                          (int num_pixels, int I_ITER, hls::stream<conv_mul_st> &in, hls::stream<b_st> &b_in, hls::stream<conv_st> &out);
+#endif
+#ifdef FAULT_CORRECTION
+void add                          (int num_pixels, int I_ITER, hls::stream<fc_add_st> &in, hls::stream<b_st> &b_in, hls::stream<conv_st> &out);
+void mul                          (int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::stream<w_st> &k_in, hls::stream<fc_mul_st> &in_correction, hls::stream<fc_add_st> &out, int foultTolerance, int &flag);
+#endif
 #endif
 #ifdef DWS_CONV
 void dws_conv(int H, int W, int PT, int PB, int PL, int PR, int SH, int SW, int num_output_conv_pixels, int I_ITER, hls::stream<din_st> &in, hls::stream<w_dw_st> &k_dw_in, hls::stream<w_pw_st> &k_pw_in, hls::stream<b_st> &b_in, hls::stream<conv_st> &out);

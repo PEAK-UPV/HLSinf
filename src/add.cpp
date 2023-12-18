@@ -21,7 +21,12 @@
 //   b_in  : input stream bias
 //   out   : output stream
 //
+#ifdef FAULT_DETECTION
 void add(int num_pixels, int I_ITER, hls::stream<conv_mul_st> &in, hls::stream<b_st> &b_in, hls::stream<conv_st> &out) {
+#endif
+#ifdef FAULT_CORRECTION
+void add(int num_pixels, int I_ITER, hls::stream<fc_add_st> &in, hls::stream<b_st> &b_in, hls::stream<conv_st> &out) {
+#endif
 
   #ifdef DEBUG_ADD
   printf("add: start\n");
@@ -35,12 +40,12 @@ void add(int num_pixels, int I_ITER, hls::stream<conv_mul_st> &in, hls::stream<b
 
   // Buffer for all data and CPO channels
   static conv_st buff_o_channels[WMAX*HMAX];
-  DO_PRAGMA(HLS AGGREGATE variable=buffer_o_channels)
+  DO_PRAGMA(HLS AGGREGATE variable=buff_o_channels)
   #ifdef ALVEO_U200
-  DO_PRAGMA(HLS bind_storage variable=buffer_o_channels type=ram_t2p impl=uram)
+  DO_PRAGMA(HLS bind_storage variable=buff_o_channels type=ram_t2p impl=uram)
   #endif
   #ifdef ALVEO_U280
-  DO_PRAGMA(HLS bind_storage variable=buffer_o_channels type=ram_t2p impl=uram)
+  DO_PRAGMA(HLS bind_storage variable=buff_o_channels type=ram_t2p impl=uram)
   #endif
 
 

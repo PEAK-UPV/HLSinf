@@ -110,6 +110,8 @@ int GI = I_SIM/CPI;				 // number of groups for input channels
 int GO = O_SIM/CPO;				 // number of groups for output channels
 char *input_data_file;           // input data file with configurations to test
 int deterministic_input_values;  // whether input data is randomly generated or not (deterministic needed in co-simulation)
+int enable_fault_tolerance = 0;  // enables fault tolerance mode
+int flag_error = 0;				 // Integer to knowing if there is any fault in multiplication opetations
 
 // buffers
 read_data_t *data_in;                  // Input data buffer (format I x W x H)
@@ -147,6 +149,7 @@ cl::Buffer *buffer_k[MAX_CONVS];              // Conv kernel buffers
 cl::Buffer *buffer_bias[MAX_CONVS];           // Conv bias buffers
 cl::Buffer *buffer_k_dw[MAX_CONVS];           // Conv kernel buffers (deepwise)
 cl::Buffer *buffer_k_pw[MAX_CONVS];           // Conv kernel buffers (pointwise)
+cl::Buffer *intToDevice;					  // Error Flag
 // DDR assignment
 cl_mem_ext_ptr_t data_in_ddr;                 // input data buffer
 cl_mem_ext_ptr_t data_in_add_ddr;             // input data add buffer
@@ -307,6 +310,8 @@ void compute(int *enable, int *from_file, int *cpu, int *retval) {
 	    	printf("\n");
 	     }
 	     
+	     printf("compute terminated\n");
+	     printf("fault tolerance mode: %d -> faults processing the data: %d\n", enable_fault_tolerance, flag_error);
 
          #ifdef DEBUG_CPU
 	     print_output(0);
