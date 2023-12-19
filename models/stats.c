@@ -82,5 +82,5 @@ void fn_stop_timer() {}
  * This function returns the timer obtained
  * 
  */
-unsined long long fn_get_timer() { return 0; }
+unsigned long long fn_get_timer() { return 0; }
 

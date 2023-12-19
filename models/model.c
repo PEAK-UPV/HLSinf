@@ -102,7 +102,7 @@ void fn_process_input_line(char *line, size_t len) {
   int offset = 0;
 
   if (verbose) {
-    char sz_line[200];
+    char sz_line[201];
     if (strlen(line) < 200) printf("  line: %s", line);  // the line has already a \n
     else {
       strncpy(sz_line, line, 200);

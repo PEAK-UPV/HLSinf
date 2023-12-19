@@ -3,10 +3,12 @@
  *
  */
 
+#ifdef RUNTIME_SUPPORT
 #include <hls_stream.h>
 #include <hls_math.h>
 #include "CL/cl_ext_xilinx.h"
 #include "xcl2.hpp"
+#endif
 
 // defines
 #define MAX_INITIALIZERS    10000
@@ -20,9 +22,11 @@ struct st_initializer {
   int *dimensions;
   char data_type[20];  // "float32", ...
   float *data;
+  #ifdef RUNTIME_SUPPORT
   // info for running
   cl_mem_ext_ptr_t buffer_ddr;
   cl::Buffer *buffer; 
+  #endif
 };
 
 // global variables

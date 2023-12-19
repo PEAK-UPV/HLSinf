@@ -2,6 +2,15 @@ In this folder you will find the parser for ONNX models. This parser will read O
 files and will generate an HLSinf model ready to be run by HLSinf. The parser is able also
 to run the model on a system with HLSinf (even with no HLSinf support).
 
+The parser can be compiled with support to either convert models and run models or to only convert models.
+To compile for the support of only model conversion you can use the script:
+
+./compile_convert.sh
+
+To have support both to convert modules and run them you can compile the whole application by:
+
+./compile.sh
+
 The whole process is divided in three steps. First, an ONNX model is parsed and data is extracted
 and a text file is generated. With this generated file a new text file is generated with the needed
 optimizations and adaptations to be used in a system with HLSinf. Different configurations and optimizations
@@ -83,6 +92,7 @@ The options are described as follows:
   -v                    Convert/Run in verbose mode
   -i                    Set input file name to convert or to run
   -o                    Set output file name to write the generated model
+  -t                    Get timing statistics for run mode
 
 Every HLSinf version can use a subset of options, since not all optimizations are included in all HLSinf versions. Here is a list
 of options applicable to current HLSinf versions:

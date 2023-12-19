@@ -3,10 +3,12 @@
  *
  */
 
+#ifdef RUNTIME_SUPPORT
 #include <hls_stream.h>
 #include <hls_math.h>
 #include "CL/cl_ext_xilinx.h"
 #include "xcl2.hpp"
+#endif
 
 // defines
 #define MAX_NODES         10000
@@ -56,8 +58,10 @@ struct st_node {
  char *keyword;
  int run_order;
  float *data;
+ #ifdef RUNTIME_SUPPORT
  cl_mem_ext_ptr_t buffer_ddr;
  cl::Buffer *buffer;
+ #endif
  // parameters for statistics
  int num_runs;
  unsigned long long accumulated_runtime;

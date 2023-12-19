@@ -11,6 +11,7 @@
 #include<string.h>
 
 #include "in_out.h"
+#include "utils.h"
 
 // global variables
 int               num_inputs;
@@ -25,7 +26,8 @@ struct st_output  aOutput[MAX_OUTPUTS];
  * an argument is an input to the model
  */
 int is_model_input(char *name) {
-  return !strcmp(name, "data");    // TODO
+  for (int i=0; i<num_inputs; i++) if (aInput[i].valid) if (!strcmp(aInput[i].name, name)) return true;
+  return false;
 }
 
 /*

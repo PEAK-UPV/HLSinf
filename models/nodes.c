@@ -683,23 +683,23 @@ void fn_add_host_device_nodes() {
     if (aInput[i].valid) {
       int n = fn_get_first_node(aInput[i].name);
       if (n != -1) {
-	if (is_hlsinf(n)) {
+	      if (is_hlsinf(n)) {
           // a first hlsinf node, we add a h2d node
-	  char name[100];
-	  sprintf(name, "h2d_%0d", num_nodes);
-	  int nn = fn_add_node(name, (char*)"h2d");
-	  // we add the input to the nn node
-	  add_input_to_node(nn, aInput[i].name);
-	  // we change the input data to the n node
-	  fn_change_input_in_node(n, aInput[i].name, name);
-	  // we set the geometry of n to nn
-	  aNode[nn].I  = aNode[n].I;
-	  aNode[nn].HI = aNode[n].HI;
-	  aNode[nn].WI = aNode[n].WI;
-	  aNode[nn].O  = aNode[nn].I;
-	  aNode[nn].HO = aNode[nn].HO;
-	  aNode[nn].WO = aNode[nn].WO;
-	}
+	        char name[100];
+	        sprintf(name, "h2d_%0d", num_nodes);
+	        int nn = fn_add_node(name, (char*)"h2d");
+	        // we add the input to the nn node
+	        add_input_to_node(nn, aInput[i].name);
+	        // we change the input data to the n node
+	        fn_change_input_in_node(n, aInput[i].name, name);
+	        // we set the geometry of n to nn
+	        aNode[nn].I  = aNode[n].I;
+	        aNode[nn].HI = aNode[n].HI;
+	        aNode[nn].WI = aNode[n].WI;
+	        aNode[nn].O  = aNode[nn].I;
+	        aNode[nn].HO = aNode[nn].HO;
+	        aNode[nn].WO = aNode[nn].WO;
+	      }
       }
     }
   }
@@ -709,23 +709,23 @@ void fn_add_host_device_nodes() {
     if (aOutput[o].valid) {
       int n = fn_get_last_node(aOutput[o].name);
       if (n != -1) {
-	if (is_hlsinf(n)) {
+	      if (is_hlsinf(n)) {
           // a last hlsinf node, we add a d2h node
-	  char name[100];
-	  sprintf(name, "d2h_%0d", num_nodes);
-	  int nn = fn_add_node(name, (char*)"d2h");
-	  // we add the link from nn to n
-	  add_input_to_node(nn, aNode[n].name);
-	  // we change the output
-	  fn_change_output_model_name(o, aNode[nn].name);
-	  // we set the geometry of n to nn
+	        char name[100];
+	        sprintf(name, "d2h_%0d", num_nodes);
+	        int nn = fn_add_node(name, (char*)"d2h");
+	        // we add the link from nn to n
+	        add_input_to_node(nn, aNode[n].name);
+	        // we change the output
+	        fn_change_output_model_name(o, aNode[nn].name);
+	        // we set the geometry of n to nn
           aNode[nn].I  = aNode[n].O;
           aNode[nn].HI = aNode[n].HO;
           aNode[nn].WI = aNode[n].WO;
           aNode[nn].O  = aNode[nn].I;
           aNode[nn].HO = aNode[nn].HO;
           aNode[nn].WO = aNode[nn].WO;
-	}
+	      }
       }
     }
   }
@@ -734,60 +734,74 @@ void fn_add_host_device_nodes() {
   for (int n=0; n < num_nodes; n++) {
     if (aNode[n].valid) {
       if (is_hlsinf(n)) {
-	// this is an hlsinf node, if one of its childs is a non-HLSinf layer and is not a d2h node then
-	// we add a d2h node between both
-	int list[100];
-	int nc = fn_get_child_nodes(aNode[n].name, list);
-	if (nc != 0) {
-	  int child = list[0];
-	  if (!is_d2h(child) && !is_hlsinf(child)) {
-	    if (verbose) printf("  adding d2h between nodes %d (%s) and %d (%s)\n", n, aNode[n].name, child, aNode[child].name);
+	      // this is an hlsinf node, if one of its childs is a non-HLSinf layer and is not a d2h node then
+	      // we add a d2h node between both
+	      int list[100];
+	      int nc = fn_get_child_nodes(aNode[n].name, list);
+	      if (nc != 0) {
+	        int child = list[0];
+	        if (!is_d2h(child) && !is_hlsinf(child)) {
+	          if (verbose) printf("  adding d2h between nodes %d (%s) and %d (%s)\n", n, aNode[n].name, child, aNode[child].name);
             // we need to add a d2c node in between
-	    char name[100];
-	    sprintf(name, "d2h_%0d", num_nodes);
-	    int nn = fn_add_node(name, (char*)"d2h");
-	    // we link all nodes pointing to n to point now to nn
-	    fn_relink_node_inputs(aNode[n].name, aNode[nn].name);
-	    // we add a link between nn and n
-	    add_input_to_node(nn, aNode[n].name);
-	    // we set the geometry of nn from n
-	    aNode[nn].I  = aNode[n].O;
-	    aNode[nn].HI = aNode[n].HO;
-	    aNode[nn].WI = aNode[n].WO;
-	    aNode[nn].O  = aNode[nn].I;
-	    aNode[nn].HO = aNode[nn].HI;
-	    aNode[nn].WO = aNode[nn].WI;
-	  }
-	}
+	          char name[100];
+	          sprintf(name, "d2h_%0d", num_nodes);
+	          int nn = fn_add_node(name, (char*)"d2h");
+	          // we link all nodes pointing to n to point now to nn
+	          fn_relink_node_inputs(aNode[n].name, aNode[nn].name);
+	          // we add a link between nn and n
+	          add_input_to_node(nn, aNode[n].name);
+	          // we set the geometry of nn from n
+	          aNode[nn].I  = aNode[n].O;
+	          aNode[nn].HI = aNode[n].HO;
+	          aNode[nn].WI = aNode[n].WO;
+	          aNode[nn].O  = aNode[nn].I;
+	          aNode[nn].HO = aNode[nn].HI;
+	          aNode[nn].WO = aNode[nn].WI;
+	        }
+	      } 
       }
+    
       if (!is_hlsinf(n) && !is_h2d(n) && !is_d2h(n)) {
-        // this is an host-based node, if one of its childs is a HLSinf layer then we add a h2d node between both
+        // this is a host-based node, if one of its childs is a HLSinf layer then we add a h2d node between both
+        // We annotate the first h2d we put so in the case more HLSinf childs are found they will share the same h2d node
+        int h2d_already_placed = false;
+        int h2d_node_placed = -1; 
         int list[100];
         int nc = fn_get_child_nodes(aNode[n].name, list);
-	for (int c = 0; c<nc; c++) {
+	      for (int c = 0; c<nc; c++) {
           int child = list[c];
           if (is_hlsinf(child)) {
-            if (verbose) printf("  adding h2d between nodes %d (%s) and %d (%s)\n", n, aNode[n].name, child, aNode[child].name);
-            // we need to add a d2c node in between
-            char name[100];
-            sprintf(name, "h2d_%0d", num_nodes);
-            int nn = fn_add_node(name, (char*)"h2d");
-            // the child node now points to nn
-	    fn_change_input_in_node(child, aNode[n].name, aNode[nn].name);
-	    // now we add a link between nn and n
-	    add_input_to_node(nn, aNode[n].name);
-            // we set the geometry of nn from n
-            aNode[nn].I  = aNode[n].O;
-            aNode[nn].HI = aNode[n].HO;
-            aNode[nn].WI = aNode[n].WO;
-            aNode[nn].O  = aNode[nn].I;
-            aNode[nn].HO = aNode[nn].HI;
-            aNode[nn].WO = aNode[nn].WI;
+            // if we already put a h2d node then we reuse it
+            if (h2d_already_placed) {
+              // the child will simply point to the h2d node
+              fn_change_input_in_node(child, aNode[n].name, aNode[h2d_node_placed].name);
+            } else {
+              if (verbose) printf("  adding h2d between nodes %d (%s) and %d (%s)\n", n, aNode[n].name, child, aNode[child].name);
+              // we need to add a d2c node in between
+              char name[100];
+              sprintf(name, "h2d_%0d", num_nodes);
+              int nn = fn_add_node(name, (char*)"h2d");
+              // the child node now points to nn
+	            fn_change_input_in_node(child, aNode[n].name, aNode[nn].name);
+	            // now we add a link between nn and n
+	            add_input_to_node(nn, aNode[n].name);
+              // we set the geometry of nn from n
+              aNode[nn].I  = aNode[n].O;
+              aNode[nn].HI = aNode[n].HO;
+              aNode[nn].WI = aNode[n].WO;
+              aNode[nn].O  = aNode[nn].I;
+              aNode[nn].HO = aNode[nn].HI;
+              aNode[nn].WO = aNode[nn].WI;
+              //
+              h2d_already_placed = true;
+              h2d_node_placed = nn;
+            }
           }
         }
       }
     }
   }
+  //
   if (verbose) printf("  completed\n");
 }
 

@@ -325,7 +325,7 @@ void k_conv2D(read_block_t *ptr_data,
     read_data_channels_gihwcpi(read_pixels, offset_read_data_channel, I_ITER, offset_data_in_group_cpi, ptr_data, out_read_data, enable_read);
     buffer0(num_accesses_b0, read_b0, read_from_input, write_b0, first_buffer_write_address, out_read_data, out_demux_0, out_buffer0);
     buffer1(num_accesses_b1, read_b1, write_b1, first_buffer_write_address, out_demux_1, out_buffer1);
-	mux(mux_accesses, mux_sel, out_buffer0, out_buffer1, out_mux);
+	  mux(mux_accesses, mux_sel, out_buffer0, out_buffer1, out_mux);
     #ifdef USE_ADD
     read_input_add_gihwcpi(read_pixels_add, o_iter_read_add_offset, ptr_data_add, out_read_data_add, enable_add);
     #endif

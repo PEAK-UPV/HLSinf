@@ -4,10 +4,12 @@
  * This file includes all the support functions related to the FPGA device
  */
 
+#ifdef RUNTIME_SUPPORT
 #include <hls_stream.h>
 #include <hls_math.h>
 #include "CL/cl_ext_xilinx.h"
 #include "xcl2.hpp"
+
 
 #include "runner.h"
 #include "nodes.h"
@@ -441,5 +443,7 @@ void fn_run_node_on_fpga(int n) {
   }
     
 }
+
+#endif
 
 

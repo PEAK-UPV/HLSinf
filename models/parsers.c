@@ -19,8 +19,6 @@
 #include "model.h"
 #include "in_out.h"
 
-//int step=0;
-
 int fn_detect_pattern(int n, char *type0, char *type1, char *type2, char *type3, char *type4, int *n0, int *n1, int *n2, int *n3, int *n4) {
 
   // printf("detect: %d -> %s %s %s %s %s : current type %s\n", n, type0, type1, type2, type3, type4, aNode[n].type);
@@ -39,8 +37,8 @@ int fn_detect_pattern(int n, char *type0, char *type1, char *type2, char *type3,
   } else {
     for (int c=0; c<num_childs; c++) {
       if (fn_detect_pattern(list[c], type1, type2, type3, type4, NULL, n1, n2, n3, n4, NULL)) {
-	*n0 = n;
-	return true;
+	      *n0 = n;
+	      return true;
       }
     }
   }
@@ -49,16 +47,16 @@ int fn_detect_pattern(int n, char *type0, char *type1, char *type2, char *type3,
 
 void fn_merge_nodes(int n0, int n1, int n2, int n3, int n4, char *keyword) {
 
-  int conv_layer = is_conv(n0) ? n0 : is_conv(n1) ? n1 : is_conv(n2) ? n2 : is_conv(n3) ? n3 : is_conv(n4) ? n4 : -1;
-  int relu_layer = is_relu(n0) ? n0 : is_relu(n1) ? n1 : is_relu(n2) ? n2 : is_relu(n3) ? n3 : is_relu(n4) ? n4 : -1;
-  int maxpool_layer = is_maxpool(n0) ? n0 : is_maxpool(n1) ? n1 : is_maxpool(n2) ? n2 : is_maxpool(n3) ? n3 : is_maxpool(n4) ? n4 : -1;
-  int bn_layer = is_bn(n0) ? n0 : is_bn(n1) ? n1 : is_bn(n2) ? n2 : is_bn(n3) ? n3 : is_bn(n4) ? n4 : -1;
-  int add_layer = is_add(n0) ? n0 : is_add(n1) ? n1 : is_add(n2) ? n2 : is_add(n3) ? n3 : is_add(n4) ? n4 : -1;
-  int merging_conv = conv_layer != -1;
-  int merging_relu = relu_layer != -1;
-  int merging_bn = bn_layer != -1;
-  int merging_maxpool = maxpool_layer != -1;
-  int merging_add = add_layer != -1;
+  int conv_layer       = is_conv(n0) ? n0 : is_conv(n1) ? n1 : is_conv(n2) ? n2 : is_conv(n3) ? n3 : is_conv(n4) ? n4 : -1;
+  int relu_layer       = is_relu(n0) ? n0 : is_relu(n1) ? n1 : is_relu(n2) ? n2 : is_relu(n3) ? n3 : is_relu(n4) ? n4 : -1;
+  int maxpool_layer    = is_maxpool(n0) ? n0 : is_maxpool(n1) ? n1 : is_maxpool(n2) ? n2 : is_maxpool(n3) ? n3 : is_maxpool(n4) ? n4 : -1;
+  int bn_layer         = is_bn(n0) ? n0 : is_bn(n1) ? n1 : is_bn(n2) ? n2 : is_bn(n3) ? n3 : is_bn(n4) ? n4 : -1;
+  int add_layer        = is_add(n0) ? n0 : is_add(n1) ? n1 : is_add(n2) ? n2 : is_add(n3) ? n3 : is_add(n4) ? n4 : -1;
+  int merging_conv     = conv_layer != -1;
+  int merging_relu     = relu_layer != -1;
+  int merging_bn       = bn_layer != -1;
+  int merging_maxpool  = maxpool_layer != -1;
+  int merging_add      = add_layer != -1;
   int last_merged_node = (n1==-1)?n0:(n2==-1)?n1:(n3==-1)?n2:(n4==-1)?n3:n4;
 
   // new node
@@ -109,10 +107,10 @@ void fn_merge_nodes(int n0, int n1, int n2, int n3, int n4, char *keyword) {
   fn_relink_node_inputs(get_node_name(n4), get_node_name(n));
 
   // parameters for HLSinf layer
-  aNode[n].has_conv = merging_conv;
-  aNode[n].has_relu = merging_relu;
-  aNode[n].has_bn   = merging_bn;
-  aNode[n].has_add  = merging_add;
+  aNode[n].has_conv    = merging_conv;
+  aNode[n].has_relu    = merging_relu;
+  aNode[n].has_bn      = merging_bn;
+  aNode[n].has_add     = merging_add;
   aNode[n].has_maxpool = merging_maxpool;
 
   // input add
@@ -161,12 +159,6 @@ void fn_merge_nodes(int n0, int n1, int n2, int n3, int n4, char *keyword) {
   fn_remove_node(n2);
   fn_remove_node(n3);
   fn_remove_node(n4);
-
-  //char filename[100];
-  //sprintf(filename, "file%0d.fig", step);
-  //step++;
-  //fn_set_columns();
-  //fn_draw_model(filename);
 }
 
 void fn_check_supported() {
@@ -340,6 +332,18 @@ void fn_adapt_conv1x1_to_conv3x3() {
 }
 
 /*
+ *
+ * fn_adapt_dense()
+ * 
+ * This function adapts dense nodes into conv nodes
+ * 
+ * A Dense node performs a matrix multiplication which can be
+ * transformed into a 2D conv operation.
+ * 
+ */
+void fn_adapt_dense() {}
+
+/*
  * fn_find_and_merge()
  *
  * Finds and merges a pattern of nodes passed as arguments (five names)
@@ -366,6 +370,9 @@ void fn_generate_output_model() {
 
   // we adapt convs1x1 to 3x3
   if (adapt_1x1_to_3x3) fn_adapt_conv1x1_to_conv3x3();
+
+  // we adapt dense nodes into conv2d 
+  if (adapt_dense) fn_adapt_dense();
 
   // first we check whether the layers can be supported in HLSinf 1.0
   fn_check_supported();

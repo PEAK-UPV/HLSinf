@@ -36,6 +36,8 @@
 #define ARG_CPI              12
 #define ARG_CPO              13
 #define ARG_XCLBIN           14
+#define ARG_TIMINGS          15
+#define ARG_ADAPT_DENSE      16
 
 // global variables
 char   input_file_name[200];
@@ -45,12 +47,14 @@ int    verbose;          // if set then we print debug information
 int    command;
 int    convert;
 int    generate_figs;
+int    timings;
 int    run;
 int    cbar_keyword;
 int    cbr_keyword;
 int    cb_keyword;
 int    c_keyword;
 int    adapt_1x1_to_3x3;
+int    adapt_dense;
 int    CPI;
 int    CPO;
 
@@ -63,11 +67,13 @@ int    CPO;
  *
  */
 void print_help(char *program_name) {
-  printf("usage: %s [-i filename] [-o filename] [-xclbin filename] [-k_cbar] [-k_cbr] [-k_cb] [-k_c] [-a1x1] [-c] [-r] [-v] [-f] [-help] [-cpi value] [-cpo value]\n", program_name);
+  printf("usage: %s [-i filename] [-o filename] [-xclbin filename] [-k_cbar] [-k_cbr] [-k_cb] [-k_c] [-a1x1] [-c] [-r] [-v] [-f] [-help] [-cpi value] [-cpo value] [-t]\n", program_name);
 
   printf("[-i filename]        : Input file with the model to parse/run\n");
   printf("[-o filename]        : Output file where to write the parsed model\n");
+  #ifdef RUNTIME_SUPPORT
   printf("[-xclbin filename]   : XCLBIN file to use in running mode\n");
+  #endif
   printf("--\n");
   printf("[-cpi value]         : CPI (channels per input) value assumed (by default set to 4)\n");
   printf("[-cpo value]         : CPO (channels per output) value assumed (by default set to 4)\n");
@@ -77,12 +83,18 @@ void print_help(char *program_name) {
   printf("[-k_c]               : Convert Conv into HLSinf node\n");
   printf("--\n");
   printf("[-a1x1]              : Adapt 1x1 conv filters into 3x3 conv filters\n");
+  printf("[-aDense]            : Adapt a nxw dense layer into a oxixhxw conv layer\n");
   printf("--\n");
   printf("[-c]                 : Compile input model and generate output model\n");
+  #ifdef RUNTIME_SUPPORT
   printf("[-r]                 : Run input model\n");
+  #endif
   printf("[-v]                 : Verbose mode activated\n");
   printf("--\n");
   printf("[-f]                 : Generate fig files with input model and generated model\n");
+  #ifdef RUNTIME_SUPPORT
+  printf("[-t]                 : Provide timings (for run mode)\n");
+  #endif
   printf("--\n");
   printf("[-help]              : Shows this text\n");
 }
@@ -100,8 +112,10 @@ void fn_parse_arguments(int argc, char *argv[]) {
     {"help", no_argument, NULL, ARG_HELP},
     {"i", required_argument, NULL, ARG_INPUT},
     {"o", required_argument, NULL, ARG_OUTPUT},
+    #ifdef RUNTIME_SUPPORT
     {"xclbin", required_argument, NULL, ARG_XCLBIN},
     {"r", no_argument,       NULL, ARG_RUN},
+    #endif
     {"v", no_argument,       NULL, ARG_VERBOSE},
     {"c", no_argument,       NULL, ARG_CONVERT},
     {"f", no_argument,       NULL, ARG_GENERATE_FIGS},
@@ -110,25 +124,31 @@ void fn_parse_arguments(int argc, char *argv[]) {
     {"k_cb", no_argument,      NULL, ARG_CB_KEYWORD},
     {"k_c", no_argument,       NULL, ARG_C_KEYWORD},
     {"a1x1", no_argument,      NULL, ARG_ADAPT_1x1_TO_3x3},
+    {"aDense", no_argument,    NULL, ARG_ADAPT_DENSE},
     {"cpi", required_argument, NULL, ARG_CPI},
     {"cpo", required_argument, NULL, ARG_CPO},
+    #ifdef RUNTIME_SUPPORT
+    {"t", no_argument, NULL, ARG_TIMINGS},
+    #endif
     {0,0,0,0}
   };
 
   int opt;
 
-  run = false;
-  verbose = false;
-  convert = false;
-  generate_figs = false;
+  run              = false;
+  verbose          = false;
+  convert          = false;
+  generate_figs    = false;
+  timings          = false;
   strcpy(output_file_name, "model.out");
-  cbar_keyword = false;
-  cbr_keyword = false;
-  cb_keyword = false;
-  c_keyword = false;
+  cbar_keyword     = false;
+  cbr_keyword      = false;
+  cb_keyword       = false;
+  c_keyword        = false;
   adapt_1x1_to_3x3 = false;
-  CPI = 4;
-  CPO = 4;
+  adapt_dense      = false;
+  CPI              = 4;
+  CPO              = 4;
 
   while ((opt = getopt_long_only(argc, argv, "", long_options, NULL)) != -1) {
     switch(opt) {
@@ -145,8 +165,10 @@ void fn_parse_arguments(int argc, char *argv[]) {
       case ARG_CB_KEYWORD        : cb_keyword = true; break;
       case ARG_C_KEYWORD         : c_keyword = true; break;
       case ARG_ADAPT_1x1_TO_3x3  : adapt_1x1_to_3x3 = true; break;
+      case ARG_ADAPT_DENSE       : adapt_dense = true; break;
       case ARG_CPI               : CPI = atoi(optarg); break;
       case ARG_CPO               : CPO = atoi(optarg); break;
+      case ARG_TIMINGS           : timings = true; break;
       default: exit(1); break;
     }
   }
@@ -181,6 +203,7 @@ int main(int argc, char *argv[]) {
   }
 
   if (run) {
+#ifdef RUNTIME_SUPPORT
     printf("reading input model (file %s)...\n", input_file_name);
     fn_read_run_graph();
 
@@ -198,5 +221,9 @@ int main(int argc, char *argv[]) {
 
     printf("deallocating buffers...\n");
     deallocate_buffers();
+    #else
+    printf("binary not compiled for runtime support\n");
+    exit(1);
+    #endif
   }
 }

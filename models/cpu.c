@@ -5,6 +5,10 @@
  *
  */
 
+#ifdef RUNTIME_SUPPORT
+
+#include<math.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -186,11 +190,11 @@ void fn_run_node_on_cpu(int n) {
       in0 = aNode[n_parent0].data;
       in1 = aNode[n_parent1].data;
       if (verbose) {
-	float min, max, avg;
-	size_t num_items;
-	fn_node_buffer_stats(n_parent0, &min, &max, &avg, &num_items);
-	printf("    buffer_i: min: %6.4f max: %6.4f avg: %6.4f, items: %6ld\n", min, max, avg, num_items);
-	fn_node_buffer_stats(n_parent1, &min, &max, &avg, &num_items);
+	      float min, max, avg;
+	      size_t num_items;
+	      fn_node_buffer_stats(n_parent0, &min, &max, &avg, &num_items);
+	      printf("    buffer_i: min: %6.4f max: %6.4f avg: %6.4f, items: %6ld\n", min, max, avg, num_items);
+	      fn_node_buffer_stats(n_parent1, &min, &max, &avg, &num_items);
         printf("    buffer_i: min: %6.4f max: %6.4f avg: %6.4f, items: %6ld\n", min, max, avg, num_items);
       }
     } else {
@@ -338,3 +342,5 @@ void fn_run_node_on_cpu(int n) {
 
   }
 }
+
+#endif
