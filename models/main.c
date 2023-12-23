@@ -185,9 +185,6 @@ int main(int argc, char *argv[]) {
     printf("computing data geometries (output of nodes)...\n");
     fn_compute_data_geometries();
 
-    printf("generating zero initializers...\n");
-    fn_create_zero_initializers();
-
     if (generate_figs) fn_draw_model((char*)"original_model.fig");
 
     printf("generating output model...\n");

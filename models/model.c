@@ -176,6 +176,17 @@ void fn_process_input_line(char *line, size_t len) {
       offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].sh = atoi(item);
       offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].sw = atoi(item);
     }
+    // if we have a avgpool then we read the parameters kh, kw, pt, pb, pl, pr, sh, sw)
+    if (!strcmp(aNode[num_nodes].type, "AveragePool")) {
+      offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].kh = atoi(item);
+      offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].kw = atoi(item);
+      offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].pt = atoi(item);
+      offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].pb = atoi(item);
+      offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].pl = atoi(item);
+      offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].pr = atoi(item);
+      offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].sh = atoi(item);
+      offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].sw = atoi(item);
+    }
     //
     num_nodes++;
   }
@@ -184,14 +195,6 @@ void fn_process_input_line(char *line, size_t len) {
     aInitializer[num_initializers].valid = true;
     aInitializer[num_initializers].name = (char*)malloc(sizeof(char) * (strlen(name)+1));
     strcpy(aInitializer[num_initializers].name, name);
-    // type
-    if (strstr(name, "weight")!=NULL) strcpy(aInitializer[num_initializers].type, "weight");
-    else if (strstr(name, "bias")!=NULL) strcpy(aInitializer[num_initializers].type, "bias");
-    else if (strstr(name, "gamma")!=NULL) strcpy(aInitializer[num_initializers].type, "gamma");
-    else if (strstr(name, "beta")!=NULL) strcpy(aInitializer[num_initializers].type, "beta");
-    else if (strstr(name, "running_mean")!=NULL) strcpy(aInitializer[num_initializers].type, "running_mean");
-    else if (strstr(name, "running_var")!=NULL) strcpy(aInitializer[num_initializers].type, "running_var");
-    else {printf("unrecognized initializer type: %s\n", name); exit(1);}
     // number of dimensions
     offset = fn_get_item_line(line, len, offset, item);
     aInitializer[num_initializers].num_dimensions = atoi(item);
@@ -297,6 +300,8 @@ void fn_write_output_model() {
  int max_row = -1;
  for (int n=0; n<num_nodes; n++) if (aNode[n].valid) max_row = max(max_row, aNode[n].row);
 
+ if (verbose) printf("  max row: %d\n", max_row);
+
  // now we list the nodes by row order, nodes in the same row can be run in parallel
  for (int r=0; r<=max_row; r++) {
    for (int n=0; n<num_nodes; n++) {
@@ -319,6 +324,7 @@ void fn_write_output_model() {
 
        if (is_conv(n)) fprintf(fd,",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", aNode[n].dh,aNode[n].dw,aNode[n].kh,aNode[n].kw,aNode[n].sh,aNode[n].sw,aNode[n].pt,aNode[n].pb,aNode[n].pl,aNode[n].pr,aNode[n].g);
        if (is_maxpool(n)) fprintf(fd,",%d,%d,%d,%d,%d,%d,%d,%d", aNode[n].kh, aNode[n].kw, aNode[n].sh, aNode[n].sw, aNode[n].pt, aNode[n].pb, aNode[n].pl, aNode[n].pr);
+       if (is_avgpool(n)) fprintf(fd,",%d,%d,%d,%d,%d,%d,%d,%d", aNode[n].kh, aNode[n].kw, aNode[n].sh, aNode[n].sw, aNode[n].pt, aNode[n].pb, aNode[n].pl, aNode[n].pr);
        if (is_bn(n)) fprintf(fd,",%f,%f", aNode[n].epsilon, aNode[n].momentum);
        fprintf(fd, "\n");
      }
@@ -338,7 +344,7 @@ void fn_write_output_model() {
  // we write also initializers
  for (int i=0; i<num_initializers; i++) {
    if (aInitializer[i].valid) {
-     fprintf(fd, "initializer,%s,%s,%d", aInitializer[i].name, aInitializer[i].type, aInitializer[i].num_dimensions);
+     fprintf(fd, "initializer,%s,%d", aInitializer[i].name, aInitializer[i].num_dimensions);
      for (int d=0; d<aInitializer[i].num_dimensions; d++) fprintf(fd, ",%d", aInitializer[i].dimensions[d]);
      // data type
      fprintf(fd, ",%s,",aInitializer[i].data_type);

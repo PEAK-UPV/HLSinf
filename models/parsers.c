@@ -47,16 +47,16 @@ int fn_detect_pattern(int n, char *type0, char *type1, char *type2, char *type3,
 
 void fn_merge_nodes(int n0, int n1, int n2, int n3, int n4, char *keyword) {
 
-  int conv_layer       = is_conv(n0) ? n0 : is_conv(n1) ? n1 : is_conv(n2) ? n2 : is_conv(n3) ? n3 : is_conv(n4) ? n4 : -1;
-  int relu_layer       = is_relu(n0) ? n0 : is_relu(n1) ? n1 : is_relu(n2) ? n2 : is_relu(n3) ? n3 : is_relu(n4) ? n4 : -1;
+  int conv_layer       = is_conv(n0)    ? n0 : is_conv(n1)    ? n1 : is_conv(n2)    ? n2 : is_conv(n3)    ? n3 : is_conv(n4)    ? n4 : -1;
+  int relu_layer       = is_relu(n0)    ? n0 : is_relu(n1)    ? n1 : is_relu(n2)    ? n2 : is_relu(n3)    ? n3 : is_relu(n4)    ? n4 : -1;
   int maxpool_layer    = is_maxpool(n0) ? n0 : is_maxpool(n1) ? n1 : is_maxpool(n2) ? n2 : is_maxpool(n3) ? n3 : is_maxpool(n4) ? n4 : -1;
-  int bn_layer         = is_bn(n0) ? n0 : is_bn(n1) ? n1 : is_bn(n2) ? n2 : is_bn(n3) ? n3 : is_bn(n4) ? n4 : -1;
-  int add_layer        = is_add(n0) ? n0 : is_add(n1) ? n1 : is_add(n2) ? n2 : is_add(n3) ? n3 : is_add(n4) ? n4 : -1;
-  int merging_conv     = conv_layer != -1;
-  int merging_relu     = relu_layer != -1;
-  int merging_bn       = bn_layer != -1;
+  int bn_layer         = is_bn(n0)      ? n0 : is_bn(n1)      ? n1 : is_bn(n2)      ? n2 : is_bn(n3)      ? n3 : is_bn(n4)      ? n4 : -1;
+  int add_layer        = is_add(n0)     ? n0 : is_add(n1)     ? n1 : is_add(n2)     ? n2 : is_add(n3)     ? n3 : is_add(n4)     ? n4 : -1;
+  int merging_conv     = conv_layer    != -1;
+  int merging_relu     = relu_layer    != -1;
+  int merging_bn       = bn_layer      != -1;
   int merging_maxpool  = maxpool_layer != -1;
-  int merging_add      = add_layer != -1;
+  int merging_add      = add_layer     != -1;
   int last_merged_node = (n1==-1)?n0:(n2==-1)?n1:(n3==-1)?n2:(n4==-1)?n3:n4;
 
   // new node
@@ -80,18 +80,18 @@ void fn_merge_nodes(int n0, int n1, int n2, int n3, int n4, char *keyword) {
 
   // inputs
   // if a merged layer is a conv then its weights and bias need to be added
-  if (merging_conv) add_input_to_node(n, get_weight_initializer_name_from_node(conv_layer));
-  if (merging_conv) add_input_to_node(n, get_bias_initializer_name_from_node(conv_layer));
+  if (merging_conv) add_input_to_node(n, aNode[conv_layer].inputs[1]); // weight is input 1 in onnx
+  if (merging_conv) add_input_to_node(n, aNode[conv_layer].inputs[2]); // bias is input 2 in onnx
 
   // the data input from first node to merge needs to be added
   add_input_to_node(n, get_data_input_name_from_node(n0, NULL));
 
   // if a batch normalization layer is merged its initializers need to be added
   if (merging_bn) {
-    add_input_to_node(n, get_gamma_initializer_name_from_node(bn_layer)); 
-    add_input_to_node(n, get_beta_initializer_name_from_node(bn_layer)); 
-    add_input_to_node(n, get_running_mean_initializer_name_from_node(bn_layer)); 
-    add_input_to_node(n, get_running_var_initializer_name_from_node(bn_layer));
+    add_input_to_node(n, aNode[bn_layer].inputs[1]); // gamma (scale) is input 1 in onnx
+    add_input_to_node(n, aNode[bn_layer].inputs[2]); // beta (bias) is input 2 in onnx
+    add_input_to_node(n, aNode[bn_layer].inputs[3]); // running mean is input 3 in onnx 
+    add_input_to_node(n, aNode[bn_layer].inputs[4]); // running var is input 4 in onnx
   }
   // if an add layer is merged, its data input not included in the merge set must be added
   if (is_add(n1)) add_input_to_node(n, get_data_input_name_from_node(n1, get_node_name(n0)));
@@ -100,11 +100,11 @@ void fn_merge_nodes(int n0, int n1, int n2, int n3, int n4, char *keyword) {
   if (is_add(n4)) add_input_to_node(n, get_data_input_name_from_node(n4, get_node_name(n3))); 
 
   // now we need to fix inputs of nodes pointing to the merged nodes, now they need to be linked to the new node
-  fn_relink_node_inputs(get_node_name(n0), get_node_name(n));
-  fn_relink_node_inputs(get_node_name(n1), get_node_name(n));
-  fn_relink_node_inputs(get_node_name(n2), get_node_name(n));
-  fn_relink_node_inputs(get_node_name(n3), get_node_name(n));
-  fn_relink_node_inputs(get_node_name(n4), get_node_name(n));
+  fn_relink_nodes(n0, n);
+  fn_relink_nodes(n1, n);
+  fn_relink_nodes(n2, n);
+  fn_relink_nodes(n3, n);
+  fn_relink_nodes(n4, n);
 
   // parameters for HLSinf layer
   aNode[n].has_conv    = merging_conv;
@@ -206,7 +206,7 @@ void fn_adapt_initializers() {
         if (aNode[n].has_conv) {	      
 	  if (verbose) printf("    node %d (hlsinf), adapting weights...\n", n);
           // we adapt weights, first we get the parameters I, O, kh, kw
-	  int ii = get_weight_initializer_entry_from_node(n);
+	  int ii = fn_get_initializer_by_name(aNode[n].inputs[1]); // weight is input 1 in onnx
 	  if (ii==-1) {printf("Error, weight initializer not found\n"); exit(1);}
 
 	  if (verbose) printf("    weight initializer: %s (%d)\n", aInitializer[ii].name, ii);
@@ -252,10 +252,10 @@ void fn_adapt_initializers() {
 	  // we merge gamma, beta, runing_mean, runing_var into a single initializer
 	  if (verbose) printf("    node %d (hlsinf), merging bn initializers...\n", n);
 
-	  int i0 = get_gamma_initializer_id_from_node(n);
-	  int i1 = get_beta_initializer_id_from_node(n);
-	  int i2 = get_running_mean_initializer_id_from_node(n);
-	  int i3 = get_running_var_initializer_id_from_node(n);
+	  int i0 = fn_get_initializer_by_name(aNode[n].inputs[1]);  // gamma is input 1 in onnx
+	  int i1 = fn_get_initializer_by_name(aNode[n].inputs[2]);  // beta is input 2 in onnx
+	  int i2 = fn_get_initializer_by_name(aNode[n].inputs[3]);  // running mean is input 3 in onnx
+	  int i3 = fn_get_initializer_by_name(aNode[n].inputs[4]);  // running var is input 4 in onnx
 	  // checks: initializers must exist and must have a single dimension
 	  if ((i0 == -1) || (i1 == -1) || (i2 == -1) || (i3 == -1)) {printf("Error, initializers not found for bn node\n"); exit(1);}
 	  if ((aInitializer[i0].num_dimensions != 1) || (aInitializer[i1].num_dimensions != 1) || (aInitializer[i2].num_dimensions != 1) || (aInitializer[i3].num_dimensions != 1)) {
@@ -288,7 +288,7 @@ void fn_adapt_initializers() {
 	  // now we add a new initializer
 	  char name[100];
 	  sprintf(name, "bn_hlsinf_initializer_%0d", num_initializers);
-	  fn_add_new_initializer(name, (char*)"bn", num_items*4, p);
+	  fn_add_new_initializer(name, num_items*4, p);
 	  // now we add an input to the node to the initializer
 	  add_input_to_node(n, name);
         }
@@ -323,7 +323,7 @@ void fn_adapt_conv1x1_to_conv3x3() {
 	  aNode[n].pr = aNode[n].pr + 2;
 
 	  // now the weight initializer is adapted accordingly
-	  fn_pad_weight_initializer_1x1_to_3x3(get_weight_initializer_name_from_node(n));
+	  fn_pad_weight_initializer_1x1_to_3x3(aNode[n].inputs[1]);  // weight is input 1 in onnx
 	}
       }
     }

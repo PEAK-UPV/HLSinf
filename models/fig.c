@@ -25,6 +25,9 @@
 #define FIG_Y_TOP_LEFT   2
 #define FIG_ROW_SPACE    2
 
+// global variables
+FILE *fd;
+
 
 /* 
  * fn_prepare_fig_file()
@@ -32,7 +35,7 @@
  * This function opens the file and writes the fig header text
  *
  */
-void fn_prepare_fig_file(FILE *fd, char *filename) {
+void fn_prepare_fig_file(char *filename) {
   fd = fopen(filename, "w");
   if (fd == NULL) {printf("Error, could not open fig file for write\n"); exit(1);}
   fprintf(fd, "#FIG 3.2  Produced by xfig version 3.2.8a\n");
@@ -54,7 +57,7 @@ void fn_prepare_fig_file(FILE *fd, char *filename) {
  * A node is represented in the graph with its row and col
  *
  */
-void fn_draw_node(FILE *fd, char *name, int row, int col) {
+void fn_draw_node(char *name, int row, int col) {
 
   // text
   int x_text = (FIG_X_TOP_LEFT * FIG_X_SCALE) + (col * FIG_COL_WIDTH * FIG_X_SCALE);
@@ -92,7 +95,7 @@ void fn_draw_node(FILE *fd, char *name, int row, int col) {
  * A node is represented by its row and column 
  *
  */
-void fn_draw_arrow(FILE *fd, int row0, int col0, int row1, int col1) {
+void fn_draw_arrow(int row0, int col0, int row1, int col1) {
 
   int x0 = (FIG_X_TOP_LEFT * FIG_X_SCALE) + (col0 * FIG_COL_WIDTH * FIG_X_SCALE);
   int y0 = (FIG_Y_TOP_LEFT * FIG_Y_SCALE) + (row0 * FIG_ROW_HEIGHT * FIG_Y_SCALE) + (0.25 * FIG_FONT_HEIGHT * FIG_Y_SCALE);
@@ -107,7 +110,7 @@ void fn_draw_arrow(FILE *fd, int row0, int col0, int row1, int col1) {
  * This function ends (closes) the fig file
  *
  */
-void fn_end_fig_file(FILE *fd) {fclose(fd);}
+void fn_end_fig_file() {fclose(fd);}
 
 /*
  * This function draws the model into the
@@ -116,16 +119,14 @@ void fn_end_fig_file(FILE *fd) {fclose(fd);}
  */
 void fn_draw_model(char *fig_filename) {
 
-  FILE *fd;      // file descriptor
-
   if (verbose) printf("generating fig file for model...\n");
 
   fn_allocate_nodes();
 
-  fn_prepare_fig_file(fd, fig_filename);
+  fn_prepare_fig_file(fig_filename);
   
   // we draw the nodes
-  for (int n = 0; n<num_nodes; n++) if (aNode[n].valid) fn_draw_node(fd, aNode[n].name, aNode[n].row, aNode[n].col);
+  for (int n = 0; n<num_nodes; n++) if (aNode[n].valid) fn_draw_node(aNode[n].name, aNode[n].row, aNode[n].col);
 
   // we draw the links
   for (int n = 0; n<num_nodes; n++) {
@@ -133,13 +134,13 @@ void fn_draw_model(char *fig_filename) {
       int list[100];
       int nc = fn_get_child_nodes(aNode[n].name, list);
       for (int c = 0; c < nc; c++) {
-	      int cc = list[c];
-        fn_draw_arrow(fd, aNode[n].row, aNode[n].col, aNode[cc].row, aNode[cc].col);
+        int cc = list[c];
+        fn_draw_arrow(aNode[n].row, aNode[n].col, aNode[cc].row, aNode[cc].col);
       }
     }
   }
 
-  fn_end_fig_file(fd);
+  fn_end_fig_file();
 
   if (verbose) printf("  completed\n");
 }

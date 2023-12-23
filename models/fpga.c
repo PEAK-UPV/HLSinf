@@ -147,7 +147,15 @@ void allocate_buffers() {
   for (int i=0; i<num_inputs; i++) {
     if (aInput[i].valid) {
       size_t size = 1;
-      for (int d=0; d<aInput[i].num_dimensions; d++) size = size * aInput[i].dimensions[d];
+      if (aInput[i].num_dimensions == 4) {
+	printf("WARNING: Input model with four dimensions, asuming three dimensions (1, 2, 3). Dimension 0 assumed to be batch size\n");
+	for (int d=1; d<aInput[i].num_dimensions; d++) size = size * aInput[i].dimensions[d];
+      } else if (aInput[i].num_dimensions == 3) {
+        for (int d=0; d<aInput[i].num_dimensions; d++) size = size * aInput[i].dimensions[d];
+      } else {
+	printf("Number of dimensions for input model not supported (%d)\n", aInput[i].num_dimensions);
+	exit(1);
+      }
       int num_items = size;   // TODO: remove
       size = size * sizeof(float);
       if (verbose) printf("  allocating buffer for input model %d (size %ld), name %-50s\n", i, size, aInput[i].name);
@@ -252,11 +260,11 @@ void fn_run_node_on_fpga(int n) {
   if (np>2) {printf("not supported yet (more than two parents)\n"); exit(1);}
 
   // weights and bias
-  i_weight = get_weight_initializer_entry_from_node(n);
+  i_weight = fn_get_initializer_by_name(aNode[n].inputs[1]);  // weight is input 1
   if (i_weight == -1) {printf("Error, weight initializer not found\n"); exit(1);}
   buffer_w = aInitializer[i_weight].buffer;
   //
-  i_bias = get_bias_initializer_entry_from_node(n);
+  i_bias = fn_get_initializer_by_name(aNode[n].inputs[2]); // bias is input 1
   if (i_bias == -1) {printf("Error, bias initializer not found\n"); exit(1);}
   buffer_b = aInitializer[i_bias].buffer;
 
@@ -316,7 +324,7 @@ void fn_run_node_on_fpga(int n) {
     // conv + bn + relu  
     bn_enable = true;
     bn_relu_enable = true;
-    i_bn = get_bn_initializer_id_from_node(n);
+    i_bn = fn_get_initializer_by_name(aNode[n].inputs[3]);  // bn data is input 3
     if (i_bn == -1) {printf("Error, bn initializer not found\n"); exit(1);}
     buffer_bn = aInitializer[i_bn].buffer;
   }
@@ -326,7 +334,7 @@ void fn_run_node_on_fpga(int n) {
     bn_enable = true;
     add_enable = true;
     add_relu_enable = true;
-    i_bn = get_bn_initializer_id_from_node(n);
+    i_bn = fn_get_initializer_by_name(aNode[n].inputs[3]);  // bn data is input 3
     if (i_bn == -1) {printf("Error, bn initializer not found\n"); exit(1);}
     buffer_bn = aInitializer[i_bn].buffer;
     n_add = fn_get_node_by_name(aNode[n].input_add);
@@ -337,7 +345,7 @@ void fn_run_node_on_fpga(int n) {
   if (!strcmp(aNode[n].keyword, "cb")) {
     // conv + bn
     bn_enable = true;
-    i_bn = get_bn_initializer_id_from_node(n);
+    i_bn = fn_get_initializer_by_name(aNode[n].inputs[3]);  // bn data is input 3
     if (i_bn == -1) {printf("Error, bn initializer not found\n"); exit(1);}
     buffer_bn = aInitializer[i_bn].buffer;
   }
@@ -354,7 +362,7 @@ void fn_run_node_on_fpga(int n) {
     printf("    read_from_mem: %1d read_from_buffer0: %1d read_from_buffer1: %1d\n", read_from_mem, read_from_buffer0, read_from_buffer1);
     printf("    write_to_mem: %1d write_to_buffer0: %1d write_to_buffer1: %1d\n", write_to_mem, write_to_buffer0, write_to_buffer1);
     //
-    // buffer stats
+/*    // buffer stats
     float min, max, avg;
     size_t num_items;
     fn_node_buffer_stats(n_parent, &min, &max, &avg, &num_items);
@@ -370,7 +378,7 @@ void fn_run_node_on_fpga(int n) {
     if (i_bn != -1) {
       fn_initializer_buffer_stats(i_bn, &min, &max, &avg, &num_items);
       printf("    buffer_bn: min: %6.4f max: %6.4f avg: %6.4f, items %6ld\n", min, max, avg, num_items);
-    }
+    }*/
   }
 
 
@@ -433,14 +441,14 @@ void fn_run_node_on_fpga(int n) {
   set_callback(kernel_events[k], "ooo_queue");
   OCL_CHECK(err, err = kernel_events[k].wait());
 
-  if (verbose) {
+/*  if (verbose) {
     // output buffer stats
     float min, max, avg;
     size_t num_items;
     copy_from_fpga(aNode[n].buffer);
     fn_node_buffer_stats(n, &min, &max, &avg, &num_items);
     printf("    buffer_o: min: %6.4f max: %6.4f avg: %6.4f, items %6ld\n", min, max, avg, num_items);
-  }
+  }*/
     
 }
 

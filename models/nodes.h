@@ -48,9 +48,9 @@ struct st_node {
  // supported in HLSinf
  int supported;
  // input and output data geometry
- int I, O;
- int HI, HO;
- int WI, W, WO;
+ int I, HI, WI;   // for conv
+ int O, HO, WO;   // for conv
+ int n, m;        // for dense
  // parameters for printing the model
  int row;
  int col;
@@ -74,11 +74,13 @@ extern struct st_node aNode[MAX_NODES];
 // function prototypes
 int fn_get_child_nodes(char *name, int *list);
 int fn_get_node_by_name(char *name);
+int fn_get_node_by_output_name(char *name);
 int is_node_by_name(char *name);
 int is_hlsinf(int n);
 int is_conv(int n);
 int is_relu(int n);
 int is_maxpool(int n);
+int is_avgpool(int n);
 int is_bn(int n);
 int is_add(int n);
 int has_no_parents(int n);
@@ -96,7 +98,7 @@ int fn_get_node_entry(char *name);
 char *get_node_name(int n);
 void fn_remove_node(int n);
 char *get_data_input_name_from_node(int n, char *exclude_name);
-void fn_relink_node_inputs(char *old_name, char *new_name);
+void fn_relink_nodes(int n1, int n2);
 void fn_add_host_device_nodes();
 int fn_add_node(char *name, char *type);
 void fn_change_input_in_node(int n, char *old_name, char *new_name);

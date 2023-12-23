@@ -19,7 +19,7 @@
 #include "stats.h"
 #include "fpga.h"
 
-void fn_conv2d(float *in, float *w, float *b, float *out, int HI, int WI, int I, int HO, int WO, int O, int KH, int KW, int SH, int SW, int PT, int PB, int PL, int PR) {
+void fn_conv2d(float *in, float *w, float *b, float *out, int HI, int WI, int I, int HO, int WO, int O, int KH, int KW, int SH, int SW, int PT, int PB, int PL, int PR, int use_bias) {
   //
   if (verbose) {
     printf("    buffer_i: %p buffer_w: %p buffer_b: %p buffer_out: %p\n", in, w, b, out);
@@ -43,9 +43,107 @@ void fn_conv2d(float *in, float *w, float *b, float *out, int HI, int WI, int I,
 	      if (!padding) out[addr_o] += in[addr_i] * w[addr_w];
             }
 	  }
-	  // bias
-	  out[addr_o] += b[o];
+	  if (use_bias) {
+  	    // bias
+	    out[addr_o] += b[o];
+	  }
 	}
+      }
+    }
+  }
+}
+
+void fn_global_average_pool(float *in, float *out, int HI, int WI, int I, int HO, int WO, int O) {
+  //
+  if ((HO!=1) || (WO!=1) || (I!=O)) {printf("Error, in global average pool\n"); exit(1);}
+  //
+  for (int i=0;i<I; i++) {
+    float sum = 0.f;
+    for (int h=0; h<HI; h++) {
+      for (int w=0; w<WI; w++) {
+	int addr_in = (i * HI * WI) + (h * WI) + w;
+        sum += in[addr_in];
+      }
+    }
+    int addr_out = (i * HO * WO);
+    out[addr_out] = sum / (float) (HI * WI);
+  }
+}
+
+void fn_flatten(float *in, float *out, int HI, int WI, int I, int HO, int WO, int O) {
+  //
+  for (int i=0; i<I; i++) {
+    for (int hi=0; hi<HI; hi++) {
+      for (int wi=0; wi<WI; wi++) {
+        int addr_in = (i * HI * WI) + (hi * WI) + wi;
+	int addr_out = addr_in;
+	out[addr_out] = in[addr_in];
+      }
+    }
+  }
+}
+
+void fn_identity(float *in, float *out, int HI, int WI, int I, int HO, int WO, int O) {
+  size_t n = I * HI * WI;
+  for (size_t x=0; x<n; x++) out[x] = in[x];
+}
+
+void fn_pad(float *in, float *out, int HI, int WI, int I) {   // TODO: implement pad correctly
+  size_t n = I * HI * WI;
+  for (size_t x=0; x<n; x++) out[x] = in[x];
+}
+
+void fn_concat(float *in, float *out, size_t size, size_t offset) {
+  for (size_t x=0; x<size; x++) out[x + offset] = in[x];
+}
+
+
+void fn_gemm(float *in, float *w, float *b, float *out, int HI, int WI, int I, int HO, int WO, int O) {
+  //
+  int n = I * HI * WI;
+  int m = O * HO * WO;
+
+  for (int o=0; o<m; o++) { // for every output
+    float r = 0.f;
+    for (int i=0; i<n; i++) { // dot product
+      int addr_in = i;
+      int addr_w = (o * n) + i;
+      r += (in[addr_in] * w[addr_w]);
+    }
+    int addr_out = o;
+    int addr_b = o;
+    out[addr_out] = r + b[addr_b];
+  }
+}
+
+void fn_matmul(float *in, float *w, float *out, int HI, int WI, int I, int HO, int WO, int O) {
+  //
+  int n = I * HI * WI;
+  int m = O * HO * WO;
+
+  for (int o=0; o<m; o++) { // for every output
+    float r = 0.f;
+    for (int i=0; i<n; i++) { // dot product
+      int addr_in = i;
+      int addr_w = (o * n) + i;
+      r += (in[addr_in] * w[addr_w]);
+    }
+    int addr_out = o;
+    out[addr_out] = r;
+  }
+}
+
+void fn_transpose(float *in, float *out, int HI, int WI, int I, int HO, int WO, int O) {
+  for (int i=0; i<I; i++) {
+    for (int hi=0; hi<HI; hi++) {
+      for (int wi=0; wi<WI; wi++) {
+	int addr_in = (i * HI * WI) + (hi * WI) + wi;
+	float data = in[addr_in];
+	int o = wi;
+	int ho = hi;
+	int wo = i;
+	int addr_out = (o * HO * WO) + (ho * WO) + wo;
+	out[addr_out] = data;
       }
     }
   }
@@ -120,6 +218,35 @@ void fn_maxpool(float *in, float *out, int I, int HI, int WI, int O, int HO, int
   }
 }
 
+void fn_avgpool(float *in, float *out, int I, int HI, int WI, int O, int HO, int WO, int KH, int KW, int SH, int SW, int PT, int PB, int PL, int PR) {
+  //
+  if (verbose) {
+    printf("    buffer_i: %p buffer_out: %p\n", in, out);
+    printf("    IxHIxWI: %3dx%3dx%3d OxHOxWO: %3dx%3dx%3d KWxKW: %3dx%3d SHxSW: %3dx%3d padings: %1d-%1d-%1d-%1d\n", I, HI, WI, O, HO, WO, KH, KW, SH, SW, PT, PB, PL, PR);
+  }
+
+  for (int o=0; o<O; o++) {
+    int i = o;
+    for (int ho=0; ho<HO; ho++) {
+      for (int wo=0; wo<WO; wo++) {
+        int addr_o = (o * HO * WO) + (ho * WO) + wo;
+	float data_sum = 0.f;
+        for (int kh = 0; kh < KH; kh++) {
+          for (int kw = 0; kw < KW; kw++) {
+            int hi = (ho * SH) - PT + kh;
+            int wi = (wo * SW) - PL + kw;
+            int padding = (hi<0) | (wi<0) | (wi>=WI) | (hi>=HI);
+            int addr_i = (i * HI * WI) + (hi * WI) + wi;
+            float data = padding ? 0.f : in[addr_i];
+            data_sum += data;
+          }
+        }
+        out[addr_o] = data_sum / (float)(KH * KW);;
+      }
+    }
+  }
+}
+
 void fn_h2d(float *in, float *out, int I, int HI, int WI) {
   for (int i=0; i<I; i++) {
     for (int hi = 0; hi<HI; hi++) {
@@ -148,6 +275,43 @@ void fn_d2h(float *in, float *out, int I, int HI, int WI) {
   }
 }
 
+float *fn_get_buffer_from_name(char *name) {
+  int i;
+  // input buffer is model input?
+  i = get_model_input_id(name);
+  if (i != -1) return aInput[i].data;
+  // input buffer is initializer?
+  i = fn_get_initializer_by_name(name);
+  if (i != -1) return aInitializer[i].data;
+  // input buffer is node buffer?
+  i = fn_get_node_by_output_name(name);
+  if (i != -1) return aNode[i].data;
+  return NULL;
+}
+
+int fn_get_num_items_from_name(char *name) {
+  int num_items = 1;
+  int i;
+  // input buffer is model input?
+  i = get_model_input_id(name);
+  if (i != -1) {
+    for (int d=0; d<aInput[i].num_dimensions; d++) num_items = num_items * aInput[i].dimensions[d];
+    return num_items;
+  }
+  // input buffer is initializer?
+  i = fn_get_initializer_by_name(name);
+  if (i != -1) {
+    for (int d=0; d<aInitializer[i].num_dimensions; d++) num_items = num_items * aInitializer[i].dimensions[d];
+    return num_items;
+  }
+  // input buffer is node buffer?
+  i = fn_get_node_by_output_name(name);
+  if (i != -1) {
+    num_items = aNode[i].O * aNode[i].HO * aNode[i].WO;
+    return num_items;
+  }
+  return 0;
+}
 
 void fn_run_node_on_cpu(int n) {
 
@@ -156,63 +320,29 @@ void fn_run_node_on_cpu(int n) {
 
   if (verbose) printf("    running on CPU\n");
 
-  // input data buffer is the output buffer of its parent or the input model buffer
-  float *in;
-  float *in0, *in1;
-  int n_parent;              // parent for the case only one parent
-  int n_parent0, n_parent1;  // parents for the case two parents
-  if (has_no_parents(n)) {
-    int i_input = fn_get_model_input_from_node(n);
-    if (i_input==-1) {printf("Error, model input not found\n"); exit(1);}
-    in = aInput[i_input].data;
-    if (verbose) {
-      float min, max, avg;
-      size_t num_items;
-      fn_input_buffer_stats(i_input, &min, &max, &avg, &num_items);
-      printf("    buffer_i: min: %6.4f max: %6.4f avg: %6.4f, items: %6ld\n", min, max, avg, num_items);
-    }
-  } else {
-    int list[100];
-    int np = fn_get_parent_nodes(aNode[n].name, list);
-    if (np == 0) {printf("Error, no parents\n"); exit(1);}
-    else if (np == 1) {    
-      n_parent = list[0];
-      in = aNode[n_parent].data;
-      if (verbose) {
-        float min, max, avg;
-        size_t num_items;
-        fn_node_buffer_stats(n_parent, &min, &max, &avg, &num_items);
-        printf("    buffer_i: min: %6.4f max: %6.4f avg: %6.4f, items: %6ld\n", min, max, avg, num_items);
-      }
-    } else if (np == 2) {
-      n_parent0 = list[0];
-      n_parent1 = list[1];
-      in0 = aNode[n_parent0].data;
-      in1 = aNode[n_parent1].data;
-      if (verbose) {
-	      float min, max, avg;
-	      size_t num_items;
-	      fn_node_buffer_stats(n_parent0, &min, &max, &avg, &num_items);
-	      printf("    buffer_i: min: %6.4f max: %6.4f avg: %6.4f, items: %6ld\n", min, max, avg, num_items);
-	      fn_node_buffer_stats(n_parent1, &min, &max, &avg, &num_items);
-        printf("    buffer_i: min: %6.4f max: %6.4f avg: %6.4f, items: %6ld\n", min, max, avg, num_items);
-      }
-    } else {
-      printf("non-supported number of parents\n"); 
-      exit(1);
-    }
-  }
   // output buffer
   float *out = aNode[n].data;
+  int num_items_out = fn_get_num_items_from_name(aNode[n].outputs[0]);
 
   if (!strcmp(aNode[n].type, "Conv")) {
-    // weight and bias
-    int i_weight = get_weight_initializer_entry_from_node(n);
-    if (i_weight == -1) {printf("Error, weight initializer not found\n"); exit(1);}
-    float *w = aInitializer[i_weight].data;
-    int i_bias = get_bias_initializer_entry_from_node(n);
-    if (i_bias == -1) {printf("Error, bias initializer not found\n"); exit(1);}
-    float *b = aInitializer[i_bias].data;
+    // input0
+    float *in = fn_get_buffer_from_name(aNode[n].inputs[0]);
+    int num_items_in = fn_get_num_items_from_name(aNode[n].inputs[0]);
+    fn_buffer_stats(in, num_items_in, (char *)"input: ");
+    // weight (input 1)
+    float *w = fn_get_buffer_from_name(aNode[n].inputs[1]);
+    int num_items_w = fn_get_num_items_from_name(aNode[n].inputs[1]);
+    fn_buffer_stats(w, num_items_w, (char *)"weight: ");
+    // bias (optional, input 2)
+    int use_bias = false;
+    float *b = NULL;
+    int num_items_b = 0;
+    if (aNode[n].num_inputs == 3) {
+      use_bias = true;
+      b = fn_get_buffer_from_name(aNode[n].inputs[2]);
+      num_items_b = fn_get_num_items_from_name(aNode[n].inputs[2]);
+      fn_buffer_stats(b, num_items_b, (char *)"bias: ");
+    }
     // parameters
     int HI = aNode[n].HI;
     int WI = aNode[n].WI;
@@ -229,44 +359,45 @@ void fn_run_node_on_cpu(int n) {
     int PL = aNode[n].pl;
     int PR = aNode[n].pr;
     //
-    fn_conv2d(in, w, b, out, HI, WI, I, HO, WO, O, KH, KW, SH, SW, PT, PB, PL, PR);
-    //
-    if (verbose) {
-      float min, max, avg;
-      size_t num_items;
-      fn_initializer_buffer_stats(i_weight, &min, &max, &avg, &num_items);
-      printf("    buffer_w: min: %6.4f max: %6.4f avg: %6.4f, items: %6ld\n", min, max, avg, num_items);
-      fn_initializer_buffer_stats(i_bias, &min, &max, &avg, &num_items);
-      printf("    buffer_b: min: %6.4f max: %6.4f avg: %6.4f, items: %6ld\n", min, max, avg, num_items);
-    }
-  }
+    fn_conv2d(in, w, b, out, HI, WI, I, HO, WO, O, KH, KW, SH, SW, PT, PB, PL, PR, use_bias);
 
-  if (!strcmp(aNode[n].type, "Add")) {
+  } else if (!strcmp(aNode[n].type, "Add")) {
+    // input 0
+    float *in0 = fn_get_buffer_from_name(aNode[n].inputs[0]);
+    int num_items_in0 = fn_get_num_items_from_name(aNode[n].inputs[0]);
+    fn_buffer_stats(in0, num_items_in0, (char*)"input: ");
+    // input 1
+    float *in1 = fn_get_buffer_from_name(aNode[n].inputs[1]);
+    int num_items_in1 = fn_get_num_items_from_name(aNode[n].inputs[1]);
+    fn_buffer_stats(in1, num_items_in1, (char*)"input: "); 
     // parameters
     int HI = aNode[n].HI;
     int WI = aNode[n].WI;
     int I  = aNode[n].I;
     //
     fn_add(in0, in1, out, I, HI, WI);
-  }
 
-  if (!strcmp(aNode[n].type, "BatchNormalization")) {
-    // gamma initializer
-    int i_gamma = get_gamma_initializer_id_from_node(n);
-    if (i_gamma == -1) {printf("Error, gamma initializer not found\n"); exit(1);}
-    float *gamma = aInitializer[i_gamma].data;
-    // beta initializer
-    int i_beta = get_beta_initializer_id_from_node(n);
-    if (i_beta == -1) {printf("Error, beta initializer not found\n"); exit(1);}
-    float *beta = aInitializer[i_beta].data;
-    // running_mean initializer
-    int i_running_mean = get_running_mean_initializer_id_from_node(n);
-    if (i_running_mean == -1) {printf("Error, running_mean initializer not found\n"); exit(1);}
-    float *running_mean = aInitializer[i_running_mean].data;
-    // running_var initializer
-    int i_running_var = get_running_var_initializer_id_from_node(n);
-    if (i_running_var == -1) {printf("Error, running_var initializer not found\n"); exit(1);}
-    float *running_var = aInitializer[i_running_var].data;
+  } else if (!strcmp(aNode[n].type, "BatchNormalization")) {
+    // input 0 
+    float *in = fn_get_buffer_from_name(aNode[n].inputs[0]);
+    int num_items_in = fn_get_num_items_from_name(aNode[n].inputs[0]);
+    fn_buffer_stats(in, num_items_in, (char*)"input: ");
+    // gamma
+    float *gamma = fn_get_buffer_from_name(aNode[n].inputs[1]);
+    int num_items_gamma = fn_get_num_items_from_name(aNode[n].inputs[1]);
+    fn_buffer_stats(gamma, num_items_gamma, (char*)"gamma: ");
+    // beta
+    float *beta = fn_get_buffer_from_name(aNode[n].inputs[2]);
+    int num_items_beta = fn_get_num_items_from_name(aNode[n].inputs[2]);
+    fn_buffer_stats(beta, num_items_beta, (char*)"beta: ");
+    // running mean
+    float *running_mean = fn_get_buffer_from_name(aNode[n].inputs[3]);
+    int num_items_running_mean = fn_get_num_items_from_name(aNode[n].inputs[3]);
+    fn_buffer_stats(running_mean, num_items_running_mean, (char*)"running_mean: ");
+    // running var
+    float *running_var = fn_get_buffer_from_name(aNode[n].inputs[4]);
+    int num_items_running_var = fn_get_num_items_from_name(aNode[n].inputs[4]);
+    fn_buffer_stats(running_var, num_items_running_var, (char*)"running_var: ");
     // parameters
     int HI = aNode[n].HI;
     int WI = aNode[n].WI;
@@ -274,29 +405,31 @@ void fn_run_node_on_cpu(int n) {
     float epsilon = aNode[n].epsilon;  // TODO: momentum?
     //
     fn_bn(in, gamma, beta, running_mean, running_var, out, I, HI, WI, epsilon);
-    //
-    if (verbose) {
-      float min, max, avg;
-      size_t num_items;
-      fn_initializer_buffer_stats(i_gamma, &min, &max, &avg, &num_items);
-      printf("    buffer_gamma: min: %6.4f max: %6.4f avg: %6.4f, items: %6ld\n", min, max, avg, num_items);
-      fn_initializer_buffer_stats(i_beta, &min, &max, &avg, &num_items);
-      printf("    buffer_beta: min: %6.4f max: %6.4f avg: %6.4f, items: %6ld\n", min, max, avg, num_items);
-      fn_initializer_buffer_stats(i_running_mean, &min, &max, &avg, &num_items);
-      printf("    buffer_running_mean: min: %6.4f max: %6.4f avg: %6.4f, items: %6ld\n", min, max, avg, num_items);
-      fn_initializer_buffer_stats(i_running_var, &min, &max, &avg, &num_items);
-      printf("    buffer_running_var: min: %6.4f max: %6.4f avg: %6.4f, items: %6ld\n", min, max, avg, num_items);    }
-  }
 
-  if (!strcmp(aNode[n].type, "Relu")) {
+  } else if (!strcmp(aNode[n].type, "Relu")) {
+    // input 0 
+    float *in = fn_get_buffer_from_name(aNode[n].inputs[0]);
+    int num_items_in = fn_get_num_items_from_name(aNode[n].inputs[0]);
+    fn_buffer_stats(in, num_items_in, (char*)"input: ");
     // parameters
     int HI = aNode[n].HI;
     int WI = aNode[n].WI;
     int I  = aNode[n].I;
     fn_relu(in, out, I, HI, WI);
-  }
 
-  if (!strcmp(aNode[n].type, "MaxPool")) {
+  } else if (!strcmp(aNode[n].type, "Transpose")) {
+    // input 0 
+    float *in = fn_get_buffer_from_name(aNode[n].inputs[0]);
+    int num_items_in = fn_get_num_items_from_name(aNode[n].inputs[0]);
+    fn_buffer_stats(in, num_items_in, (char*)"input: ");
+    //
+    fn_transpose(in, out, aNode[n].HI, aNode[n].WI, aNode[n].I, aNode[n].HO, aNode[n].WO, aNode[n].O);
+
+  } else if (!strcmp(aNode[n].type, "MaxPool")) {
+    // input 0 
+    float *in = fn_get_buffer_from_name(aNode[n].inputs[0]);
+    int num_items_in = fn_get_num_items_from_name(aNode[n].inputs[0]);
+    fn_buffer_stats(in, num_items_in, (char*)"input: ");
     // parameters
     int HI = aNode[n].HI;
     int WI = aNode[n].WI;
@@ -312,35 +445,150 @@ void fn_run_node_on_cpu(int n) {
     int PB = aNode[n].pb;
     int PL = aNode[n].pl;
     int PR = aNode[n].pr;
-
     fn_maxpool(in, out, I, HI, WI, O, HO, WO, KH, KW, SH, SW, PT, PB, PL, PR);
-  }
 
-  if (!strcmp(aNode[n].type, "h2d")) {
+  } else if (!strcmp(aNode[n].type, "AveragePool")) {
+    // input 0 
+    float *in = fn_get_buffer_from_name(aNode[n].inputs[0]);
+    int num_items_in = fn_get_num_items_from_name(aNode[n].inputs[0]);
+    fn_buffer_stats(in, num_items_in, (char*)"input: ");
+    // parameters
+    int HI = aNode[n].HI;
+    int WI = aNode[n].WI;
+    int I  = aNode[n].I;
+    int HO = aNode[n].HO;
+    int WO = aNode[n].WO;
+    int O  = aNode[n].O;
+    int KH = aNode[n].kh;
+    int KW = aNode[n].kw;
+    int SH = aNode[n].sh;
+    int SW = aNode[n].sw;
+    int PT = aNode[n].pt;
+    int PB = aNode[n].pb;
+    int PL = aNode[n].pl;
+    int PR = aNode[n].pr;
+    fn_avgpool(in, out, I, HI, WI, O, HO, WO, KH, KW, SH, SW, PT, PB, PL, PR);
+
+  } else if (!strcmp(aNode[n].type, "h2d")) {
+    // input 0 
+    float *in = fn_get_buffer_from_name(aNode[n].inputs[0]);
+    int num_items_in = fn_get_num_items_from_name(aNode[n].inputs[0]);
+    fn_buffer_stats(in, num_items_in, (char*)"input: ");
     // parameters
     int HI = aNode[n].HI;
     int WI = aNode[n].WI;
     int I  = aNode[n].I;
     fn_h2d(in, out, I, HI, WI);
     copy_to_fpga(aNode[n].buffer);
-  }
 
-  if (!strcmp(aNode[n].type, "d2h")) {
+  } else if (!strcmp(aNode[n].type, "d2h")) {
+    // input 0 
+    float *in = fn_get_buffer_from_name(aNode[n].inputs[0]);
+    int num_items_in = fn_get_num_items_from_name(aNode[n].inputs[0]);
+    fn_buffer_stats(in, num_items_in, (char*)"input: ");
     // parameters
     int HI = aNode[n].HI;
     int WI = aNode[n].WI;
     int I  = aNode[n].I;
+    int n_parent = fn_get_node_by_output_name(aNode[n].inputs[0]);
     copy_from_fpga(aNode[n_parent].buffer);
     fn_d2h(in, out, I, HI, WI);
+
+  } else if (!strcmp(aNode[n].type, "GlobalAveragePool")) {
+    // input 0 
+    float *in = fn_get_buffer_from_name(aNode[n].inputs[0]);
+    int num_items_in = fn_get_num_items_from_name(aNode[n].inputs[0]);
+    fn_buffer_stats(in, num_items_in, (char*)"input: ");
+    // parameters
+    int HI = aNode[n].HI;
+    int WI = aNode[n].WI;
+    int I  = aNode[n].I;
+    int HO = aNode[n].HO;
+    int WO = aNode[n].WO;
+    int O  = aNode[n].O;
+    fn_global_average_pool(in, out, HI, WI, I, HO, WO, O);
+
+  } else if (!strcmp(aNode[n].type, "Flatten")) {
+    // input 0 
+    float *in = fn_get_buffer_from_name(aNode[n].inputs[0]);
+    int num_items_in = fn_get_num_items_from_name(aNode[n].inputs[0]);
+    fn_buffer_stats(in, num_items_in, (char *)"input: ");
+    // parameters
+    int HI = aNode[n].HI;
+    int WI = aNode[n].WI;
+    int I  = aNode[n].I;
+    int HO = aNode[n].HO;
+    int WO = aNode[n].WO;
+    int O  = aNode[n].O;
+    fn_flatten(in, out, HI, WI, I, HO, WO, O);
+
+  } else if (!strcmp(aNode[n].type, "Identity")) {
+    // input 0 
+    float *in = fn_get_buffer_from_name(aNode[n].inputs[0]);
+    int num_items_in = fn_get_num_items_from_name(aNode[n].inputs[0]);
+    fn_buffer_stats(in, num_items_in, (char*)"input: ");
+    fn_identity(in, out, aNode[n].HI, aNode[n].WI, aNode[n].I, aNode[n].HO, aNode[n].WO, aNode[n].O);
+
+  } else if (!strcmp(aNode[n].type, "Gemm")) {  // TODO: add C tensor (optional)
+    // input 0 
+    float *in = fn_get_buffer_from_name(aNode[n].inputs[0]);
+    int num_items_in = fn_get_num_items_from_name(aNode[n].inputs[0]);
+    fn_buffer_stats(in, num_items_in, (char*)"input: ");
+    // weight 
+    float *w = fn_get_buffer_from_name(aNode[n].inputs[1]);
+    int num_items_w = fn_get_num_items_from_name(aNode[n].inputs[1]);
+    fn_buffer_stats(w, num_items_w, (char*)"weights: ");
+    // bias
+    float *b = fn_get_buffer_from_name(aNode[n].inputs[2]);
+    int num_items_b = fn_get_num_items_from_name(aNode[n].inputs[2]);
+    fn_buffer_stats(b, num_items_b, (char*)"bias: ");
+    // parameters
+    int HI = aNode[n].HI;
+    int WI = aNode[n].WI;
+    int I = aNode[n].I;
+    int HO = aNode[n].HO;
+    int WO = aNode[n].WO;
+    int O = aNode[n].O;
+    fn_gemm(in, w, b, out, HI, WI, I, HO, WO, O);
+
+  } else if (!strcmp(aNode[n].type, "MatMul")) {
+    // input 0 
+    float *in = fn_get_buffer_from_name(aNode[n].inputs[0]);
+    int num_items_in = fn_get_num_items_from_name(aNode[n].inputs[0]);
+    fn_buffer_stats(in, num_items_in, (char*)"input: ");
+    // weights
+    float *w = fn_get_buffer_from_name(aNode[n].inputs[1]);
+    int num_items_w = fn_get_num_items_from_name(aNode[n].inputs[1]);
+    fn_buffer_stats(w, num_items_w, (char*)"weights: ");
+    fn_matmul(in, w, out, aNode[n].HI, aNode[n].WI, aNode[n].I, aNode[n].HO, aNode[n].WO, aNode[n].O);
+
+  } else if (!strcmp(aNode[n].type, "Concat")) {
+    size_t offset = 0;
+    for (int i=0; i<aNode[n].num_inputs; i++) {
+      float *in = fn_get_buffer_from_name(aNode[n].inputs[i]);
+      int num_items_in = fn_get_num_items_from_name(aNode[n].inputs[i]);
+      fn_buffer_stats(in, num_items_in, (char*)"input: ");
+      int x = fn_get_node_by_output_name(aNode[n].inputs[i]);
+      size_t size = aNode[x].HO * aNode[x].WO * aNode[x].O;
+      fn_concat(in, out, size, offset);
+      offset += size;
+    }
+  } else if (!strcmp(aNode[n].type, "Pad")) {
+    // input 0 
+    float *in = fn_get_buffer_from_name(aNode[n].inputs[0]);
+    int num_items_in = fn_get_num_items_from_name(aNode[n].inputs[0]);
+    fn_buffer_stats(in, num_items_in, (char*)"input: ");
+    fn_pad(in, out, aNode[n].HI, aNode[n].WI, aNode[n].I);    
+  } else {
+    printf("Error, layer not supported yet\n");
+    exit(1);
   }
 
   if (verbose) {
-    float min, max, avg;
-    size_t num_items;
-    fn_node_buffer_stats(n, &min, &max, &avg, &num_items);
-    printf("    buffer_o: min: %6.4f max: %6.4f avg: %6.4f, items: %6ld\n", min, max, avg, num_items);
-
+    fn_buffer_stats(out, num_items_out, (char*)"out  : ");
   }
+
+  if (verbose) printf("\n");
 }
 
 #endif

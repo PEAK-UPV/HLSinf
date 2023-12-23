@@ -50,104 +50,6 @@ int is_initializer(char *name) {
 }
 
 /*
- * is_weight_initializer()
- *
- * returns whether a name is a weight initializer
- *
- */
-int is_weight_initializer(char *name) {
-  if (!is_initializer(name)) return false;
-  int i = fn_get_initializer_by_name(name);
-  if (i==-1) return false;
-  if (!strcmp(aInitializer[i].type, "weight")) return true;
-  return false;  
-}
-
-/*
- * is_bias_initializer()
- *
- * returns whether a name is a bias initializer
- *
- */
-int is_bias_initializer(char *name) {
-  if (!is_initializer(name)) return false;
-  int i = fn_get_initializer_by_name(name);
-  if (i==-1) return false;
-  if (!strcmp(aInitializer[i].type, "bias")) return true;
-  return false;
-}
-
-/*
- * is_gamma_initializer()
- *
- * returns whether a name is a gamma initializer
- *
- */
-int is_gamma_initializer(char *name) {
-  if (!is_initializer(name)) return false;
-  int i = fn_get_initializer_by_name(name);
-  if (i==-1) return false;
-  if (!strcmp(aInitializer[i].type, "gamma")) return true;
-  return false;
-}
-
-/*
- * is_beta_initializer()
- *
- * returns whether a name is a beta initializer
- *
- */
-int is_beta_initializer(char *name) {
-  if (!is_initializer(name)) return false;
-  int i = fn_get_initializer_by_name(name);
-  if (i==-1) return false;
-  if (!strcmp(aInitializer[i].type, "beta")) return true;
-  return false; 
-}
-
-/*
- * is_running_mean_initializer()
- *
- * returns whether a name is a running_mean initializer
- *
- */
-int is_running_mean_initializer(char *name) {
-  if (!is_initializer(name)) return false;
-  int i = fn_get_initializer_by_name(name);
-  if (i==-1) return false;
-  if (!strcmp(aInitializer[i].type, "running_mean")) return true;
-  return false; 
-}
-
-/*
- * is_running_var_initializer()
- *
- * returns whether a name is a running_var initializer
- *
- */
-int is_running_var_initializer(char *name) {
-  if (!is_initializer(name)) return false;
-  int i = fn_get_initializer_by_name(name);
-  if (i==-1) return false;
-  if (!strcmp(aInitializer[i].type, "running_var")) return true;
-  return false; 
-}
-
-/*
- * is_bn_initializer()
- *
- * returns whether a name is a bn initializer
- *
- */
-int is_bn_initializer(char *name) {
-  if (!is_initializer(name)) return false;
-  int i = fn_get_initializer_by_name(name);
-  if (i==-1) return false;
-  if (!strcmp(aInitializer[i].type, "bn")) return true;
-  return false;
-}
-
-/*
  * fn_read_initializers_data()
  *
  * This function reads the data from initializer files.
@@ -199,58 +101,6 @@ void fn_read_initializers_data() {
 }
 
 /*
- * fn_create_zero_initializers()
- *
- * This function checks whether all initializers exist. If for a
- * layer an initializer does not exist (e.g. bias for a conv layer) then
- * it is created and initialized to zeros
- */
-void fn_create_zero_initializers() {
-
-  if (verbose) printf("Creating zero initializers...\n");
-
-  // we search all the nodes
-  for (int n=0; n<num_nodes; n++) {
-    if (aNode[n].valid) {
-      if (is_conv(n)) {
-	if (get_bias_initializer_name_from_node(n)==NULL) {
-          // we create a bias initializer
-	  char name[300];
-	  sprintf(name, "bias_%s", aNode[n].name);
-	  int num_items = aNode[n].O;
-	  fn_add_new_initializer(name, (char*)"bias", num_items, NULL);
-	  add_input_to_node(n, name);
-	  if (verbose) printf("  Bias initializer %s (layer %s)\n", name, aNode[n].name);
-	}
-	if (get_weight_initializer_name_from_node(n)==NULL) {
-	  printf("Error, weights for node %s not found\n", aNode[n].name);
-	  exit(1);
-	}
-      }
-      if (is_bn(n)) {
-	if (get_gamma_initializer_name_from_node(n)==NULL) {
-	  printf("Error, gamma initializer for node %s not found\n", aNode[n].name);
-	  exit(1);
-	}
-        if (get_beta_initializer_name_from_node(n)==NULL) {
-          printf("Error, beta initializer for node %s not found\n", aNode[n].name);
-          exit(1);
-        }
-        if (get_running_var_initializer_name_from_node(n)==NULL) {
-          printf("Error, running_var initializer for node %s not found\n", aNode[n].name);
-          exit(1);
-        }
-        if (get_running_mean_initializer_name_from_node(n)==NULL) {
-          printf("Error, running_mean initializer for node %s not found\n", aNode[n].name);
-          exit(1);
-        }
-      }
-    }
-  }
-  if (verbose) printf("  completed\n");
-}
-
-/*
  * fn_add_new_initializer()
  *
  * Adds an initializer and all its data is set to zeros
@@ -263,12 +113,11 @@ void fn_create_zero_initializers() {
  *
  * One dimension is asumed
  */
-void fn_add_new_initializer(char *name, char *type, int num_items, float *d) {
+void fn_add_new_initializer(char *name, int num_items, float *d) {
 
   aInitializer[num_initializers].valid = true;
   aInitializer[num_initializers].name = (char*)malloc(sizeof(char) * (strlen(name)+1));
   strcpy(aInitializer[num_initializers].name, name);
-  strcpy(aInitializer[num_initializers].type, type);
   aInitializer[num_initializers].num_dimensions = 1;
   aInitializer[num_initializers].dimensions = (int*)malloc(sizeof(int) * 1);
   aInitializer[num_initializers].dimensions[0] = num_items;
@@ -318,249 +167,25 @@ void fn_write_initializers_data() {
 
   }
 }
-	
-
 
 /*
- * get_weight_initializer_name_from_node()
+ * get_initializer_entry_from_node()
  *
- * Returns the weight initializer name from
- * a node passed as an argument as id
- *
- * If not found it returns NULL
- */
-char *get_weight_initializer_name_from_node(int n) {
-  if (n == -1) return NULL;
-  if (!aNode[n].valid) return NULL;
-
-  // we sweep all its inputs and check whether they are initializers
-  for (int i=0; i<aNode[n].num_inputs; i++) {
-    if (is_weight_initializer(aNode[n].inputs[i])) return aNode[n].inputs[i];
-  }
-  return NULL;
-}
-
-/*
- * get_weight_initializer_entry_from_node()
- *
- * Returns the weight initializer id from
- * a node passed as an argument as id
+ * Returns the initializer id from a node passed
+ * as an argument as id
  *
  * If not found it returns -1
  */
-int get_weight_initializer_entry_from_node(int n) {
+int get_initializer_entry_from_node(int n) {
   if (n == -1) return -1;
   if (!aNode[n].valid) return -1;
 
-  // we seep all its inputs and check whether they are initializers
+  // we sweep all its inputs and check whether they are initializers
   for (int i=0; i<aNode[n].num_inputs; i++) {
-    if (is_weight_initializer(aNode[n].inputs[i])) return fn_get_initializer_by_name(aNode[n].inputs[i]);
+    if (is_initializer(aNode[n].inputs[i])) return fn_get_initializer_by_name(aNode[n].inputs[i]);
   }
   return -1;
 }
-
-/*
- * get_bias_initializer_name_from_node()
- *
- * Returns the bias initializer name from
- * a node passed as an argument as id
- *
- * If not found it returns NULL
- */
-char *get_bias_initializer_name_from_node(int n) {
-  if (n == -1) return NULL;
-  if (!aNode[n].valid) return NULL;
-
-  // we sweep all its inputs and check whether they are initializers
-  for (int i=0; i<aNode[n].num_inputs; i++) {
-    if (is_bias_initializer(aNode[n].inputs[i])) return aNode[n].inputs[i];
-  }
-  return NULL;
-}
-
-/*
- * get_bias_initializer_entry_from_node()
- *
- * Returns the bias initializer id from
- * a node passed as an argument as id
- *
- * If not found it returns -1
- */
-int get_bias_initializer_entry_from_node(int n) {
-  if (n == -1) return -1;
-  if (!aNode[n].valid) return -1;
-
-  // we seep all its inputs and check whether they are initializers
-  for (int i=0; i<aNode[n].num_inputs; i++) {
-    if (is_bias_initializer(aNode[n].inputs[i])) return fn_get_initializer_by_name(aNode[n].inputs[i]);
-  }
-  return -1;
-}
-
-
-/*
- * get_gamma_initializer_name_from_node()
- *
- * Returns the gamma initializer name from
- * a node passed as an argument as id
- *
- * If not found it returns NULL
- */
-char *get_gamma_initializer_name_from_node(int n) {
-  if (n == -1) return NULL;
-  if (!aNode[n].valid) return NULL;
-
-  // we sweep all its inputs and check whether they are initializers
-  for (int i=0; i<aNode[n].num_inputs; i++) {
-    if (is_gamma_initializer(aNode[n].inputs[i])) return aNode[n].inputs[i];
-  }
-  return NULL;
-}
-
-/*
- * get_gamma_initializer_id_from_node()
- *
- * Returns the gamma initializer id from
- * a node passed as an argument as id
- *
- * If not found it returns -1
- *
- */
-int get_gamma_initializer_id_from_node(int n) {
-  int i = fn_get_initializer_by_name(get_gamma_initializer_name_from_node(n));
-  return i;
-}
-
-/*
- * get_beta_initializer_name_from_node()
- *
- * Returns the beta initializer name from
- * a node passed as an argument as id
- *
- * If not found it returns NULL
- */
-char *get_beta_initializer_name_from_node(int n) {
-  if (n == -1) return NULL;
-  if (!aNode[n].valid) return NULL;
-
-  // we sweep all its inputs and check whether they are initializers
-  for (int i=0; i<aNode[n].num_inputs; i++) {
-    if (is_beta_initializer(aNode[n].inputs[i])) return aNode[n].inputs[i];
-  }
-  return NULL;
-}
-
-/*
- * get_beta_initializer_id_from_node()
- *
- * Returns the beta initializer id from
- * a node passed as an argument as id
- *
- * If not found it returns -1
- *
- */
-int get_beta_initializer_id_from_node(int n) {
-  int i = fn_get_initializer_by_name(get_beta_initializer_name_from_node(n));
-  return i;
-}
-
-/*
- * get_running_mean_initializer_name_from_node()
- *
- * Returns the running_mean initializer name from
- * a node passed as an argument as id
- *
- * If not found it returns NULL
- */
-char *get_running_mean_initializer_name_from_node(int n) {
-  if (n == -1) return NULL;
-  if (!aNode[n].valid) return NULL;
-
-  // we sweep all its inputs and check whether they are initializers
-  for (int i=0; i<aNode[n].num_inputs; i++) {
-    if (is_running_mean_initializer(aNode[n].inputs[i])) return aNode[n].inputs[i];
-  }
-  return NULL;
-}
-
-/*
- * get_running_mean_initializer_id_from_node()
- *
- * Returns the running_mean initializer id from
- * a node passed as an argument as id
- *
- * If not found it returns -1
- *
- */
-int get_running_mean_initializer_id_from_node(int n) {
-  int i = fn_get_initializer_by_name(get_running_mean_initializer_name_from_node(n));
-  return i;
-}
-/*
- * get_running_var_initializer_name_from_node()
- *
- * Returns the running_var initializer name from
- * a node passed as an argument as id
- *
- * If not found it returns NULL
- */
-char *get_running_var_initializer_name_from_node(int n) {
-  if (n == -1) return NULL;
-  if (!aNode[n].valid) return NULL;
-
-  // we sweep all its inputs and check whether they are initializers
-  for (int i=0; i<aNode[n].num_inputs; i++) {
-    if (is_running_var_initializer(aNode[n].inputs[i])) return aNode[n].inputs[i];
-  }
-  return NULL;
-}
-
-/*
- * get_running_var_initializer_id_from_node()
- *
- * Returns the running_var initializer id from
- * a node passed as an argument as id
- *
- * If not found it returns -1
- *
- */
-int get_running_var_initializer_id_from_node(int n) {
-  int i = fn_get_initializer_by_name(get_running_var_initializer_name_from_node(n));
-  return i;
-}
-
-/*
- * get_bn_initializer_name_from_node()
- *
- * Returns the bn initializer name from
- * a node passed as an argument as id
- *
- * If not found it returns NULL
- */
-char *get_bn_initializer_name_from_node(int n) {
-  if (n == -1) return NULL;
-  if (!aNode[n].valid) return NULL;
-
-  // we sweep all its inputs and check whether they are initializers
-  for (int i=0; i<aNode[n].num_inputs; i++) {
-    if (is_bn_initializer(aNode[n].inputs[i])) return aNode[n].inputs[i];
-  }
-  return NULL;
-}
-
-/*
- * get_bn_initializer_id_from_node()
- *
- * Returns the bn initializer id from a node
- * passed as an argument as id
- *
- * If not found it returns -1
- *
- */
-int get_bn_initializer_id_from_node(int n) {
-  int i = fn_get_initializer_by_name(get_bn_initializer_name_from_node(n));
-  return i;
-} 
 
 /*
  *

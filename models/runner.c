@@ -99,6 +99,8 @@ void fn_process_input_line2(char *line, size_t len) {
     offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].HO = atoi(item);
     offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].WO = atoi(item);
 
+    printf("node %d -> %d %d %d %d %d %d \n", num_nodes, aNode[num_nodes].I, aNode[num_nodes].HI, aNode[num_nodes].WI, aNode[num_nodes].O, aNode[num_nodes].HO, aNode[num_nodes].WO);
+
     // keyword (if is an hlsinf node)
     if (!strcmp(aNode[num_nodes].type, "HLSinf")) {
       offset = fn_get_item_line(line, len, offset, item);
@@ -135,14 +137,24 @@ void fn_process_input_line2(char *line, size_t len) {
     if (!strcmp(aNode[num_nodes].type, "MaxPool")) {
       offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].kh = atoi(item);
       offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].kw = atoi(item);
+      offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].sh = atoi(item);
+      offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].sw = atoi(item);
       offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].pt = atoi(item);
       offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].pb = atoi(item);
       offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].pl = atoi(item);
       offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].pr = atoi(item);
+    }
+    // if we have an avgpool then we read the parameters kh, kw, pt, pb, pl, pr, sh, sw)
+    if (!strcmp(aNode[num_nodes].type, "AveragePool")) {
+      offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].kh = atoi(item);
+      offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].kw = atoi(item);
       offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].sh = atoi(item);
       offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].sw = atoi(item);
+      offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].pt = atoi(item);
+      offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].pb = atoi(item);
+      offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].pl = atoi(item);
+      offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].pr = atoi(item);
     }
-
     // if we have a HLSinf then we read all the parameters: kh, kw, pt, pb, pl, pr, sh, sw
     if (!strcmp(aNode[num_nodes].type, "HLSinf")) {
       offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].hlsinf_kh_conv = atoi(item);
@@ -189,9 +201,6 @@ void fn_process_input_line2(char *line, size_t len) {
     offset = fn_get_item_line(line, len, offset, item);
     aInitializer[num_initializers].name = (char*)malloc(sizeof(char) * (strlen(item)+1));
     strcpy(aInitializer[num_initializers].name, item);
-    // type
-    offset = fn_get_item_line(line, len, offset, item);
-    strcpy(aInitializer[num_initializers].type, item);
     // dimensions
     offset = fn_get_item_line(line, len, offset, item);
     aInitializer[num_initializers].num_dimensions = atoi(item);
@@ -266,7 +275,7 @@ void run_graph() {
   if (timings) for (int n=0; n<num_nodes; n++) {aNode[n].num_runs = 0; aNode[n].accumulated_runtime = 0;}
 
   // now we read the node graph in execution order collecting statistics
-  for (int order=0; order < max_execution_order; order++) {
+  for (int order=0; order <= max_execution_order; order++) {
     //
     for (int n=0; n<num_nodes; n++) {
       //
@@ -276,12 +285,11 @@ void run_graph() {
         //
         if (timings) fn_start_timer();
         //
-	      if (!strcmp(aNode[n].type, "HLSinf")) fn_run_node_on_fpga(n);
-	      else fn_run_node_on_cpu(n);
+        if (!strcmp(aNode[n].type, "HLSinf")) fn_run_node_on_fpga(n); else fn_run_node_on_cpu(n);
         //
-        if (timings) fn_stop_timmer();
+        if (timings) fn_stop_timer();
         //
-        if (timings) {aNode[n].num_runs++; aNode[n].accumulated_runtime += fn_get_timmer();}
+        if (timings) {aNode[n].num_runs++; aNode[n].accumulated_runtime += fn_get_timer();}
       }
     }
   }
@@ -297,7 +305,7 @@ void run_graph() {
         int nr = aNode[n].num_runs;
         unsigned long long crt = aNode[n].accumulated_runtime;
         unsigned long long art = (crt / nr);
-        printf("| %-50s | %-10d | %-15ulld | %-15ulld|\n", aNode[name], crt, art);)
+        printf("| %-50s | %-10d | %-15lld | %-15lld|\n", aNode[n].name, aNode[n].num_runs, crt, art);
       }
     }
   }
