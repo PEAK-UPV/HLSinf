@@ -504,7 +504,7 @@ void fn_remove_identity() {
 	  }
 	}
 	if (verbose && verbose_level >= 3) printf("    node %d (%s) removed\n", n, aNode[n].name);
-	fn_delete_node(n);
+	fn_remove_node(n);
       }
     }
   }

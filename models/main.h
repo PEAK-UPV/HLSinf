@@ -4,7 +4,7 @@
  *
  */
 
-// global variables
+// global variables (see main.c for a description of each)
 extern char   input_file_name[200];
 extern char   output_file_name[200];
 extern char   xclbin_file_name[200];

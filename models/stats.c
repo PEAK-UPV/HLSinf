@@ -1,7 +1,8 @@
 /*
  * stats.c
  *
- * This file provides statistics about node buffers and initializer buffers
+ * This file provides statistics about buffers (min, max, avg) and 
+ * provides support for timing statistics
  *
  */
 

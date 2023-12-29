@@ -1,7 +1,11 @@
 /*
  * fpga.c
  *
- * This file includes all the support functions related to the FPGA device
+ * This file includes all the support functions related to the FPGA device.
+ *
+ * It provides functions to create buffers, copy to and from the fpga buffers
+ * and to run nodes on HLSinf kernels.
+ *
  */
 
 #ifdef RUNTIME_SUPPORT
@@ -38,33 +42,46 @@ void set_callback(cl::Event event, const char *queue_name) {
 }
 
 // global variables
-cl::Context       context;
-cl::CommandQueue  q;
-cl::Program       program;
-std::string       binaryFile;
-cl::Kernel        kernel_conv2d[MAX_KERNELS];
-vector<cl::Event> kernel_events(MAX_KERNELS);
-vector<cl::Event> write_events(3);
-vector<cl::Event> read_events(3);
+cl::Context       context;                      // opencl context
+cl::CommandQueue  q;                            // opencl launch queue
+cl::Program       program;                      // opencl program
+std::string       binaryFile;                   // opencl binary file (xclbin)
+cl::Kernel        kernel_conv2d[MAX_KERNELS];   // opencl kernels
+vector<cl::Event> kernel_events(MAX_KERNELS);   // opencl kernel events
+vector<cl::Event> write_events(3);              // opencl write events
+vector<cl::Event> read_events(3);               // opencl read events
 
-float             *add_data_buffer;
-float             *bn_data_buffer;
-cl::Buffer        *add_buffer;
-cl::Buffer        *bn_buffer;
-cl_mem_ext_ptr_t  add_buffer_ddr;
-cl_mem_ext_ptr_t  bn_buffer_ddr;
+float             *add_data_buffer;             // temporal add buffer (for those cases an add is not used by HLSinf)
+float             *bn_data_buffer;              // temporal bn buffer (for those cases bn is not used by HLSinf)
+cl::Buffer        *add_buffer;                  // temporal opencl add buffer
+cl::Buffer        *bn_buffer;                   // temporal opencl bn buffer
+cl_mem_ext_ptr_t  add_buffer_ddr;               // temporal xilinx add buffer information
+cl_mem_ext_ptr_t  bn_buffer_ddr;                // temporal xilinx bn buffer information
 
+/*
+ * fn_get_clbuffer_from_name()
+ *
+ * This function returns the opencl buffer associated
+ * to a name. The name can be of an initializer,
+ * of a node's output, or a model input
+ *
+ */
 cl::Buffer *fn_get_clbuffer_from_name(char *name) {
   int i;
+
   // input buffer is model input?
   i = get_model_input_id(name);
   if (i != -1) return aInput[i].buffer;
+
   // input buffer is initializer?
   i = fn_get_initializer_by_name(name);
   if (i != -1) return aInitializer[i].buffer;
+
   // input buffer is node buffer?
   i = fn_get_node_by_output_name(name);
   if (i != -1) return aNode[i].buffer;
+
+  // none found
   return NULL;
 }
 
@@ -76,14 +93,18 @@ cl::Buffer *fn_get_clbuffer_from_name(char *name) {
  */
 void fn_init_fpga() {
 
+  // is xclbin file defined and instantiated?
   if (!xclbin_defined) {printf("WARNING: FPGA not initialized since no xclbin has been specified\n"); return;}
 
   cl_int err;
 
+  // debug/verbose information
   if (verbose && verbose_level >= 3) printf("creating FPGA context...\n");
 
+  // binary file
   binaryFile = xclbin_file_name;
 
+  // platform, context, device, binaries
   auto devices = xcl::get_xil_devices();
   auto device = devices[0];
   OCL_CHECK(err, context = cl::Context(device, NULL, NULL, NULL, &err));
@@ -93,6 +114,7 @@ void fn_init_fpga() {
   cl::Program::Binaries bins{{fileBuf.data(), fileBuf.size()}};
   devices.resize(1);
 
+  // program
   OCL_CHECK(err, cl::Program program(context, devices, bins, NULL, &err));
   std::cout << "Device " << device_name.c_str() << ": program successful!" << std::endl;
 
@@ -104,9 +126,18 @@ void fn_init_fpga() {
     std::cout << "Kernel successfully created" << std::endl;
   }
 
+  // debug/verbosity information
   if (verbose && verbose_level >= 3) printf("  completed\n");
 }
 
+/*
+ * allocate_buffers()
+ *
+ * Allocates all needed buffers for running the model.
+ * The function allocates a buffer in the host and an associated
+ * buffer in the FPGA (if xclbin is defined)
+ *
+ */
 void allocate_buffers() {
 
   cl_int err;
@@ -116,9 +147,11 @@ void allocate_buffers() {
   // every node has an output buffer
   for (int n=0; n<num_nodes; n++) {
     if (aNode[n].valid) {
+      // data buffer
       size_t size = aNode[n].O * aNode[n].HO * aNode[n].WO * sizeof(float);
       if (verbose && verbose_level >= 3) printf("  allocating output buffer for node %d (size %ld), name: %-50s\n", n, size, aNode[n].name);
       posix_memalign((void **)&aNode[n].data, 4096, size);
+      // opencl buffer (if xclbin defined)
       if (xclbin_defined) {
         aNode[n].buffer_ddr.flags = 0 | XCL_MEM_TOPOLOGY;
         aNode[n].buffer_ddr.obj   = aNode[n].data;
@@ -128,8 +161,8 @@ void allocate_buffers() {
     }
   }
 
-  // add temporal buffer
   if (xclbin_defined) {
+    // data buffer
     size_t size=1000;
     posix_memalign((void**)&add_data_buffer, 4096, size);
     add_buffer_ddr.flags = 0 | XCL_MEM_TOPOLOGY;
@@ -148,11 +181,12 @@ void allocate_buffers() {
   // every initializer has a buffer
   for (int i=0; i<num_initializers; i++) {
     if (aInitializer[i].valid) {
+      // data buffer
       size_t size = 1;
       for (int d=0; d<aInitializer[i].num_dimensions; d++) size = size * aInitializer[i].dimensions[d];
       size = size * sizeof(float);
       if (verbose && verbose_level >= 3) printf("  allocating buffer for initializer %d (size %ld), name: %-50s\n", i, size, aInitializer[i].name);
-      //
+      // opencl buffer (if xclbin defined)
       if (xclbin_defined) {
         aInitializer[i].buffer_ddr.flags = 0 | XCL_MEM_TOPOLOGY;
         aInitializer[i].buffer_ddr.obj   = aInitializer[i].data;
@@ -165,6 +199,7 @@ void allocate_buffers() {
   // finally we need a buffer for every input
   for (int i=0; i<num_inputs; i++) {
     if (aInput[i].valid) {
+      // size
       size_t size = 1;
       if (aInput[i].num_dimensions == 4) {
 	printf("WARNING: Input model with four dimensions, asuming three dimensions (1, 2, 3). Dimension 0 assumed to be batch size\n");
@@ -175,43 +210,74 @@ void allocate_buffers() {
 	printf("Number of dimensions for input model not supported (%d)\n", aInput[i].num_dimensions);
 	exit(1);
       }
+      // data buffer
       int num_items = size;   // TODO: remove
       size = size * sizeof(float);
       if (verbose && verbose_level >= 3) printf("  allocating buffer for input model %d (size %ld), name %-50s\n", i, size, aInput[i].name);
       posix_memalign((void **)&aInput[i].data, 4096, size);
+      // opencl buffer (if xclbin defined)
       if (xclbin_defined) {
         aInput[i].buffer_ddr.flags = 0 | XCL_MEM_TOPOLOGY;
         aInput[i].buffer_ddr.obj   = aInput[i].data;
         aInput[i].buffer_ddr.param = 0;       
         OCL_CHECK(err, aInput[i].buffer = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, size, &aInput[i].buffer_ddr, &err));
       }
+      // initialization
       for (int x=0; x<num_items; x++) aInput[i].data[x] = 1.f; // TODO: remove
     }
   }
 
+  // debug/verbosity information
   if (verbose && verbose_level >= 3) printf("  completed\n");
 }
 
+/*
+ * copy_to_fpga()
+ *
+ * copies data from a data buffer to an FPGA opencl buffer
+ *
+ */
 void copy_to_fpga(cl::Buffer *buf) {
+  // check xclbin defined
   if (!xclbin_defined) {printf("ERROR: copy to fpga not possible since no XCLBIN has been defined\n"); return;}
+
+  // copy
   cl_int err;
   OCL_CHECK(err, err = q.enqueueMigrateMemObjects( {*buf}, 0, NULL, &write_events[0]));
   set_callback(write_events[0], "ooo_queue");
   OCL_CHECK(err, err = write_events[0].wait());
 }
 
+
+/*
+ * copy_from_fpga()
+ *
+ * copies data from an FPGA opencl buffer into a data buffer
+ *
+ */
 void copy_from_fpga(cl::Buffer *buf) {
+  // check xclbin defined
   if (!xclbin_defined) {printf("ERROR: copy from fpga not possible since no XCLBIN has been defined\n"); return;}
+
+  // copy
   cl_int err;
   OCL_CHECK(err, err = q.enqueueMigrateMemObjects({*buf}, CL_MIGRATE_MEM_OBJECT_HOST, NULL, &read_events[0]));
   set_callback(read_events[0], "ooo_queue");
   OCL_CHECK(err, err = read_events[0].wait());
 }
 
+/*
+ * deallocate_buffers()
+ *
+ * Deallocates the buffers, first in the host
+ * and then in the FPGA (if xclbin defined)
+ *
+ */
 void deallocate_buffers() {
+  // debug/verbosity information
   if (verbose && verbose_level >= 3) printf("deallocating buffers...\n");
 
-  // we deallocate buffers of nodes, initializers, and inputs
+  // we deallocate opencl buffers of nodes, initializers, and inputs (only if xclbin is defined)
   if (xclbin_defined) {
     for (int n=0; n<num_nodes; n++) if (aNode[n].valid) free(aNode[n].buffer);
     for (int i=0; i<num_initializers; i++) if (aInitializer[i].valid) free(aInitializer[i].buffer);
@@ -223,18 +289,20 @@ void deallocate_buffers() {
   for (int i=0; i<num_initializers; i++) if (aInitializer[i].valid) free(aInitializer[i].data);
   for (int i=0; i<num_inputs; i++) if (aInput[i].valid) free(aInput[i].data);
 
+  // debug/verbosity information
   if (verbose && verbose_level >= 3) printf("  completed\n");
 }
 
 /*
  * run_node_on_fpga()
  *
- * This function launches the kernel for a given node
+ * This function launches the kernel for a given node.
  *
  * The node is passed as argument
- * The kernel identifier is passed as argument aswell
+ * The kernel identifier is passed as argument aswell.
+ * For a given node, the range of output channels and input rows is passed aswell.
+ *
  */
-
 void fn_run_node_on_fpga(int n, int k, int first_O, int last_O, int first_HI, int last_HI) {
 
   //
@@ -263,19 +331,13 @@ void fn_run_node_on_fpga(int n, int k, int first_O, int last_O, int first_HI, in
   int         read_from_buffer0, write_to_buffer0;
   int         read_from_buffer1, write_to_buffer1;
 
-  int         i_weight, i_bias, i_bn, n_parent, n_add;
-
+  // let's first check correctness of node and type, and xclbin defined
   if (n==-1) return;
   if (!aNode[n].valid) return;
   if (strcmp(aNode[n].type, "HLSinf")) return;
   if (!xclbin_defined) {printf("WARNING: FPGA not initialized\n"); return;}
 
-  i_weight = -1;
-  i_bias = -1;
-  i_bn = -1;
-  n_parent = -1;
-  n_add = -1;
-
+  // debug/verbosity information
   if (verbose && verbose_level >= 1) printf("    running %s (keyword %s, O: %d - %d, HI %d - %d) (fpga)\n", aNode[n].name, aNode[n].keyword, first_O, last_O, first_HI, last_HI);
 
   // input clbuffer
@@ -322,14 +384,11 @@ void fn_run_node_on_fpga(int n, int k, int first_O, int last_O, int first_HI, in
   pr                      = aNode[n].hlsinf_pr_conv;
   sh                      = aNode[n].hlsinf_sh_conv;
   sw                      = aNode[n].hlsinf_sw_conv;
-  //
   i_iter                  = I / CPI;
-  //
   first_o_iter            = (first_O / CPO);
   last_o_iter             = ((last_O+1) / CPO) - 1;
   read_offset             = 0;
   write_offset            = 0;
-  //
   relu_enable             = false;
   relu_factor             = 0.f;
   stm_enable              = false;
@@ -364,6 +423,7 @@ void fn_run_node_on_fpga(int n, int k, int first_O, int last_O, int first_HI, in
   if (!strcmp(aNode[n].keyword, "cb"))   {bn_enable = true;}
   if (!strcmp(aNode[n].keyword, "cr"))   {relu_enable = true;}
 
+  // verbosity/debug information
   if (verbose && verbose_level >= 3) {
     printf("      IxHIxWI: %4dx%4dx%4d OxHOxWO: %4dx%4dx%4d num_read_rows: %3d pads: %1d%1d%1d%1d SWxSW: %1dx%1d\n", I, HI, WI, O, HO, WO, num_read_rows, pt, pb, pl, pr, sh, sw);
     printf("      i_iter: %3d first_o_iter: %3d last_o_iter: %3d\n", i_iter, first_o_iter, last_o_iter);
@@ -377,6 +437,7 @@ void fn_run_node_on_fpga(int n, int k, int first_O, int last_O, int first_HI, in
   }
 
 
+  // aruments
   cl_int err;
   int arg = 0;
   OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_i));
@@ -430,11 +491,12 @@ void fn_run_node_on_fpga(int n, int k, int first_O, int last_O, int first_HI, in
   OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, write_to_buffer0));
   OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, write_to_buffer1));
   //
-  //
+  // enqueue and run, and wait
   OCL_CHECK(err, err = q.enqueueNDRangeKernel(kernel_conv2d[k], 0, 1, 1, NULL, &kernel_events[k]));
   set_callback(kernel_events[k], "ooo_queue");
   OCL_CHECK(err, err = kernel_events[k].wait());
 
+  // verbosity/debug information
   if (verbose && verbose_level >= 2) {
     copy_from_fpga(aNode[n].buffer);
     fn_buffer_stats_by_name(aNode[n].outputs[0], (char*)"      out    : ");

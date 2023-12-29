@@ -2,7 +2,9 @@
  *
  * main.c
  *
- * This file includes the main entry point of the parser
+ * This file includes the main entry point of the parser.
+ * The file includes the arguments parsing and the function's call
+ * to perform the desired operation (either convert a model or to run a model).
  *
  */
 
@@ -21,6 +23,7 @@
 #include "fpga.h"
 #include "parsers.h"
 
+// arguments defines
 #define ARG_HELP              0
 #define ARG_OUTPUT            1
 #define ARG_RUN               2
@@ -49,36 +52,35 @@
 #define ARG_OMP              25
 
 // global variables
-char   input_file_name[200];
-char   output_file_name[200];
-char   xclbin_file_name[200];
-int    xclbin_defined;
-int    verbose;          // if set then we print debug information
-int    verbose_level;
-int    command;
-int    convert;
-int    generate_figs;
-int    timings;
-int    run;
-int    cbar_keyword;
-int    cbr_keyword;
-int    crm_keyword;
-int    cb_keyword;
-int    cr_keyword;
-int    c_keyword;
-int    adapt_1x1_to_3x3;
-int    adapt_2x2_to_3x3;
-int    adapt_dense;
-int    remove_identity;
-int    CPI;
-int    CPO;
-int    num_kernels;
-int    ocp_enabled;
-int    ocp_threshold;
-int    irp_enabled;
-int    irp_threshold;
-int    np_enabled;
-int    enable_omp;
+char   input_file_name[200];   // input file name including the model to convert/run
+char   output_file_name[200];  // output file name to write the produced model
+char   xclbin_file_name[200];  // xclbin file (for running)
+int    xclbin_defined;         // whether xclbin has been defined
+int    verbose;                // if set then we print debug information
+int    verbose_level;          // verbosity level (currently 1, 2, 3)
+int    convert;                // whether we have to convert an input model to an output file
+int    generate_figs;          // whether fig files will be generated for input model and converted one
+int    timings;                // whether to collect and show timing statistics
+int    run;                    // whether we have to run an input model
+int    cbar_keyword;           // CBAR optimization to be applied
+int    cbr_keyword;            // CBR optimization to be applied
+int    crm_keyword;            // CRM optimization to be applied
+int    cb_keyword;             // CB optimization to be applied
+int    cr_keyword;             // CR optimization to be applied
+int    c_keyword;              // C optimization to be applied
+int    adapt_1x1_to_3x3;       // whether 1x1 conv filters to be adapted/padded to 3x3 conv filters
+int    adapt_2x2_to_3x3;       // whether 2x2 conv filters to be adapted/padded to 3x3 conv filters
+int    adapt_dense;            // whether dense nodes to be adapted/padded to 2D conv nodes
+int    remove_identity;        // whether identity nodes to be removed from the input model
+int    CPI;                    // Channels per input to be assumed (HLSinf input channel parallelism)
+int    CPO;                    // Channels per output to be assumed (HLSinf output channel parallelism)
+int    num_kernels;            // number of available HLSinf kernels in the FPGA system
+int    ocp_enabled;            // whether output channel parallelism to be applied
+int    ocp_threshold;          // output channel parallelism threshold
+int    irp_enabled;            // whether input row parallelism to be applied
+int    irp_threshold;          // input row parallelism to be applied
+int    np_enabled;             // whether node parallelism to be applied
+int    enable_omp;             // whether OpenMP to be applied to CPU nodes
 
 /*
  *
@@ -91,45 +93,48 @@ int    enable_omp;
 void print_help(char *program_name) {
   printf("usage: %s [-c|-r filename] [-o filename] [-xclbin filename] [-k_cbar] [-k_cbr] [-k_crm] [-k_cb] [-k_cr] [-k_c] [-a1x1] [-a2x2] [-v value] [-f] [-help] [-cpi value] [-cpo value] [-t] [-omp]\n", program_name);
 
-  printf("[-c filename]        : convert/parse input file\n");
-  printf("[-o filename]        : Output file where to write the parsed model\n");
+  printf("\n");
+  printf("  [-c filename]        : convert/parse input file\n");
+  printf("  [-o filename]        : Output file where to write the parsed model\n");
   #ifdef RUNTIME_SUPPORT
-  printf("[-r filename]        : run input file\n");  
-  printf("[-xclbin filename]   : XCLBIN file to use in running mode\n");
+  printf("  [-r filename]        : run input file\n");  
+  printf("  [-xclbin filename]   : XCLBIN file to use in running mode\n");
   #endif
-  printf("--\n");
-  printf("[-cpi value]         : CPI (channels per input) value assumed (by default set to 4)\n");
-  printf("[-cpo value]         : CPO (channels per output) value assumed (by default set to 4)\n");
-  printf("--Optimizations:\n");
-  printf("[-k_cbar]            : Merge Conv + BatchNorm + Add + ReLU nodes into a single HLSinf node\n");
-  printf("[-k_cbr]             : Merge Conv + BatchNorm + ReLU nodes into a single HLSinf node\n");
-  printf("[-k_crm]             : Merge Conv + Relu + MaxPool\n");
-  printf("[-k_cb]              : Merge Conv + BatchNorm nodes into a single HLSinf node\n");
-  printf("[-k_cr]              : Merge Conv + ReLU nodes into a single HLSinf node\n");
-  printf("[-k_c]               : Convert Conv into HLSinf node\n");
-  printf("[-a1x1]              : Adapt 1x1 conv filters into 3x3 conv filters\n");
-  printf("[-a2x2]              : Adapt 2x2 conv filters into 3x3 conv filters\n");
-  printf("[-aDense]            : Adapt a nxw dense layer into a oxixhxw conv layer\n");
-  printf("[-ri]                : Remove identity nodes\n");
-  printf("[-all]               : Use all optimizations available\n");
-  printf("--\n");
-  printf("[-v value]           : Verbose mode activated. Available levels:\n");
-  printf("  1                  : just processes being run\n");
-  printf("  2                  : output information for every node\n");
-  printf("  3                  : all\n");
-  printf("--\n");
-  printf("[-k value]           : Number of HLSinf kernels availablei (1 by default)\n");
-  printf("[-ocp value]         : Use output channel parallelism with indicated threshold\n");
-  printf("[-irp value]         : Use input row parallelism with indicated threshold\n");
-  printf("[-np]                : Use node parallelism\n");
-  printf("--\n");
-  printf("[-f]                 : Generate fig files with input model and generated model\n");
+  printf("\n");
+  printf("Parameters/optimizations for model conversion:\n");
+  printf("  [-cpi value]         : CPI (channels per input) value assumed (by default set to 4)\n");
+  printf("  [-cpo value]         : CPO (channels per output) value assumed (by default set to 4)\n");
+  printf("  [-k_cbar]            : Merge Conv + BatchNorm + Add + ReLU nodes into a single HLSinf node\n");
+  printf("  [-k_cbr]             : Merge Conv + BatchNorm + ReLU nodes into a single HLSinf node\n");
+  printf("  [-k_crm]             : Merge Conv + Relu + MaxPool\n");
+  printf("  [-k_cb]              : Merge Conv + BatchNorm nodes into a single HLSinf node\n");
+  printf("  [-k_cr]              : Merge Conv + ReLU nodes into a single HLSinf node\n");
+  printf("  [-k_c]               : Convert Conv into HLSinf node\n");
+  printf("  [-a1x1]              : Adapt 1x1 conv filters into 3x3 conv filters\n");
+  printf("  [-a2x2]              : Adapt 2x2 conv filters into 3x3 conv filters\n");
+  printf("  [-aDense]            : Adapt a nxw dense layer into a oxixhxw conv layer\n");
+  printf("  [-ri]                : Remove identity nodes\n");
+  printf("  [-all]               : Use all optimizations available\n");
+  printf("\n");
+  printf("Debug:\n");
+  printf("  [-v value]           : Verbose mode activated. Available levels:\n");
+  printf("    1                  : just processes being run\n");
+  printf("    2                  : output information for every node\n");
+  printf("    3                  : all\n");
+  printf("\n");
   #ifdef RUNTIME_SUPPORT
-  printf("[-t]                 : Provide timings (for run mode)\n");
-  printf("[-omp]               : Enable OpenMP (for nodes running on CPU)\n");
+  printf(" Parameters for model run:\n");
+  printf("  [-k value]           : Number of HLSinf kernels availablei (1 by default)\n");
+  printf("  [-ocp value]         : Use output channel parallelism with indicated threshold\n");
+  printf("  [-irp value]         : Use input row parallelism with indicated threshold\n");
+  printf("  [-np]                : Use node parallelism\n");
+  printf("  [-t]                 : Provide timings (for run mode)\n");
+  printf("  [-omp]               : Enable OpenMP (for nodes running on CPU)\n");  printf("\n");
   #endif
-  printf("--\n");
+  printf("--Others:\n");
+  printf("  [-f]                 : Generate fig files with input model and generated model\n");
   printf("[-help]              : Shows this text\n");
+  printf("\n");
 }
 
 
@@ -242,10 +247,20 @@ void fn_parse_arguments(int argc, char *argv[]) {
   }
 }
 
+/*
+ * main()
+ *
+ * This is the main entry point, calls the argument's parsing function
+ * and based on the arguments runs all needed functions to either convert
+ * an input model or to run an input model
+ *
+ */
 int main(int argc, char *argv[]) {
 
+  // we first parse the arguments
   fn_parse_arguments(argc, argv);
 
+  // conversion procedure
   if (convert) {
     if (verbose && verbose_level >= 1) printf("reading input model (file %s)...\n", input_file_name); 
     fn_read_input_model();
@@ -264,8 +279,9 @@ int main(int argc, char *argv[]) {
     fn_write_output_model();
   }
 
+  // run procedure
   if (run) {
-#ifdef RUNTIME_SUPPORT
+    #ifdef RUNTIME_SUPPORT
     if (verbose && verbose_level >= 1) printf("reading input model (file %s)...\n", input_file_name);
     fn_read_run_graph();
   

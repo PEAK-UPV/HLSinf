@@ -20,15 +20,24 @@
 #include "stats.h"
 #include "fpga.h"
 
+/* 
+ * fn_conv2D()
+ *
+ * performs 2D durect convolution
+ *
+ */
 void fn_conv2d(float *in, float *w, float *b, float *out, int HI, int WI, int I, int HO, int WO, int O, int KH, int KW, int SH, int SW, int PT, int PB, int PL, int PR, int use_bias) {
-  //
+  // verbose information
   if (verbose && verbose_level >= 3) {
     printf("    buffer_i: %p buffer_w: %p buffer_b: %p buffer_out: %p\n", in, w, b, out);
-    printf("    IxHIxWI: %3dx%3dx%3d OxHOxWO: %3dx%3dx%3d KWxKW: %3dx%3d SHxSW: %3dx%3d padings: %1d-%1d-%1d-%1d\n", I, HI, WI, O, HO, WO, KH, KW, SH, SW, PT, PB, PL, PR);
+    printf("    IxHIxWI: %3dx%3dx%3d OxHOxWO: %3dx%3dx%3d KWxKW: %3dx%3d SHxSW: %3dx%3d padings: %1d-%1d-%1d-%1d\n", 
+		I, HI, WI, O, HO, WO, KH, KW, SH, SW, PT, PB, PL, PR);
   }
+  // let's initialize output buffer
   int size_o = O * WO * HO;
-  for (int x = 0; x<size_o; x++) out[x] = 0.f;
+  memset(out, 0, size_o*sizeof(float));
 
+  // 6-loop 2d-convolution implementation
   #pragma omp parallel for
   for (int i=0; i<I; i++) {
     for (int o=0; o<O; o++) {
@@ -50,7 +59,7 @@ void fn_conv2d(float *in, float *w, float *b, float *out, int HI, int WI, int I,
     }
   }
 
-  // bias
+  // bias addition
   if (use_bias) {
     for (int o=0; o<O; o++) {
       for (int ho=0; ho<HO; ho++) {
@@ -61,13 +70,18 @@ void fn_conv2d(float *in, float *w, float *b, float *out, int HI, int WI, int I,
       }
     }
   }
-
 }
 
+/*
+ * fn_global_average_pool()
+ *
+ * performs global average pool per dimension
+ *
+ */
 void fn_global_average_pool(float *in, float *out, int HI, int WI, int I, int HO, int WO, int O) {
-  //
+  // let's check some arguments
   if ((HO!=1) || (WO!=1) || (I!=O)) {printf("Error, in global average pool\n"); exit(1);}
-  //
+  // let's perform global average pool per input (output) channel
   for (int i=0;i<I; i++) {
     float sum = 0.f;
     for (int h=0; h<HI; h++) {
@@ -81,8 +95,15 @@ void fn_global_average_pool(float *in, float *out, int HI, int WI, int I, int HO
   }
 }
 
+/*
+ * fn_flatten()
+ *
+ * Flattens an input buffer
+ *
+ */
 void fn_flatten(float *in, float *out, int HI, int WI, int I, int HO, int WO, int O) {
   //
+  #pragma omp parallel for
   for (int i=0; i<I; i++) {
     for (int hi=0; hi<HI; hi++) {
       for (int wi=0; wi<WI; wi++) {
@@ -94,36 +115,73 @@ void fn_flatten(float *in, float *out, int HI, int WI, int I, int HO, int WO, in
   }
 }
 
+/*
+ * fn_identity()
+ *
+ * Performs identity function (just copy an input buffer onto an output buffer)
+ *
+ */
 void fn_identity(float *in, float *out, int HI, int WI, int I, int HO, int WO, int O) {
   size_t n = I * HI * WI;
   for (size_t x=0; x<n; x++) out[x] = in[x];
 }
 
+/*
+ * fn_pad()
+ *
+ * Pads the input buffer
+ *
+ */
 void fn_pad(float *in, float *out, int HI, int WI, int I) {   // TODO: implement pad correctly
   size_t n = I * HI * WI;
   for (size_t x=0; x<n; x++) out[x] = in[x];
 }
 
+/*
+ *
+ * fn_sigmoid()
+ *
+ * Performs element-wise sigmoid function
+ *
+ */
 void fn_sigmoid(float *in, float *out, int HI, int WI, int I) {
   size_t n = I * HI * WI;
   for (size_t x=0; x<n; x++) out[x] = 1 / (1 + expf(-in[x]));
 }
 
+/*
+ * fn_mul()
+ *
+ * Performs element-wise multiplication of two input buffers
+ *
+ */
 void fn_mul(float *in0, float *in1, float *out, int HI, int WI, int I) {
   size_t n = I * HI * WI;
   for (size_t x=0; x<n; x++) out[x] = in0[x] * in1[x];
 }
 
+/*
+ * fn_concat()
+ *
+ * Concatenates (copies) an input buffer to an output buffer given an offset
+ *
+ */
 void fn_concat(float *in, float *out, size_t size, size_t offset) {
   for (size_t x=0; x<size; x++) out[x + offset] = in[x];
 }
 
-
+/*
+ * fn_gemm()
+ *
+ * Performs GEMM operation: out = in * w + b
+ *
+ */
 void fn_gemm(float *in, float *w, float *b, float *out, int HI, int WI, int I, int HO, int WO, int O) {
-  //
+  // n and m dimensions
   int n = I * HI * WI;
   int m = O * HO * WO;
 
+  // operation
   for (int o=0; o<m; o++) { // for every output
     float r = 0.f;
     for (int i=0; i<n; i++) { // dot product
@@ -137,11 +195,18 @@ void fn_gemm(float *in, float *w, float *b, float *out, int HI, int WI, int I, i
   }
 }
 
+/*
+ * fn_matmul()
+ *
+ * Performs matmul operation: out = in * w
+ *
+ */
 void fn_matmul(float *in, float *w, float *out, int HI, int WI, int I, int HO, int WO, int O) {
-  //
+  // n and m dimensions
   int n = I * HI * WI;
   int m = O * HO * WO;
 
+  // operation
   for (int o=0; o<m; o++) { // for every output
     float r = 0.f;
     for (int i=0; i<n; i++) { // dot product
@@ -154,6 +219,12 @@ void fn_matmul(float *in, float *w, float *out, int HI, int WI, int I, int HO, i
   }
 }
 
+/*
+ * fn_transpose()
+ *
+ * Transposes the input assuming permutation 2 0 1
+ *
+ */
 void fn_transpose(float *in, float *out, int HI, int WI, int I, int HO, int WO, int O) {
   for (int i=0; i<I; i++) {
     for (int hi=0; hi<HI; hi++) {
@@ -170,6 +241,14 @@ void fn_transpose(float *in, float *out, int HI, int WI, int I, int HO, int WO, 
   }
 }
 
+/*
+ * fn_bn()
+ *
+ * Performs batch normalization to each channel
+ *
+ * out = (in - running_mean) / sqrt(running_var + epsilon) * gamma + beta
+ *
+ */
 void fn_bn(float *in, float *gamma, float *beta, float *running_mean, float *running_var, float *out, int I, int HI, int WI, float epsilon) {
   for (int i=0; i<I; i++) {
     for (int hi = 0; hi<HI; hi++) {
@@ -184,6 +263,12 @@ void fn_bn(float *in, float *gamma, float *beta, float *running_mean, float *run
   }
 }
 
+/*
+ * fn_add()
+ *
+ * Adds two buffers: out = in0 + in1
+ *
+ */
 void fn_add(float *in0, float *in1, float *out, int I, int HI, int WI) {
   for (int i=0; i<I; i++) {
     for (int hi = 0; hi<HI; hi++) {
@@ -197,6 +282,12 @@ void fn_add(float *in0, float *in1, float *out, int I, int HI, int WI) {
   }
 }
 
+/*
+ * fn_relu()
+ *
+ * Performs relu activation to each input element: out = max(in, 0)
+ *
+ */
 void fn_relu(float *in, float *out, int I, int HI, int WI) {
   for (int i=0; i<I; i++) {
     for (int hi = 0; hi<HI; hi++) {
@@ -210,13 +301,21 @@ void fn_relu(float *in, float *out, int I, int HI, int WI) {
   }
 }
 
+/*
+ * fn_maxpool()
+ *
+ * Performs the maxpool operation to each channel
+ *
+ */
 void fn_maxpool(float *in, float *out, int I, int HI, int WI, int O, int HO, int WO, int KH, int KW, int SH, int SW, int PT, int PB, int PL, int PR) {
-  //
+  // verbosity information
   if (verbose && verbose_level >= 3) {
     printf("    buffer_i: %p buffer_out: %p\n", in, out);
-    printf("    IxHIxWI: %3dx%3dx%3d OxHOxWO: %3dx%3dx%3d KWxKW: %3dx%3d SHxSW: %3dx%3d padings: %1d-%1d-%1d-%1d\n", I, HI, WI, O, HO, WO, KH, KW, SH, SW, PT, PB, PL, PR);
+    printf("    IxHIxWI: %3dx%3dx%3d OxHOxWO: %3dx%3dx%3d KWxKW: %3dx%3d SHxSW: %3dx%3d padings: %1d-%1d-%1d-%1d\n", 
+		I, HI, WI, O, HO, WO, KH, KW, SH, SW, PT, PB, PL, PR);
   }
 
+  // operation
   for (int o=0; o<O; o++) {
     int i = o;
     for (int ho=0; ho<HO; ho++) {
@@ -239,13 +338,21 @@ void fn_maxpool(float *in, float *out, int I, int HI, int WI, int O, int HO, int
   }
 }
 
+/*
+ * fn_avgpool()
+ *
+ * Performs the avgpool operation to each channel
+ *
+ */
 void fn_avgpool(float *in, float *out, int I, int HI, int WI, int O, int HO, int WO, int KH, int KW, int SH, int SW, int PT, int PB, int PL, int PR) {
-  //
+  // verbosity information
   if (verbose && verbose_level >= 3) {
     printf("    buffer_i: %p buffer_out: %p\n", in, out);
-    printf("    IxHIxWI: %3dx%3dx%3d OxHOxWO: %3dx%3dx%3d KWxKW: %3dx%3d SHxSW: %3dx%3d padings: %1d-%1d-%1d-%1d\n", I, HI, WI, O, HO, WO, KH, KW, SH, SW, PT, PB, PL, PR);
+    printf("    IxHIxWI: %3dx%3dx%3d OxHOxWO: %3dx%3dx%3d KWxKW: %3dx%3d SHxSW: %3dx%3d padings: %1d-%1d-%1d-%1d\n", 
+		I, HI, WI, O, HO, WO, KH, KW, SH, SW, PT, PB, PL, PR);
   }
 
+  // operation
   for (int o=0; o<O; o++) {
     int i = o;
     for (int ho=0; ho<HO; ho++) {
@@ -268,10 +375,19 @@ void fn_avgpool(float *in, float *out, int I, int HI, int WI, int O, int HO, int
   }
 }
 
+/*
+ * fn_h2d()
+ *
+ * Performns host_to_device copy of buffer: out = in
+ *
+ */
 void fn_h2d(float *in, float *out, int I, int HI, int WI, int O, int HO, int WO) {
 
+  // output is zeroed first, it may happen that output
+  // buffer is larger (more channels than input because of paddings)
   memset(out, 0, O * HO * WO * sizeof(float));
 
+  // copy out = in
   for (int i=0; i<I; i++) {
     for (int hi = 0; hi<HI; hi++) {
       for (int wi = 0; wi<WI; wi++) {
@@ -285,7 +401,15 @@ void fn_h2d(float *in, float *out, int I, int HI, int WI, int O, int HO, int WO)
   }
 }
 
+/*
+ * fn_d2h()
+ *
+ * Performns device_to_host copy of buffer: out = in
+ *
+ */
 void fn_d2h(float *in, float *out, int I, int HI, int WI) {
+
+  // copy operation
   for (int i=0; i<I; i++) {
     for (int hi = 0; hi<HI; hi++) {
       for (int wi = 0; wi<WI; wi++) {
@@ -299,49 +423,83 @@ void fn_d2h(float *in, float *out, int I, int HI, int WI) {
   }
 }
 
+/*
+ * fn_get_buffer_from_name()
+ *
+ * This function returns the buffer for the associated name.
+ * The name can be an input model, an output of a node or an initializer
+ *
+ */
 float *fn_get_buffer_from_name(char *name) {
   int i;
+ 
   // input buffer is model input?
   i = get_model_input_id(name);
   if (i != -1) return aInput[i].data;
+
   // input buffer is initializer?
   i = fn_get_initializer_by_name(name);
   if (i != -1) return aInitializer[i].data;
+
   // input buffer is node buffer?
   i = fn_get_node_by_output_name(name);
   if (i != -1) return aNode[i].data;
+
+  // not found
   return NULL;
 }
 
+/*
+ * fn_get_num_items_from_name()
+ *
+ * This function returns the size of a buffer for the associated name.
+ * The name can be an input model, an output of a node or an initializer
+ *
+ */
+
 int fn_get_num_items_from_name(char *name) {
+
   int num_items = 1;
   int i;
+
   // input buffer is model input?
   i = get_model_input_id(name);
   if (i != -1) {
     for (int d=0; d<aInput[i].num_dimensions; d++) num_items = num_items * aInput[i].dimensions[d];
     return num_items;
   }
+
   // input buffer is initializer?
   i = fn_get_initializer_by_name(name);
   if (i != -1) {
     for (int d=0; d<aInitializer[i].num_dimensions; d++) num_items = num_items * aInitializer[i].dimensions[d];
     return num_items;
   }
+
   // input buffer is node buffer?
   i = fn_get_node_by_output_name(name);
   if (i != -1) {
     num_items = aNode[i].O * aNode[i].HO * aNode[i].WO;
     return num_items;
   }
+
+  // not found, zero size
   return 0;
 }
 
+/*
+ * fn_run_node_on_cpu()
+ *
+ * Runs the node passed as argument on the cpu
+ *
+ */
 void fn_run_node_on_cpu(int n) {
 
+  // let's check validity of the node
   if (n==-1) return;
   if (!aNode[n].valid) return;
 
+  // verbosity information
   if (verbose && verbose_level >= 1) printf("    running %s (cpu)\n", aNode[n].name);
 
   // output buffer
@@ -352,10 +510,10 @@ void fn_run_node_on_cpu(int n) {
     // input0
     float *in = fn_get_buffer_from_name(aNode[n].inputs[0]);
     if (verbose && verbose_level>=3) fn_buffer_stats_by_name(aNode[n].inputs[0], (char *)"      input: ");
-    // weight (input 1)
+    // weight
     float *w = fn_get_buffer_from_name(aNode[n].inputs[1]);
     if (verbose && verbose_level>=3) fn_buffer_stats_by_name(aNode[n].inputs[1], (char *)"      weight: ");
-    // bias (optional, input 2)
+    // bias (optional)
     int use_bias = false;
     float *b = NULL;
     int num_items_b = 0;
@@ -599,6 +757,7 @@ void fn_run_node_on_cpu(int n) {
     exit(1);
   }
 
+  // verbosity information
   if (verbose && verbose_level >= 2) fn_buffer_stats_by_name(aNode[n].outputs[0], (char*)"      out  : ");
 }
 

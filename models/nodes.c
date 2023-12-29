@@ -581,8 +581,17 @@ void fn_allocate_nodes() {
   if (verbose && verbose_level >= 3) printf("      completed\n");
 }
 
+/* 
+ * fn_get_dimensions_from_name()
+ *
+ * This function returns the dimensions of a buffer data which is
+ * associated to a name. The name can be an initializer, a model input name 
+ * or a node's output.
+ *
+ */
 void fn_get_dimensions_from_name(char *name, int *num_dimensions, int *dim0, int *dim1, int *dim2, int *dim3) {
   int i;
+
   // name is model input?
   i = get_model_input_id(name);
   if (i != -1) {
@@ -593,6 +602,7 @@ void fn_get_dimensions_from_name(char *name, int *num_dimensions, int *dim0, int
     *dim3 = aInput[i].num_dimensions >= 4 ? aInput[i].dimensions[3] : 0;
     return;
   }
+
   // name is initializer?
   i = fn_get_initializer_by_name(name);
   if (i != -1) {
@@ -603,6 +613,7 @@ void fn_get_dimensions_from_name(char *name, int *num_dimensions, int *dim0, int
     *dim3 = aInitializer[i].num_dimensions >= 4 ? aInitializer[i].dimensions[3] : 0;
     return;
   }
+
   // name is node?
   i = fn_get_node_by_output_name(name);
   if (i != -1) {
@@ -613,6 +624,8 @@ void fn_get_dimensions_from_name(char *name, int *num_dimensions, int *dim0, int
     *dim3 = 0;
     return;
   }
+
+  // not found
   *num_dimensions = 0;
   *dim0 = 0;
   *dim1 = 0;
@@ -629,6 +642,7 @@ void fn_get_dimensions_from_name(char *name, int *num_dimensions, int *dim0, int
  */
 void fn_compute_data_geometries() {
 
+  // verbose/debug information
   if (verbose && verbose_level >= 3) printf("computing data geometries...\n");
 
   // we allocate the nodes in the running order
@@ -641,6 +655,7 @@ void fn_compute_data_geometries() {
   for (int r=0; r<=max_row; r++) {
     for (int n=0; n<num_nodes; n++) {
       if (aNode[n].valid && (aNode[n].row == r)) {
+	// let's get the input dimensions
         int num_dimensions;
 	int dim0, dim1, dim2, dim3;
 	fn_get_dimensions_from_name(aNode[n].inputs[0], &num_dimensions, &dim0, &dim1, &dim2, &dim3);   // input 0 is the data input
@@ -654,38 +669,46 @@ void fn_compute_data_geometries() {
           aNode[n].HI = dim1 == 0 ? 1 : dim1;
           aNode[n].WI = dim2 == 0 ? 1 : dim2;
 	}
+	// verbose/debug information
 	if (verbose && verbose_level >= 3) printf("  (parent)   node: %3d node_name: %-50s ---> I: %4d HI: %4d WI: %4d\n", n, aNode[n].name, aNode[n].I, aNode[n].HI, aNode[n].WI);
 
+	// let's compute the output dimensions of the node, depending on the node type
         if (is_conv(n)) {
 	  int i = fn_get_initializer_by_name(aNode[n].inputs[1]);	// weight is input 1 in onnx
           aNode[n].O  = aInitializer[i].dimensions[0];
           aNode[n].HO = ((aNode[n].HI - aNode[n].kh + aNode[n].pt + aNode[n].pb)/aNode[n].sh) + 1;
           aNode[n].WO = ((aNode[n].WI - aNode[n].kw + aNode[n].pr + aNode[n].pl)/aNode[n].sw) + 1;
+	  // verbose/debug information
 	  if (verbose && verbose_level >= 3) printf("  (conv)     node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
         } else if (is_maxpool(n)) {
           aNode[n].O  = aNode[n].I;
           aNode[n].HO = ((aNode[n].HI - aNode[n].kh + aNode[n].pt + aNode[n].pb)/aNode[n].sh) + 1;
           aNode[n].WO = ((aNode[n].WI - aNode[n].kw + aNode[n].pl + aNode[n].pr)/aNode[n].sw) + 1;
-          if (verbose && verbose_level >= 3) printf("  (maxpool)  node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
+          // verbose/debug information
+	  if (verbose && verbose_level >= 3) printf("  (maxpool)  node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
         } else if (is_avgpool(n)) {
           aNode[n].O  = aNode[n].I;
           aNode[n].HO = ((aNode[n].HI - aNode[n].kh + aNode[n].pt + aNode[n].pb)/aNode[n].sh) + 1;
           aNode[n].WO = ((aNode[n].WI - aNode[n].kw + aNode[n].pl + aNode[n].pr)/aNode[n].sw) + 1;
-          if (verbose && verbose_level >= 3) printf("  (avgpool)  node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
+          // verbose/debug information
+	  if (verbose && verbose_level >= 3) printf("  (avgpool)  node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
         } else if (is_transpose(n)) {
 	  aNode[n].O = aNode[n].WI;
 	  aNode[n].HO = aNode[n].HI;
 	  aNode[n].WO = aNode[n].I;
+          // verbose/debug information
 	  if (verbose && verbose_level >= 3) printf("  (trans)    node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
 	} else if (is_global_average_pool(n)) {
 	  aNode[n].O  = aNode[n].I;
 	  aNode[n].HO = 1;
 	  aNode[n].WO = 1;
+          // verbose/debug information
 	  if (verbose && verbose_level >= 3) printf("  (gapool)   node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
 	} else if (is_flatten(n)) {
 	  aNode[n].O = aNode[n].I * aNode[n].HI * aNode[n].WI;
 	  aNode[n].HO = 1;
 	  aNode[n].WO = 1;
+          // verbose/debug information
 	  if (verbose && verbose_level >= 3) printf("  (flatten)  node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
 	} else if (is_gemm(n)) {
 	  int i_w = fn_get_initializer_by_name(aNode[n].inputs[1]); // weight is input 1 in onnx
@@ -693,6 +716,7 @@ void fn_compute_data_geometries() {
 	  aNode[n].O = aInitializer[i_w].dimensions[0];   // in ONNX the output dimension is the first one
 	  aNode[n].HO = 1;
 	  aNode[n].WO = 1;
+          // verbose/debug information
 	  if (verbose && verbose_level >= 3) printf("  (gemm)     node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
 	} else if (is_matmul(n)) {
 	  int i_w = fn_get_initializer_by_name(aNode[n].inputs[1]); // weight is input 1 in onnx
@@ -700,7 +724,8 @@ void fn_compute_data_geometries() {
 	  aNode[n].O = aInitializer[i_w].dimensions[1];   // in ONNX the output dimension is the second one
 	  aNode[n].HO = 1;
 	  aNode[n].WO = 1;
-          if (verbose && verbose_level >= 3) printf("  (matmul)   node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
+          // verbose/debug information
+	  if (verbose && verbose_level >= 3) printf("  (matmul)   node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
 	} else if (is_concat(n)) {  // Todo, implement axis in concat
 	  // dimension 0 will be added
 	  int dim0_count = 0;
@@ -711,15 +736,18 @@ void fn_compute_data_geometries() {
 	  aNode[n].O = dim0_count;
 	  aNode[n].HO = aNode[n].HI;
 	  aNode[n].WO = aNode[n].WI;
-          if (verbose && verbose_level >= 3) printf("  (concat)   node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
+          // verbose/debug information
+	  if (verbose && verbose_level >= 3) printf("  (concat)   node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
         } else {
           aNode[n].O  = aNode[n].I; aNode[n].HO = aNode[n].HI; aNode[n].WO = aNode[n].WI;
-          if (verbose && verbose_level >= 3) printf("  (other)    node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
+          // verbose/debug information
+	  if (verbose && verbose_level >= 3) printf("  (other)    node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
 	}
       }
     }
   }
 
+  // verbose/debug information
   if (verbose && verbose_level >= 3) printf("  completed\n");
 }
 
@@ -730,11 +758,13 @@ void fn_compute_data_geometries() {
  *
  */
 int fn_get_node_entry(char *name) {
+  // we sweep all node names, and if there is a coincidence, then we return the entry id
   for (int n=0; n<num_nodes; n++) {
     if (aNode[n].valid) {
       if (!strcmp(aNode[n].name, name)) return n;
     }
   }
+  // no coincidence found!
   printf("Error, node %s not found\n", name);
   exit(1);
 }
@@ -747,24 +777,34 @@ int fn_get_node_entry(char *name) {
  *
  */
 char *get_node_name(int n) {
+  // is a valid entry?
   if (n == -1) return NULL;
   if (!aNode[n].valid) return NULL;
+  // let's return the name
   return (aNode[n].name);
 }
 
 /*
  * fn_remove_node()
  *
- * Removes a node passed as an id as argument
+ * Removes a node passed as an id as argument.
  *
  */
 void fn_remove_node(int n) {
+  // let's check the node is valid
   if (n==-1) return;
   if (!aNode[n].valid) return;
+  // let's remove its inputs
   for (int i=0; i<aNode[n].num_inputs; i++) free(aNode[n].inputs[i]);
   free(aNode[n].inputs);
+  // let's remove its outputs
   for (int o=0; o<aNode[n].num_outputs; o++) free(aNode[n].outputs[o]);
   free(aNode[n].outputs);
+  // let's remove its name
+  free(aNode[n].name);
+  // let's remove its type
+  free(aNode[n].type);
+  // no longer valid
   aNode[n].valid = 0;
 }
 
@@ -773,10 +813,12 @@ void fn_remove_node(int n) {
  *
  * It returns the name of the input of a node. The
  * node is passed as an argument as an id, an exclude name
- * is passed as second argument
+ * is passed as second argument. If exclude_name is set to null
+ * then no exclude name is checked
  *
  */
 char *get_data_input_name_from_node(int n, char *exclude_name) {
+  // is a valid node?
   if (n == -1) return NULL;
   if (!aNode[n].valid) return NULL;
 
@@ -799,6 +841,7 @@ char *get_data_input_name_from_node(int n, char *exclude_name) {
  *
  */
 void fn_relink_nodes(int n1, int n2) {
+  // are both nodes valid?
   if (n1 == -1) return;
   if (n2 == -1) return;
   if (!aNode[n1].valid) return;
@@ -824,32 +867,6 @@ void fn_relink_nodes(int n1, int n2) {
 }
 
 /*
- * fn_relink_node_inputs()
- *
- * Relinks all inputs by changing an old name by a new name.
- * Basically, the old_name is replaced by the new_name on every
- * input with the old_name.
- *
- */
-//void fn_relink_node_inputs(char *old_name, char *new_name) {
-//  if (old_name==NULL) return;
-//
-//  // we search all nodes and all of their inputs, changing the name of the input if found
-//  for (int n=0; n<num_nodes; n++) {
-//    if (aNode[n].valid) {
-//      for (int i=0; i<aNode[n].num_inputs; i++) {
-//        if (!strcmp(aNode[n].inputs[i], old_name)) {
-//          char *p = (char*)malloc(sizeof(char) * (strlen(new_name)+1));
-//          strcpy(p, new_name);
-//          free(aNode[n].inputs[i]);
-//          aNode[n].inputs[i] = p;
-//        }
-//      }
-//    }
-//  }
-//}
-
-/*
  * fn_add_node()
  *
  * Adds a node with a name and type specified in the arguments
@@ -858,37 +875,27 @@ void fn_relink_nodes(int n1, int n2) {
  * It returns the id of the new node
  */
 int fn_add_node(char *name, char *type) {
+  // node entry
   int n = num_nodes;
+  // let's set valid and name
   aNode[n].valid = true;
   aNode[n].name = (char*)malloc(sizeof(char) * (strlen(name)+1));
   strcpy(aNode[n].name, name);
-  aNode[n].num_inputs = 0;
+  // type
   aNode[n].type = (char*)malloc(sizeof(char) * (strlen(type)+1));
   strcpy(aNode[n].type, type);
+  // no inputs
   aNode[n].num_inputs = 0;
   aNode[n].inputs = NULL;
+  // just one output
   aNode[n].num_outputs = 1;
   aNode[n].outputs = (char**)malloc(sizeof(char*) * 1);
   aNode[n].outputs[0] = (char*)malloc(sizeof(char) * (strlen(name)+1));
   strcpy(aNode[n].outputs[0], name);
+  // let's ready for the next node
   num_nodes=num_nodes+1;
+  // let's return the new node's id
   return n;
-}
-
-/*
- * fn_delete_node()
- *
- * Deletes a node passed as argument
- *
- */
-void fn_delete_node(int n) {
-  aNode[n].valid = false;
-  for (int i=0; i<aNode[n].num_inputs; i++) free(aNode[n].inputs[i]);
-  free(aNode[n].inputs);
-  for (int o=0; o<aNode[n].num_outputs; o++) free(aNode[n].outputs[o]);
-  free(aNode[n].outputs);
-  free(aNode[n].name);
-  free(aNode[n].type);
 }
 
 /*

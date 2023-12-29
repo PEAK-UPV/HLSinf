@@ -2,7 +2,7 @@
  * initializers.c
  *
  * This files provides support for initializers obtained from a onnx file
- * exported to a txt file
+ * exported to a txt file.
  *
  */
 
@@ -16,8 +16,8 @@
 #include "main.h"
 
 // global variables
-int    num_initializers;
-struct st_initializer aInitializer[MAX_INITIALIZERS];
+int    num_initializers;                               // number of initializers
+struct st_initializer aInitializer[MAX_INITIALIZERS];  // vector of initializers
 
 /*
  * fn_get_initializer_by_name()
@@ -29,8 +29,11 @@ struct st_initializer aInitializer[MAX_INITIALIZERS];
  *
  */
 int fn_get_initializer_by_name(char *name) {
+  // double check null name
   if (name == NULL) return -1;
+  // we sweep all initializers, if there is a coincidence by name then we return the entry
   for (int i=0; i<num_initializers; i++) if (aInitializer[i].valid) if (!strcmp(aInitializer[i].name, name)) return i;
+  // otherwise we return -1 (not found)
   return -1;
 }
 
@@ -41,131 +44,49 @@ int fn_get_initializer_by_name(char *name) {
  *
  */
 int is_initializer(char *name) {
+  // we sweep all initializers, if there is a coincidence by name then we return true
   for (int i=0; i<num_initializers; i++) {
     if (aInitializer[i].valid) {
       if (!strcmp(aInitializer[i].name, name)) return true;
     }
   }
+  // otherwise we return false
   return false;
-}
-
-/*
- * fn_read_initializers_data()
- *
- * This function reads the data from initializer files.
- * This function asumes a file.data file exists with its
- * name (file) equal to the initializer's name.
- *
- * Data is loaded on dynamically allocated buffers
- */
-void fn_read_initializers_data() {
-  FILE *fd;
-  char *line = NULL;
-  size_t len = 0;
-  ssize_t read;  
-
-  if (verbose && verbose_level >= 3) printf("reading initializers data...\n");
-  
-  // we read every initializer
-  for (int i=0; i<num_initializers; i++) {
-    if (aInitializer[i].valid) {
-      char filename[100];
-      sprintf(filename, "%s.data", aInitializer[i].name);
-      if ((fd = fopen(filename, "r")) == NULL) {printf("Error, could not open initializer file %s\n", aInitializer[i].name); exit(1);}
-      // first row is the number of items
-      read = getline(&line, &len, fd);
-      int num_items = atoi(line);
-      if (verbose && verbose_level >= 3) printf("  initializer: %-50s num_items: %12d file: %-50s\n", aInitializer[i].name, num_items, filename);
-      // now we read the number of dimensions
-      read = getline(&line, &len, fd);
-      aInitializer[i].num_dimensions = atoi(line);
-      aInitializer[i].dimensions = (int*)malloc(sizeof(int) * aInitializer[i].num_dimensions);
-      // now we read each dimension
-      for (int d=0; d<aInitializer[i].num_dimensions; d++) {
-	read = getline(&line, &len, fd);
-	aInitializer[i].dimensions[d] = atoi(line);
-      }
-      // now we read the data
-      posix_memalign((void**)&aInitializer[i].data, 4096, sizeof(float) * num_items);
-      //aInitializer[i].data = (float*)malloc(sizeof(float) * num_items);
-      for (int d = 0; d < num_items; d++) {
-        read = getline(&line, &len, fd);
-	if (read == -1) {printf("error, while reading initializer %s\n", aInitializer[i].name); exit(1);}
-        aInitializer[i].data[d] = atof(line);
-      }
-      fclose(fd);
-    }
-  }
-
-  if (verbose && verbose_level >= 3) printf("  completed\n");
 }
 
 /*
  * fn_add_new_initializer()
  *
- * Adds an initializer and all its data is set to zeros
- * The name of the initializer, its type, and its number of items
- * is passed as an argument. 
+ * Adds an initializer. The name of the initializer, 
+ * its type, and its number of items
+ * is passed as an argument.
  *
  * Also, a pointer to float data is passed
  * as argument, if the pointer is NULL then data is created and zeroed,
- * otherwhise the pointer is used and linked to data
+ * otherwhise the pointer is used and linked to data.
  *
- * One dimension is asumed
+ * One dimension is asumed.
  */
 void fn_add_new_initializer(char *name, int num_items, float *d) {
 
+  // we initialize some fields (valid and name)
   aInitializer[num_initializers].valid = true;
   aInitializer[num_initializers].name = (char*)malloc(sizeof(char) * (strlen(name)+1));
   strcpy(aInitializer[num_initializers].name, name);
+  // just one dimension assumed
   aInitializer[num_initializers].num_dimensions = 1;
+  // dimensions
   aInitializer[num_initializers].dimensions = (int*)malloc(sizeof(int) * 1);
   aInitializer[num_initializers].dimensions[0] = num_items;
+  // let's zero the values or just assign the values passed as argument
   if (d==NULL) {
     aInitializer[num_initializers].data = (float*)malloc(sizeof(float) * num_items);
     for (int x=0; x<num_items; x++) aInitializer[num_initializers].data[x] = 0.f;
   } else {
     aInitializer[num_initializers].data = d;
   }
+  // ready for next initializer
   num_initializers++;
-}
-
-/*
- * fn_write_initializers_data()
- *
- * This function writes the data for each initializer in its own file
- * This function asumes a file.data file will be produced with its
- * name (file) equal to the initializer's name
- *
- */
-void fn_write_initializers_data() {
-  FILE *fd;
-  char *line = NULL;
-  size_t len = 0;
-  ssize_t read;
-
-  if (verbose && verbose_level >= 3) printf("writing initializers data...\n");
-
-  // we write every initializer
-  for (int i=0; i<num_initializers; i++) {
-    if (aInitializer[i].valid) {
-      char filename[100];
-      sprintf(filename, "%s.data", aInitializer[i].name);
-      if ((fd = fopen(filename, "w")) == NULL) {printf("Error, could not open initializer file %s\n", aInitializer[i].name); exit(1);}
-      if (verbose && verbose_level >= 3) printf("  file: %s\n", filename);
-      // num items
-      int num_items = 1;
-      for (int d=0; d<aInitializer[i].num_dimensions; d++) num_items = num_items * aInitializer[i].dimensions[d];
-      fprintf(fd, "%d\n", num_items);
-      // dimensions
-      fprintf(fd, "%d\n", aInitializer[i].num_dimensions);
-      for (int d=0; d<aInitializer[i].num_dimensions; d++) fprintf(fd, "%d\n", aInitializer[i].dimensions[d]);
-      // data
-      for (int d = 0; d < num_items; d++) fprintf(fd, "%f\n", aInitializer[i].data[d]);
-      fclose(fd);
-    }
-
-  }
 }
 
 /*

@@ -3,6 +3,9 @@
  *
  */
 
+#ifndef _FPGA_H
+#define _FPGA_H
+
 #ifdef RUNTIME_SUPPORT
 
 #define MAX_KERNELS 8
@@ -17,3 +20,4 @@ void fn_run_node_on_fpga(int n, int k, int first_O, int last_O, int first_HI, in
 
 #endif
 
+#endif

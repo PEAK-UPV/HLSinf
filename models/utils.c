@@ -1,18 +1,32 @@
 /*
  * utils.c
  *
- * support functions
+ * support generic functions
  *
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 
+/*
+ * max function
+ *
+ * returns the maximum integer value between two 
+ * arguments.
+ *
+ */
 int max(int a, int b) {
   if (a>=b) return a;
   return b;
 }
 
+/*
+ * min function
+ *
+ * returns the minimum integer value between two
+ * arguments.
+ *
+ */
 int min(int a, int b) {
   if (a<=b) return a;
   return b;
@@ -22,8 +36,9 @@ int min(int a, int b) {
  *
  * fn_get_item_line()
  *
- * takes the first comma-separated item from an offset
- * returns the item as a string and returns the next offset
+ * takes the first comma-separated item from an offset,
+ * returns the item as a string and returns the next offset.
+ *
  * left spaces and right spaces are removed
  */
 size_t fn_get_item_line(char *line, size_t len, size_t offset, char *item) {
