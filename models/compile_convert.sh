@@ -6,5 +6,4 @@ cc -c nodes.c
 cc -c parsers.c       
 cc -c utils.c         
 cc -c model.c         
-cc -c stats.c         
-cc stats.o fig.o in_out.o nodes.o initializers.o main.o model.o parsers.o utils.o -o hlsinf_runner
+cc fig.o in_out.o nodes.o initializers.o main.o model.o parsers.o utils.o -o hlsinf_runner

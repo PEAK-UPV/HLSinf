@@ -101,7 +101,7 @@ void fn_process_input_line(char *line, size_t len) {
   char name[200];
   int offset = 0;
 
-  if (verbose) {
+  if (verbose && (verbose_level>=2)) {
     char sz_line[201];
     if (strlen(line) < 200) printf("  line: %s", line);  // the line has already a \n
     else {
@@ -260,8 +260,6 @@ void fn_read_input_model() {
   size_t len = 0;
   ssize_t read;
 
-  if (verbose) printf("reading input model (%s)...\n", input_file_name);
-
   if ((fd = fopen(input_file_name, "r"))==NULL) {
     printf("Error, could not open input file\n");
     exit(1);
@@ -277,7 +275,7 @@ void fn_read_input_model() {
   fclose(fd);
   if (line) free(line);
 
-  if (verbose) printf("  completed (nodes: %d, initializers: %d, inputs: %d, outputs: %d)\n", num_nodes, num_initializers, num_inputs, num_outputs);
+  if (verbose && (verbose_level>=2)) printf("  completed (nodes: %d, initializers: %d, inputs: %d, outputs: %d)\n", num_nodes, num_initializers, num_inputs, num_outputs);
 }
 
 /*
@@ -288,8 +286,6 @@ void fn_read_input_model() {
  */
 void fn_write_output_model() {
 
- if (verbose) printf("writing output model...\n");
-
  FILE *fd = fopen(output_file_name, "w");
  if (fd == NULL) {printf("Error, could not open the output model for writting\n"); exit(1);}
 
@@ -299,8 +295,6 @@ void fn_write_output_model() {
  // we compute the max row
  int max_row = -1;
  for (int n=0; n<num_nodes; n++) if (aNode[n].valid) max_row = max(max_row, aNode[n].row);
-
- if (verbose) printf("  max row: %d\n", max_row);
 
  // now we list the nodes by row order, nodes in the same row can be run in parallel
  for (int r=0; r<=max_row; r++) {

@@ -1,6 +1,7 @@
 In this folder you will find the parser for ONNX models. This parser will read ONNX input
 files and will generate an HLSinf model ready to be run by HLSinf. The parser is able also
-to run the model on a system with HLSinf (even with no HLSinf support).
+to run the model on a system with HLSinf (even with no HLSinf support). A complete model can be run also
+on CPU.
 
 The parser can be compiled with support to either convert models and run models or to only convert models.
 To compile for the support of only model conversion you can use the script:
@@ -11,10 +12,10 @@ To have support both to convert modules and run them you can compile the whole a
 
 ./compile.sh
 
-The whole process is divided in three steps. First, an ONNX model is parsed and data is extracted
+The whole process is divided in three steps. First, an ONNX model is parsed, data is extracted
 and a text file is generated. With this generated file a new text file is generated with the needed
 optimizations and adaptations to be used in a system with HLSinf. Different configurations and optimizations
-will be possible In a third and final step the generated model can be used to run inference processes, providing
+will be possible. In a third and final step the generated model can be used to run inference processes, providing
 timing statistics.
 
 FIRST STEP: Extract the model from ONNX
@@ -74,39 +75,53 @@ In this step the text generated file is read and a new text file is generated, w
 model for the HLSinf platform. Different optimizations and configurations can be applied in this step. These
 options can be listed by running:
 
+```
 ./hlsinf_runner -help
+```
 
 The options are described as follows:
 
-  -cpi <value>          Assume a specific CPI value for HLSinf (by default set to 4)
-  -cpo <value>          Assume a specific CPO value for HLSinf (by default set to 4)
-  -a1x1                 Adapt 1x1 Conv filters to equivalent 3x3 filters
-  -k_c                  Replace Conv nodes by HLSinf nodes
-  -k_cb                 Replace Conv + BatchNormalization nodes by HLSinf nodes
-  -k_cbr                Replace Conv + BatchNormalization+Relu nodes by HLSinf nodes
-  -k_cbar               Replace Conv + BatchNormalization+Add+Relu nodes by HLSinf nodes
-  -xclbin <filename>    Set xclbin file including the HLSinf accelerator/s
-  -f                    Generate fig files for original and generated models
-  -c                    Run in convert mode (does not run the model, just converts the model)
-  -r                    Run the input model into the HLSinf platform
-  -v                    Convert/Run in verbose mode
-  -i                    Set input file name to convert or to run
-  -o                    Set output file name to write the generated model
-  -t                    Get timing statistics for run mode
+```
+usage: ./hlsinf_runner [-c|-r filename] [-o filename] [-xclbin filename] [-k_cbar] [-k_cbr] [-k_crm] [-k_cb] [-k_cr] [-k_c] [-a1x1] [-a2x2] [-v value] [-f] [-help] [-cpi value] [-cpo value] [-t] [-omp]
+[-c filename]        : convert/parse input file
+[-o filename]        : Output file where to write the parsed model
+--
+[-cpi value]         : CPI (channels per input) value assumed (by default set to 4)
+[-cpo value]         : CPO (channels per output) value assumed (by default set to 4)
+--Optimizations:
+[-k_cbar]            : Merge Conv + BatchNorm + Add + ReLU nodes into a single HLSinf node
+[-k_cbr]             : Merge Conv + BatchNorm + ReLU nodes into a single HLSinf node
+[-k_crm]             : Merge Conv + Relu + MaxPool
+[-k_cb]              : Merge Conv + BatchNorm nodes into a single HLSinf node
+[-k_cr]              : Merge Conv + ReLU nodes into a single HLSinf node
+[-k_c]               : Convert Conv into HLSinf node
+[-a1x1]              : Adapt 1x1 conv filters into 3x3 conv filters
+[-a2x2]              : Adapt 2x2 conv filters into 3x3 conv filters
+[-aDense]            : Adapt a nxw dense layer into a oxixhxw conv layer
+[-ri]                : Remove identity nodes
+[-all]               : Use all optimizations available
+--
+[-v value]           : Verbose mode activated. Available levels:
+  1                  : just processes being run
+  2                  : output information for every node
+  3                  : all
+--
+[-k value]           : Number of HLSinf kernels availablei (1 by default)
+[-ocp value]         : Use output channel parallelism with indicated threshold
+[-irp value]         : Use input row parallelism with indicated threshold
+[-np]                : Use node parallelism
+--
+[-f]                 : Generate fig files with input model and generated model
+--
+[-help]              : Shows this text
+```
 
-Every HLSinf version can use a subset of options, since not all optimizations are included in all HLSinf versions. Here is a list
-of options applicable to current HLSinf versions:
+Every HLSinf version can use a subset of options, since not all optimizations are included in all HLSinf versions. 
 
-------------------------------------------------------------
-| HLSinf  |     |     |      |     |      |       |        |
-| version | cpi | cpo | a1x1 | k_c | k_cb | k_cbr | k_cbar |
-------------------------------------------------------------
-|   1.0   |  4  |  4  |  yes | yes | yes  | yes   | yes    |
-------------------------------------------------------------
+You can apply all optimizations by using the all option:
 
-For instance, to run this step for HLSinf 1.0 you run:
-
-./hlsinf_runner -i model.txt -o model_hlsinf_1_0.txt -a1x1 -k_c -k_cb -k_cbr -k_cbar -c
+```
+./hlsinf_runner -c model.txt -o model_hlsinf_1_0.txt -all
 
 The new model file has a slightly different format. For each input, output, node, and initializer a text line is included, as follows:
 
@@ -173,7 +188,7 @@ THIRD STEP: Run the model
 Now, the generated model from the previous step is ready to be used. To do this, we run the 
 program again but use the -r option (instead of -c). As an example, we can run:
 
-./hlsinf_runner -i model.txt -r -xclbin file.xclbin
+./hlsinf_runner -r model.txt -xclbin file.xclbin
 
 We need to specify the xclbin file to be used for the FPGA to be programmed.
 

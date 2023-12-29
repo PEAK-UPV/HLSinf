@@ -75,13 +75,16 @@ cl::Buffer *fn_get_clbuffer_from_name(char *name) {
  *
  */
 void fn_init_fpga() {
+
+  if (!xclbin_defined) {printf("WARNING: FPGA not initialized since no xclbin has been specified\n"); return;}
+
   cl_int err;
 
-  if (verbose && verbose_level >= 2) printf("creating FPGA context...\n");
+  if (verbose && verbose_level >= 3) printf("creating FPGA context...\n");
 
   binaryFile = xclbin_file_name;
 
- auto devices = xcl::get_xil_devices();
+  auto devices = xcl::get_xil_devices();
   auto device = devices[0];
   OCL_CHECK(err, context = cl::Context(device, NULL, NULL, NULL, &err));
   OCL_CHECK(err, q = cl::CommandQueue(context, device, CL_QUEUE_PROFILING_ENABLE | CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE, &err));
@@ -101,43 +104,46 @@ void fn_init_fpga() {
     std::cout << "Kernel successfully created" << std::endl;
   }
 
-  if (verbose && verbose_level >= 2) printf("  completed\n");
+  if (verbose && verbose_level >= 3) printf("  completed\n");
 }
 
 void allocate_buffers() {
 
   cl_int err;
 
-  if (verbose && verbose_level >= 2) printf("allocating buffers...\n");
+  if (verbose && verbose_level >= 3) printf("allocating buffers...\n");
 
   // every node has an output buffer
   for (int n=0; n<num_nodes; n++) {
     if (aNode[n].valid) {
       size_t size = aNode[n].O * aNode[n].HO * aNode[n].WO * sizeof(float);
-      if (verbose && verbose_level >= 2) printf("  allocating output buffer for node %d (size %ld), name: %-50s\n", n, size, aNode[n].name);
+      if (verbose && verbose_level >= 3) printf("  allocating output buffer for node %d (size %ld), name: %-50s\n", n, size, aNode[n].name);
       posix_memalign((void **)&aNode[n].data, 4096, size);
-      aNode[n].buffer_ddr.flags = 0 | XCL_MEM_TOPOLOGY;
-      aNode[n].buffer_ddr.obj   = aNode[n].data;
-      aNode[n].buffer_ddr.param = 0;
-      OCL_CHECK(err, aNode[n].buffer = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR, size, &aNode[n].buffer_ddr, &err));
+      if (xclbin_defined) {
+        aNode[n].buffer_ddr.flags = 0 | XCL_MEM_TOPOLOGY;
+        aNode[n].buffer_ddr.obj   = aNode[n].data;
+        aNode[n].buffer_ddr.param = 0;
+        OCL_CHECK(err, aNode[n].buffer = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR, size, &aNode[n].buffer_ddr, &err));
+      }
     }
   }
 
   // add temporal buffer
-  size_t size=1000;
-  posix_memalign((void**)&add_data_buffer, 4096, size);
-  add_buffer_ddr.flags = 0 | XCL_MEM_TOPOLOGY;
-  add_buffer_ddr.obj   = add_data_buffer;
-  add_buffer_ddr.param = 0;
-  OCL_CHECK(err, add_buffer = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, size, &add_buffer_ddr, &err));
+  if (xclbin_defined) {
+    size_t size=1000;
+    posix_memalign((void**)&add_data_buffer, 4096, size);
+    add_buffer_ddr.flags = 0 | XCL_MEM_TOPOLOGY;
+    add_buffer_ddr.obj   = add_data_buffer;
+    add_buffer_ddr.param = 0;
+    OCL_CHECK(err, add_buffer = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, size, &add_buffer_ddr, &err));
 
-  // bn temporal buffer
-  posix_memalign((void**)&bn_data_buffer, 4096, size);
-  bn_buffer_ddr.flags = 0 | XCL_MEM_TOPOLOGY;
-  bn_buffer_ddr.obj   = bn_data_buffer;
-  bn_buffer_ddr.param = 0;
-  OCL_CHECK(err, bn_buffer = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, size, &bn_buffer_ddr, &err));  
-
+    // bn temporal buffer
+    posix_memalign((void**)&bn_data_buffer, 4096, size);
+    bn_buffer_ddr.flags = 0 | XCL_MEM_TOPOLOGY;
+    bn_buffer_ddr.obj   = bn_data_buffer;
+    bn_buffer_ddr.param = 0;
+    OCL_CHECK(err, bn_buffer = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, size, &bn_buffer_ddr, &err));  
+  }
 
   // every initializer has a buffer
   for (int i=0; i<num_initializers; i++) {
@@ -145,12 +151,14 @@ void allocate_buffers() {
       size_t size = 1;
       for (int d=0; d<aInitializer[i].num_dimensions; d++) size = size * aInitializer[i].dimensions[d];
       size = size * sizeof(float);
-      if (verbose && verbose_level >= 2) printf("  allocating buffer for initializer %d (size %ld), name: %-50s\n", i, size, aInitializer[i].name);
+      if (verbose && verbose_level >= 3) printf("  allocating buffer for initializer %d (size %ld), name: %-50s\n", i, size, aInitializer[i].name);
       //
-      aInitializer[i].buffer_ddr.flags = 0 | XCL_MEM_TOPOLOGY;
-      aInitializer[i].buffer_ddr.obj   = aInitializer[i].data;
-      aInitializer[i].buffer_ddr.param = 0; 
-      OCL_CHECK(err, aInitializer[i].buffer = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, size, &aInitializer[i].buffer_ddr, &err));
+      if (xclbin_defined) {
+        aInitializer[i].buffer_ddr.flags = 0 | XCL_MEM_TOPOLOGY;
+        aInitializer[i].buffer_ddr.obj   = aInitializer[i].data;
+        aInitializer[i].buffer_ddr.param = 0; 
+        OCL_CHECK(err, aInitializer[i].buffer = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, size, &aInitializer[i].buffer_ddr, &err));
+      }
     }
   }
 
@@ -169,20 +177,23 @@ void allocate_buffers() {
       }
       int num_items = size;   // TODO: remove
       size = size * sizeof(float);
-      if (verbose && verbose_level >= 2) printf("  allocating buffer for input model %d (size %ld), name %-50s\n", i, size, aInput[i].name);
+      if (verbose && verbose_level >= 3) printf("  allocating buffer for input model %d (size %ld), name %-50s\n", i, size, aInput[i].name);
       posix_memalign((void **)&aInput[i].data, 4096, size);
-      aInput[i].buffer_ddr.flags = 0 | XCL_MEM_TOPOLOGY;
-      aInput[i].buffer_ddr.obj   = aInput[i].data;
-      aInput[i].buffer_ddr.param = 0;       
-      OCL_CHECK(err, aInput[i].buffer = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, size, &aInput[i].buffer_ddr, &err));
+      if (xclbin_defined) {
+        aInput[i].buffer_ddr.flags = 0 | XCL_MEM_TOPOLOGY;
+        aInput[i].buffer_ddr.obj   = aInput[i].data;
+        aInput[i].buffer_ddr.param = 0;       
+        OCL_CHECK(err, aInput[i].buffer = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, size, &aInput[i].buffer_ddr, &err));
+      }
       for (int x=0; x<num_items; x++) aInput[i].data[x] = 1.f; // TODO: remove
     }
   }
 
-  if (verbose && verbose_level >= 2) printf("  completed\n");
+  if (verbose && verbose_level >= 3) printf("  completed\n");
 }
 
 void copy_to_fpga(cl::Buffer *buf) {
+  if (!xclbin_defined) {printf("ERROR: copy to fpga not possible since no XCLBIN has been defined\n"); return;}
   cl_int err;
   OCL_CHECK(err, err = q.enqueueMigrateMemObjects( {*buf}, 0, NULL, &write_events[0]));
   set_callback(write_events[0], "ooo_queue");
@@ -190,6 +201,7 @@ void copy_to_fpga(cl::Buffer *buf) {
 }
 
 void copy_from_fpga(cl::Buffer *buf) {
+  if (!xclbin_defined) {printf("ERROR: copy from fpga not possible since no XCLBIN has been defined\n"); return;}
   cl_int err;
   OCL_CHECK(err, err = q.enqueueMigrateMemObjects({*buf}, CL_MIGRATE_MEM_OBJECT_HOST, NULL, &read_events[0]));
   set_callback(read_events[0], "ooo_queue");
@@ -197,14 +209,21 @@ void copy_from_fpga(cl::Buffer *buf) {
 }
 
 void deallocate_buffers() {
-  if (verbose && verbose_level >= 2) printf("deallocating buffers...\n");
+  if (verbose && verbose_level >= 3) printf("deallocating buffers...\n");
 
   // we deallocate buffers of nodes, initializers, and inputs
-  for (int n=0; n<num_nodes; n++) if (aNode[n].valid) free(aNode[n].buffer);
-  for (int i=0; i<num_initializers; i++) if (aInitializer[i].valid) free(aInitializer[i].buffer);
-  for (int i=0; i<num_inputs; i++) if (aInput[i].valid) free(aInput[i].buffer);
+  if (xclbin_defined) {
+    for (int n=0; n<num_nodes; n++) if (aNode[n].valid) free(aNode[n].buffer);
+    for (int i=0; i<num_initializers; i++) if (aInitializer[i].valid) free(aInitializer[i].buffer);
+    for (int i=0; i<num_inputs; i++) if (aInput[i].valid) free(aInput[i].buffer);
+  }
 
-  if (verbose && verbose_level >= 2) printf("  completed\n");
+  // now we deallocate the data of nodes, initializers and inputs
+  for (int n=0; n<num_nodes; n++) if (aNode[n].valid) free(aNode[n].data);
+  for (int i=0; i<num_initializers; i++) if (aInitializer[i].valid) free(aInitializer[i].data);
+  for (int i=0; i<num_inputs; i++) if (aInput[i].valid) free(aInput[i].data);
+
+  if (verbose && verbose_level >= 3) printf("  completed\n");
 }
 
 /*
@@ -249,6 +268,7 @@ void fn_run_node_on_fpga(int n, int k, int first_O, int last_O, int first_HI, in
   if (n==-1) return;
   if (!aNode[n].valid) return;
   if (strcmp(aNode[n].type, "HLSinf")) return;
+  if (!xclbin_defined) {printf("WARNING: FPGA not initialized\n"); return;}
 
   i_weight = -1;
   i_bias = -1;
@@ -260,13 +280,13 @@ void fn_run_node_on_fpga(int n, int k, int first_O, int last_O, int first_HI, in
 
   // input clbuffer
   cl::Buffer *buffer_i = fn_get_clbuffer_from_name(aNode[n].inputs[0]);
-  if (verbose && verbose_level >= 2) fn_buffer_stats_by_name(aNode[n].inputs[0], (char *)"      input  : ");
+  if (verbose && verbose_level >= 3) fn_buffer_stats_by_name(aNode[n].inputs[0], (char *)"      input  : ");
 
   // weight and bias clbuffers
   cl::Buffer *buffer_w = fn_get_clbuffer_from_name(aNode[n].inputs[1]);
   cl::Buffer *buffer_b = fn_get_clbuffer_from_name(aNode[n].inputs[2]);
-  if (verbose && verbose_level >= 2) fn_buffer_stats_by_name(aNode[n].inputs[1], (char *)"      weights: ");
-  if (verbose && verbose_level >= 2) fn_buffer_stats_by_name(aNode[n].inputs[2], (char *)"      bias   : ");
+  if (verbose && verbose_level >= 3) fn_buffer_stats_by_name(aNode[n].inputs[1], (char *)"      weights: ");
+  if (verbose && verbose_level >= 3) fn_buffer_stats_by_name(aNode[n].inputs[2], (char *)"      bias   : ");
 
   // output data clbuffer
   cl::Buffer *buffer_o = aNode[n].buffer;
@@ -278,14 +298,14 @@ void fn_run_node_on_fpga(int n, int k, int first_O, int last_O, int first_HI, in
   if (!strcmp(aNode[n].keyword, "cbar")) i = 4;
   if (i!=-1) {
     buffer_bn = fn_get_clbuffer_from_name(aNode[n].inputs[i]);
-    if (verbose && verbose_level >= 2) fn_buffer_stats_by_name(aNode[n].inputs[i], (char *)"      bn     : ");
+    if (verbose && verbose_level >= 3) fn_buffer_stats_by_name(aNode[n].inputs[i], (char *)"      bn     : ");
   }
 
   // add buffer
   cl::Buffer *buffer_add = add_buffer;
   if (!strcmp(aNode[n].keyword, "cbar")) {
     buffer_add = fn_get_clbuffer_from_name(aNode[n].inputs[3]);
-    if (verbose && verbose_level >= 2) fn_buffer_stats_by_name(aNode[n].inputs[3], (char *)"      add    : ");
+    if (verbose && verbose_level >= 3) fn_buffer_stats_by_name(aNode[n].inputs[3], (char *)"      add    : ");
   }
 
   // default arguments
@@ -340,10 +360,11 @@ void fn_run_node_on_fpga(int n, int k, int first_O, int last_O, int first_HI, in
   // seting up arguments (depending on the keyword)
   if (!strcmp(aNode[n].keyword, "cbr"))  {bn_enable = true; bn_relu_enable = true;}
   if (!strcmp(aNode[n].keyword, "cbar")) {bn_enable = true; bn_relu_enable = false; add_enable = true; add_relu_enable = true;}
+  if (!strcmp(aNode[n].keyword, "crm"))  {relu_enable = true; maxpool_enable = true;}
   if (!strcmp(aNode[n].keyword, "cb"))   {bn_enable = true;}
   if (!strcmp(aNode[n].keyword, "cr"))   {relu_enable = true;}
 
-  if (verbose && verbose_level >= 2) {
+  if (verbose && verbose_level >= 3) {
     printf("      IxHIxWI: %4dx%4dx%4d OxHOxWO: %4dx%4dx%4d num_read_rows: %3d pads: %1d%1d%1d%1d SWxSW: %1dx%1d\n", I, HI, WI, O, HO, WO, num_read_rows, pt, pb, pl, pr, sh, sw);
     printf("      i_iter: %3d first_o_iter: %3d last_o_iter: %3d\n", i_iter, first_o_iter, last_o_iter);
     printf("      relu_enable: %1d stm_enable: %1d, relu_factor: %4.2f bn_enable: %1d\n", relu_enable, stm_enable, relu_factor, bn_enable);

@@ -8,5 +8,8 @@
 - support alpha, beta, transA, transB in gemm
 - support optional input C in gemm
 - support correct order padding (pt, pl, pb, pr)
-- xclbin como parámetro opcional
 - support pad node correctly
+- support input file
+- support dense as conv
+- support dummy_concat (and shift of dummy concat)
+- support of DW convolution 

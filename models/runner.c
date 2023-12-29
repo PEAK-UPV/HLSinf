@@ -23,7 +23,7 @@
 #include "stats.h"
 #include "runner.h"
 
-#define MAX_EOG_ENTRIES     100
+#define MAX_EOG_ENTRIES     1000
 #define MAX_EXECUTION_ORDER 1000
 
 // global variables
@@ -47,7 +47,7 @@ void fn_process_input_line2(char *line, size_t len) {
   char item[200];
   int offset = 0;
 
-  if (verbose && verbose_level >= 2) {
+  if (verbose && verbose_level >= 3) {
     char sz_line[201];
     if (strlen(line) < 200) printf("  line: %s", line);  // the line has already a \n
     else {
@@ -246,7 +246,7 @@ void fn_read_run_graph() {
   size_t len = 0;
   ssize_t read;
 
-  if (verbose && verbose_level >= 2) printf("reading run graph (%s)...\n", input_file_name);
+  if (verbose && verbose_level >= 3) printf("reading run graph (%s)...\n", input_file_name);
 
   if ((fd = fopen(input_file_name, "r"))==NULL) {
     printf("Error, could not open input file\n");
@@ -264,7 +264,7 @@ void fn_read_run_graph() {
   fclose(fd);
   if (line) free(line);
 
-  if (verbose && verbose_level >= 2) printf("  completed (nodes: %d, inputs: %d, outputs: %d, initializers: %d)\n", num_nodes, num_inputs, num_outputs, num_initializers);
+  if (verbose && verbose_level >= 3) printf("  completed (nodes: %d, inputs: %d, outputs: %d, initializers: %d)\n", num_nodes, num_inputs, num_outputs, num_initializers);
 }
 
 /*
@@ -283,8 +283,8 @@ void build_execution_order_graph(int order) {
   // we create a list of hlsinf nodes and a list of cpu nodes
   int num_hlsinf_nodes = 0;
   int num_cpu_nodes = 0;
-  int hlsinf_nodes[100];
-  int cpu_nodes[100];
+  int hlsinf_nodes[500];
+  int cpu_nodes[500];
   for (int n=0; n<num_nodes; n++) {
     if (aNode[n].valid && (aNode[n].run_order == order)) {
       if (is_hlsinf(n)) {hlsinf_nodes[num_hlsinf_nodes] = n; num_hlsinf_nodes++;}
@@ -377,17 +377,27 @@ void run_execution_order(int order) {
 
   if (timings) fn_start_timer(200);
 
-  if (verbose && verbose_level >= 2) printf("    running execution order %d\n", order);
+  if (verbose && verbose_level >= 3) printf("    running execution order %d\n", order);
   build_execution_order_graph(order);
-  //if (verbose) printf("    running %d tasks\n", eog_entries[order]);
+  if (verbose && verbose_level >= 3) printf("      %d tasks found\n", eog_entries[order]);
 
   // cpu tasks
-  #pragma omp parallel for
-  for (int e=0; e<eog_entries[order]; e++) {
-    if (eog[e][order].cpu == true) {
-      if (timings) fn_start_timer(e);
-      fn_run_node_on_cpu(eog[e][order].node);
-      if (timings) {fn_stop_timer(e); eog[e][order].accumulated_runtime += fn_get_timer(e); eog[e][order].num_runs++;}
+  if (enable_omp) {
+    #pragma omp parallel for
+    for (int e=0; e<eog_entries[order]; e++) {
+      if (eog[e][order].cpu == true) {
+        if (timings) fn_start_timer(e);
+        fn_run_node_on_cpu(eog[e][order].node);
+        if (timings) {fn_stop_timer(e); eog[e][order].accumulated_runtime += fn_get_timer(e); eog[e][order].num_runs++;}
+      }
+    }
+  } else {
+    for (int e=0; e<eog_entries[order]; e++) {
+      if (eog[e][order].cpu == true) {
+        if (timings) fn_start_timer(e);
+        fn_run_node_on_cpu(eog[e][order].node);
+        if (timings) {fn_stop_timer(e); eog[e][order].accumulated_runtime += fn_get_timer(e); eog[e][order].num_runs++;}
+      }
     }
   }
 
@@ -462,14 +472,16 @@ void run_graph() {
  */
 void copy_initializers_to_fpga() {
 
-  if (verbose && verbose_level >= 2) printf("copying initializers to FPGA...\n");
+  if (!xclbin_defined) {printf("WARNING: initializers not copied to FPGA since no XCLBIN has been specified\n"); return;}
+
+  if (verbose && verbose_level >= 3) printf("copying initializers to FPGA...\n");
   for (int i=0; i<num_initializers; i++) {
     if (aInitializer[i].valid) {
-      if (verbose && verbose_level >= 2) printf("  copying initializer %3d name %s\n", i, aInitializer[i].name);
+      if (verbose && verbose_level >= 3) printf("  copying initializer %3d name %s\n", i, aInitializer[i].name);
       copy_to_fpga(aInitializer[i].buffer);
     }
   }
-  if (verbose && verbose_level >= 2) printf("  completed\n");
+  if (verbose && verbose_level >= 3) printf("  completed\n");
 }
 
 #endif

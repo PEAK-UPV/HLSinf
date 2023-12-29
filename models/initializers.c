@@ -64,7 +64,7 @@ void fn_read_initializers_data() {
   size_t len = 0;
   ssize_t read;  
 
-  if (verbose && verbose_level >= 2) printf("reading initializers data...\n");
+  if (verbose && verbose_level >= 3) printf("reading initializers data...\n");
   
   // we read every initializer
   for (int i=0; i<num_initializers; i++) {
@@ -75,7 +75,7 @@ void fn_read_initializers_data() {
       // first row is the number of items
       read = getline(&line, &len, fd);
       int num_items = atoi(line);
-      if (verbose && verbose_level >= 2) printf("  initializer: %-50s num_items: %12d file: %-50s\n", aInitializer[i].name, num_items, filename);
+      if (verbose && verbose_level >= 3) printf("  initializer: %-50s num_items: %12d file: %-50s\n", aInitializer[i].name, num_items, filename);
       // now we read the number of dimensions
       read = getline(&line, &len, fd);
       aInitializer[i].num_dimensions = atoi(line);
@@ -97,7 +97,7 @@ void fn_read_initializers_data() {
     }
   }
 
-  if (verbose && verbose_level >= 2) printf("  completed\n");
+  if (verbose && verbose_level >= 3) printf("  completed\n");
 }
 
 /*
@@ -144,7 +144,7 @@ void fn_write_initializers_data() {
   size_t len = 0;
   ssize_t read;
 
-  if (verbose && verbose_level >= 2) printf("writing initializers data...\n");
+  if (verbose && verbose_level >= 3) printf("writing initializers data...\n");
 
   // we write every initializer
   for (int i=0; i<num_initializers; i++) {
@@ -152,7 +152,7 @@ void fn_write_initializers_data() {
       char filename[100];
       sprintf(filename, "%s.data", aInitializer[i].name);
       if ((fd = fopen(filename, "w")) == NULL) {printf("Error, could not open initializer file %s\n", aInitializer[i].name); exit(1);}
-      if (verbose && verbose_level >= 2) printf("  file: %s\n", filename);
+      if (verbose && verbose_level >= 3) printf("  file: %s\n", filename);
       // num items
       int num_items = 1;
       for (int d=0; d<aInitializer[i].num_dimensions; d++) num_items = num_items * aInitializer[i].dimensions[d];
@@ -209,7 +209,7 @@ void fn_pad_weight_initializer_1x1_to_3x3(char *name) {
   int KH_new = 3;
   int KW_new = 3;
 
-  if (verbose && verbose_level >= 2) printf("      pading 1x1 weight initializer to 3x3: name: %s OxIxKHxKW: %3dx%3dx%3dx%3d\n", name, O, I, KH, KW);
+  if (verbose && verbose_level >= 3) printf("      pading 1x1 weight initializer to 3x3: name: %s OxIxKHxKW: %3dx%3dx%3dx%3d\n", name, O, I, KH, KW);
 
   size_t new_size = KH_new * KW_new * O * I;
   float *p = (float*)malloc(sizeof(float) * new_size);
@@ -249,7 +249,7 @@ void fn_pad_weight_initializer_2x2_to_3x3(char *name) {
   int KH_new = 3;
   int KW_new = 3;
 
-  if (verbose && verbose_level >= 2) printf("      pading 2x2 weight initializer to 3x3: name: %s OxIxKHxKW: %3dx%3dx%3dx%3d\n", name, O, I, KH, KW);
+  if (verbose && verbose_level >= 3) printf("      pading 2x2 weight initializer to 3x3: name: %s OxIxKHxKW: %3dx%3dx%3dx%3d\n", name, O, I, KH, KW);
 
   size_t new_size = KH_new * KW_new * O * I;
   float *p = (float*)malloc(sizeof(float) * new_size);
@@ -321,7 +321,7 @@ void fn_pad_weights(int i, int new_I, int new_O) {
   }
   aInitializer[i].dimensions[0] = new_O;
   aInitializer[i].dimensions[1] = new_I;
-  delete(aInitializer[i].data);
+  free(aInitializer[i].data);
   aInitializer[i].data = p;
 }
 
@@ -342,7 +342,7 @@ void fn_pad_bias(int i, int new_O) {
   memset(p, 0, sizeof(float) * new_num_items);
   for (int o=0; o<O; o++) p[o] = aInitializer[i].data[o];
   aInitializer[i].dimensions[0] = new_O;
-  delete(aInitializer[i].data);
+  free(aInitializer[i].data);
   aInitializer[i].data = p;
 }
 
@@ -363,7 +363,7 @@ void fn_pad_bn_vector(int i, int new_O) {
   memset(p, 0, sizeof(float) * new_num_items);
   for (int o=0; o<O; o++) p[o] = aInitializer[i].data[o];
   aInitializer[i].dimensions[0] = new_O;
-  delete(aInitializer[i].data);
+  free(aInitializer[i].data);
   aInitializer[i].data = p;
 }
 
