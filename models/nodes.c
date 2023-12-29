@@ -293,6 +293,19 @@ int is_add(int n) {
 }
 
 /*
+ * is_identity()
+ *
+ * Returns whether a node passed as its id is an Identity node
+ *
+ */
+int is_identity(int n) {
+  if (n==-1) return false;
+  if (!aNode[n].valid) return false;
+  if (!strcmp(aNode[n].type, "Identity")) return true;
+  return false;
+}
+
+/*
  * add_input_to_node()
  *
  * Adds an input (name) to the list of inputs of the node (passed as an id)
@@ -534,7 +547,7 @@ int fn_check_all_parents_allocated(int n) {
  */
 void fn_allocate_nodes() {
 
-  if (verbose) printf("    allocating nodes...\n");
+  if (verbose && verbose_level >= 2) printf("    allocating nodes...\n");
 
   // we first initialize the col field to every node
   for (int n=0; n<num_nodes; n++) if (aNode[n].valid) {aNode[n].col = -1; aNode[n].row = -1;}
@@ -548,7 +561,6 @@ void fn_allocate_nodes() {
     end = false;
     if (n == -1) end = true;
     if (!end) {
-      if (verbose) printf("      allocating node: %d (%s)\n", n, aNode[n].name);
       // we now get the number of parents
       int plist[100];
       int np = fn_get_parent_nodes(aNode[n].name, plist);
@@ -566,7 +578,7 @@ void fn_allocate_nodes() {
     }
   } while (!end);
 
-  if (verbose) printf("      completed\n");
+  if (verbose && verbose_level >= 2) printf("      completed\n");
 }
 
 void fn_get_dimensions_from_name(char *name, int *num_dimensions, int *dim0, int *dim1, int *dim2, int *dim3) {
@@ -617,7 +629,7 @@ void fn_get_dimensions_from_name(char *name, int *num_dimensions, int *dim0, int
  */
 void fn_compute_data_geometries() {
 
-  if (verbose) printf("computing data geometries...\n");
+  if (verbose && verbose_level >= 2) printf("computing data geometries...\n");
 
   // we allocate the nodes in the running order
   fn_allocate_nodes();
@@ -642,53 +654,53 @@ void fn_compute_data_geometries() {
           aNode[n].HI = dim1 == 0 ? 1 : dim1;
           aNode[n].WI = dim2 == 0 ? 1 : dim2;
 	}
-	if (verbose) printf("  (parent)   node: %3d node_name: %-50s ---> I: %4d HI: %4d WI: %4d\n", n, aNode[n].name, aNode[n].I, aNode[n].HI, aNode[n].WI);
+	if (verbose && verbose_level >= 2) printf("  (parent)   node: %3d node_name: %-50s ---> I: %4d HI: %4d WI: %4d\n", n, aNode[n].name, aNode[n].I, aNode[n].HI, aNode[n].WI);
 
         if (is_conv(n)) {
 	  int i = fn_get_initializer_by_name(aNode[n].inputs[1]);	// weight is input 1 in onnx
           aNode[n].O  = aInitializer[i].dimensions[0];
           aNode[n].HO = ((aNode[n].HI - aNode[n].kh + aNode[n].pt + aNode[n].pb)/aNode[n].sh) + 1;
           aNode[n].WO = ((aNode[n].WI - aNode[n].kw + aNode[n].pr + aNode[n].pl)/aNode[n].sw) + 1;
-	  if (verbose) printf("  (conv)     node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
+	  if (verbose && verbose_level >= 2) printf("  (conv)     node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
         } else if (is_maxpool(n)) {
           aNode[n].O  = aNode[n].I;
           aNode[n].HO = ((aNode[n].HI - aNode[n].kh + aNode[n].pt + aNode[n].pb)/aNode[n].sh) + 1;
           aNode[n].WO = ((aNode[n].WI - aNode[n].kw + aNode[n].pl + aNode[n].pr)/aNode[n].sw) + 1;
-          if (verbose) printf("  (maxpool)  node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
+          if (verbose && verbose_level >= 2) printf("  (maxpool)  node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
         } else if (is_avgpool(n)) {
           aNode[n].O  = aNode[n].I;
           aNode[n].HO = ((aNode[n].HI - aNode[n].kh + aNode[n].pt + aNode[n].pb)/aNode[n].sh) + 1;
           aNode[n].WO = ((aNode[n].WI - aNode[n].kw + aNode[n].pl + aNode[n].pr)/aNode[n].sw) + 1;
-          if (verbose) printf("  (avgpool)  node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
+          if (verbose && verbose_level >= 2) printf("  (avgpool)  node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
         } else if (is_transpose(n)) {
 	  aNode[n].O = aNode[n].WI;
 	  aNode[n].HO = aNode[n].HI;
 	  aNode[n].WO = aNode[n].I;
-	  if (verbose) printf("  (trans)    node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
+	  if (verbose && verbose_level >= 2) printf("  (trans)    node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
 	} else if (is_global_average_pool(n)) {
 	  aNode[n].O  = aNode[n].I;
 	  aNode[n].HO = 1;
 	  aNode[n].WO = 1;
-	  if (verbose) printf("  (gapool)   node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
+	  if (verbose && verbose_level >= 2) printf("  (gapool)   node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
 	} else if (is_flatten(n)) {
 	  aNode[n].O = aNode[n].I * aNode[n].HI * aNode[n].WI;
 	  aNode[n].HO = 1;
 	  aNode[n].WO = 1;
-	  if (verbose) printf("  (flatten)  node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
+	  if (verbose && verbose_level >= 2) printf("  (flatten)  node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
 	} else if (is_gemm(n)) {
 	  int i_w = fn_get_initializer_by_name(aNode[n].inputs[1]); // weight is input 1 in onnx
 	  if (i_w == -1) {printf("Error, could not get weight initializer from node\n"); exit(1);}
 	  aNode[n].O = aInitializer[i_w].dimensions[0];   // in ONNX the output dimension is the first one
 	  aNode[n].HO = 1;
 	  aNode[n].WO = 1;
-	  if (verbose) printf("  (gemm)     node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
+	  if (verbose && verbose_level >= 2) printf("  (gemm)     node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
 	} else if (is_matmul(n)) {
 	  int i_w = fn_get_initializer_by_name(aNode[n].inputs[1]); // weight is input 1 in onnx
 	  if (i_w == -1) {printf("Error, could not get weight initializer from node\n"); exit(1);}
 	  aNode[n].O = aInitializer[i_w].dimensions[1];   // in ONNX the output dimension is the second one
 	  aNode[n].HO = 1;
 	  aNode[n].WO = 1;
-          if (verbose) printf("  (matmul)   node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
+          if (verbose && verbose_level >= 2) printf("  (matmul)   node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
 	} else if (is_concat(n)) {  // Todo, implement axis in concat
 	  // dimension 0 will be added
 	  int dim0_count = 0;
@@ -699,16 +711,16 @@ void fn_compute_data_geometries() {
 	  aNode[n].O = dim0_count;
 	  aNode[n].HO = aNode[n].HI;
 	  aNode[n].WO = aNode[n].WI;
-          if (verbose) printf("  (concat)   node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
+          if (verbose && verbose_level >= 2) printf("  (concat)   node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
         } else {
           aNode[n].O  = aNode[n].I; aNode[n].HO = aNode[n].HI; aNode[n].WO = aNode[n].WI;
-          if (verbose) printf("  (other)    node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
+          if (verbose && verbose_level >= 2) printf("  (other)    node: %3d node_name: %-50s ---> O: %4d HO: %4d WO: %4d\n", n, aNode[n].name, aNode[n].O, aNode[n].HO, aNode[n].WO);
 	}
       }
     }
   }
 
-  if (verbose) printf("  completed\n");
+  if (verbose && verbose_level >= 2) printf("  completed\n");
 }
 
 /*
@@ -864,6 +876,22 @@ int fn_add_node(char *name, char *type) {
 }
 
 /*
+ * fn_delete_node()
+ *
+ * Deletes a node passed as argument
+ *
+ */
+void fn_delete_node(int n) {
+  aNode[n].valid = false;
+  for (int i=0; i<aNode[n].num_inputs; i++) free(aNode[n].inputs[i]);
+  free(aNode[n].inputs);
+  for (int o=0; o<aNode[n].num_outputs; o++) free(aNode[n].outputs[o]);
+  free(aNode[n].outputs);
+  free(aNode[n].name);
+  free(aNode[n].type);
+}
+
+/*
  * fn_change_input_in_node()
  *
  * This function changes one input in a given node id.
@@ -897,7 +925,7 @@ void fn_change_input_in_node(int n, char *old_name, char *new_name) {
  */
 void fn_add_host_device_nodes() {
 
-  if (verbose) printf("adding h2d and d2h nodes...\n");
+  if (verbose && verbose_level >= 2) printf("adding h2d and d2h nodes...\n");
 
   // if the first node is an hlsinf node then we need to add a h2d node
   for (int i=0; i<num_inputs; i++) {
@@ -918,8 +946,8 @@ void fn_add_host_device_nodes() {
 	  aNode[nn].HI = aNode[n].HI;
 	  aNode[nn].WI = aNode[n].WI;
 	  aNode[nn].O  = aNode[nn].I;
-	  aNode[nn].HO = aNode[nn].HO;
-	  aNode[nn].WO = aNode[nn].WO;
+	  aNode[nn].HO = aNode[nn].HI;
+	  aNode[nn].WO = aNode[nn].WI;
         }
       }
     }
@@ -944,8 +972,8 @@ void fn_add_host_device_nodes() {
           aNode[nn].HI = aNode[n].HO;
           aNode[nn].WI = aNode[n].WO;
           aNode[nn].O  = aNode[nn].I;
-          aNode[nn].HO = aNode[nn].HO;
-          aNode[nn].WO = aNode[nn].WO;
+          aNode[nn].HO = aNode[nn].HI;
+          aNode[nn].WO = aNode[nn].WI;
         }
       }
     }
@@ -962,7 +990,7 @@ void fn_add_host_device_nodes() {
 	if (nc != 0) {
 	  int child = list[0];
 	  if (!is_d2h(child) && !is_hlsinf(child)) {
-	    if (verbose) printf("  adding d2h between nodes %d (%s) and %d (%s)\n", n, aNode[n].name, child, aNode[child].name);
+	    if (verbose && verbose_level >= 2) printf("  adding d2h between nodes %d (%s) and %d (%s)\n", n, aNode[n].name, child, aNode[child].name);
             // we need to add a d2c node in between
 	    char name[100];
 	    sprintf(name, "d2h_%0d", num_nodes);
@@ -998,7 +1026,7 @@ void fn_add_host_device_nodes() {
               // the child will simply point to the h2d node
               fn_change_input_in_node(child, aNode[n].name, aNode[h2d_node_placed].name);
             } else {
-              if (verbose) printf("  adding h2d between nodes %d (%s) and %d (%s)\n", n, aNode[n].name, child, aNode[child].name);
+              if (verbose && verbose_level >= 2) printf("  adding h2d between nodes %d (%s) and %d (%s)\n", n, aNode[n].name, child, aNode[child].name);
               // we need to add a d2c node in between
               char name[100];
               sprintf(name, "h2d_%0d", num_nodes);
@@ -1024,6 +1052,6 @@ void fn_add_host_device_nodes() {
     }
   }
   //
-  if (verbose) printf("  completed\n");
+  if (verbose && verbose_level >= 2) printf("  completed\n");
 }
 

@@ -38,7 +38,12 @@ int is_initializer(char *name);
 void fn_read_initializers_data();
 void fn_write_initializers_data();
 void fn_pad_weight_initializer_1x1_to_3x3(char *name);
+void fn_pad_weight_initializer_2x2_to_3x3(char *name);
 void fn_add_new_initializer(char *name, int num_items, float *d);
 void remove_initializer(int i);
 void fn_print_initializer_data_stats(int i);
 int get_initializer_entry_from_node(int n);
+void fn_pad_weights(int i, int new_I, int new_O);
+void fn_pad_bias(int i, int new_O);
+void fn_pad_bn_vector(int i, int new_O);
+

@@ -62,9 +62,6 @@ struct st_node {
  cl_mem_ext_ptr_t buffer_ddr;
  cl::Buffer *buffer;
  #endif
- // parameters for statistics
- int num_runs;
- unsigned long long accumulated_runtime;
 };
 
 // global variables
@@ -83,6 +80,9 @@ int is_maxpool(int n);
 int is_avgpool(int n);
 int is_bn(int n);
 int is_add(int n);
+int is_identity(int n);
+int is_h2d(int n);
+int is_d2h(int n);
 int has_no_parents(int n);
 int fn_get_first_node(char *name);
 int fn_get_last_node(char *name);
@@ -101,4 +101,5 @@ char *get_data_input_name_from_node(int n, char *exclude_name);
 void fn_relink_nodes(int n1, int n2);
 void fn_add_host_device_nodes();
 int fn_add_node(char *name, char *type);
+void fn_delete_node(int n);
 void fn_change_input_in_node(int n, char *old_name, char *new_name);

@@ -11,6 +11,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<unistd.h>
 
 #include "utils.h"
 #include "in_out.h"
@@ -20,10 +21,19 @@
 #include "fpga.h"
 #include "cpu.h"
 #include "stats.h"
+#include "runner.h"
+
+#define MAX_EOG_ENTRIES     100
+#define MAX_EXECUTION_ORDER 1000
 
 // global variables
 int max_execution_order;
-
+int eog_entries[MAX_EXECUTION_ORDER];
+int current_eog_entry[MAX_EXECUTION_ORDER];
+struct st_eog eog[MAX_EOG_ENTRIES][MAX_EXECUTION_ORDER];
+int num_runs[MAX_EXECUTION_ORDER];
+unsigned long long accumulated_runtime[MAX_EXECUTION_ORDER];
+pthread_mutex_t lock; 
 
 /*
  *
@@ -37,7 +47,7 @@ void fn_process_input_line2(char *line, size_t len) {
   char item[200];
   int offset = 0;
 
-  if (verbose) {
+  if (verbose && verbose_level >= 2) {
     char sz_line[201];
     if (strlen(line) < 200) printf("  line: %s", line);  // the line has already a \n
     else {
@@ -98,8 +108,6 @@ void fn_process_input_line2(char *line, size_t len) {
     offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].O  = atoi(item);
     offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].HO = atoi(item);
     offset = fn_get_item_line(line, len, offset, item); aNode[num_nodes].WO = atoi(item);
-
-    printf("node %d -> %d %d %d %d %d %d \n", num_nodes, aNode[num_nodes].I, aNode[num_nodes].HI, aNode[num_nodes].WI, aNode[num_nodes].O, aNode[num_nodes].HO, aNode[num_nodes].WO);
 
     // keyword (if is an hlsinf node)
     if (!strcmp(aNode[num_nodes].type, "HLSinf")) {
@@ -238,7 +246,7 @@ void fn_read_run_graph() {
   size_t len = 0;
   ssize_t read;
 
-  if (verbose) printf("reading run graph (%s)...\n", input_file_name);
+  if (verbose && verbose_level >= 2) printf("reading run graph (%s)...\n", input_file_name);
 
   if ((fd = fopen(input_file_name, "r"))==NULL) {
     printf("Error, could not open input file\n");
@@ -256,8 +264,151 @@ void fn_read_run_graph() {
   fclose(fd);
   if (line) free(line);
 
-  if (verbose) printf("  completed (nodes: %d, inputs: %d, outputs: %d, initializers: %d)\n", num_nodes, num_inputs, num_outputs, num_initializers);
+  if (verbose && verbose_level >= 2) printf("  completed (nodes: %d, inputs: %d, outputs: %d, initializers: %d)\n", num_nodes, num_inputs, num_outputs, num_initializers);
 }
+
+/*
+ * build_execution_order_graph()
+ *
+ * This function builds an execution order graph taking into
+ * account the number of kernels, and the nodes available
+ * in a given execution order
+ * The function takes into account the modes of parallelism available
+ * (ocp, irp, np)
+ */
+void build_execution_order_graph(int order) {
+
+  //if (verbose) printf("    building execution order graph for execution order %d\n", order);
+
+  // we create a list of hlsinf nodes and a list of cpu nodes
+  int num_hlsinf_nodes = 0;
+  int num_cpu_nodes = 0;
+  int hlsinf_nodes[100];
+  int cpu_nodes[100];
+  for (int n=0; n<num_nodes; n++) {
+    if (aNode[n].valid && (aNode[n].run_order == order)) {
+      if (is_hlsinf(n)) {hlsinf_nodes[num_hlsinf_nodes] = n; num_hlsinf_nodes++;}
+      else {cpu_nodes[num_cpu_nodes] = n; num_cpu_nodes++;}
+    }
+  }
+
+  eog_entries[order] = 0;
+
+  // every cpu node is added as a single entry in the execution graph
+  for (int n=0; n<num_cpu_nodes; n++) {
+    eog[eog_entries[order]][order].node = cpu_nodes[n];
+    eog[eog_entries[order]][order].cpu  = true;
+    eog_entries[order]++;
+  }
+
+  // hlsinf nodes
+  if (ocp_enabled) {
+    // we build groups of ocp_threshold, each one in a different task
+    for (int n=0; n<num_hlsinf_nodes; n++) {
+      int O  = aNode[hlsinf_nodes[n]].O;
+      int HI = aNode[hlsinf_nodes[n]].HI;
+      for (int o=0; o<O; o+= ocp_threshold) {
+	eog[eog_entries[order]][order].node = hlsinf_nodes[n];
+	eog[eog_entries[order]][order].cpu  = false;
+	eog[eog_entries[order]][order].first_O = o;
+	eog[eog_entries[order]][order].last_O = min(O-1, o+ocp_threshold-1);
+	eog[eog_entries[order]][order].first_HI = 0;
+	eog[eog_entries[order]][order].last_HI = HI-1;
+	eog_entries[order]++;
+      }
+    }
+  } else if (irp_enabled) {
+    // we build groups of irp_threshold, each one in a different task
+    for (int n=0; n<num_hlsinf_nodes; n++) {
+      int O  = aNode[hlsinf_nodes[n]].O;
+      int HI = aNode[hlsinf_nodes[n]].HI;
+      for (int hi=0; hi<HI; hi+= irp_threshold) {
+	eog[eog_entries[order]][order].node = hlsinf_nodes[n];
+	eog[eog_entries[order]][order].cpu  = false;
+	eog[eog_entries[order]][order].first_O = 0;
+	eog[eog_entries[order]][order].last_O  = O-1;
+	eog[eog_entries[order]][order].first_HI = hi;
+	eog[eog_entries[order]][order].last_HI = min(HI-1, hi+irp_threshold-1);
+	eog_entries[order]++;
+      }
+    }
+  } else {
+    // no parallelism at all, one task per node
+    for (int n=0; n<num_hlsinf_nodes; n++) {
+      int O  = aNode[hlsinf_nodes[n]].O;
+      int HI = aNode[hlsinf_nodes[n]].HI;
+      eog[eog_entries[order]][order].node = hlsinf_nodes[n];
+      eog[eog_entries[order]][order].cpu  = false;
+      eog[eog_entries[order]][order].first_O = 0;
+      eog[eog_entries[order]][order].last_O = O-1;
+      eog[eog_entries[order]][order].first_HI = 0;
+      eog[eog_entries[order]][order].last_HI = HI-1;
+      eog_entries[order]++;
+    }
+  }
+}
+
+/*
+ * get_eog_entry
+ *
+ * This function provides the next execution order graph entry
+ * in a mutex section, guaranteeing every thread will not 
+ * share any eog task
+ *
+ */
+int get_eog_entry(int order) {
+  int eog_entry;
+  pthread_mutex_lock(&lock); 
+  if (current_eog_entry[order] >= eog_entries[order]) eog_entry = -1; else eog_entry = current_eog_entry[order];
+  current_eog_entry[order]++;
+  pthread_mutex_unlock(&lock);
+  return eog_entry;
+}
+
+/*
+ * run_execution_order()
+ *
+ * runs all nodes that belong to the same execution order
+ * node parallelism is applied if enabled
+ * First, an execution graph is built and then run in parallel
+ *
+ */
+void run_execution_order(int order) {
+
+  if (timings) fn_start_timer(200);
+
+  if (verbose && verbose_level >= 2) printf("    running execution order %d\n", order);
+  build_execution_order_graph(order);
+  //if (verbose) printf("    running %d tasks\n", eog_entries[order]);
+
+  // cpu tasks
+  #pragma omp parallel for
+  for (int e=0; e<eog_entries[order]; e++) {
+    if (eog[e][order].cpu == true) {
+      if (timings) fn_start_timer(e);
+      fn_run_node_on_cpu(eog[e][order].node);
+      if (timings) {fn_stop_timer(e); eog[e][order].accumulated_runtime += fn_get_timer(e); eog[e][order].num_runs++;}
+    }
+  }
+
+  // fpga tasks
+  current_eog_entry[order] = 0;
+  #pragma omp parallel for
+  for (int k=0; k<num_kernels; k++) {
+    int e;
+    do {
+      e = get_eog_entry(order);
+      if (e!=-1) if (eog[e][order].cpu == false) {
+	if (timings) fn_start_timer(k);
+        fn_run_node_on_fpga(eog[e][order].node, k, eog[e][order].first_O, eog[e][order].last_O, eog[e][order].first_HI, eog[e][order].last_HI);
+	if (timings) {fn_stop_timer(k); eog[e][order].accumulated_runtime += fn_get_timer(k); eog[e][order].num_runs++;}
+      }
+    } while (e!=-1);
+  }
+
+  if (timings) {fn_stop_timer(200); num_runs[order]++; accumulated_runtime[order] += fn_get_timer(200);}
+}
+
 
 /*
  * run_graph()
@@ -267,46 +418,38 @@ void fn_read_run_graph() {
  */
 void run_graph() {
   
-  if (verbose) printf("running graph\n");
-
-  // every node will run and we will collect stats for every node. We will
-  // acount for the number of runs of the node and the accumulated time for the node
+  // every group of nodes (in the same run order)  will run and we will collect stats for every run order. We will
+  // acount for the number of runs and the accumulated time for the run order
   // we first reset the run statistics
-  if (timings) for (int n=0; n<num_nodes; n++) {aNode[n].num_runs = 0; aNode[n].accumulated_runtime = 0;}
-
-  // now we read the node graph in execution order collecting statistics
-  for (int order=0; order <= max_execution_order; order++) {
-    //
-    for (int n=0; n<num_nodes; n++) {
-      //
-      if ((aNode[n].valid) && (aNode[n].run_order == order)) {
-        //
-        if (verbose) printf("  running: node: %3d order: %3d name: %-50s\n", n, order, aNode[n].name);
-        //
-        if (timings) fn_start_timer();
-        //
-        if (!strcmp(aNode[n].type, "HLSinf")) fn_run_node_on_fpga(n); else fn_run_node_on_cpu(n);
-        //
-        if (timings) fn_stop_timer();
-        //
-        if (timings) {aNode[n].num_runs++; aNode[n].accumulated_runtime += fn_get_timer();}
-      }
-    }
+  if (timings) {
+    for (int e=0; e<MAX_EOG_ENTRIES; e++) for (int o=0; o<MAX_EXECUTION_ORDER; o++) {eog[e][o].num_runs = 0; eog[e][o].accumulated_runtime = 0;}
+    for (int o=0; o<MAX_EXECUTION_ORDER; o++) {num_runs[o] = 0; accumulated_runtime[o] = 0;}
   }
 
-  if (verbose) printf("  completed\n");
-
+  // now we read the node graph in execution order
+  for (int order=0; order <= max_execution_order; order++) run_execution_order(order);
+    
   if (timings) {
-    // now we print statistics for every node
-    printf("\nGraph timing statistics:\n");
-    printf("| %-50s |           |               |               |\n", "Node");
-    for (int n=0; n<num_nodes; n++) {
-      if (aNode[n].valid) {
-        int nr = aNode[n].num_runs;
-        unsigned long long crt = aNode[n].accumulated_runtime;
-        unsigned long long art = (crt / nr);
-        printf("| %-50s | %-10d | %-15lld | %-15lld|\n", aNode[n].name, aNode[n].num_runs, crt, art);
+    // now we print statistics for every run order and task
+    printf("| Graph timing statistics                                                                                                                  |\n");
+    printf("|------------------------------------------------------------------------------------------|-----------------|------------|-----------------|-----------------|\n");
+    printf("| Execution order / task                                                                   | conf.           |   #runs    | accum. runtime  |  avg. runtime   |\n");
+    printf("|------------------------------------------------------------------------------------------|-----------------|------------|-----------------|-----------------|\n");
+    for (int order=0; order <= max_execution_order; order++) {
+      int nr = num_runs[order];
+      unsigned long long crt = accumulated_runtime[order];
+      unsigned long long art = crt / nr;
+      printf("| execution order: %4d                                                                    |                 | %10d | %15lld | % 15lld |\n", order, nr, crt, art);
+      for (int e=0; e<eog_entries[order]; e++) {
+	int n = eog[e][order].node;
+	nr = eog[e][order].num_runs;
+	crt = eog[e][order].accumulated_runtime;
+	art = crt / nr;
+	char conf[40];
+	if (is_hlsinf(n)) sprintf(conf, "O: %4d-%4d", eog[e][order].first_O, eog[e][order].last_O); else sprintf(conf, "cpu");
+	printf("| %-88s | %-15s | %10d | %15lld | %15lld |\n", aNode[n].name, conf, nr, crt, art);
       }
+      printf("|------------------------------------------------------------------------------------------|-----------------|------------|-----------------|-----------------|\n");
     }
   }
 }
@@ -319,14 +462,14 @@ void run_graph() {
  */
 void copy_initializers_to_fpga() {
 
-  if (verbose) printf("copying initializers to FPGA...\n");
+  if (verbose && verbose_level >= 2) printf("copying initializers to FPGA...\n");
   for (int i=0; i<num_initializers; i++) {
     if (aInitializer[i].valid) {
-      if (verbose) printf("  copying initializer %3d name %s\n", i, aInitializer[i].name);
+      if (verbose && verbose_level >= 2) printf("  copying initializer %3d name %s\n", i, aInitializer[i].name);
       copy_to_fpga(aInitializer[i].buffer);
     }
   }
-  if (verbose) printf("  completed\n");
+  if (verbose && verbose_level >= 2) printf("  completed\n");
 }
 
 #endif

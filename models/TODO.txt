@@ -1,0 +1,12 @@
+- support dilations in conv
+- support groups in conv
+- support ceil_mode in maxpool
+- support storage_order in maxpool
+- support output indices (optional) in maxpool
+- support optional outputs in bn
+- support axis in flatten
+- support alpha, beta, transA, transB in gemm
+- support optional input C in gemm
+- support correct order padding (pt, pl, pb, pr)
+- xclbin como parámetro opcional
+- support pad node correctly

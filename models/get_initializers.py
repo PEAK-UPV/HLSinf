@@ -31,11 +31,11 @@ if __name__ == '__main__':
         f = open(filename, "w")
         f.write(str(len(obj.float_data)))
         f.write("\n")
-        #f.write(str(len(obj.dims)))
-        #f.write("\n")
-        #for dim in obj.dims:
-        #    f.write(str(dim))
-        #    f.write("\n")
+        f.write(str(len(obj.dims)))
+        f.write("\n")
+        for dim in obj.dims:
+            f.write(str(dim))
+            f.write("\n")
         for d in obj.float_data:
             f.write(str(d))
             f.write("\n")

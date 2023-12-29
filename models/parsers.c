@@ -45,7 +45,7 @@ int fn_detect_pattern(int n, char *type0, char *type1, char *type2, char *type3,
   return false;
 }
 
-void fn_merge_nodes(int n0, int n1, int n2, int n3, int n4, char *keyword) {
+void fn_merge_nodes(int n0, int n1, int n2, int n3, int n4, char *keyword, int *new_node) {
 
   int conv_layer       = is_conv(n0)    ? n0 : is_conv(n1)    ? n1 : is_conv(n2)    ? n2 : is_conv(n3)    ? n3 : is_conv(n4)    ? n4 : -1;
   int relu_layer       = is_relu(n0)    ? n0 : is_relu(n1)    ? n1 : is_relu(n2)    ? n2 : is_relu(n3)    ? n3 : is_relu(n4)    ? n4 : -1;
@@ -61,6 +61,7 @@ void fn_merge_nodes(int n0, int n1, int n2, int n3, int n4, char *keyword) {
 
   // new node
   int n = num_nodes;
+  *new_node = n;
   num_nodes++;
 
   aNode[n].valid = true;
@@ -78,14 +79,38 @@ void fn_merge_nodes(int n0, int n1, int n2, int n3, int n4, char *keyword) {
   aNode[n].outputs[0] = (char*)malloc(sizeof(char) * (strlen(aNode[n].name)+1));
   strcpy(aNode[n].outputs[0], aNode[n].name);
 
-  // inputs
-  // if a merged layer is a conv then its weights and bias need to be added
-  if (merging_conv) add_input_to_node(n, aNode[conv_layer].inputs[1]); // weight is input 1 in onnx
-  if (merging_conv) add_input_to_node(n, aNode[conv_layer].inputs[2]); // bias is input 2 in onnx
+  // hlsinf node will have the following inputs (in this order):
+  //   - input data
+  //   - conv weight
+  //   - conv bias
+  //   - bn gamma
+  //   - bn beta
+  //   - bn running mean
+  //   - bn running var
+  //   - add input data
+  //   - bn combined data (will be added later and will remove bn four inputs)
 
+  // first input (input data)
   // the data input from first node to merge needs to be added
-  add_input_to_node(n, get_data_input_name_from_node(n0, NULL));
+  add_input_to_node(n, get_data_input_name_from_node(n0, NULL));  
 
+  // second and third input (conv weight and bias)
+  // if a merged layer is a conv then its weights and bias need to be added
+  // in the case of bias it may not be included, in that case we add a zero-initialized bias initializer
+  if (merging_conv) {
+    add_input_to_node(n, aNode[conv_layer].inputs[1]); // weight is input 1 in onnx
+    if (aNode[conv_layer].num_inputs == 2) {
+      // bias has to be defined and initialized
+      char name[100];
+      sprintf(name, "%s_zero_bias", aNode[conv_layer].name);
+      fn_add_new_initializer(name, aNode[conv_layer].O, NULL);
+      add_input_to_node(n, name);
+    } else {
+      add_input_to_node(n, aNode[conv_layer].inputs[2]); // bias is input 2 in onnx
+    }
+  }
+
+  // fourth, fifth, sixth and seventh input (bn data)
   // if a batch normalization layer is merged its initializers need to be added
   if (merging_bn) {
     add_input_to_node(n, aNode[bn_layer].inputs[1]); // gamma (scale) is input 1 in onnx
@@ -93,6 +118,8 @@ void fn_merge_nodes(int n0, int n1, int n2, int n3, int n4, char *keyword) {
     add_input_to_node(n, aNode[bn_layer].inputs[3]); // running mean is input 3 in onnx 
     add_input_to_node(n, aNode[bn_layer].inputs[4]); // running var is input 4 in onnx
   }
+
+  // eight input (add input data)
   // if an add layer is merged, its data input not included in the merge set must be added
   if (is_add(n1)) add_input_to_node(n, get_data_input_name_from_node(n1, get_node_name(n0)));
   if (is_add(n2)) add_input_to_node(n, get_data_input_name_from_node(n2, get_node_name(n1)));
@@ -164,7 +191,7 @@ void fn_merge_nodes(int n0, int n1, int n2, int n3, int n4, char *keyword) {
 void fn_check_supported() {
   int list[100];
 
-  if (verbose) printf("  checking supported nodes...\n");
+  if (verbose && verbose_level >= 2) printf("  checking supported nodes...\n");
 
   for (int n=0; n<num_nodes; n++) {
     if (aNode[n].valid) {
@@ -181,10 +208,10 @@ void fn_check_supported() {
       // Add layer is supported with two parents
       if ((!strcmp(aNode[n].type, "Add")) && (fn_get_parent_nodes(aNode[n].name, list)==2)) aNode[n].supported = true;
 
-      if (verbose) printf("    node %d (%s) supported: %s\n", n, aNode[n].name, aNode[n].supported?"yes":"no");
+      if (verbose && verbose_level >= 2) printf("    node %d (%s) supported: %s\n", n, aNode[n].name, aNode[n].supported?"yes":"no");
     }
   }
-  if (verbose) printf("  completed\n");
+  if (verbose && verbose_level >= 2) printf("  completed\n");
 }
 
 /*
@@ -197,32 +224,33 @@ void fn_check_supported() {
  */
 void fn_adapt_initializers() {
 
-  if (verbose) printf("  adapting initializers...\n");
+  if (verbose && verbose_level >= 2) printf("  adapting initializers...\n");
 
   // we search for HLSinf nodes
   for (int n=0; n<num_nodes; n++) {
     if (aNode[n].valid) {
       if (is_hlsinf(n)) {
         if (aNode[n].has_conv) {	      
-	  if (verbose) printf("    node %d (hlsinf), adapting weights...\n", n);
+	  if (verbose && verbose_level >= 2) printf("    node %d (hlsinf), adapting weights...\n", n);
           // we adapt weights, first we get the parameters I, O, kh, kw
-	  int ii = fn_get_initializer_by_name(aNode[n].inputs[1]); // weight is input 1 in onnx
+	  int ii = fn_get_initializer_by_name(aNode[n].inputs[1]); // weight is input 1 in hlsinf
 	  if (ii==-1) {printf("Error, weight initializer not found\n"); exit(1);}
 
-	  if (verbose) printf("    weight initializer: %s (%d)\n", aInitializer[ii].name, ii);
+	  if (verbose && verbose_level >= 2) printf("    weight initializer: %s (%d)\n", aInitializer[ii].name, ii);
 
 	  int I  = aNode[n].I;
 	  int KH = aNode[n].hlsinf_kh_conv;
 	  int KW = aNode[n].hlsinf_kw_conv;
 	  int O  = aNode[n].O;
 
-	  if (verbose) printf("    I %d kh %d kw %d O %d\n", I, KH, KW, O);
+	  if (verbose && verbose_level >= 2) printf("    I %d kh %d kw %d O %d\n", I, KH, KW, O);
 
 	  int num_items = 1;
 	  for (int d=0; d<aInitializer[ii].num_dimensions; d++) num_items = num_items * aInitializer[ii].dimensions[d];
 	  float* p = (float*)malloc(num_items * sizeof(float));
+	  memset(p, 0, num_items * sizeof(float));
 
-	  if (verbose) printf("    number of items: %d\n", num_items);
+	  if (verbose && verbose_level >= 2) printf("    number of items: %d\n", num_items);
 
 	  int GI = I / CPI;
 	  int GO = O / CPO;
@@ -242,7 +270,7 @@ void fn_adapt_initializers() {
 	      }
 	    }
 	  }
-	  if (verbose) printf("    new memory allocated and initialized\n");
+	  if (verbose && verbose_level >= 2) printf("    new memory allocated and initialized\n");
 
 	  free(aInitializer[ii].data);
 	  aInitializer[ii].data = p;
@@ -250,29 +278,29 @@ void fn_adapt_initializers() {
 	
 	if (aNode[n].has_bn) {
 	  // we merge gamma, beta, runing_mean, runing_var into a single initializer
-	  if (verbose) printf("    node %d (hlsinf), merging bn initializers...\n", n);
+	  if (verbose && verbose_level >= 2) printf("    node %d (hlsinf), merging bn initializers...\n", n);
 
-	  int i0 = fn_get_initializer_by_name(aNode[n].inputs[1]);  // gamma is input 1 in onnx
-	  int i1 = fn_get_initializer_by_name(aNode[n].inputs[2]);  // beta is input 2 in onnx
-	  int i2 = fn_get_initializer_by_name(aNode[n].inputs[3]);  // running mean is input 3 in onnx
-	  int i3 = fn_get_initializer_by_name(aNode[n].inputs[4]);  // running var is input 4 in onnx
+	  int i0 = fn_get_initializer_by_name(aNode[n].inputs[3]);  // gamma is input 3 in hlsinf
+	  int i1 = fn_get_initializer_by_name(aNode[n].inputs[4]);  // beta is input 4 in hlsinf
+	  int i2 = fn_get_initializer_by_name(aNode[n].inputs[5]);  // running mean is input 5 in hlsinf
+	  int i3 = fn_get_initializer_by_name(aNode[n].inputs[6]);  // running var is input 6 in hlsinf
 	  // checks: initializers must exist and must have a single dimension
 	  if ((i0 == -1) || (i1 == -1) || (i2 == -1) || (i3 == -1)) {printf("Error, initializers not found for bn node\n"); exit(1);}
 	  if ((aInitializer[i0].num_dimensions != 1) || (aInitializer[i1].num_dimensions != 1) || (aInitializer[i2].num_dimensions != 1) || (aInitializer[i3].num_dimensions != 1)) {
 	    printf("Error, bn node initializers must have a single dimension\n"); exit(1);
 	  }
 
-	  if (verbose) printf("    initializers found: %d %d %d %d\n", i0, i1, i2, i3);
+	  if (verbose && verbose_level >= 2) printf("    initializers found: %d %d %d %d\n", i0, i1, i2, i3);
 
 	  int num_items = aInitializer[i0].dimensions[0];
 
-          if (verbose) printf("    number of items: %d\n", num_items);
+          if (verbose && verbose_level >= 2) printf("    number of items: %d\n", num_items);
 	  float *p = (float*)malloc(sizeof(float) * num_items * 4);
 	  for (int d=0; d<num_items; d++) {
-	    p[(d*4)    ] = aInitializer[i0].data[d];
-	    p[(d*4) + 1] = aInitializer[i1].data[d];
-	    p[(d*4) + 2] = aInitializer[i2].data[d];
-	    p[(d*4) + 3] = aInitializer[i3].data[d];
+	    p[(d*4) + 1] = aInitializer[i0].data[d]; // gamma in pos 1 for hlsinf
+	    p[(d*4) + 0] = aInitializer[i1].data[d]; // beta in pos 0 for hlsinf
+	    p[(d*4) + 2] = aInitializer[i2].data[d]; // running mean in pos 2 for hlsinf
+	    p[(d*4) + 3] = aInitializer[i3].data[d]; // running var in pos 3 for hlsinf
 	  }
 
 	  // we remove the four inputs to initializers from the node
@@ -296,7 +324,7 @@ void fn_adapt_initializers() {
     }
   }
 
-  if (verbose) printf("    completed\n");
+  if (verbose && verbose_level >= 2) printf("    completed\n");
 }
 
 /*
@@ -308,13 +336,13 @@ void fn_adapt_initializers() {
  * and two extra columns at the right with padding
  */
 void fn_adapt_conv1x1_to_conv3x3() {
-  if (verbose) printf("  adapting conv1x1 -> conv3x3\n");
+  if (verbose && verbose_level >= 2) printf("  adapting conv1x1 -> conv3x3\n");
   // we search all the nodes looking for possible conv 1x1 nodes
   for (int n=0; n<num_nodes; n++) {
     if (aNode[n].valid) {
       if (is_conv(n)) {
         if ((aNode[n].kh==1) && (aNode[n].kw==1) && (aNode[n].dh==1) && (aNode[n].dw==1) && (aNode[n].g==1)) {
-          if (verbose) printf("    found node %d (%s)\n", n, aNode[n].name);
+          if (verbose && verbose_level >= 2) printf("    found node %d (%s)\n", n, aNode[n].name);
 	  // we change the filter geometry first
 	  aNode[n].kh = 3;
 	  aNode[n].kw = 3;
@@ -328,7 +356,113 @@ void fn_adapt_conv1x1_to_conv3x3() {
       }
     }
   }
-  if (verbose) printf("  completed\n");
+  if (verbose && verbose_level >= 2) printf("  completed\n");
+}
+
+/*
+ * fn_adapt_conv2x2_to_conv3x3
+ *
+ * This function adapts all conv2x2 nodes into conv3x3
+ * Eligible nodes must have dilations equal to one and group set to one
+ * When adapted, the new convolution will have one extra row at the bottom
+ * and one extra column at the right with padding
+ */
+void fn_adapt_conv2x2_to_conv3x3() {
+  if (verbose && verbose_level >= 2) printf("  adapting conv2x2 -> conv3x3\n");
+  // we search all the nodes looking for possible conv 2x2 nodes
+  for (int n=0; n<num_nodes; n++) {
+    if (aNode[n].valid) {
+      if (is_conv(n)) {
+        if ((aNode[n].kh==2) && (aNode[n].kw==2) && (aNode[n].dh==1) && (aNode[n].dw==1) && (aNode[n].g==1)) {
+          if (verbose && verbose_level >= 2) printf("    found node %d (%s)\n", n, aNode[n].name);
+          // we change the filter geometry first
+          aNode[n].kh = 3;
+          aNode[n].kw = 3;
+          // we add two extra rows and columns to padding (bottom and right)
+          aNode[n].pb = aNode[n].pb + 1;
+          aNode[n].pr = aNode[n].pr + 1;
+
+          // now the weight initializer is adapted accordingly
+          fn_pad_weight_initializer_2x2_to_3x3(aNode[n].inputs[1]);  // weight is input 1 in onnx
+        }
+      }
+    }
+  }
+  if (verbose && verbose_level >= 2) printf("  completed\n");
+}
+
+/*
+ *
+ * fn_adapt_channels()
+ *
+ * In HLSinf both I and O must be multiple of CPI and CPO, respectively.
+ * In this function HLSinf nodes are adapted and h2d/d2h nodes aswell
+ *
+ */
+void fn_adapt_channels() {
+  
+  // we search for h2d nodes and adapt them properly
+  for (int n=0; n<num_nodes; n++) {
+    if (aNode[n].valid && is_h2d(n)) {
+      if ((aNode[n].O % CPO) != 0) {
+	if (verbose && verbose_level >= 2) printf("  node %s adapted at its output\n", aNode[n].name);
+        // the output needs to be resized
+        int new_O = ((aNode[n].O + CPO - 1) / CPO) * CPO;
+        aNode[n].O = new_O;
+      }
+    }
+  }
+
+  // we search for hlsinf nodes
+  for (int n=0; n<num_nodes; n++) {
+    if (aNode[n].valid && is_hlsinf(n)) {
+      if ((aNode[n].I % CPI) != 0) {
+	if (verbose && verbose_level >= 2) printf("  node %s needs to be adapted at its input\n", aNode[n].name);
+	// the input needs to be resized
+	int new_I = ((aNode[n].I + CPI - 1) / CPI) * CPI;
+	aNode[n].I = new_I;
+	// the weight needs to be addapted to the new geometry
+	int i_w = fn_get_initializer_by_name(aNode[n].inputs[1]);
+	if (i_w==-1) {printf("Error, weights not found\n"); exit(1);}
+        fn_pad_weights(i_w, new_I, aNode[n].O);
+      }
+
+      if ((aNode[n].O % CPO) != 0) {
+	printf("  node %s needs to be adapted at its output\n", aNode[n].name);
+	// the output needs to be resized
+	int new_O = ((aNode[n].O + CPO - 1) / CPO) * CPO;
+	aNode[n].O = new_O;
+        // the bias needs to be adapted aswell
+        int i_b = fn_get_initializer_by_name(aNode[n].inputs[2]);
+        if (i_b==-1) {printf("Error, bias not found\n"); exit(1);}
+        fn_pad_bias(i_b, new_O);
+	if (aNode[n].has_bn) {
+	  // the bn data needs to be adapted aswell
+	  int i_bn = fn_get_initializer_by_name(aNode[n].inputs[3]);
+	  fn_pad_bn_vector(i_bn, new_O);
+          i_bn = fn_get_initializer_by_name(aNode[n].inputs[4]);
+          fn_pad_bn_vector(i_bn, new_O);
+          i_bn = fn_get_initializer_by_name(aNode[n].inputs[5]);
+          fn_pad_bn_vector(i_bn, new_O);
+          i_bn = fn_get_initializer_by_name(aNode[n].inputs[6]);
+          fn_pad_bn_vector(i_bn, new_O);
+	}
+      }
+    }
+  }
+
+  // we search for d2h nodes and adapt them properly
+  for (int n=0; n<num_nodes; n++) {
+    if (aNode[n].valid && is_d2h(n)) {
+      if ((aNode[n].O % CPO) != 0) {
+	if (verbose && verbose_level >= 2) printf("  node %s needs to be adapted at its input\n", aNode[n].name);
+	// the input needs to be resized
+	int new_I = ((aNode[n].I + CPI - 1) / CPI) * CPI;
+	aNode[n].I = new_I;
+      }
+    }
+  }
+
 }
 
 /*
@@ -344,6 +478,40 @@ void fn_adapt_conv1x1_to_conv3x3() {
 void fn_adapt_dense() {}
 
 /*
+ *
+ * fn_remove_identity()
+ *
+ * This function removes Identity nodes by reusing the input of the 
+ * node in each input of the child nodes
+ *
+ */
+void fn_remove_identity() {
+
+  if (verbose && verbose_level >= 2) printf("    removing identity nodes\n");
+  for (int n=0; n<num_nodes; n++) {
+    if (aNode[n].valid) {
+      if (is_identity(n)) {
+	for (int nn=0; nn<num_nodes; nn++) {
+          if ((aNode[nn].valid) && (n!=nn)) {
+	    for (int i=0; i<aNode[nn].num_inputs; i++) {
+	      if (!strcmp(aNode[nn].inputs[i], aNode[n].outputs[0])) {
+		char *p = (char*)malloc(sizeof(char) * (strlen(aNode[n].inputs[0])+1));
+		strcpy(p, aNode[n].inputs[0]);
+		free(aNode[nn].inputs[i]);
+		aNode[nn].inputs[i] = p;
+              }
+	    }
+	  }
+	}
+	if (verbose && verbose_level >= 2) printf("    node %d (%s) removed\n", n, aNode[n].name);
+	fn_delete_node(n);
+      }
+    }
+  }
+  if (verbose && verbose_level >= 2) printf("    completed\n");
+}
+
+/*
  * fn_find_and_merge()
  *
  * Finds and merges a pattern of nodes passed as arguments (five names)
@@ -353,26 +521,31 @@ void fn_adapt_dense() {}
  */
 void fn_find_and_merge(char *name0, char *name1, char *name2, char *name3, char *name4, char *keyword) {
   int n0, n1, n2, n3, n4;
-  if (verbose) printf("  merging %s-%s-%s-%s-%s pattern\n", name0, name1, name2, name3, name4);
+  if (verbose && verbose_level >= 2) printf("  merging %s-%s-%s-%s-%s pattern\n", name0, name1, name2, name3, name4);
   for (int n=0; n<num_nodes; n++) {
     n0 = -1; n1 = -1; n2 = -1; n3 = -1; n4 = -1;
     if (fn_detect_pattern(n, name0, name1, name2, name3, name4, &n0, &n1, &n2, &n3, &n4)) {
-      if (verbose) printf("    merging nodes %d %d %d %d %d\n", n0, n1, n2, n3, n4);
-      fn_merge_nodes(n0, n1, n2, n3, n4, keyword);
+      int nn;
+      fn_merge_nodes(n0, n1, n2, n3, n4, keyword, &nn);
+      if (verbose && verbose_level >= 2) printf("    merged nodes %d %d %d %d %d -> %d\n", n0, n1, n2, n3, n4, nn);   
     }
   }
-  if (verbose) printf("    completed\n");
+  if (verbose && verbose_level >= 2) printf("    completed\n");
 }
 
 void fn_generate_output_model() {
 
-  if (verbose) printf("generating output model...\n");
+  if (verbose && verbose_level >= 2) printf("generating output model...\n");
 
-  // we adapt convs1x1 to 3x3
+  // we adapt convs to 3x3
   if (adapt_1x1_to_3x3) fn_adapt_conv1x1_to_conv3x3();
+  if (adapt_2x2_to_3x3) fn_adapt_conv2x2_to_conv3x3();
 
   // we adapt dense nodes into conv2d 
   if (adapt_dense) fn_adapt_dense();
+
+  // we remove identity nodes
+  if (remove_identity) fn_remove_identity();
 
   // first we check whether the layers can be supported in HLSinf 1.0
   fn_check_supported();
@@ -380,10 +553,13 @@ void fn_generate_output_model() {
   if (cbar_keyword)  fn_find_and_merge((char*)"Conv", (char*)"BatchNormalization", (char*)"Add",  (char*)"Relu", NULL, (char*)"cbar");	
   if (cbr_keyword)   fn_find_and_merge((char*)"Conv", (char*)"BatchNormalization", (char*)"Relu", NULL,          NULL, (char*)"cbr");
   if (cb_keyword)    fn_find_and_merge((char*)"Conv", (char*)"BatchNormalization", NULL,          NULL,          NULL, (char*)"cb");
-  if (c_keyword)     fn_find_and_merge((char*)"Conv", NULL, NULL, NULL, NULL, (char*)"c");
+  if (cr_keyword)    fn_find_and_merge((char*)"Conv", (char*)"Relu"              , NULL,          NULL,          NULL, (char*)"cr");
+  if (c_keyword)     fn_find_and_merge((char*)"Conv", NULL                       , NULL,          NULL,          NULL, (char*)"c");
 
-  // now we adapt the initializers accordingly
+  // now we add h2d and d2h nodes, adapt channels and initializers
+  fn_add_host_device_nodes();
+  fn_adapt_channels();
   fn_adapt_initializers();
 
-  if (verbose) printf("  completed\n");
+  if (verbose && verbose_level >= 2) printf("  completed\n");
 }

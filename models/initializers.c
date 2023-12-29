@@ -64,7 +64,7 @@ void fn_read_initializers_data() {
   size_t len = 0;
   ssize_t read;  
 
-  if (verbose) printf("reading initializers data...\n");
+  if (verbose && verbose_level >= 2) printf("reading initializers data...\n");
   
   // we read every initializer
   for (int i=0; i<num_initializers; i++) {
@@ -75,7 +75,7 @@ void fn_read_initializers_data() {
       // first row is the number of items
       read = getline(&line, &len, fd);
       int num_items = atoi(line);
-      if (verbose) printf("  initializer: %-50s num_items: %12d file: %-50s\n", aInitializer[i].name, num_items, filename);
+      if (verbose && verbose_level >= 2) printf("  initializer: %-50s num_items: %12d file: %-50s\n", aInitializer[i].name, num_items, filename);
       // now we read the number of dimensions
       read = getline(&line, &len, fd);
       aInitializer[i].num_dimensions = atoi(line);
@@ -97,7 +97,7 @@ void fn_read_initializers_data() {
     }
   }
 
-  if (verbose) printf("  completed\n");
+  if (verbose && verbose_level >= 2) printf("  completed\n");
 }
 
 /*
@@ -144,7 +144,7 @@ void fn_write_initializers_data() {
   size_t len = 0;
   ssize_t read;
 
-  if (verbose) printf("writing initializers data...\n");
+  if (verbose && verbose_level >= 2) printf("writing initializers data...\n");
 
   // we write every initializer
   for (int i=0; i<num_initializers; i++) {
@@ -152,7 +152,7 @@ void fn_write_initializers_data() {
       char filename[100];
       sprintf(filename, "%s.data", aInitializer[i].name);
       if ((fd = fopen(filename, "w")) == NULL) {printf("Error, could not open initializer file %s\n", aInitializer[i].name); exit(1);}
-      if (verbose) printf("  file: %s\n", filename);
+      if (verbose && verbose_level >= 2) printf("  file: %s\n", filename);
       // num items
       int num_items = 1;
       for (int d=0; d<aInitializer[i].num_dimensions; d++) num_items = num_items * aInitializer[i].dimensions[d];
@@ -209,7 +209,7 @@ void fn_pad_weight_initializer_1x1_to_3x3(char *name) {
   int KH_new = 3;
   int KW_new = 3;
 
-  if (verbose) printf("      pading 1x1 weight initializer to 3x3: name: %s OxIxKHxKW: %3dx%3dx%3dx%3d\n", name, O, I, KH, KW);
+  if (verbose && verbose_level >= 2) printf("      pading 1x1 weight initializer to 3x3: name: %s OxIxKHxKW: %3dx%3dx%3dx%3d\n", name, O, I, KH, KW);
 
   size_t new_size = KH_new * KW_new * O * I;
   float *p = (float*)malloc(sizeof(float) * new_size);
@@ -219,6 +219,52 @@ void fn_pad_weight_initializer_1x1_to_3x3(char *name) {
     cnt++;
     for (int xx=0; xx<8; xx++) p[cnt+xx] = 0.f;
     cnt+=8;
+  }
+  free(aInitializer[i].data);
+  aInitializer[i].data = p;
+  // new dimensions
+  aInitializer[i].dimensions[2] = KH_new;
+  aInitializer[i].dimensions[3] = KW_new;
+}
+
+/*
+ *
+ * fn_pad_weight_initializer_2x2_to_3x3()
+ *
+ * This function adapts by padding a OxIx2x2 weight filter to a
+ * OxIx3x3 filter
+ */
+void fn_pad_weight_initializer_2x2_to_3x3(char *name) {
+
+  int i = fn_get_initializer_by_name(name);
+  if (i==-1) {printf("Error, could not get initializer id\n"); exit(1);}
+
+  int num_dims = aInitializer[i].num_dimensions;
+  int num_items = 1;
+  for (int d=0; d<num_dims; d++) num_items = num_items * aInitializer[i].dimensions[d];
+  int O = aInitializer[i].dimensions[0];
+  int I = aInitializer[i].dimensions[1];
+  int KH = aInitializer[i].dimensions[2];
+  int KW = aInitializer[i].dimensions[3];
+  int KH_new = 3;
+  int KW_new = 3;
+
+  if (verbose && verbose_level >= 2) printf("      pading 2x2 weight initializer to 3x3: name: %s OxIxKHxKW: %3dx%3dx%3dx%3d\n", name, O, I, KH, KW);
+
+  size_t new_size = KH_new * KW_new * O * I;
+  float *p = (float*)malloc(sizeof(float) * new_size);
+  size_t cnt = 0;
+  for (size_t x=0; x<num_items; x=x+4) {
+    p[cnt]   = aInitializer[i].data[x];
+    p[cnt+1] = aInitializer[i].data[x+1];
+    p[cnt+2] = 0.f;
+    p[cnt+3] = aInitializer[i].data[x+2];
+    p[cnt+4] = aInitializer[i].data[x+3];
+    p[cnt+5] = 0.f;
+    p[cnt+6] = 0.f;
+    p[cnt+7] = 0.f;
+    p[cnt+8] = 0.f;
+    cnt+=9;
   }
   free(aInitializer[i].data);
   aInitializer[i].data = p;
@@ -243,3 +289,81 @@ void remove_initializer(int i) {
   if (aInitializer[i].data != NULL) free(aInitializer[i].data);
   aInitializer[i].valid = false;
 };
+
+/*
+ * fn_pad_weights()
+ *
+ * resizes the initializer with new I and O
+ *
+ */
+void fn_pad_weights(int i, int new_I, int new_O) {
+  if (i==-1) return;
+  if (!aInitializer[i].valid) return;
+
+  int O = aInitializer[i].dimensions[0];
+  int I = aInitializer[i].dimensions[1];
+  int KH = aInitializer[i].dimensions[2];
+  int KW = aInitializer[i].dimensions[3];
+
+  size_t new_num_items = new_I * new_O * KH * KW;
+  float *p = (float *)malloc(sizeof(float) * new_num_items);
+  memset(p, 0, sizeof(float) * new_num_items);
+  for (int ii=0; ii<I; ii++) {
+    for (int oo=0; oo<O; oo++) {
+      for (int kh = 0; kh<KH; kh++) {
+	for (int kw = 0; kw<KW; kw++) {
+          int addr_in = (oo * I * KH * KW) + (ii * KH * KW) + (kh * KW) + kw;
+	  int addr_out = (oo * new_I * KH * KW) + (ii * KH * KW) + (kh * KW) + kw;
+	  p[addr_out] = aInitializer[i].data[addr_in];
+	}
+      }
+    }
+  }
+  aInitializer[i].dimensions[0] = new_O;
+  aInitializer[i].dimensions[1] = new_I;
+  delete(aInitializer[i].data);
+  aInitializer[i].data = p;
+}
+
+/*
+ * fn_pad_bias()
+ *
+ * resizes the initializer with new O
+ *
+ */
+void fn_pad_bias(int i, int new_O) {
+  if (i==-1) return;
+  if (!aInitializer[i].valid) return;
+
+  int O = aInitializer[i].dimensions[0];
+
+  size_t new_num_items = new_O;
+  float *p = (float *)malloc(sizeof(float) * new_num_items);
+  memset(p, 0, sizeof(float) * new_num_items);
+  for (int o=0; o<O; o++) p[o] = aInitializer[i].data[o];
+  aInitializer[i].dimensions[0] = new_O;
+  delete(aInitializer[i].data);
+  aInitializer[i].data = p;
+}
+
+/*
+ * fn_pad_bn_vector()
+ *
+ * resizes the initializer with new O
+ *
+ */
+void fn_pad_bn_vector(int i, int new_O) {
+  if (i==-1) return;
+  if (!aInitializer[i].valid) return;
+
+  int O = aInitializer[i].dimensions[0];
+
+  size_t new_num_items = new_O;
+  float *p = (float *)malloc(sizeof(float) * new_num_items);
+  memset(p, 0, sizeof(float) * new_num_items);
+  for (int o=0; o<O; o++) p[o] = aInitializer[i].data[o];
+  aInitializer[i].dimensions[0] = new_O;
+  delete(aInitializer[i].data);
+  aInitializer[i].data = p;
+}
+

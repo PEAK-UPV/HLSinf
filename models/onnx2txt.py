@@ -51,6 +51,7 @@ if __name__ == '__main__':
 
     # nodes
     for node in onnxModel.graph.node:
+
         name = node.name
         type = node.op_type
         num_inputs=len(node.input)
