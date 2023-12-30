@@ -89,7 +89,7 @@ HLSinf 1.0:
   - Clipping support
   - STM support (sigmoid, Tanh, multiply)
   - Upsize support
-  - Node order: Conv + ReLU + STM + Pooling + BatchNorm + Add + Upsize
+  - Node order: Conv + (leaky)ReLU + STM + Pooling + BatchNorm + (leaky)ReLU + Add + (leaky)ReLU + Upsize
   - Target FPGA: Alveo U280 (DDR memory configuration 32)
   - 2 kernels
   - WMAX: 1024
