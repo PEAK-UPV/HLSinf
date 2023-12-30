@@ -52,6 +52,7 @@
 #define ARG_OMP              25
 #define ARG_MC               26
 #define ARG_HLSINF_1_0       27
+#define ARG_NO_WARNINGS      28
 
 // global variables
 char   input_file_name[200];   // input file name including the model to convert/run
@@ -84,6 +85,7 @@ int    irp_enabled;            // whether input row parallelism to be applied
 int    irp_threshold;          // input row parallelism to be applied
 int    np_enabled;             // whether node parallelism to be applied
 int    enable_omp;             // whether OpenMP to be applied to CPU nodes
+int    no_warnings;            // do not show warning messages
 
 /*
  *
@@ -143,6 +145,7 @@ void print_help(char *program_name) {
   printf("\n");
   printf("Others:\n");
   printf("  [-f]                 : Generate fig files with input model and generated model\n");
+  printf("  [-nw]                : Do not show warnings\n");
   printf("  [-help]              : Shows this text\n");
   printf("\n");
 }
@@ -179,6 +182,7 @@ void fn_parse_arguments(int argc, char *argv[]) {
     {"all", no_argument,       NULL, ARG_ALL},
     {"cpi", required_argument, NULL, ARG_CPI},
     {"cpo", required_argument, NULL, ARG_CPO},
+    {"nw", no_argument,        NULL, ARG_NO_WARNINGS},
     #ifdef RUNTIME_SUPPORT
     {"t", no_argument, NULL, ARG_TIMINGS},
     {"k", required_argument,   NULL, ARG_NUM_KERNELS},
@@ -221,6 +225,7 @@ void fn_parse_arguments(int argc, char *argv[]) {
   xclbin_defined   = false;
   enable_omp       = false;
   memory_configuration = 0;
+  no_warnings          = false;
 
 
   while ((opt = getopt_long_only(argc, argv, "", long_options, NULL)) != -1) {
@@ -251,6 +256,7 @@ void fn_parse_arguments(int argc, char *argv[]) {
       case ARG_IRP               : irp_enabled = true; irp_threshold = atoi(optarg); break;
       case ARG_NP                : np_enabled = true; break;
       case ARG_OMP               : enable_omp = true; break;
+      case ARG_NO_WARNINGS       : no_warnings = true; break;
       case ARG_ALL               : cbar_keyword = true; cbr_keyword = true; crm_keyword = true; cb_keyword = true;
 				   cr_keyword = true;   c_keyword = true;
 				   adapt_1x1_to_3x3 = true; adapt_2x2_to_3x3 = true;

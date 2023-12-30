@@ -94,7 +94,7 @@ cl::Buffer *fn_get_clbuffer_from_name(char *name) {
 void fn_init_fpga() {
 
   // is xclbin file defined and instantiated?
-  if (!xclbin_defined) {printf("WARNING: FPGA not initialized since no xclbin has been specified\n"); return;}
+  if (!xclbin_defined) {if (!no_warnings) printf("WARNING: FPGA not initialized since no xclbin has been specified\n"); return;}
 
   cl_int err;
 
@@ -116,14 +116,14 @@ void fn_init_fpga() {
 
   // program
   OCL_CHECK(err, cl::Program program(context, devices, bins, NULL, &err));
-  std::cout << "Device " << device_name.c_str() << ": program successful!" << std::endl;
+  // std::cout << "Device " << device_name.c_str() << ": program successful!" << std::endl;
 
   // kernels
   for (int k=0; k<num_kernels; k++) {
     char dummy[50];
     sprintf(dummy, "k_conv2D:{k_conv2D_%d}", k+1);
     OCL_CHECK(err, kernel_conv2d[k] = cl::Kernel(program, dummy, &err));
-    std::cout << "Kernel successfully created" << std::endl;
+    //std::cout << "Kernel successfully created" << std::endl;
   }
 
   // debug/verbosity information
@@ -202,7 +202,7 @@ void allocate_buffers() {
       // size
       size_t size = 1;
       if (aInput[i].num_dimensions == 4) {
-	printf("WARNING: Input model with four dimensions, asuming three dimensions (1, 2, 3). Dimension 0 assumed to be batch size\n");
+	if (!no_warnings) printf("WARNING: Input model with four dimensions, asuming three dimensions (1, 2, 3). Dimension 0 assumed to be batch size\n");
 	for (int d=1; d<aInput[i].num_dimensions; d++) size = size * aInput[i].dimensions[d];
       } else if (aInput[i].num_dimensions == 3) {
         for (int d=0; d<aInput[i].num_dimensions; d++) size = size * aInput[i].dimensions[d];
@@ -335,7 +335,7 @@ void fn_run_node_on_fpga(int n, int k, int first_O, int last_O, int first_HI, in
   if (n==-1) return;
   if (!aNode[n].valid) return;
   if (strcmp(aNode[n].type, "HLSinf")) return;
-  if (!xclbin_defined) {printf("WARNING: FPGA not initialized\n"); return;}
+  if (!xclbin_defined) {if (!no_warnings) printf("WARNING: FPGA not initialized\n"); return;}
 
   // debug/verbosity information
   if (verbose && verbose_level >= 1) printf("    running %s (keyword %s, O: %d - %d, HI %d - %d) (fpga)\n", aNode[n].name, aNode[n].keyword, first_O, last_O, first_HI, last_HI);

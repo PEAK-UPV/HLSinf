@@ -480,7 +480,7 @@ void run_graph() {
  */
 void copy_initializers_to_fpga() {
 
-  if (!xclbin_defined) {printf("WARNING: initializers not copied to FPGA since no XCLBIN has been specified\n"); return;}
+  if (!xclbin_defined) {if (!no_warnings) printf("WARNING: initializers not copied to FPGA since no XCLBIN has been specified\n"); return;}
 
   if (verbose && verbose_level >= 3) printf("copying initializers to FPGA...\n");
   for (int i=0; i<num_initializers; i++) {

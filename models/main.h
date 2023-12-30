@@ -33,3 +33,4 @@ extern int    irp_enabled;
 extern int    irp_threshold;
 extern int    np_enabled;
 extern int    enable_omp;
+extern int    no_warnings;

@@ -660,7 +660,7 @@ void fn_compute_data_geometries() {
 	int dim0, dim1, dim2, dim3;
 	fn_get_dimensions_from_name(aNode[n].inputs[0], &num_dimensions, &dim0, &dim1, &dim2, &dim3);   // input 0 is the data input
         if (num_dimensions == 4) {
-          printf("WARNING: initializer has four dimensions, only three dimensions (1, 2, 3) will be considered (assuming first dimension is batch size)\n");
+          if (!no_warnings) printf("WARNING: initializer has four dimensions, only three dimensions (1, 2, 3) will be considered (assuming first dimension is batch size)\n");
           aNode[n].I = dim1;
           aNode[n].HI = dim2 == 0 ? 1 : dim2;
           aNode[n].WI = dim3 == 0 ? 1 : dim3;

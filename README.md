@@ -3,7 +3,7 @@ High-Level Synthesis inference accelerator for FPGAs
 
 This project targets inference processes on FPGA systems. For this, HLS is used as the main programming language (C++ with HLS pragmas).
 
-It is highly recommended to use vitis_hls (Vitis 2020.1) to work with the project. In order to launch the project you need to first set the environment variables and then launch `vitis_hls` and open the project (we asume you cloned the repo in HLSinf directory):
+It is recommended to use vitis_hls (Vitis 2020.2) to work with the project. In order to launch the project you need to first set the environment variables and then launch `vitis_hls` and open the project (we asume you cloned the repo in HLSinf directory):
 ```
 $ cd HLSinf
 $ source scripts/setenv_2020.2.sh
@@ -80,7 +80,7 @@ Final and stable HLSinf versions
 ------------------------------------------------------------------------------------------------
 | Version | device     | #kernels | CPI x CPO | Data type | memory configuration | HMAX | WMAX |
 |----------------------------------------------------------------------------------------------|
-|   1.0   | Alveo U200 |     2    |   4 x 4   |  float32  |      32 (DDR0)       | 1024 |  256 |
+|   1.0   | Alveo U280 |     2    |   4 x 4   |  float32  |      32 (DDR0)       | 1024 |  256 |
 |----------------------------------------------------------------------------------------------|
 | Nodes (in order): conv, lReLU, Clip, Shift, STM, Pool, BatchNorm, lReLU, Add, lReLU, Upsize  |
 | conv: 2d direct, KHxKW = 3x3, padding support, stride support, no dilations, no group support|
