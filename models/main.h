@@ -26,6 +26,7 @@ extern int    remove_identity;
 extern int    CPI;
 extern int    CPO;
 extern int    num_kernels;
+extern int    memory_configuration;
 extern int    ocp_enabled;
 extern int    ocp_threshold;
 extern int    irp_enabled;

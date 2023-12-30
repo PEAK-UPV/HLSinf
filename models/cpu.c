@@ -38,9 +38,9 @@ void fn_conv2d(float *in, float *w, float *b, float *out, int HI, int WI, int I,
   memset(out, 0, size_o*sizeof(float));
 
   // 6-loop 2d-convolution implementation
-  #pragma omp parallel for
-  for (int i=0; i<I; i++) {
-    for (int o=0; o<O; o++) {
+  #pragma omp parallel for 
+  for (int o=0; o<O; o++) {
+    for (int i=0; i<I; i++) {
       for (int ho=0; ho<HO; ho++) {
 	for (int wo=0; wo<WO; wo++) {
           int addr_o = (o * HO * WO) + (ho * WO) + wo;

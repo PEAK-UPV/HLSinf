@@ -79,6 +79,14 @@ void fn_merge_nodes(int n0, int n1, int n2, int n3, int n4, char *keyword, int *
   aNode[n].outputs[0] = (char*)malloc(sizeof(char) * (strlen(aNode[n].name)+1));
   strcpy(aNode[n].outputs[0], aNode[n].name);
 
+  // if the output of the last merged node is a model output then we change the model output name
+  int o_id = get_model_output_id(aNode[last_merged_node].outputs[0]);
+  printf("o_id = %d, name=%s\n", o_id, aNode[last_merged_node].name);
+  if (o_id!=-1) {
+    printf("changing it\n");
+    fn_change_output_model_name(o_id, aNode[n].outputs[0]);
+  }
+
   // hlsinf node will have the following inputs (in this order):
   //   - input data
   //   - conv weight

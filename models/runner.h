@@ -20,3 +20,4 @@ struct st_eog {
 void fn_read_run_graph();
 void run_graph();
 void copy_initializers_to_fpga();
+void fn_show_output();

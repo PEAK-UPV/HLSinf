@@ -377,10 +377,6 @@ void run_execution_order(int order) {
 
   if (timings) fn_start_timer(200);
 
-  if (verbose && verbose_level >= 3) printf("    running execution order %d\n", order);
-  build_execution_order_graph(order);
-  if (verbose && verbose_level >= 3) printf("      %d tasks found\n", eog_entries[order]);
-
   // cpu tasks
   if (enable_omp) {
     #pragma omp parallel for
@@ -427,7 +423,7 @@ void run_execution_order(int order) {
  *
  */
 void run_graph() {
-  
+
   // every group of nodes (in the same run order)  will run and we will collect stats for every run order. We will
   // acount for the number of runs and the accumulated time for the run order
   // we first reset the run statistics
@@ -436,8 +432,20 @@ void run_graph() {
     for (int o=0; o<MAX_EXECUTION_ORDER; o++) {num_runs[o] = 0; accumulated_runtime[o] = 0;}
   }
 
+  if (verbose && verbose_level >= 3) printf("    building execution order\n");
+  for (int order=0; order <= max_execution_order; order++) {
+    build_execution_order_graph(order);
+    if (verbose && verbose_level >= 3) printf("      order %d -> %d tasks found\n", order, eog_entries[order]);
+  }
+
+  fn_start_timer(201);
+
   // now we read the node graph in execution order
   for (int order=0; order <= max_execution_order; order++) run_execution_order(order);
+
+  fn_stop_timer(201);
+
+  printf("Inference time: %lld\n", fn_get_timer(201));
     
   if (timings) {
     // now we print statistics for every run order and task
@@ -482,6 +490,16 @@ void copy_initializers_to_fpga() {
     }
   }
   if (verbose && verbose_level >= 3) printf("  completed\n");
+}
+
+/*
+ * fn_show_output()
+ *
+ * Shows statistics of model output
+ *
+ */
+void fn_show_output() {
+  for (int o=0; o<num_outputs; o++) fn_buffer_stats_by_name(aOutput[o].name, (char*)"output: ");
 }
 
 #endif

@@ -74,15 +74,17 @@
 
 // Configuration 1.0: U200, 4x4, FP32: DIRECT_CONV, RELU, STM, CLIPPING, POOLING, BATCH_NORM, ADD, UPSIZE
 #ifdef HLSINF_1_0
-#define ALVEO_U200
+#define ALVEO_U280
 #define DIRECT_CONV
 #define USE_RELU
 #define USE_CLIPPING
 //#define USE_SHIFT
 #define USE_POOLING
 #define USE_BATCH_NORM
+#define USE_BATCH_NORM_RELU
 #define USE_STM
 #define USE_ADD
+#define USE_ADD_RELU
 #define USE_UPSIZE
 #define FLOAT_DATA_TYPE               // we use float numbers as input data
 #define CPI                          4
