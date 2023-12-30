@@ -72,7 +72,7 @@
 // Automatic defines (do not change; add new ones if needed)
 // -----------------------------------------------------------------------------------------------------------
 
-// Configuration 1.0: U200, 4x4, FP32: DIRECT_CONV, RELU, STM, CLIPPING, POOLING, BATCH_NORM, ADD, UPSIZE
+// Configuration 1.0: U280, 4x4, FP32: DIRECT_CONV, RELU, STM, CLIPPING, POOLING, BATCH_NORM, ADD, UPSIZE
 #ifdef HLSINF_1_0
 #define ALVEO_U280
 #define DIRECT_CONV
@@ -119,8 +119,56 @@
 #define write_data_t             float
 #endif
 
-// Configuration 1.1: U200, 8x8, MIXED PRECISSION: DIRECT_CONV, RELU, CLIPPING, SHIFT, POOLING, BN, ADD, UPSIZE
+// Configuration 1.1: U280, 4x4, FP32: DIRECT_CONV, RELU, STM, CLIPPING, POOLING, BATCH_NORM, ADD, UPSIZE
 #ifdef HLSINF_1_1
+#define ALVEO_U280
+#define DIRECT_CONV
+#define USE_RELU
+#define USE_CLIPPING
+//#define USE_SHIFT
+#define USE_POOLING
+#define USE_BATCH_NORM
+#define USE_BATCH_NORM_RELU
+#define USE_STM
+#define USE_ADD
+#define USE_ADD_RELU
+#define USE_UPSIZE
+#define FLOAT_DATA_TYPE               // we use float numbers as input data
+#define CPI                          8
+#define CPO                          8
+#define LOG2_CPO                     3
+#define WMAX                      1024
+#define HMAX                       256
+#define READ_BURST_SIZE             16
+#define STREAMS_DEPTH               16
+#define DATA_BUFFER_SIZE        16384 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define WEIGHT_BUFFER_SIZE        4096
+#define EPSILON_VALUE          0.00001
+#define MIN_DATA_TYPE_VALUE   -9999999
+#define READ_BLOCK_SIZE             16   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define WRITE_BLOCK_SIZE            16   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define din_t                    float
+#define conv_cvt_t               float
+#define conv_mul_t               float
+#define relu_t                   float
+#define stm_t                    float
+#define pool_cvt_t               float
+#define pool_t                   float
+#define bn_t                     float
+#define add_t                    float
+#define w_t                      float
+#define b_t                      float
+#define conv_t                   float
+#define dout_t                   float
+#define read_bias_t              float
+#define read_data_t              float
+#define read_filter_t            float
+#define write_data_t             float
+#endif
+
+
+// Configuration 1.X: U280, 8x8, MIXED PRECISSION: DIRECT_CONV, RELU, CLIPPING, SHIFT, POOLING, BN, ADD, UPSIZE
+#ifdef HLSINF_1_X
 #define ALVEO_U200
 //#define DSP_OPTIMIZATION
 #define DIRECT_CONV

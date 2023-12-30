@@ -1,8 +1,0 @@
-/var/spool/slurm/d/job00022/slurm_script: 4: /var/spool/slurm/d/job00022/slurm_script: source: not found
-rm -rf ./test_conv2D /{*sw_emu*,*hw_emu*}
-rm -rf profile_* TempConfig system_estimate.xtxt *.rpt *.csv
-rm -rf src/*.ll *v++* .Xil emconfig.json dltmp* xmltmp* *.log *.jou *.wcfg *.wdb
-rm -rf build_dir* sd_card*
-rm -rf package.*
-rm -rf _x* *xclbin.run_summary qemu-memory-_* emulation _vimage pl* start_simulation.sh *.xclbin
-utils.mk:58: *** XILINX_XRT variable is not set, please set correctly and rerun.  Stop.

@@ -77,23 +77,18 @@ Final and stable HLSinf versions
 --------------------------------
 
 ```
-HLSinf 1.0:
-  - CPI x CPO = 4 x 4
-  - Direct 2D Conv support (KHxKW: 3x3, padding support, stride support)
-  - ReLU after 2D conv, including ReLU factor (leaky relu)
-  - Batch Normalization support (eps = 0.00001)
-  - ReLU after Batch Normalization, including ReLU factor (leaky relu)
-  - Add tensor support
-  - ReLU after Add tensor, including ReLU factor (leaky relu)
-  - Avg/Max-pool (KHxKW: 2x2, SHxSW: 2x2)
-  - Clipping support
-  - STM support (sigmoid, Tanh, multiply)
-  - Upsize support
-  - Node order: Conv + (leaky)ReLU + STM + Pooling + BatchNorm + (leaky)ReLU + Add + (leaky)ReLU + Upsize
-  - Target FPGA: Alveo U280 (DDR memory configuration 32)
-  - 2 kernels
-  - WMAX: 1024
-  - HMAX: 256
+-----------------------------------------------------------------------------------------------------------------------------
+| Version | device     | #kernels | CPI x CPO | Data type | memory configuration | HMAX | WMAX |                            |
+|----------------------------------------------------------------------------------------------|                            |
+|         | Alveo U200 |     2    |   4 x 4   |  float32  |      32 (DDR0)       | 1024 |  256 |                            |
+|   1.0   |-----------------------------------------------------------------------------------------------------------------|
+|         | Nodes (in order): 2D_conv + lReLU + Cliping + Shift + STM + Pooling + BatchNorm + lReLU + Add + lReLU + Upsize  |
+|         | 2D_conv: direct, KHxKW = 3x3, padding support, stride support, no dilations, no group support                   |
+|         | STM: Sigmoid, Tanh and scalar multiplication                                                                    |
+|         | Batch normalization: epsilon = 0.00001                                                                          |
+|         | Pooling: Avg and Max pooling support. KHxKW = 2x2, SHxSW = 2x2, no dilations, no padding support                |
+|         | Add: add two tensors                                                                                            |
+-----------------------------------------------------------------------------------------------------------------------------
 ```
   
   
