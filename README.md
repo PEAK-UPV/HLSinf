@@ -77,18 +77,18 @@ Final and stable HLSinf versions
 --------------------------------
 
 ```
------------------------------------------------------------------------------------------------------------------------------
-| Version | device     | #kernels | CPI x CPO | Data type | memory configuration | HMAX | WMAX |                            |
-|----------------------------------------------------------------------------------------------|                            |
-|         | Alveo U200 |     2    |   4 x 4   |  float32  |      32 (DDR0)       | 1024 |  256 |                            |
-|   1.0   |-----------------------------------------------------------------------------------------------------------------|
-|         | Nodes (in order): 2D_conv + lReLU + Cliping + Shift + STM + Pooling + BatchNorm + lReLU + Add + lReLU + Upsize  |
-|         | 2D_conv: direct, KHxKW = 3x3, padding support, stride support, no dilations, no group support                   |
-|         | STM: Sigmoid, Tanh and scalar multiplication                                                                    |
-|         | Batch normalization: epsilon = 0.00001                                                                          |
-|         | Pooling: Avg and Max pooling support. KHxKW = 2x2, SHxSW = 2x2, no dilations, no padding support                |
-|         | Add: add two tensors                                                                                            |
------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------
+| Version | device     | #kernels | CPI x CPO | Data type | memory configuration | HMAX | WMAX |
+|----------------------------------------------------------------------------------------------|
+|   1.0   | Alveo U200 |     2    |   4 x 4   |  float32  |      32 (DDR0)       | 1024 |  256 |
+|----------------------------------------------------------------------------------------------|
+| Nodes (in order): conv, lReLU, Clip, Shift, STM, Pool, BatchNorm, lReLU, Add, lReLU, Upsize  |
+| conv: 2d direct, KHxKW = 3x3, padding support, stride support, no dilations, no group support|
+| STM: Sigmoid, Tanh and scalar multiplication                                                 |
+| Batch normalization: epsilon = 0.00001                                                       |
+| Pooling: Avg and Max pooling support. KHxKW = 2x2, SHxSW = 2x2, no dilations, no pad support |
+| Add: add two tensors                                                                         |
+------------------------------------------------------------------------------------------------
 ```
   
   
