@@ -50,9 +50,10 @@
 #define ARG_NP               23
 #define ARG_ALL              24
 #define ARG_OMP              25
-#define ARG_MC               26
-#define ARG_HLSINF_1_0       27
-#define ARG_NO_WARNINGS      28
+#define ARG_MC_DATA          26
+#define ARG_MC_WEIGHTS       27
+#define ARG_HLSINF_1_0       28
+#define ARG_NO_WARNINGS      29
 
 // global variables
 char   input_file_name[200];   // input file name including the model to convert/run
@@ -78,7 +79,8 @@ int    remove_identity;        // whether identity nodes to be removed from the 
 int    CPI;                    // Channels per input to be assumed (HLSinf input channel parallelism)
 int    CPO;                    // Channels per output to be assumed (HLSinf output channel parallelism)
 int    num_kernels;            // number of available HLSinf kernels in the FPGA system
-int    memory_configuration;   // memory configuration index (which memory configuration use in FPGAs)
+int    memory_configuration_weights;   // memory configuration index (which memory configuration use in FPGAs) for data
+int    memory_configuration_data;      // memory configuration index for weights (filters, bias, bn, ...)
 int    ocp_enabled;            // whether output channel parallelism to be applied
 int    ocp_threshold;          // output channel parallelism threshold
 int    irp_enabled;            // whether input row parallelism to be applied
@@ -130,7 +132,8 @@ void print_help(char *program_name) {
   #ifdef RUNTIME_SUPPORT
   printf("Parameters for model run:\n");
   printf("  [-k value]           : Number of HLSinf kernels availablei (1 by default)\n");
-  printf("  [-mc value]          : Memory configuration. Configurations:\n");
+  printf("  [-mcd value]         : Memory configuration for data\n");
+  printf("  [-mcw value]         : Memory configuration for weights\n");
   printf("        0              : DDR0 in Alveo U200\n");
   printf("       32              : DDR0 in Alveo U280\n");
   printf("  [-ocp value]         : Use output channel parallelism with indicated threshold\n");
@@ -186,7 +189,8 @@ void fn_parse_arguments(int argc, char *argv[]) {
     #ifdef RUNTIME_SUPPORT
     {"t", no_argument, NULL, ARG_TIMINGS},
     {"k", required_argument,   NULL, ARG_NUM_KERNELS},
-    {"mc", required_argument,  NULL, ARG_MC},
+    {"mcd", required_argument,  NULL, ARG_MC_DATA},
+    {"mcw", required_argument, NULL, ARG_MC_WEIGHTS},
     {"ocp", required_argument, NULL, ARG_OCP},
     {"irp", required_argument, NULL, ARG_IRP},
     {"np", no_argument,        NULL, ARG_NP},
@@ -224,7 +228,8 @@ void fn_parse_arguments(int argc, char *argv[]) {
   verbose_level    = 0;
   xclbin_defined   = false;
   enable_omp       = false;
-  memory_configuration = 0;
+  memory_configuration_data = 0;
+  memory_configuration_weights = 0;
   no_warnings          = false;
 
 
@@ -251,7 +256,8 @@ void fn_parse_arguments(int argc, char *argv[]) {
       case ARG_CPO               : CPO = atoi(optarg); break;
       case ARG_TIMINGS           : timings = true; break;
       case ARG_NUM_KERNELS       : num_kernels = atoi(optarg); break;
-      case ARG_MC                : memory_configuration = atoi(optarg); break;
+      case ARG_MC_DATA           : memory_configuration_data = atoi(optarg); break;
+      case ARG_MC_WEIGHTS        : memory_configuration_weights = atoi(optarg); break;
       case ARG_OCP               : ocp_enabled = true; ocp_threshold = atoi(optarg); break;
       case ARG_IRP               : irp_enabled = true; irp_threshold = atoi(optarg); break;
       case ARG_NP                : np_enabled = true; break;
@@ -266,7 +272,9 @@ void fn_parse_arguments(int argc, char *argv[]) {
 				   cbr_keyword = true; crm_keyword = true; cbar_keyword = true;
 				   adapt_1x1_to_3x3 = true; adapt_2x2_to_3x3 = true;
 				   adapt_dense = true; remove_identity = true;
-				   memory_configuration = 32; num_kernels = 2;
+				   memory_configuration_weights = 32; 
+				   memory_configuration_data = 32; 
+				   num_kernels = 2;
 				   break;
       default: exit(1); break;
     }

@@ -81,9 +81,7 @@ void fn_merge_nodes(int n0, int n1, int n2, int n3, int n4, char *keyword, int *
 
   // if the output of the last merged node is a model output then we change the model output name
   int o_id = get_model_output_id(aNode[last_merged_node].outputs[0]);
-  printf("o_id = %d, name=%s\n", o_id, aNode[last_merged_node].name);
   if (o_id!=-1) {
-    printf("changing it\n");
     fn_change_output_model_name(o_id, aNode[n].outputs[0]);
   }
 
@@ -429,6 +427,7 @@ void fn_adapt_channels() {
 	// the input needs to be resized
 	int new_I = ((aNode[n].I + CPI - 1) / CPI) * CPI;
 	aNode[n].I = new_I;
+	printf("new I: %d\n", new_I);
 	// the weight needs to be addapted to the new geometry
 	int i_w = fn_get_initializer_by_name(aNode[n].inputs[1]);
 	if (i_w==-1) {printf("Error, weights not found\n"); exit(1);}

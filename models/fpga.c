@@ -153,7 +153,7 @@ void allocate_buffers() {
       posix_memalign((void **)&aNode[n].data, 4096, size);
       // opencl buffer (if xclbin defined)
       if (xclbin_defined) {
-        aNode[n].buffer_ddr.flags = memory_configuration | XCL_MEM_TOPOLOGY;
+        aNode[n].buffer_ddr.flags = memory_configuration_data | XCL_MEM_TOPOLOGY;
         aNode[n].buffer_ddr.obj   = aNode[n].data;
         aNode[n].buffer_ddr.param = 0;
         OCL_CHECK(err, aNode[n].buffer = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR, size, &aNode[n].buffer_ddr, &err));
@@ -165,14 +165,14 @@ void allocate_buffers() {
     // data buffer
     size_t size=1000;
     posix_memalign((void**)&add_data_buffer, 4096, size);
-    add_buffer_ddr.flags = memory_configuration | XCL_MEM_TOPOLOGY;
+    add_buffer_ddr.flags = memory_configuration_data | XCL_MEM_TOPOLOGY;
     add_buffer_ddr.obj   = add_data_buffer;
     add_buffer_ddr.param = 0;
     OCL_CHECK(err, add_buffer = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, size, &add_buffer_ddr, &err));
 
     // bn temporal buffer
     posix_memalign((void**)&bn_data_buffer, 4096, size);
-    bn_buffer_ddr.flags = memory_configuration | XCL_MEM_TOPOLOGY;
+    bn_buffer_ddr.flags = memory_configuration_weights | XCL_MEM_TOPOLOGY;
     bn_buffer_ddr.obj   = bn_data_buffer;
     bn_buffer_ddr.param = 0;
     OCL_CHECK(err, bn_buffer = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, size, &bn_buffer_ddr, &err));  
@@ -188,7 +188,7 @@ void allocate_buffers() {
       if (verbose && verbose_level >= 3) printf("  allocating buffer for initializer %d (size %ld), name: %-50s\n", i, size, aInitializer[i].name);
       // opencl buffer (if xclbin defined)
       if (xclbin_defined) {
-        aInitializer[i].buffer_ddr.flags = memory_configuration | XCL_MEM_TOPOLOGY;
+        aInitializer[i].buffer_ddr.flags = memory_configuration_weights | XCL_MEM_TOPOLOGY;
         aInitializer[i].buffer_ddr.obj   = aInitializer[i].data;
         aInitializer[i].buffer_ddr.param = 0; 
         OCL_CHECK(err, aInitializer[i].buffer = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, size, &aInitializer[i].buffer_ddr, &err));
@@ -217,7 +217,7 @@ void allocate_buffers() {
       posix_memalign((void **)&aInput[i].data, 4096, size);
       // opencl buffer (if xclbin defined)
       if (xclbin_defined) {
-        aInput[i].buffer_ddr.flags = memory_configuration | XCL_MEM_TOPOLOGY;
+        aInput[i].buffer_ddr.flags = memory_configuration_data | XCL_MEM_TOPOLOGY;
         aInput[i].buffer_ddr.obj   = aInput[i].data;
         aInput[i].buffer_ddr.param = 0;       
         OCL_CHECK(err, aInput[i].buffer = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, size, &aInput[i].buffer_ddr, &err));

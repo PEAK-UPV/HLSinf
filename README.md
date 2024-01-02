@@ -80,7 +80,7 @@ Final and stable HLSinf versions
 ------------------------------------------------------------------------------------------------
 | Version | device     | #kernels | CPI x CPO | Data type | memory configuration | HMAX | WMAX |
 |----------------------------------------------------------------------------------------------|
-|   1.0   | Alveo U280 |     2    |   4 x 4   |  float32  |      32 (DDR0)       | 1024 |  256 |
+|   1.0   | Alveo U280 |     2    |   4 x 4   |  float32  | 32 (DDR0, data & w.) | 1024 |  256 |
 |----------------------------------------------------------------------------------------------|
 | Nodes (in order): conv, lReLU, Clip, Shift, STM, Pool, BatchNorm, lReLU, Add, lReLU, Upsize  |
 | conv: 2d direct, KHxKW = 3x3, padding support, stride support, no dilations, no group support|
@@ -89,6 +89,45 @@ Final and stable HLSinf versions
 | Pooling: Avg and Max pooling support. KHxKW = 2x2, SHxSW = 2x2, no dilations, no pad support |
 | Add: add two tensors                                                                         |
 ------------------------------------------------------------------------------------------------
+| Version | device     | #kernels | CPI x CPO | Data type | memory configuration | HMAX | WMAX |
+|----------------------------------------------------------------------------------------------|
+|   1.1   | Alveo U280 |     1    |   8 x 8   |  float32  |32 (DDR0, data & w.)  | 1024 |  256 |
+|----------------------------------------------------------------------------------------------|
+| Nodes (in order): conv, lReLU, Clip, Shift, STM, Pool, BatchNorm, lReLU, Add, lReLU, Upsize  |
+| conv: 2d direct, KHxKW = 3x3, padding support, stride support, no dilations, no group support|
+| STM: Sigmoid, Tanh and scalar multiplication                                                 |
+| Batch normalization: epsilon = 0.00001                                                       |
+| Pooling: Avg and Max pooling support. KHxKW = 2x2, SHxSW = 2x2, no dilations, no pad support |
+| Add: add two tensors                                                                         |
+------------------------------------------------------------------------------------------------
+| Version | device     | #kernels | CPI x CPO | Data type | memory configuration | HMAX | WMAX |
+|----------------------------------------------------------------------------------------------|
+|   1.2   | Alveo U280 |     3    |   4 x 4   |  float32  | 32 (data) 33 (w.)    | 1024 |  256 |
+|----------------------------------------------------------------------------------------------|
+| Nodes (in order): conv, lReLU, Clip, Shift, STM, Pool, BatchNorm, lReLU, Add, lReLU, Upsize  |
+| conv: 2d direct, KHxKW = 3x3, padding support, stride support, no dilations, no group support|
+| STM: Sigmoid, Tanh and scalar multiplication                                                 |
+| Batch normalization: epsilon = 0.00001                                                       |
+| Pooling: Avg and Max pooling support. KHxKW = 2x2, SHxSW = 2x2, no dilations, no pad support |
+| Add: add two tensors                                                                         |
+------------------------------------------------------------------------------------------------
+```
+
+Some performance results:
+
+```
+---------------------------------------------------------------------------------------------------------------------------------
+| Model    | HLSinf version | Model generation parameters   | mode run parameters                        | Inference time (us)  |
+|-------------------------------------------------------------------------------------------------------------------------------|
+| resnet50 | HLSinf 1.0     | -cpi 4 -cpo 4 -all            | -mcd 32 -mcw 32 -cpi 4 -cpo 4 -k 2 -ocp 64 |              851683  |
+| resnet50 | HLSinf 1.1     | -cpi 8 -cpo 8 -all            | -mcd 32 -mcw 32 -cpi 8 -cpo 8 -k 1         |             1143178  |
+| resnet50 | HLSinf 1.2     | -cpi 4 -cpo 4 -all            | -mcd 32 -mcw 33 -cpi 4 -cpo 4 -k 3 -ocp 64 |              766763  |
+---------------------------------------------------------------------------------------------------------------------------------
+| custo    | HLSinf 1.0     | -cpi 4 -cpo 4 -all            | -mcd 32 -mcw 32 -cpi 4 -cpo 4 -k 2 -ocp 64 |              491605  |
+| custom   | HLSinf 1.1     | -cpi 8 -cpo 8 -all            | -mcd 32 -mcw 32 -cpi 8 -cpo 8 -k 1         |              389977  |
+| custom   | HLSinf 1.2     | -cpi 4 -cpo 4 -all            | -mcd 32 -mcw 33 -cpi 4 -cpo 4 -k 3 -ocp 64 |              421997  |
+---------------------------------------------------------------------------------------------------------------------------------
+
 ```
   
   
