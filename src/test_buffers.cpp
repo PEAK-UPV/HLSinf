@@ -143,6 +143,7 @@ if (enable_add){
   OCL_CHECK(err, buffer_k_pw[0]    = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_kernel_pw_in_bytes, &kernel_pw_ddr[0], &err));
 #endif
   OCL_CHECK(err, buffer_bias[0] = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY  | CL_MEM_USE_HOST_PTR , size_bias_in_bytes, &bias_ddr[0], &err));
+  OCL_CHECK(err, intToDevice = new cl::Buffer(context, CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR, sizeof(int), &flag_error, &err));
 #endif
 }
 
@@ -227,9 +228,13 @@ void copy_from_fpga() {
   OCL_CHECK(err, err = q.enqueueMigrateMemObjects({*buffer_o[0]}, CL_MIGRATE_MEM_OBJECT_HOST, NULL, &read_events[0]));
   set_callback(read_events[0], "ooo_queue");
   OCL_CHECK(err, err = read_events[0].wait());
+  OCL_CHECK(err, err = q.enqueueMigrateMemObjects({*intToDevice}, CL_MIGRATE_MEM_OBJECT_HOST, NULL, &read_events[0]));
+  set_callback(read_events[0], "ooo_queue");
+  OCL_CHECK(err, err = read_events[0].wait());
   // Wait for all of the OpenCL operations to complete
   OCL_CHECK(err, err = q.flush());
   OCL_CHECK(err, err = q.finish());
+
 }
 #endif
 

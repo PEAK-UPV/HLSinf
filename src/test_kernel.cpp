@@ -79,10 +79,6 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
     #ifdef USE_BATCH_NORM
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_batch_norm));
     #endif
-    #ifdef USE_BATCH_NORM_RELU
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_batch_norm_relu));
-    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, batch_norm_relu_factor));
-    #endif    
     #if defined(DIRECT_CONV) || defined(WINOGRAD_CONV)
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_k[0]));
     #endif
@@ -93,6 +89,10 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_bias[0]));
     #ifdef USE_BATCH_NORM
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_batch_norm_val[0]));
+    #endif
+    #ifdef USE_BATCH_NORM_RELU
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_batch_norm_relu));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, batch_norm_relu_factor));
     #endif
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *buffer_o[0]));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, read_offset_p));
@@ -121,6 +121,8 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, write_to_mem));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, write_to_b0));
     OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, write_to_b1));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, enable_fault_tolerance));
+    OCL_CHECK(err, err = kernel_conv2d[k].setArg(arg++, *intToDevice));
     OCL_CHECK(err, err = q.enqueueNDRangeKernel(kernel_conv2d[k], 0, 1, 1, NULL, &kernel_events[k]));
     set_callback(kernel_events[k], "ooo_queue");
     #else
@@ -158,7 +160,7 @@ void run_kernel(int rows_p, int PT_p, int PB_p, int PL_p, int PR_p, int read_off
         #ifdef USE_ADD_RELU
 	apply_add_relu,
         #endif
-        min_clip, max_clip, dir_shift, pos_shift, upsize_factor, write_to_weight_buffer, read_from_weight_buffer, first_row_weight_buffer, read_from_mem, read_from_b0, read_from_b1, write_to_mem, write_to_b0, write_to_b1);
+        min_clip, max_clip, dir_shift, pos_shift, upsize_factor, write_to_weight_buffer, read_from_weight_buffer, first_row_weight_buffer, read_from_mem, read_from_b0, read_from_b1, write_to_mem, write_to_b0, write_to_b1, enable_fault_tolerance, &flag_error);
     #endif
   }
 

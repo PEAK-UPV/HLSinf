@@ -67,10 +67,29 @@ void mux(int num_accesses, int SEL, hls::stream<din_st> &in0, hls::stream<din_st
 	}
 }
 
-void demux(int ENABLE, int num_accesses, int SEL, hls::stream<dout_st> &IN, hls::stream<dout_st> &out0, hls::stream<dout_st> &out1) {
+void selector_mux(int num_accesses, hls::stream<din_st> &in, hls::stream<din_st> &out, int faultTolerance, int iteration){
+
+	din_st px_out;
+	din_st px_in;
+	DO_PRAGMA(HLS ARRAY_PARTITION variable=px_out complete dim=0)
+	DO_PRAGMA(HLS ARRAY_PARTITION variable=px_in complete dim=0)
+	for (int I = 0; I < num_accesses; I++) {
+		DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE*W_REFERENCE)
+		#pragma HLS PIPELINE II=1
+		 px_in = in.read();
+		 for (int cpi=0; cpi<CPI; cpi++) {
+			#pragma HLS unroll
+			px_out.pixel[cpi] = faultTolerance ?  (!iteration ?  px_in.pixel[cpi/2] : px_in.pixel[(cpi + CPI / 2) / 2 + (CPI / 4)]) : px_in.pixel[cpi];
+		 }
+		out << px_out;
+	}
+}
+
+
+void demux(int ENABLE, int num_accesses, int SEL, hls::stream<dout_st> &IN, hls::stream<dout_st> &out0, hls::stream<dout_st> &out1, int enable_fault_tolerance_use) {
 
 	if (!ENABLE) return;
-
+	if (!enable_fault_tolerance_use) return;
 	for (int I = 0; I < num_accesses; I++) {
 		DO_PRAGMA(HLS loop_tripcount min=1 max=H_REFERENCE*W_REFERENCE)
 		#pragma HLS PIPELINE II=1
@@ -208,6 +227,26 @@ void weight_buffer(int I_ITER, int write_to_buff, int read_from_buff, int offset
   #ifdef DEBUG_WEIGHT_BUFFER
   printf("WEIGHT_BUFFER: ends\n");
   #endif
+}
+
+void selector_filters(int I_ITER, hls::stream<w2_st> &in, hls::stream<w2_st> &out, int faultTolerance, int iteration){
+	for (int p=0; p<I_ITER; p++) {
+	  DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE / CPI)
+	  for (int cpo=0; cpo<CPO; cpo++) {
+        #pragma HLS pipeline II=1
+	    w2_st px_in;
+	    w2_st px_out;
+	    px_in = in.read();
+	    for (int cpi=0; cpi<CPI; cpi++) {
+          #pragma HLS unroll
+		  for (int x=0; x<9; x++) {
+            #pragma HLS unroll
+		    px_out.pixel[cpi][x] = faultTolerance ?  (!iteration ?  px_in.pixel[cpi/2][x] : px_in.pixel[(cpi + CPI / 2) / 2 + (CPI / 4)][x]) : px_in.pixel[cpi][x];
+		  }
+		}
+		out << px_out;
+	  }
+	}
 }
 
 void prepare_weight_filters(int I_ITER, hls::stream<w2_st> &in, hls::stream<w_st> &out) {

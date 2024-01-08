@@ -31,7 +31,7 @@ using std::vector;
 #define MAX_CONVS        8  // Maximum number of convolutional layers
 #define MAX_KERNELS      4  // Maximum number of kernels implemented
 #define MAX_WORK_ITEMS 512  // Maximum number of work items to process
-#define NUM_KERNELS      2
+#define NUM_KERNELS      1
 
 // Global variables
 extern int CONVS;                        // Number of convolutional layers
@@ -95,6 +95,8 @@ extern int o_iter;						 // number of output iterations
 extern int global_offset;				 // global offset for the output data for the kernel
 extern int GI;							 // number of groups for input channels
 extern int GO;							 // number of groups for output channels
+extern int flag_error;					 // Integer to knowing if there is any fault in multiplication opetations
+extern int enable_fault_tolerance;  	// enables fault tolerance mode
 
 extern read_data_t   *data_in;          // Input data buffer (format I x W x H)
 extern din_t         *data_in_add;      // Input data buffer for add module(format I x W x H)
@@ -132,6 +134,7 @@ extern cl::Buffer *buffer_k[MAX_CONVS];              // Conv kernel buffers
 extern cl::Buffer *buffer_k_dw[MAX_CONVS];           // Conv kernel buffers (deepwise)
 extern cl::Buffer *buffer_k_pw[MAX_CONVS];           // Conv kernel buffers (pointwise)
 extern cl::Buffer *buffer_bias[MAX_CONVS];           // Conv bias buffers
+extern cl::Buffer *intToDevice;					  	 // Error Flag
 // DDR assignment
 extern cl_mem_ext_ptr_t data_in_ddr;                  // input data buffer
 extern cl_mem_ext_ptr_t data_in_add_ddr;              // input data add buffer

@@ -29,7 +29,7 @@
 // Each configuration is optimized for the specific targeted board
 // -----------------------------------------------------------------------------------------------------------
 
-//#define HLSINF_1_15
+
 //#define HLSINF_1_0  // U200, 4x4,  FP32:             DIRECT_CONV, RELU, STM, CLIPPING,        POOLING, BN, ADD, UPSIZE
 //#define HLSINF_1_1  // U200, 8x8,  MIXED PRECISSION: DIRECT_CONV, RELU,      CLIPPING, SHIFT, POOLING, BN, ADD, UPSIZE
 //#define HLSINF_1_2  // U200, 16x8, MIXED PRECISSION: DIRECT_CONV, RELU,      CLIPPING, SHIFT, POOLING, BN, ADD, UPSIZE
@@ -79,6 +79,7 @@
 #define USE_RELU
 #define USE_CLIPPING
 //#define USE_SHIFT
+#define FAULT_DETECTION
 #define USE_POOLING
 #define USE_BATCH_NORM
 #define USE_STM
@@ -1270,8 +1271,8 @@
 // -----------------------------------------------------------------------------------------------------------
 #define W_SIM         64 //WMAX
 #define H_SIM         64 //HMAX
-#define I_SIM         CPI //I_REFERENCE
-#define O_SIM         CPO //O_REFERENCE
+#define I_SIM         8 //I_REFERENCE
+#define O_SIM         8 //O_REFERENCE
 #define PT_SIM        1   
 #define PB_SIM        1
 #define PL_SIM        1
@@ -1415,21 +1416,27 @@ extern "C" void k_conv2D(read_block_t *ptr_data,
                          int min_clip, int max_clip, 
                          int dir_shift, int pos_shift, int upsize_factor,
                          int write_to_weight_buffer, int read_from_weight_buffer, int first_row_weight_buffer,
- 						 int read_from_mem, int read_from_b0, int read_from_b1, int write_to_mem, int write_to_b0, int write_to_b1);
+ 						 int read_from_mem, int read_from_b0, int read_from_b1, int write_to_mem, int write_to_b0, int write_to_b1, int enable_faultTolerance, int* error);
 
 void read_bias                    (int offset_bias, read_bias_st *b_ptr, hls::stream<b_st> &out);
+void selector_bias                (hls::stream<b_st> &in, hls::stream<b_st> &out, int enable_faultTolerance, int iteration);
 void read_batch_norm              (int offset_batchnorm, bnp_st *b_ptr, hls::stream<bnp_st> &out);
+void selector_batch_norm          (hls::stream<bnp_st> &in, hls::stream<bnp_st> &out, int enable_faultTolerance, int iteration);
 void read_kernel                  (int enable, int I_ITER, int offset_kernel, read_filter_t *k_ptr, hls::stream<w_t> &k_out);
 void weight_buffer                (int I_ITER, int write_to_buff, int read_from_buff, int offset_buff, hls::stream<w_t> &in, hls::stream<w2_st> &out);
-void prepare_weight_filters(int I_ITER, hls::stream<w2_st> &in, hls::stream<w_st> &out);
+void selector_filters             (int I_ITER, hls::stream<w2_st> &in, hls::stream<w2_st> &out, int enable_faultTolerance, int iteration);
+void prepare_weight_filters		  (int I_ITER, hls::stream<w2_st> &in, hls::stream<w_st> &out);
 void read_data_channels_gihwcpi   (int num_pixels, int offset, int I_ITER, int cpi_group_offset, read_block_t *ptr, hls::stream<din_st> &out, int enable);
 
 void read_input_add_gihwcpi       (int num_pixels, int offset, write_block_t *ptr, hls::stream<dout_st> &out, int enable);
-void write_data_channels_gihwcpi  (int num_pixels, int offset, write_block_t *ptr, hls::stream<dout_st> &in, int write_to_obuf, hls::stream<dout_st> &out);
+void selector_input_add_gihwcpi   (int num_pixels, hls::stream<dout_st> &in, hls::stream<dout_st> &out, int enable_faultTolerance, int iteration, int enable);
+void comparator_write   		  (int num_pixels, hls::stream<dout_st> &in, hls::stream<dout_st> &out, int faultTolerance, int &error, int enable, dout_st buff_o_channels_write[WMAX*HMAX]);
+void write_data_channels_gihwcpi  (int num_pixels, int offset, write_block_t *ptr, hls::stream<dout_st> &in, int write_to_obuf, hls::stream<dout_st> &out, int enable_faultTolerance);
 void buffer0                      (int num_accesses, int read, int read_from_input, int write, int first_write_address, hls::stream<din_st> &input, hls::stream<dout_st> &in, hls::stream<din_st> &out);
 void buffer1                      (int num_accesses, int read, int write, int first_write_address, hls::stream<dout_st> &in, hls::stream<din_st> &out);
 void mux                          (int num_accesses, int sel, hls::stream<din_st> &in0, hls::stream<din_st> &in1, hls::stream<din_st> &out);
-void demux                        (int enable, int num_accesses, int sel, hls::stream<dout_st> &in, hls::stream<dout_st> &out0, hls::stream<dout_st> &out1);
+void selector_mux                 (int num_accesses, hls::stream<din_st> &in, hls::stream<din_st> &out, int enable_faultTolerance, int iteration);
+void demux                        (int enable, int num_accesses, int sel, hls::stream<dout_st> &in, hls::stream<dout_st> &out0, hls::stream<dout_st> &out1, int enable_faultTolerance);
 
 void relu                         (int enable_relu, int enable_clipping, int enable_shift, float relu_factor, int min_clip, int max_clip, int direction_shift, int pos_shift, int num_pixels, hls::stream<conv_st> &in, hls::stream<relu_st> &out);
 void stm                          (int enable_stm, int num_pixels, hls::stream<relu_st> &in, hls::stream<stm_st> &out);

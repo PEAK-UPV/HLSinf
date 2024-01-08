@@ -49,10 +49,40 @@ void read_bias(int offset_bias, read_bias_st *b_ptr, hls::stream<b_st> &out) {
   #endif
 }
 
+// ---------------------------------------------------------------------------------------
+// selector_bias. Select bias channels and send them to conv module
+//
+// Arguments:
+//   in               			: bias data
+//   out         				: output stream
+//   enable_faultTolerance      : fault tolerance flag
+//
+// All the bias are read and sent through the out stream
+//
+void selector_bias(hls::stream<b_st> &in, hls::stream<b_st> &out, int faultTolerance, int iteration){
+  #ifdef DEBUG_READ_BIAS
+  printf("SELECTOR_BIAS: start\n");
+  #endif
+  b_st bias;
+  b_st res;
+  DO_PRAGMA(HLS ARRAY_PARTITION variable=bias dim=0 complete)
+  DO_PRAGMA(HLS ARRAY_PARTITION variable=res dim=0 complete)
+  bias = in.read();
+  for (int cpo=0; cpo<CPO; cpo++) {
+	DO_PRAGMA(HLS loop_tripcount min=1 max=CPO)
+	#pragma HLS unroll
+	 res.pixel[cpo] = faultTolerance ?  (!iteration ?  bias.pixel[cpo/2] : bias.pixel[(cpo + CPO / 2) / 2 + (CPO / 4)]) : bias.pixel[cpo];
+  }
+  out << res;
+  #ifdef DEBUG_READ_BIAS
+  printf("SELECTOR_BIAS: end\n");
+  #endif
+}
+
 
 // ---------------------------------------------------------------------------------------
 // read_batch_norm. Reading batch normalization values from memory and sending to batch
-// 					normalization module
+// 					selector module
 //
 // Arguments:
 //   b_ptr               : pointer to batch normalization values
@@ -82,6 +112,40 @@ void read_batch_norm(int offset_batchnorm, bnp_st *b_ptr, hls::stream<bnp_st> &o
 
   #ifdef DEBUG_READ_BATCH_NORM
   printf("DEBUG_READ_BATCH_NORM: end\n");
+  #endif
+}
+
+// ---------------------------------------------------------------------------------------
+// selector_batch_norm. Select batch norm channels and send them to batch normalization module
+//
+// Arguments:
+//   in               			: batch norm data
+//   out         				: output stream
+//   enable_faultTolerance      : fault tolerance flag
+//
+// All the bias are read and sent through the out stream
+//
+void selector_batch_norm(hls::stream<bnp_st> &in, hls::stream<bnp_st> &out, int faultTolerance, int iteration){
+  #ifdef DEBUG_READ_BIAS
+  printf("SELECTOR_BN: start\n");
+  #endif
+  bnp_st batch_norm;
+  bnp_st res;
+  DO_PRAGMA(HLS ARRAY_PARTITION variable=batch_norm dim=0 complete)
+  DO_PRAGMA(HLS ARRAY_PARTITION variable=res dim=0 complete)
+
+  batch_norm = in.read();
+  for (int cpo=0; cpo<CPO; cpo++) {
+	DO_PRAGMA(HLS loop_tripcount min=1 max=CPO)
+	#pragma HLS PIPELINE II=1
+	for (int i =0; i< 4; i++){
+		#pragma HLS unroll
+		res.values[cpo*4+i] = faultTolerance ?  (!iteration ?  batch_norm.values[(cpo/2)*4+i] : batch_norm.values[((cpo + CPO / 2) / 2 + (CPO / 4))*4+i]) : batch_norm.values[cpo*4+i];
+	}
+  }
+  out << res;
+  #ifdef DEBUG_READ_BIAS
+  printf("SELECTOR_BN: end\n");
   #endif
 }
 
@@ -394,3 +458,55 @@ void read_input_add_gihwcpi(int num_pixels, int offset, write_block_t *ptr, hls:
   #endif
 
 }
+
+// ---------------------------------------------------------------------------------------
+// selector_input_add_gihwcpi. Select add data channels and send them to add module
+//
+// Arguments:
+//   in               			: add data
+//   out         				: output stream
+//   enable_faultTolerance      : fault tolerance flag
+//
+// All the bias are read and sent through the out stream
+//
+void selector_input_add_gihwcpi(int num_pixels, hls::stream<dout_st> &in, hls::stream<dout_st> &out, int faultTolerance, int iteration, int enable){
+	#ifdef DEBUG_READ_DATA
+	printf("SELECTOR_DATA: starts (gihwcpi format)\n");
+	printf("  num_pixels : %d\n", num_pixels);
+	printf("  offset : %d\n", offset);
+	#endif
+
+	if (!enable) return;
+
+	dout_st px_out;
+	dout_st px_in;
+	DO_PRAGMA(HLS ARRAY_PARTITION variable=px_out complete dim=0)
+	DO_PRAGMA(HLS ARRAY_PARTITION variable=px_in complete dim=0)
+
+	for (int i = 0; i < num_pixels; i++) {
+	  DO_PRAGMA(HLS LOOP_TRIPCOUNT min=1 max = I_REFERENCE * H_REFERENCE * W_REFERENCE / CPI)
+	  DO_PRAGMA(HLS pipeline)
+
+	  px_in = in.read();
+	  for (int cpo=0; cpo<CPO; cpo++) {
+		#pragma HLS unroll
+		px_out.pixel[cpo] = faultTolerance ?  (!iteration ?  px_in.pixel[cpo/2] : px_in.pixel[(cpo + CPO / 2) / 2 + (CPO / 4)]) : px_in.pixel[cpo];
+	  }
+	  out << px_out;
+
+	  #ifdef DEBUG_READ_DATA
+	  #ifdef DEBUG_VERBOSE
+	  printf("data read : %d : ", i);
+	  for (int x=0; x<CPO; x++) printf("%f ", float(px_out.pixel[x]));
+	  printf("\n");
+	  #endif
+	  #endif
+	}
+
+	#ifdef DEBUG_READ_DATA
+	printf("SELECTOR_DATA: ends (gihwcpi format)\n");
+	#endif
+
+}
+
+
