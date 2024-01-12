@@ -71,8 +71,8 @@ void mul(int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::str
       #ifdef DEBUG_MUL
       //#ifdef DEBUG_VERBOSE
       printf("MUL: kernel read\n");
-      for(int i=0; i<CPI; i++){
-        for(int o=0; o<CPO; o++){
+		for(int o=0; o<CPO; o++){
+			for(int i=0; i<CPI; i++){
           printf("kernel cpi=%d cpo=%d: ", i, o);
           for (int p=0; p<9; p++){
             printf(" %f ", float(kernel.pixel[o][i][p]));

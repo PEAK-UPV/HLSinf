@@ -1424,7 +1424,7 @@ void read_batch_norm              (int offset_batchnorm, bnp_st *b_ptr, hls::str
 void selector_batch_norm          (hls::stream<bnp_st> &in, hls::stream<bnp_st> &out, int enable_faultTolerance, int iteration);
 void read_kernel                  (int enable, int I_ITER, int offset_kernel, read_filter_t *k_ptr, hls::stream<w_t> &k_out);
 void weight_buffer                (int I_ITER, int write_to_buff, int read_from_buff, int offset_buff, hls::stream<w_t> &in, hls::stream<w2_st> &out);
-void selector_filters             (int I_ITER, hls::stream<w2_st> &in, hls::stream<w2_st> &out, int enable_faultTolerance, int iteration);
+void selector_filters             (int I_ITER, hls::stream<w_st> &in, hls::stream<w_st> &out, int enable_faultTolerance, int iteration);
 void prepare_weight_filters		  (int I_ITER, hls::stream<w2_st> &in, hls::stream<w_st> &out);
 void read_data_channels_gihwcpi   (int num_pixels, int offset, int I_ITER, int cpi_group_offset, read_block_t *ptr, hls::stream<din_st> &out, int enable);
 

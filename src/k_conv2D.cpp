@@ -245,9 +245,9 @@ void k_conv2D(read_block_t *ptr_data,
     static hls::stream<dout_st>  out_read_data_add_selector("out_read_data_add_selector");
     #ifdef DIRECT_CONV
     static hls::stream<w_t>      out_read_kernel;                                                                        // read filters stream from READ_KERNEL module (direct conv)
-    static hls::stream<w2_st>    out_read_kernel_2;                                                                      // read filters stream from WEIGHT_BUFFER module (direct conv)
-    static hls::stream<w2_st>    out_read_kernel_2_selector;
-    static hls::stream<w_st>     out_read_kernel_3;                                                                      // read filters stream from PREPARE_WEIGHT_FILTERS module (direct conv)
+    static hls::stream<w2_st>    out_read_kernel_2("out_read_kernel_2");                                                                      // read filters stream from WEIGHT_BUFFER module (direct conv)
+    static hls::stream<w_st>     out_read_kernel_2_selector("out_read_kernel_2_selector");
+    static hls::stream<w_st>     out_read_kernel_3("out_read_kernel_3");                                                                      // read filters stream from PREPARE_WEIGHT_FILTERS module (direct conv)
     #endif
     #ifdef DWS_CONV
     static hls::stream<w_dw_st>  out_read_kernel_dw;                                                                     // read filters stream for depth wise conv (DWS conv)
@@ -320,7 +320,7 @@ void k_conv2D(read_block_t *ptr_data,
 	#endif
 	bool impar = faultTolerance ? o_iter & 0x1 : false;
     int enable_comparator_write = impar || !faultTolerance;
-    printf("Enable comparator write: %d | Impar: %d | o_iter: %d | FAULT_TOLERANCE %d\n", enable_comparator_write, impar, o_iter, faultTolerance);
+//    printf("Enable comparator write: %d | Impar: %d | o_iter: %d | FAULT_TOLERANCE %d\n", enable_comparator_write, impar, o_iter, faultTolerance);
     // -------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // variables (loop dependent)
 	int o_channel                  = ((o_iter/2) + o_iter_first) * CPO; //<< LOG2_CPO;  // current output channel (first one in this iteration)
@@ -341,9 +341,9 @@ void k_conv2D(read_block_t *ptr_data,
 	  selector_bias(out_read_bias_selector, out_read_bias, faultTolerance, impar);
 	  #ifdef DIRECT_CONV
 	  read_kernel(enable_read_kernel, I_ITER, offset_kernel, ptr_kernel, out_read_kernel);
-	  weight_buffer(I_ITER, write_to_weight_buffer, read_from_weight_buffer, offset_weight_buffer, out_read_kernel, out_read_kernel_2_selector);
-	  selector_filters(I_ITER,out_read_kernel_2_selector, out_read_kernel_2, faultTolerance, impar);
-	  prepare_weight_filters(I_ITER, out_read_kernel_2, out_read_kernel_3);
+	  weight_buffer(I_ITER, write_to_weight_buffer, read_from_weight_buffer, offset_weight_buffer, out_read_kernel, out_read_kernel_2);
+	  prepare_weight_filters(I_ITER, out_read_kernel_2, out_read_kernel_2_selector);
+	  selector_filters(I_ITER,out_read_kernel_2_selector, out_read_kernel_3, faultTolerance, impar);
 	  #endif
 	  #ifdef DWS_CONV
 	  dws_read_dw_kernel(I_ITER, o_iter, ptr_dw_kernel, out_read_kernel_dw);  // o_iter as argument to load all kernels in the first iteration (o_iter==0)
@@ -352,8 +352,8 @@ void k_conv2D(read_block_t *ptr_data,
 	  read_data_channels_gihwcpi(read_pixels, offset_read_data_channel, I_ITER, offset_data_in_group_cpi, ptr_data, out_read_data, enable_read);
 	  buffer0(num_accesses_b0, read_b0, read_from_input, write_b0, first_buffer_write_address, out_read_data, out_demux_0, out_buffer0);
 	  buffer1(num_accesses_b1, read_b1, write_b1, first_buffer_write_address, out_demux_1, out_buffer1);
-	  mux(mux_accesses, mux_sel, out_buffer0, out_buffer1, out_mux_selector);
-	  selector_mux(mux_accesses, out_mux_selector, out_mux, faultTolerance, impar);
+	  mux(mux_accesses, mux_sel, out_buffer0, out_buffer1, out_mux);
+//	  selector_mux(mux_accesses, out_mux_selector, out_mux, faultTolerance, impar);
 	  #ifdef USE_ADD
 	  read_input_add_gihwcpi(read_pixels_add, o_iter_read_add_offset, ptr_data_add, out_read_data_add_selector, enable_add);
 	  selector_input_add_gihwcpi(read_pixels_add, out_read_data_add_selector, out_read_data_add, faultTolerance, impar, enable_add);

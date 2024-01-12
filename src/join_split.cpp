@@ -229,23 +229,23 @@ void weight_buffer(int I_ITER, int write_to_buff, int read_from_buff, int offset
   #endif
 }
 
-void selector_filters(int I_ITER, hls::stream<w2_st> &in, hls::stream<w2_st> &out, int faultTolerance, int iteration){
+void selector_filters(int I_ITER, hls::stream<w_st> &in, hls::stream<w_st> &out, int faultTolerance, int iteration){
 	for (int p=0; p<I_ITER; p++) {
 	  DO_PRAGMA(HLS loop_tripcount min=1 max=I_REFERENCE / CPI)
+	  #pragma HLS pipeline II=1
+	  w_st px_in;
+	  w_st px_out;
+	  px_in = in.read();
 	  for (int cpo=0; cpo<CPO; cpo++) {
-        #pragma HLS pipeline II=1
-	    w2_st px_in;
-	    w2_st px_out;
-	    px_in = in.read();
 	    for (int cpi=0; cpi<CPI; cpi++) {
           #pragma HLS unroll
 		  for (int x=0; x<9; x++) {
             #pragma HLS unroll
-		    px_out.pixel[cpi][x] = faultTolerance ?  (!iteration ?  px_in.pixel[cpi/2][x] : px_in.pixel[(cpi + CPI / 2) / 2 + (CPI / 4)][x]) : px_in.pixel[cpi][x];
+		    px_out.pixel[cpo][cpi][x] = faultTolerance ?  (!iteration ?  px_in.pixel[cpo/2][cpi][x] : px_in.pixel[(cpo + CPI / 2) / 2 + (CPI / 4)][cpi][x]) : px_in.pixel[cpo][cpi][x];
 		  }
 		}
-		out << px_out;
 	  }
+	  out << px_out;
 	}
 }
 
