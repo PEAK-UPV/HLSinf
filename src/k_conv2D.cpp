@@ -320,20 +320,21 @@ void k_conv2D(read_block_t *ptr_data,
 	#endif
 	bool impar = faultTolerance ? o_iter & 0x1 : false;
     int enable_comparator_write = impar || !faultTolerance;
-//    printf("Enable comparator write: %d | Impar: %d | o_iter: %d | FAULT_TOLERANCE %d\n", enable_comparator_write, impar, o_iter, faultTolerance);
+    printf("Enable comparator write: %d | Impar: %d | o_iter: %d | FAULT_TOLERANCE %d\n", enable_comparator_write, impar, o_iter, faultTolerance);
     // -------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // variables (loop dependent)
-	int o_channel                  = ((o_iter/2) + o_iter_first) * CPO; //<< LOG2_CPO;  // current output channel (first one in this iteration)
-	int o_iter_read_add_offset     = write_offset + (offset_read_add_group_cpo * ((o_iter/2) + o_iter_first));
-	int	o_iter_write_offset        = write_offset + (offset_data_out_group_cpo * ((o_iter/2) + o_iter_first));
-	int	offset_bias                = (o_iter/2) + o_iter_first;
-	int	offset_kernel              = ((o_iter/2) + o_iter_first) * ((I + CPI - 1) / CPI) * CPI * CPO * 9;
-	int	offset_weight_buffer       = first_row_weight_buffer + ((o_iter/2)  * I_ITER);     // offset weight buffer
-	int	read_b0                    = fn_get_read_b0(read_from_b0, read_from_mem, input_fits_in_b0, (o_iter/2));
-	int	write_b0                   = fn_get_write_b0(write_to_b0, read_from_mem, input_fits_in_b0, (o_iter/2));
+    int var_mul 				   = faultTolerance ? (o_iter/2) : o_iter;
+ 	int o_channel                  = (var_mul + o_iter_first) * CPO; //<< LOG2_CPO;  // current output channel (first one in this iteration)
+	int o_iter_read_add_offset     = write_offset + (offset_read_add_group_cpo * (var_mul + o_iter_first));
+	int	o_iter_write_offset        = write_offset + (offset_data_out_group_cpo * (var_mul + o_iter_first));
+	int	offset_bias                = var_mul + o_iter_first;
+	int	offset_kernel              = (var_mul + o_iter_first) * ((I + CPI - 1) / CPI) * CPI * CPO * 9;
+	int	offset_weight_buffer       = first_row_weight_buffer + (var_mul  * I_ITER);     // offset weight buffer
+	int	read_b0                    = fn_get_read_b0(read_from_b0, read_from_mem, input_fits_in_b0, var_mul);
+	int	write_b0                   = fn_get_write_b0(write_to_b0, read_from_mem, input_fits_in_b0, var_mul);
 	int	read_from_input            = read_from_mem && !read_b0;
 	int	enable_read                = read_from_input;
-	int	first_buffer_write_address = write_pixels * (o_iter/2);
+	int	first_buffer_write_address = write_pixels * var_mul;
 
     // -------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // modules
