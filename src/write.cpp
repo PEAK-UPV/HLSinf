@@ -110,5 +110,6 @@ void comparator_write(int num_pixels, hls::stream<dout_st> &in, hls::stream<dout
 		}
 	}
 	if (check) flag = check;
+	else flag = 0;
 
 }
