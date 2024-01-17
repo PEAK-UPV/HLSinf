@@ -22,6 +22,7 @@
 #include "runner.h"
 #include "fpga.h"
 #include "parsers.h"
+#include "dataset.h"
 
 // arguments defines
 #define ARG_HELP              0
@@ -54,11 +55,29 @@
 #define ARG_MC_WEIGHTS       27
 #define ARG_HLSINF_1_0       28
 #define ARG_NO_WARNINGS      29
+#define ARG_DATA_DIRECTORY   30
+#define ARG_LABELS_FILE      31
+#define ARG_MEAN_NORMALIZE0  32
+#define ARG_MEAN_NORMALIZE1  33
+#define ARG_MEAN_NORMALIZE2  34
+#define ARG_STD_NORMALIZE0   35
+#define ARG_STD_NORMALIZE1   36
+#define ARG_STD_NORMALIZE2   37
+#define ARG_RESIZE_INPUT     38
+#define ARG_CROP_INPUT       39
+#define ARG_APPLY_SOFTMAX    40
+#define ARG_COMPUTE_ACCURACY 41
+#define ARG_KERNEL_CLOCK     42
+#define ARG_CONF_FILE        43
 
 // global variables
 char   input_file_name[200];   // input file name including the model to convert/run
 char   output_file_name[200];  // output file name to write the produced model
 char   xclbin_file_name[200];  // xclbin file (for running)
+char   data_directory[200];    // data directory (for running)
+char   labels_file[200];       // labels file
+char   conf_file[200];         // configuration file
+int    load_conf;              // whether to load the configuration file
 int    xclbin_defined;         // whether xclbin has been defined
 int    verbose;                // if set then we print debug information
 int    verbose_level;          // verbosity level (currently 1, 2, 3)
@@ -88,6 +107,141 @@ int    irp_threshold;          // input row parallelism to be applied
 int    np_enabled;             // whether node parallelism to be applied
 int    enable_omp;             // whether OpenMP to be applied to CPU nodes
 int    no_warnings;            // do not show warning messages
+float  mean_normalize_dim0;    // average normalize value for dimension 0
+float  mean_normalize_dim1;    // average normalize value for dimension 1     
+float  mean_normalize_dim2;    // average normalize value for dimension 2
+float  std_normalize_dim0;     // average normalize value for dimension 0
+float  std_normalize_dim1;     // average normalize value for dimension 1     
+float  std_normalize_dim2;     // average normalize value for dimension 2
+int    resize_input;           // resize input to value
+int    crop_input;             // crop input
+int    apply_softmax;          // applies softmax at the output of model
+int    compute_accuracy;       // computes top1 and top5 accuracy
+float  kernel_clock;           // kernel clock (in MHz)
+
+
+
+/*
+ * fn_process_conf_line()
+ *
+ * processes a configuration file line
+ *
+ */
+void fn_process_conf_line(char *line) {
+  if (line[0] == '#') return;
+
+  if (fn_compare_str(line, (char *)"r=", 2)) {run = true; strcpy(input_file_name, &line[2]);}
+  if (fn_compare_str(line, (char *)"c=", 2)) {convert = true; strcpy(input_file_name, &line[2]);}
+  if (fn_compare_str(line, (char *)"o=", 2)) {strcpy(output_file_name, &line[2]);}
+  if (fn_compare_str(line, (char *)"cpi=", 4)) {CPI = atoi(&line[4]);}
+  if (fn_compare_str(line, (char *)"cpo=", 4)) {CPO = atoi(&line[4]);}
+  if (fn_compare_str(line, (char *)"xclbin=", 7)) {strcpy(xclbin_file_name, &line[7]); xclbin_defined = true;}
+  if (fn_compare_str(line, (char *)"k=", 2)) {num_kernels=atoi(&line[2]);}
+  if (fn_compare_str(line, (char *)"ocp=", 4)) {ocp_enabled = true; ocp_threshold=atoi(&line[4]);}
+  if (fn_compare_str(line, (char *)"mcd=", 4)) {memory_configuration_data=atoi(&line[4]);}
+  if (fn_compare_str(line, (char *)"mcw=", 4)) {memory_configuration_weights = atoi(&line[4]);}
+  if (fn_compare_str(line, (char *)"lf=", 3)) {strcpy(labels_file, &line[3]);}
+  if (fn_compare_str(line, (char *)"dd=", 3)) {strcpy(data_directory, &line[3]);}
+  if (fn_compare_str(line, (char *)"softmax=yes",11)) {apply_softmax = true;}
+  if (fn_compare_str(line, (char *)"accuracy=yes",12)) {compute_accuracy = true;}
+  if (fn_compare_str(line, (char *)"v=",2)) {verbose=true; verbose_level=atoi(&line[2]);}
+  if (fn_compare_str(line, (char *)"f=yes",5)) {generate_figs = true;}
+  if (fn_compare_str(line, (char *)"k_cbar=yes",10)) {cbar_keyword = true;}
+  if (fn_compare_str(line, (char *)"k_cbr=yes",9)) {cbr_keyword = true;}
+  if (fn_compare_str(line, (char *)"k_crm=yes",9)) {crm_keyword = true;}
+  if (fn_compare_str(line, (char *)"k_cb=yes",8)) {cb_keyword = true;}
+  if (fn_compare_str(line, (char *)"k_cr=yes",8)) {cr_keyword = true;}
+  if (fn_compare_str(line, (char *)"k_c=",3)) {c_keyword = true;}
+  if (fn_compare_str(line, (char *)"mean0=",6)) {mean_normalize_dim0 = atof(&line[6]);}
+  if (fn_compare_str(line, (char *)"mean1=",6)) {mean_normalize_dim1 = atof(&line[6]);}
+  if (fn_compare_str(line, (char *)"mean2=",6)) {mean_normalize_dim2 = atof(&line[6]);}
+  if (fn_compare_str(line, (char *)"std0=",5)) {std_normalize_dim0 = atof(&line[5]);}
+  if (fn_compare_str(line, (char *)"std1=",5)) {std_normalize_dim1 = atof(&line[5]);}
+  if (fn_compare_str(line, (char *)"std2=",5)) {std_normalize_dim2 = atof(&line[5]);}
+  if (fn_compare_str(line, (char *)"resize=",7)) {resize_input = atoi(&line[7]);}
+  if (fn_compare_str(line, (char *)"crop=yes",8)) {crop_input = true;}
+  if (fn_compare_str(line, (char *)"kernel_clock=",13)) {kernel_clock = atof(&line[13]);}
+  if (fn_compare_str(line, (char *)"a1x1=yes",8)) {adapt_1x1_to_3x3 = true;}
+  if (fn_compare_str(line, (char *)"a2x2=yes",8)) {adapt_2x2_to_3x3 = true;}
+  if (fn_compare_str(line, (char *)"aDense=yes",10)) {adapt_dense = true;}
+  if (fn_compare_str(line, (char *)"ri=yes",6)) {remove_identity = true;}
+  if (fn_compare_str(line, (char *)"t=yes",5)) {timings = true;}
+  if (fn_compare_str(line, (char *)"omp=yes",7)) {enable_omp = true;}
+  if (fn_compare_str(line, (char *)"nw=yes",6)) {no_warnings = true;}
+}
+
+/*
+ * fn_print_conf()
+ *
+ * prints selected configuration
+ *
+ */
+void fn_print_conf() {
+  printf("Configuration:\n");
+  if (run) {
+    printf(" - run %s model\n", input_file_name);
+    printf(" - CPI %d, CPO %d\n", CPI, CPO);
+    printf(" - xclbin file: %s\n", xclbin_defined?xclbin_file_name:(char*)"not defined");
+    printf(" - number of kernels: %d\n", num_kernels);
+    if (ocp_enabled) printf(" - output channel parallelism enabled: threshold %d\n", ocp_threshold);
+    printf(" - memory configuration: data %d, weights %d\n", memory_configuration_data, memory_configuration_weights);
+    printf(" - labels file: %s\n", labels_file);
+    printf(" - data directory: %s\n", data_directory);
+    printf(" - softmax: %s\n", apply_softmax?(char *)"yes":(char *)"no");
+    printf(" - accuracy: %s\n", compute_accuracy?(char *)"yes":(char *)"no");
+    printf(" - mean: %6.4f %6.4f %6.4f\n", mean_normalize_dim0, mean_normalize_dim1, mean_normalize_dim2);
+    printf(" - std : %6.4f %6.4f %6.4f\n", std_normalize_dim0, std_normalize_dim1, std_normalize_dim2);
+    printf(" - resize: %s\n", resize_input?(char *)"yes":(char *)"no");
+    printf(" - crop: %s\n", crop_input?(char *)"yes":(char *)"no");
+    printf(" - kernel clock: %6.4f\n", kernel_clock);
+    printf(" - Enable OMP: %s\n", enable_omp?(char *)"yes":(char *)"no");
+    printf(" - Show timing statistics: %s\n", timings?(char *)"yes":(char *)"no");
+  }
+  if (convert) {
+    printf(" - convert %s model into %s file\n", input_file_name, output_file_name);
+    printf(" - CPI %d, CPO %d\n", CPI, CPO);
+    printf(" - Generate figs: %s\n", generate_figs?(char *)"yes":(char *)"no");
+    printf(" - CBAR optimization: %s\n", cbar_keyword?(char *)"yes":(char *)"no");
+    printf(" - CBR optimization : %s\n", cbr_keyword?(char *)"yes":(char *)"no");
+    printf(" - CRM optimization : %s\n", crm_keyword?(char *)"yes":(char *)"no");
+    printf(" - CB optimization  : %s\n", cb_keyword?(char *)"yes":(char *)"no");
+    printf(" - CR optimization  : %s\n", cr_keyword?(char *)"yes":(char *)"no");
+    printf(" - C optimization   : %s\n", c_keyword?(char *)"yes":(char *)"no");
+    printf(" - Adapt 1x1 kernels: %s\n", adapt_1x1_to_3x3?(char *)"yes":(char *)"no");
+    printf(" - Adapt 2x2 kernels: %s\n", adapt_2x2_to_3x3?(char *)"yes":(char *)"no");
+    printf(" - Adapt Dense nodes: %s\n", adapt_dense?(char *)"yes":(char *)"no");    
+    printf(" - Remove identity nodes: %s\n", remove_identity?(char *)"yes":(char *)"no");
+  }
+ 
+  if (verbose) printf(" - verbosity level: %d\n", verbose_level);
+  if (no_warnings) printf(" - do not show warnings\n");
+}
+
+/*
+ *
+ * fn_load_conf()
+ *
+ * loads the configuration from a file passed as argument
+ *
+ */
+void fn_load_conf(char *filename) {
+  FILE *fd;
+  char *line = NULL;
+  size_t len = 0;
+  ssize_t read;
+
+  if ((fd = fopen(filename, "r"))==NULL) {printf("Error, conf file not found\n"); exit(1);}
+
+  while ((read = getline(&line, &len, fd)) != -1) {
+    // remove intro
+    if (line[strlen(line)-1] == 10) line[strlen(line)-1] = '\0';
+    fn_process_conf_line(line);
+  }
+  fclose(fd);
+  if (line) free(line);
+  printf("input file: %s\n", input_file_name);
+}
+
 
 /*
  *
@@ -98,14 +252,28 @@ int    no_warnings;            // do not show warning messages
  *
  */
 void print_help(char *program_name) {
-  printf("usage: %s [-c|-r filename] [-o filename] [-xclbin filename] [-k_cbar] [-k_cbr] [-k_crm] [-k_cb] [-k_cr] [-k_c] [-a1x1] [-a2x2] [-v value] [-f] [-help] [-cpi value] [-cpo value] [-t] [-omp]\n", program_name);
+  printf("usage: %s [-c|-r filename] [-o filename] [-dd dirname] [-xclbin filename] [-k_cbar] [-k_cbr] [-k_crm] [-k_cb] [-k_cr] [-k_c] [-a1x1] [-a2x2] [-v value] [-f] [-help] [-cpi value] [-cpo value] [-t] [-omp] ...\n", program_name);
 
   printf("\n");
   printf("  [-c filename]        : convert/parse input file\n");
   printf("  [-o filename]        : Output file where to write the parsed model\n");
+  printf("  [-conf filename]     : configuration file\n");
   #ifdef RUNTIME_SUPPORT
   printf("  [-r filename]        : run input file\n");  
   printf("  [-xclbin filename]   : XCLBIN file to use in running mode\n");
+  printf("  [-dd dirname]        : data directory\n");
+  printf("  [-lf filename]       : labels file name\n");
+  printf("  [-mean0 float]       : average value input data normalization for dimension 0\n");
+  printf("  [-mean1 float]       : average value input data normalization for dimension 1\n");
+  printf("  [-mean2 float]       : average value input data normalization for dimension 2\n");
+  printf("  [-std0 float]        : std dev. input data normalization for dimension 0\n");
+  printf("  [-std1 float]        : std dev. input data normalization for dimension 1\n");
+  printf("  [-std2 float]        : std dev. input data normalization for dimension 2\n");
+  printf("  [-resize value]      : resize input to given size\n");
+  printf("  [-crop]              : crop input\n");
+  printf("  [-softmax]           : applies softmat at the output of the model\n");
+  printf("  [-accuracy]          : computes accuracy\n");
+  printf("  [-kernel_clock value]: kernel clock (in MHz)\n");
   #endif
   printf("\n");
   printf("Parameters/optimizations for model conversion:\n");
@@ -168,6 +336,9 @@ void fn_parse_arguments(int argc, char *argv[]) {
     #ifdef RUNTIME_SUPPORT
     {"xclbin", required_argument, NULL, ARG_XCLBIN},
     {"r", required_argument,       NULL, ARG_RUN},
+    {"dd", required_argument,      NULL, ARG_DATA_DIRECTORY},
+    {"lf", required_argument,      NULL, ARG_LABELS_FILE},
+    {"conf", required_argument,    NULL, ARG_CONF_FILE},
     #endif
     {"v", required_argument,       NULL, ARG_VERBOSE},
     {"c", required_argument,       NULL, ARG_CONVERT},
@@ -196,6 +367,17 @@ void fn_parse_arguments(int argc, char *argv[]) {
     {"np", no_argument,        NULL, ARG_NP},
     {"omp", no_argument,       NULL, ARG_OMP},
     {"hlsinf_1_0", no_argument,NULL, ARG_HLSINF_1_0},
+    {"mean0", required_argument,NULL, ARG_MEAN_NORMALIZE0},
+    {"mean1", required_argument,NULL, ARG_MEAN_NORMALIZE1},
+    {"mean2", required_argument,NULL, ARG_MEAN_NORMALIZE2},
+    {"std0", required_argument,NULL, ARG_STD_NORMALIZE0},
+    {"std1", required_argument,NULL, ARG_STD_NORMALIZE1},
+    {"std2", required_argument,NULL, ARG_STD_NORMALIZE2},
+    {"resize", required_argument,NULL, ARG_RESIZE_INPUT},
+    {"crop", no_argument, NULL, ARG_CROP_INPUT},
+    {"softmax", no_argument, NULL, ARG_APPLY_SOFTMAX},
+    {"accuracy", no_argument, NULL, ARG_COMPUTE_ACCURACY},
+    {"kernel_clock", required_argument, NULL, ARG_KERNEL_CLOCK},
     #endif
     {0,0,0,0}
   };
@@ -208,6 +390,10 @@ void fn_parse_arguments(int argc, char *argv[]) {
   generate_figs    = false;
   timings          = false;
   strcpy(output_file_name, "model.out");
+  strcpy(data_directory, "./");
+  strcpy(labels_file, "");
+  strcpy(conf_file, "");
+  load_conf        = false;
   cbar_keyword     = false;
   cbr_keyword      = false;
   crm_keyword      = false;
@@ -231,12 +417,25 @@ void fn_parse_arguments(int argc, char *argv[]) {
   memory_configuration_data = 0;
   memory_configuration_weights = 0;
   no_warnings          = false;
-
+  mean_normalize_dim0   = 0.f;
+  mean_normalize_dim1   = 0.f;
+  mean_normalize_dim2   = 0.f;
+  std_normalize_dim0   = 1.f;
+  std_normalize_dim1   = 1.f;
+  std_normalize_dim2   = 1.f;
+  resize_input         = 0;
+  crop_input           = false;
+  apply_softmax        = false;
+  compute_accuracy     = false;
+  kernel_clock         = 300;
 
   while ((opt = getopt_long_only(argc, argv, "", long_options, NULL)) != -1) {
     switch(opt) {
       case ARG_HELP              : print_help(argv[0]); break;
       case ARG_RUN               : strcpy(input_file_name, optarg); run = true; break;
+      case ARG_DATA_DIRECTORY    : strcpy(data_directory, optarg); break;
+      case ARG_LABELS_FILE       : strcpy(labels_file, optarg); break;
+      case ARG_CONF_FILE         : strcpy(conf_file, optarg); load_conf = true; break;
       case ARG_CONVERT           : strcpy(input_file_name, optarg); convert = true; break;
       case ARG_OUTPUT            : strcpy(output_file_name, optarg); break;
       case ARG_XCLBIN            : strcpy(xclbin_file_name, optarg); xclbin_defined = true; break;
@@ -263,6 +462,17 @@ void fn_parse_arguments(int argc, char *argv[]) {
       case ARG_NP                : np_enabled = true; break;
       case ARG_OMP               : enable_omp = true; break;
       case ARG_NO_WARNINGS       : no_warnings = true; break;
+      case ARG_MEAN_NORMALIZE0   : mean_normalize_dim0 = atof(optarg); break;
+      case ARG_MEAN_NORMALIZE1   : mean_normalize_dim1 = atof(optarg); break;
+      case ARG_MEAN_NORMALIZE2   : mean_normalize_dim2 = atof(optarg); break;
+      case ARG_STD_NORMALIZE0    : std_normalize_dim0 = atof(optarg); break;
+      case ARG_STD_NORMALIZE1    : std_normalize_dim1 = atof(optarg); break;
+      case ARG_STD_NORMALIZE2    : std_normalize_dim2 = atof(optarg); break;
+      case ARG_RESIZE_INPUT      : resize_input = atoi(optarg); break;
+      case ARG_CROP_INPUT        : crop_input = true; break;
+      case ARG_APPLY_SOFTMAX     : apply_softmax = true; break;
+      case ARG_COMPUTE_ACCURACY  : compute_accuracy = true; break;
+      case ARG_KERNEL_CLOCK      : kernel_clock = atof(optarg); break;
       case ARG_ALL               : cbar_keyword = true; cbr_keyword = true; crm_keyword = true; cb_keyword = true;
 				   cr_keyword = true;   c_keyword = true;
 				   adapt_1x1_to_3x3 = true; adapt_2x2_to_3x3 = true;
@@ -274,11 +484,14 @@ void fn_parse_arguments(int argc, char *argv[]) {
 				   adapt_dense = true; remove_identity = true;
 				   memory_configuration_weights = 32; 
 				   memory_configuration_data = 32; 
-				   num_kernels = 2;
+				   num_kernels = 2; kernel_clock = 240; 
+				   memory_configuration_data = 32; memory_configuration_weights = 32;
 				   break;
       default: exit(1); break;
     }
   }
+
+  if (load_conf) fn_load_conf(conf_file);
 }
 
 /*
@@ -293,6 +506,9 @@ int main(int argc, char *argv[]) {
 
   // we first parse the arguments
   fn_parse_arguments(argc, argv);
+
+  // now we show the configuration
+  fn_print_conf();
 
   // conversion procedure
   if (convert) {
@@ -327,6 +543,9 @@ int main(int argc, char *argv[]) {
 
     if (verbose && verbose_level >= 1) printf("copying initializers into buffers...\n");
     copy_initializers_to_fpga();
+
+    if (verbose && verbose_level >= 1) printf("loading dataset...\n");
+    load_dataset();
 
     if (verbose && verbose_level >= 1) printf("running the graph...\n");
     run_graph();

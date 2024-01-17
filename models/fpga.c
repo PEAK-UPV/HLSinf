@@ -211,7 +211,6 @@ void allocate_buffers() {
 	exit(1);
       }
       // data buffer
-      int num_items = size;   // TODO: remove
       size = size * sizeof(float);
       if (verbose && verbose_level >= 3) printf("  allocating buffer for input model %d (size %ld), name %-50s\n", i, size, aInput[i].name);
       posix_memalign((void **)&aInput[i].data, 4096, size);
@@ -222,8 +221,6 @@ void allocate_buffers() {
         aInput[i].buffer_ddr.param = 0;       
         OCL_CHECK(err, aInput[i].buffer = new cl::Buffer(context, CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, size, &aInput[i].buffer_ddr, &err));
       }
-      // initialization
-      for (int x=0; x<num_items; x++) aInput[i].data[x] = 1.f; // TODO: remove
     }
   }
 

@@ -123,7 +123,7 @@ Some performance results:
 | resnet50 | HLSinf 1.1     | -cpi 8 -cpo 8 -all            | -mcd 32 -mcw 32 -cpi 8 -cpo 8 -k 1         |             1143178  |
 | resnet50 | HLSinf 1.2     | -cpi 4 -cpo 4 -all            | -mcd 32 -mcw 33 -cpi 4 -cpo 4 -k 3 -ocp 64 |              766763  |
 ---------------------------------------------------------------------------------------------------------------------------------
-| custo    | HLSinf 1.0     | -cpi 4 -cpo 4 -all            | -mcd 32 -mcw 32 -cpi 4 -cpo 4 -k 2 -ocp 64 |              491605  |
+| custom   | HLSinf 1.0     | -cpi 4 -cpo 4 -all            | -mcd 32 -mcw 32 -cpi 4 -cpo 4 -k 2 -ocp 64 |              491605  |
 | custom   | HLSinf 1.1     | -cpi 8 -cpo 8 -all            | -mcd 32 -mcw 32 -cpi 8 -cpo 8 -k 1         |              389977  |
 | custom   | HLSinf 1.2     | -cpi 4 -cpo 4 -all            | -mcd 32 -mcw 33 -cpi 4 -cpo 4 -k 3 -ocp 64 |              421997  |
 ---------------------------------------------------------------------------------------------------------------------------------

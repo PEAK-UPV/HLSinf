@@ -13,7 +13,8 @@ struct st_eog {
   int last_HI;
   // parameters for statistics
   int num_runs;
-  unsigned long long accumulated_runtime;  
+  unsigned long long accumulated_runtime;
+  unsigned long long expected_runtime;
 };
 
 // global variables

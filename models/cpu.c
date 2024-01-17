@@ -19,6 +19,34 @@
 #include "in_out.h"
 #include "stats.h"
 #include "fpga.h"
+#include "utils.h"
+
+/*
+ * fn_softmax()
+ *
+ * performs the softmax activation function
+ *
+ */
+void fn_softmax(float *in, float *out, int n) {
+
+    int i;
+    int j;
+    float _max;
+    float sum;
+
+    _max = in[0];
+    // Get the max value
+    for (i = 0; i < n; i++) _max = max(in[i], _max);
+    // Get the sum
+    sum = 0;
+    for (i = 0; i < n; i++) {
+     out[i] = exp(in[i] - _max);
+     sum = sum + out[i];
+    }
+
+    // Get the probabilities
+    for (i = 0; i < n; i++) out[i] = out[i] / sum;
+}
 
 /* 
  * fn_conv2D()
@@ -465,7 +493,7 @@ int fn_get_num_items_from_name(char *name) {
   // input buffer is model input?
   i = get_model_input_id(name);
   if (i != -1) {
-    for (int d=0; d<aInput[i].num_dimensions; d++) num_items = num_items * aInput[i].dimensions[d];
+    for (int d=0; d<aInput[i].num_dimensions; d++) if (aInput[i].dimensions[d] != 0) num_items = num_items * aInput[i].dimensions[d];
     return num_items;
   }
 

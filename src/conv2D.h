@@ -29,15 +29,6 @@
 // Each configuration is optimized for the specific targeted board
 // -----------------------------------------------------------------------------------------------------------
 
-//#define HLSINF_1_15
-//#define HLSINF_1_0  // U200, 4x4,  FP32:             DIRECT_CONV, RELU, STM, CLIPPING,        POOLING, BN, ADD, UPSIZE
-//#define HLSINF_1_1  // U200, 8x8,  MIXED PRECISSION: DIRECT_CONV, RELU,      CLIPPING, SHIFT, POOLING, BN, ADD, UPSIZE
-//#define HLSINF_1_2  // U200, 16x8, MIXED PRECISSION: DIRECT_CONV, RELU,      CLIPPING, SHIFT, POOLING, BN, ADD, UPSIZE
-//#define HLSINF_1_3  // U200, 8x4,  FP32:             DIRECT_CONV, RELU, STM, CLIPPING,        POOLING, BN, ADD, UPSIZE
-
-//#define HLSINF_TEST // U200, 4x8,  FP32:             DIRECT_CONV, RELU, STM, CLIPPING,        POOLING, BN, ADD, UPSIZE
-//#define HLSINF_TEST2 // U200, 6x6,  FP32:             DIRECT_CONV, RELU, STM, CLIPPING,        POOLING, BN, ADD, UPSIZE
-//#define HLSINF_TEST3 // U280, 4x4,  FP32:             DIRECT_CONV, RELU, STM, CLIPPING,        POOLING, BN, ADD, UPSIZE
 
 
 // -----------------------------------------------------------------------------------------------------------
@@ -73,6 +64,8 @@
 // -----------------------------------------------------------------------------------------------------------
 
 // Configuration 1.0: U280, 4x4, FP32: DIRECT_CONV, RELU, STM, CLIPPING, POOLING, BATCH_NORM, ADD, UPSIZE
+// Configuracion 1.0: 2 kernels
+// Includes configuration 1.2: 3 kernels
 #ifdef HLSINF_1_0
 #define ALVEO_U280
 #define PRUEBA_MUL_2
@@ -169,9 +162,10 @@
 #endif
 
 
-// Configuration 1.X: U280, 8x8, MIXED PRECISSION: DIRECT_CONV, RELU, CLIPPING, SHIFT, POOLING, BN, ADD, UPSIZE
-#ifdef HLSINF_1_X
-#define ALVEO_U200
+// Configuration 1.3: U280, 8x8, MIXED PRECISSION: DIRECT_CONV, RELU, CLIPPING, SHIFT, POOLING, BN, ADD, UPSIZE
+#ifdef HLSINF_1_3
+#define ALVEO_U280
+#define PRUEBA_MUL_2
 //#define DSP_OPTIMIZATION
 #define DIRECT_CONV
 #define USE_RELU
@@ -179,17 +173,19 @@
 #define USE_SHIFT
 #define USE_POOLING
 #define USE_BATCH_NORM
+#define USE_BATCH_NORM_RELU
 #define USE_ADD
+#define USE_ADD_RELU
 #define USE_UPSIZE
 //#define USE_STM
-#define CPI                               8
-#define CPO                               8
-#define LOG2_CPO                          3
-#define WMAX                           1024 
+#define CPI                              16
+#define CPO                              16
+#define LOG2_CPO                          4
+#define WMAX                            512
 #define HMAX                            256
 #define READ_BURST_SIZE                  16
 #define STREAMS_DEPTH                    16
-#define DATA_BUFFER_SIZE              32768 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define DATA_BUFFER_SIZE               8192 // 32 rows x 32 cols x (512/CPI) pixels_in
 #define WEIGHT_BUFFER_SIZE             5000
 #define EPSILON_VALUE               0.00001
 #define MIN_DATA_TYPE_VALUE               0
@@ -208,10 +204,62 @@
 #define b_t                      ap_int<32>
 #define conv_t                   ap_int<32>
 #define dout_t                   ap_uint<8>
+#define read_bias_t              float
+#define read_data_t              float
+#define read_filter_t            float
+#define write_data_t             float
 #endif
 
-// HLSINF_1_2: U200, 16x16, MIXED PRECISSION: DIRECT_CONV, RELU, CLIPPING, SHIFT, POOLING, UPSIZE
-#ifdef HLSINF_1_2
+// Configuration 1.4: U280, 32x32, MIXED PRECISSION: DIRECT_CONV, RELU, CLIPPING, SHIFT, POOLING, BN, ADD, UPSIZE
+#ifdef HLSINF_1_4
+#define ALVEO_U280
+#define PRUEBA_MUL_2
+//#define DSP_OPTIMIZATION
+#define DIRECT_CONV
+#define USE_RELU
+#define USE_CLIPPING
+#define USE_SHIFT
+#define USE_POOLING
+#define USE_BATCH_NORM
+#define USE_BATCH_NORM_RELU
+#define USE_ADD
+#define USE_ADD_RELU
+#define USE_UPSIZE
+//#define USE_STM
+#define CPI                              32
+#define CPO                              32
+#define LOG2_CPO                          5
+#define WMAX                            512
+#define HMAX                            256
+#define READ_BURST_SIZE                  16
+#define STREAMS_DEPTH                    16
+#define DATA_BUFFER_SIZE               8192 // 32 rows x 32 cols x (512/CPI) pixels_in
+#define WEIGHT_BUFFER_SIZE             5000
+#define EPSILON_VALUE               0.00001
+#define MIN_DATA_TYPE_VALUE               0
+#define READ_BLOCK_SIZE                  64   // Read block size. READ_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define WRITE_BLOCK_SIZE                 64   // Write block size. WRITE_BLOCK_SIZE * DATA_TYPE_WIDTH must be 512 for max perf.
+#define din_t                    ap_uint<4>
+#define conv_cvt_t               ap_uint<4>
+#define conv_mul_t               ap_int<32>
+#define relu_t                   ap_uint<4>
+#define stm_t                    ap_uint<4>
+#define pool_cvt_t               ap_uint<4>
+#define pool_t                   ap_uint<4>
+#define bn_t                     ap_uint<4>
+#define add_t                    ap_uint<4>
+#define w_t                       ap_int<4>
+#define b_t                      ap_int<32>
+#define conv_t                   ap_int<32>
+#define dout_t                   ap_uint<4>
+#define read_bias_t              float
+#define read_data_t              float
+#define read_filter_t            float
+#define write_data_t             float
+#endif
+
+// HLSINF_1_X: U200, 16x16, MIXED PRECISSION: DIRECT_CONV, RELU, CLIPPING, SHIFT, POOLING, UPSIZE
+#ifdef HLSINF_1_X
 #define ALVEO_U200
 #define DIRECT_CONV
 #define USE_RELU
@@ -249,7 +297,7 @@
 #endif
 
 // Configuration 1.3: U200, 6x6, FP32: DIRECT_CONV, RELU, POOLING, UPSIZE
-#ifdef HLSINF_1_3
+#ifdef HLSINF_1_X
 #define ALVEO_U200
 #define DIRECT_CONV
 #define USE_RELU
@@ -287,8 +335,8 @@
 #define dout_t                   float
 #endif
 
-// Configuration 1.4: U200, 8x8, FP32: DIRECT_CONV, RELU, POOLING, UPSIZE
-#ifdef HLSINF_1_4
+// Configuration 1.X: U200, 8x8, FP32: DIRECT_CONV, RELU, POOLING, UPSIZE
+#ifdef HLSINF_1_X
 #define PRUEBA_MUL_2
 #define ALVEO_U200
 #define DIRECT_CONV
@@ -1493,6 +1541,7 @@ void add                          (int num_pixels, int I_ITER, hls::stream<conv_
 #ifdef DIRECT_CONV
 void direct_conv                  (int H, int W, int PT, int PB, int PL, int PR, int SH, int SW, int num_output_conv_pixels, int I_ITER, hls::stream<din_st> &in, hls::stream<w_st> &k_in, hls::stream<b_st> &b_in, hls::stream<conv_st> &out);
 void mul                          (int num_data_frames, int I_ITER, hls::stream<conv_cvt_st> &in, hls::stream<w_st> &k_in, hls::stream<conv_mul_st> &out);
+
 #endif
 #ifdef DWS_CONV
 void dws_conv(int H, int W, int PT, int PB, int PL, int PR, int SH, int SW, int num_output_conv_pixels, int I_ITER, hls::stream<din_st> &in, hls::stream<w_dw_st> &k_dw_in, hls::stream<w_pw_st> &k_pw_in, hls::stream<b_st> &b_in, hls::stream<conv_st> &out);

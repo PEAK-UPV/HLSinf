@@ -22,6 +22,8 @@
 #include "cpu.h"
 #include "stats.h"
 #include "runner.h"
+#include "opencv.h"
+#include "dataset.h"
 
 #define MAX_EOG_ENTRIES     1000
 #define MAX_EXECUTION_ORDER 1000
@@ -407,7 +409,13 @@ void run_execution_order(int order) {
       if (e!=-1) if (eog[e][order].cpu == false) {
 	if (timings) fn_start_timer(k);
         fn_run_node_on_fpga(eog[e][order].node, k, eog[e][order].first_O, eog[e][order].last_O, eog[e][order].first_HI, eog[e][order].last_HI);
-	if (timings) {fn_stop_timer(k); eog[e][order].accumulated_runtime += fn_get_timer(k); eog[e][order].num_runs++;}
+	if (timings) {
+	  fn_stop_timer(k); 
+	  eog[e][order].accumulated_runtime += fn_get_timer(k); 
+	  eog[e][order].num_runs++;
+	  int n = eog[e][order].node;
+	  eog[e][order].expected_runtime += (aNode[n].I / CPI) * (aNode[n].HI * aNode[n].WI) * ((eog[e][order].last_O - eog[e][order].first_O + 1)/CPO)/kernel_clock;
+	}
       }
     } while (e!=-1);
   }
@@ -419,10 +427,12 @@ void run_execution_order(int order) {
 /*
  * run_graph()
  *
- * This function runs the graph on the FPGA
+ * This function runs the graph on the FPGA/CPU
  *
  */
 void run_graph() {
+
+  fn_print_inference_table_header();
 
   // every group of nodes (in the same run order)  will run and we will collect stats for every run order. We will
   // acount for the number of runs and the accumulated time for the run order
@@ -438,10 +448,56 @@ void run_graph() {
     if (verbose && verbose_level >= 3) printf("      order %d -> %d tasks found\n", order, eog_entries[order]);
   }
 
+  int num_inferences = 0;
+  int num_top1_hits  = 0;
+  int num_top5_hits  = 0;
+
   fn_start_timer(201);
 
-  // now we read the node graph in execution order
-  for (int order=0; order <= max_execution_order; order++) run_execution_order(order);
+  // every dataset label will be run
+  for (int d=0; d<num_dataset_entries; d++) {
+    // every image of the label will be run 
+    for (int f=0; f<aDataset[d].num_files; f++) {
+      // loading
+      fn_start_timer(202);
+      // I x H x W (we assume only one input and located at index 0)
+      // We also asume dimensions is 4 or 3
+      int I = aInput[0].num_dimensions == 4? aInput[0].dimensions[1] : aInput[0].dimensions[0];
+      int H = aInput[0].num_dimensions == 4? aInput[0].dimensions[2] : aInput[0].dimensions[1];
+      int W = aInput[0].num_dimensions == 4? aInput[0].dimensions[3] : aInput[0].dimensions[2];
+      // let's load the image
+      fn_load_image_as_rgb(aDataset[d].filenames[f], H, W, I, aInput[0].data, resize_input, crop_input, mean_normalize_dim0, mean_normalize_dim1, mean_normalize_dim2, std_normalize_dim0, std_normalize_dim1, std_normalize_dim2);
+      fn_stop_timer(202);
+      // inference
+      fn_start_timer(203);
+      // now we run the node graph in execution order
+      for (int order=0; order <= max_execution_order; order++) run_execution_order(order);
+      //
+      num_inferences++;
+      //
+      int predict;
+      float max_value;
+      if (apply_softmax && compute_accuracy) {
+	// num items
+        int num_items = fn_get_num_items_from_name(aOutput[0].name);
+	float *out_softmax = (float *)malloc(sizeof(float) * num_items);
+	fn_softmax(fn_get_buffer_from_name(aOutput[0].name), out_softmax, num_items);
+	//
+	// now accuracy
+	predict = 0;
+	max_value = out_softmax[0];
+	for (int x=0; x<num_items; x++) if (out_softmax[x] > max_value) {max_value = out_softmax[x]; predict = x;}
+	if (predict == d) num_top5_hits++;
+      }
+      fn_stop_timer(203);
+      //
+      float top1_acc = (float)num_top1_hits / (float)num_inferences;
+      float top5_acc = (float)num_top5_hits / (float)num_inferences;
+      fn_print_inference_table_info(aDataset[d].filenames[f], fn_get_timer(202), fn_get_timer(203), predict, max_value, top1_acc, top5_acc);
+    }
+  }
+
+  fn_print_inference_table_bottom();
 
   fn_stop_timer(201);
 
@@ -449,15 +505,15 @@ void run_graph() {
     
   if (timings) {
     // now we print statistics for every run order and task
-    printf("| Graph timing statistics                                                                                                                  |\n");
-    printf("|------------------------------------------------------------------------------------------|-----------------|------------|-----------------|-----------------|\n");
-    printf("| Execution order / task                                                                   | conf.           |   #runs    | accum. runtime  |  avg. runtime   |\n");
-    printf("|------------------------------------------------------------------------------------------|-----------------|------------|-----------------|-----------------|\n");
+    printf("Graph timing statistics\n");
+    printf("|------------------------------------------------------------------------------------------|-----------------|------------|-----------------|-----------------|-----------------|--------|\n");
+    printf("| Execution order / task                                                                   | conf.           |   #runs    | accum. runtime  |  avg. runtime   | HLSinf exp.time | Effic. |\n");
+    printf("|------------------------------------------------------------------------------------------|-----------------|------------|-----------------|-----------------|-----------------|--------|\n");
     for (int order=0; order <= max_execution_order; order++) {
       int nr = num_runs[order];
       unsigned long long crt = accumulated_runtime[order];
       unsigned long long art = crt / nr;
-      printf("| execution order: %4d                                                                    |                 | %10d | %15lld | % 15lld |\n", order, nr, crt, art);
+      printf("| execution order: %4d                                                                    |                 | %10d | %15lld | % 15lld |                 |        |\n", order, nr, crt, art);
       for (int e=0; e<eog_entries[order]; e++) {
 	int n = eog[e][order].node;
 	nr = eog[e][order].num_runs;
@@ -465,9 +521,9 @@ void run_graph() {
 	art = crt / nr;
 	char conf[40];
 	if (is_hlsinf(n)) sprintf(conf, "O: %4d-%4d", eog[e][order].first_O, eog[e][order].last_O); else sprintf(conf, "cpu");
-	printf("| %-88s | %-15s | %10d | %15lld | %15lld |\n", aNode[n].name, conf, nr, crt, art);
+	printf("| %-88s | %-15s | %10d | %15lld | %15lld | %15lld | %6.4f |\n", aNode[n].name, conf, nr, crt, art, eog[e][order].expected_runtime, (float)eog[e][order].expected_runtime / (float)crt);
       }
-      printf("|------------------------------------------------------------------------------------------|-----------------|------------|-----------------|-----------------|\n");
+      printf("|------------------------------------------------------------------------------------------|-----------------|------------|-----------------|-----------------|-----------------|--------|\n");
     }
   }
 }
