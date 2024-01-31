@@ -40,13 +40,13 @@ module READ #(
 );
 
 // wires
-wire [DATA_WIDTH - 1: 0] data_write_w;          // data to write to FIFO
-wire                          write_w;          // write signal to FIFO
-wire                          full_w;           // full signal from FIFO
-wire                          almost_full_w;    // almost_full signal from FIFO
-wire [DATA_WIDTH - 1: 0] data_read_w;           // data read from FIFO
-wire                          next_read_w;      // next_read signal to FIFO
-wire                          empty_w;          // empty signal from FIFO
+wire [DATA_WIDTH - 1: 0] data_write_w;                      // data to write to FIFO
+wire                     write_w;                           // write signal to FIFO
+wire                     full_w;                            // full signal from FIFO
+wire                     almost_full_w;                     // almost_full signal from FIFO
+wire [DATA_WIDTH - 1: 0] data_read_w;                       // data read from FIFO
+wire                     next_read_w;                       // next_read signal to FIFO
+wire                     empty_w;                           // empty signal from FIFO
 
 // registers
 reg [LOG_MAX_ITERS-1:0]          num_iters_r;               // FIFO
@@ -61,13 +61,13 @@ reg [1:0]                        write_fsm_state;           // FSM state for wri
 reg [1:0]                        write_fsm_next_state;      // FSM state for write to downstream
 
 // combinational logic
-assign address_out  = base_address_r;                 // address to the block ream
+assign address_out  = base_address_r;                                      // address to the block ream
 assign request      = module_enabled_r & (read_fsm_state == `FSM_READ);    // read request to the block ram
-assign data_write_w = data_in;                        // data to FIFO
-assign write_w      = valid_in;                       // write signal to FIFO
-assign next_read_w  = write_fsm_state == `FSM_WRITE;  // next_read signal to FIFO
-assign valid_out    = write_fsm_state == `FSM_WRITE;  // valid signal to downstream module
-assign data_out     = data_read_w;                    // data to downstream module
+assign data_write_w = data_in;                                             // data to FIFO
+assign write_w      = valid_in;                                            // write signal to FIFO
+assign next_read_w  = write_fsm_state == `FSM_WRITE;                       // next_read signal to FIFO
+assign valid_out    = write_fsm_state == `FSM_WRITE;                       // valid signal to downstream module
+assign data_out     = data_read_w;                                         // data to downstream module
 
 // modules
 
@@ -181,6 +181,13 @@ always @ (posedge clk) begin
   end
 end
 
+// debug support. When enabled (through the DEBUG define) the module will generate
+// debug information on every specific cycle, depending on the debug conditions implemented
+// the module has a tics counter register to keep up with current cycle
+//
+// in this module whenever a read or write event is performed the associated information is shown as debug
+//
+
 `define DEBUG
 
 `ifdef DEBUG
@@ -191,7 +198,7 @@ end
     else begin
       $display("READ @ cycle %d", tics);
       if (request) $display("%d, READ (read to bram): address_out %x, num_iters %d num_reads %d module_enabled %d", tics, address_out, num_iters_r, num_reads_per_iter_r, module_enabled_r);
-      if (valid_out) $display("%d, READ (forward): data_out %x (full %d almost_full %d empty %d)", tics, data_out, full_w, almost_full_w, empty_w); 
+      if (valid_out) $display("%d, WRITE (forward): data_out %x (full %d almost_full %d empty %d)", tics, data_out, full_w, almost_full_w, empty_w); 
       tics <= tics + 1;
     end
   end

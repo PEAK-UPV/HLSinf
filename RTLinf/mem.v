@@ -41,6 +41,13 @@ always @ (posedge clk) if (write) mem[addr_write] <= data_write;
 // sequential logic for read
 always @ (posedge clk) if (read) begin data_read <= mem[addr_read]; valid_out <= 1; end else begin valid_out <= 0; end
 
+// debug support. When enabled (through the DEBUG define) the module will generate
+// debug information on every specific cycle, depending on the debug conditions implemented
+// the module has a tics counter register to keep up with current cycle
+//
+// in this module whenever a read (valid_out) event occurs the associated information is shown as debug
+//
+
 `define DEBUG
 
 `ifdef DEBUG

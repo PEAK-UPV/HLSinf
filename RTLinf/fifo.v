@@ -74,6 +74,14 @@ always @ (posedge clk) begin
   end
 end
 
+
+// debug support. When enabled (through the DEBUG define) the module will generate
+// debug information on every specific cycle, depending on the debug conditions implemented
+// the module has a tics counter register to keep up with current cycle
+//
+// in this module whenever a write or next_read event occurs, the associated information is displayed
+//
+
 `define DEBUG
 
 `ifdef DEBUG

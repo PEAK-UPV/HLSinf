@@ -1,45 +1,216 @@
 // Module DISTRIBUTE_IN
 //
-// This module distributes input data to outputs based on specific configuration
+// This module distributes input data to outputs based on specific configuration.
+// The module has as NUM_DATA_INPUTS activation input ports. Every such input port
+// has an independent FIFO. Activation pixels are stored in those FIFOs.
+// The module has NUM_WEIGHT_INPUTS ports as well which is equal to the number of output ports (NUM_DATA_OUTPUTS)
+// A single FIFO is used to store the input weights.
+//
+// The module works a given number of iterations and a number of "reads" per iteration. A "read" is consumed
+// when all input data is available and the outputs are available (as well). On the first "read" of a cycle
+// we forward both activations and weights, on the remaining "reads" for the iteration we only care on data.
+// When all "reads" operations of one iteration are consumed we set up a new iteration. When all iterations
+// are consumed the module disables itself.
+// 
+// Output ports are grouped into two output ports. The first one collects all output activations and the second one
+// collects all output weights.
+//
+// Assignement of input activations to outputs depends on the conf_mode parameter. Current modes:
+//    - CONF_MODE_1: Every input activation i is sent to output data i
 //
 
+`define CONF_MODE_0 0
+`define CONF_MODE_1 1
+
 module DISTRIBUTE_IN #(
-    parameter NUM_DATA_INPUTS  = 8,  // number of data inputs
-    parameter DATA_WIDTH       = 8,  // input and output data width
-    parameter NUM_DATA_OUTPUTS = 8,  // number of data outputs
-    parameter LOG_MAX_ITERS = 16,          // number of bits for max iters register
-    parameter LOG_MAX_READS_PER_ITER = 16  // number of bits for max reads per iter
+    parameter NUM_DATA_INPUTS        = 8,                // number of data inputs
+    parameter DATA_WIDTH             = 8,                // input and output data width
+    parameter NUM_DATA_OUTPUTS       = 8,                // number of data outputs
+    parameter LOG_MAX_ITERS          = 16,               // number of bits for max iters register
+    parameter LOG_MAX_READS_PER_ITER = 16,               // number of bits for max reads per iter
+    localparam NUM_WEIGHT_INPUTS     = NUM_DATA_OUTPUTS  // The number of input weights equals the number of outputs
 ) (
   input clk,
   input rst,
 
-  input configure,                                                 // CONFIGURE interface:: configure signal
-  input conf_mode,                                                 // CONFIGURE interface:: configuration mode
-  input [LOG_MAX_ITERS-1:0]          num_iters,                    // CONFIGURE interface:: number of iterations for reads
-  input [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter,           // CONFIGURE interface:: number of reads per iteration  
+  input                                    configure,                    // CONFIGURE interface:: configure signal
+  input                                    conf_mode,                    // CONFIGURE interface:: configuration mode
+  input [LOG_MAX_ITERS-1:0]                num_iters,                    // CONFIGURE interface:: number of iterations for reads
+  input [LOG_MAX_READS_PER_ITER-1:0]       num_reads_per_iter,           // CONFIGURE interface:: number of reads per iteration  
 
-  input [NUM_DATA_INPUTS*DATA_WIDTH-1:0] act_data_in,    // ACTIVATION interface:: data
-  input  [NUM_DATA_INPUTS-1:0]           act_valid_in,   // ACTIVATION interface:: valid
-  output [NUM_DATA_INPUTS-1:0]           act_avail_out,  // ACTIVATION interface:: avail
+  input [NUM_DATA_INPUTS*DATA_WIDTH-1:0]   act_data_in,                  // ACTIVATION interface:: data
+  input  [NUM_DATA_INPUTS-1:0]             act_valid_in,                 // ACTIVATION interface:: valid
+  output [NUM_DATA_INPUTS-1:0]             act_avail_out,                // ACTIVATION interface:: avail
 
-  input [NUM_DATA_OUTPUTS*DATA_WIDTH-1:0] weights_data_in,    // WEIGHTS interface:: data
-  input [NUM_DATA_OUTPUTS-1:0]            weights_valid_in,   // WEIGHTS interface:: valid
-  output [NUM_DATA_OUTPUTS-1:0]           weights_avail_out,  // WEIGHTS interface:: avail
+  input [NUM_WEIGHT_INPUTS*DATA_WIDTH-1:0] weights_data_in,              // WEIGHTS interface:: data
+  input [NUM_WEIGHT_INPUTS-1:0]            weights_valid_in,             // WEIGHTS interface:: valid
+  output[NUM_WEIGHT_INPUTS-1:0]            weights_avail_out,            // WEIGHTS interface:: avail
 
-  output [NUM_DATA_OUTPUTS*DATA_WIDTH-1:0] data_out,  // OUT interface:: data
-  output [NUM_DATA_OUTPUTS-1:0] valid_out,            // OUT interface:: valid
-  input  [NUM_DATA_OUTPUTS-1:0] avail_in              // OUT interface:: avail
+  output [NUM_DATA_OUTPUTS*DATA_WIDTH-1:0] data_out,                     // OUT1 interface:: data
+  output [NUM_DATA_OUTPUTS-1:0]            valid_out,                    // OUT1 interface:: valid
+  input  [NUM_DATA_OUTPUTS-1:0]            avail_in,                     // OUT1 interface:: avail
+  
+  output [NUM_DATA_OUTPUTS*DATA_WIDTH-1:0] weights_data_out,             // OUT2 interface:: data
+  output [NUM_DATA_OUTPUTS-1:0]            weights_valid_out,            // OUT2 interface:: valid
+  input  [NUM_DATA_OUTPUTS-1:0]            weights_avail_in              // OUT2 interface:: avail
+
 );
 
 // wires
+wire [DATA_WIDTH - 1: 0] data_write_w[NUM_DATA_INPUTS];                  // data to write to FIFO
+wire                     write_w[NUM_DATA_INPUTS];                       // write signal to FIFO
+wire                     full_w[NUM_DATA_INPUTS];                        // full signal from FIFO
+wire                     almost_full_w[NUM_DATA_INPUTS];                 // almost_full signal from FIFO
+wire [DATA_WIDTH - 1: 0] data_read_w[NUM_DATA_INPUTS];                   // data read from FIFO
+wire                     next_read_w[NUM_DATA_INPUTS];                   // next_read signal to FIFO
+wire                     empty_w[NUM_DATA_INPUTS];                       // empty signal from FIFO
+//
+wire [NUM_WEIGHT_INPUTS*DATA_WIDTH - 1: 0] weights_write_w;              // data to write to weights FIFO
+wire                                       weights_write_w;              // write signal to weights FIFO
+wire                                       weights_full_w;               // full signal from weights FIFO
+wire                                       weights_almost_full_w;        // almost_full signal from weights FIFO
+wire [NUM_WEIGHT_INPUTS*DATA_WIDTH - 1: 0] weights_data_read_w;          // data read from weights FIFO
+wire                                       weights_next_read_w;          // next_read signal to weights FIFO
+wire                                       weights_empty_w;              // empty signal from weights FIFO
+//
+wire first_read_cycle_w;                                                 // whether we are in the first "read" cycle/operation
+wire perform_operation_w;                                                // when set indicates a "read" operation is performed (input data sent to output)
+
 
 // registers
+reg [LOG_MAX_ITERS-1:0]          num_iters_r;               // FIFO
+reg [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter_r;      // number of reads per iteration (down counter)
+reg [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter_copy_r; // copy of number of reads per iteration
+reg [LOG_MAX_ADDRESS-1:0]        conf_mode_r;               // configuration mode
+reg                              module_enabled_r;          // module enabled
 
-// combinational logic
+
+// combinational logic (activation FIFOs)
+generate
+  for (i=0; i<NUM_DATA_INPUTS; i=i+1) begin
+    assign data_write_w[i] = act_data_in[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH];   // data to write to the FIFO
+    assign write_w[i]      = act_valid_in[i];                                  // FIFO write signal
+    assign act_avail_out   = ~almost_full_w[i] & ~full_w[i];                   // avail signal from FIFO       
+  end
+endgenerate
+
+// combinational logic (weights FIFOs)
+assign weights_write_w   = weights_data_in;                                     // data to write to the weights FIFO
+assign weights_write_w   = weights_valid_in;                                    // weights FIFO write signal
+assign weights_avail_out = ~weights_almost_full_w & ~weights_full_w;            // avail signal from weights FIFO       
+
+// combinational logic (perform operation)
+// first_read_cycle_w indicates whether we are on the first "read" cycle of an iteration
+// perform_operation_w indicates whether in this cycle we perform the operation. We perform the operation if we have all data at the inputs
+// available (on a first read cycle we need to have both weights and activations, on the remaining cycles we need only the activations)
+assign first_read_cycle_w  = moduled_enabled_r & (num_reads_per_iter_r == num_reads_per_iter_copy_r);
+assign perform_operation_w = first_read_cycle_w ? ~weights_empty_w & ~(|empty_w) & |avail_in & weights_avail_in :
+                                                  ~(|empty_w) & |avail_in;
+
+// combinational logic (outputs of the module)
+generate
+  for (i=0; i<NUM_LANES;i?i+1) begin
+    assign data_out[((i+1)*NUM_LANES)-1:i*NUM_LANES] = (conf_mode_r == CONF_MODE_1) ? data_read_w[i] : 0;
+    assign valid_out = perform_operation_w;
+  end
+endgenerate
+assign weights_data_out = weights_data_read_w;
+assign weights_valid_out = first_read_cycle_w & perform_operation_w;
 
 // modules
 
+// every activation input port has an independent FIFO
+generate
+  for (i=0; i<NUM_DATA_INPUTS; i=i+1) begin
+    FIFO #(
+      .NUM_SLOTS     ( 4               ),
+      .LOG_NUM_SLOTS ( 2               ),
+      .DATA_WIDTH    ( DATA_WIDTH      )
+    ) fifo_in_data (
+      .clk           ( clk             ),
+      .rst           ( rst             ),
+      .data_write    ( data_write_w[i] ),
+      .write         ( write_w[i]      ),
+      .full          ( full_w[i]       ),
+      .almost_full   ( almost_full_w[i]),
+      .data_read     ( data_read_w[i]  ),
+      .next_read     ( next_read_w[i]  ),
+      .empty         ( empty_w[i]      )
+    );
+  end
+endgenerate
+
+// All input weights are stored in the same FIFO
+FIFO #(
+  .NUM_SLOTS         ( 4                           ),
+  .LOG_NUM_SLOTS     ( 2                           ),
+  .DATA_WIDTH        ( NUM_DATA_OUTPUTS*DATA_WIDTH )
+) fifo_in_weights (
+  .clk               ( clk                         ),
+  .rst               ( rst                         ),
+  .data_write        ( weights_write_w             ),
+  .write             ( weights_write_w             ),
+  .full              ( weights_full_w              ),
+  .almost_full       ( weights_almost_full_w       ),
+  .data_read         ( weights_data_read_w         ),
+  .next_read         ( weights_next_read_w         ),
+  .empty             ( weights_empty_w             )
+);
+
 // sequential logic
+
+// configuration and iterations
+//
+always @ (posedge clk) begin
+  if (~rst) begin
+    num_iters_r          <= 0;
+    num_reads_per_iter_r <= 0;
+    conf_mode_r          <= `CONF_MODE_0;
+    module_enabled_r     <= 1'b0;
+  end else begin
+    if (configure) begin
+      num_iters_r               <= num_iters;
+      num_reads_per_iter_r      <= num_reads_per_iter;
+      num_reads_per_iter_copy_r <= num_reads_per_iter;
+      conf_mode_r               <= conf_mode;
+      module_enabled_r          <= 1'b1;
+    end else begin
+      if (num_reads_per_iter_r == 1) begin
+        if (num_iters_r == 1) module_enabled_r <= 0;
+        else begin
+          num_iters_r          <= num_iters_r - 1;
+          num_reads_per_iter_r <= num_reads_per_iter_copy_r;
+        end
+      end else begin
+        if (perform_operation_w) begin
+          num_reads_per_iter_r <= num_reads_per_iter_r - 1;
+          base_address_r       <= base_address_r + 1;
+        end
+      end
+    end
+  end 
+end
+
+// debug support. When enabled (through the DEBUG define) the module will generate
+// debug information on every specific cycle, depending on the debug conditions implemented
+// the module has a tics counter register to keep up with current cycle
+//
+// in this module whenever a "read" cycle is performed the associated information is shown as debug
+//
+
+`define DEBUG
+
+`ifdef DEBUG
+  reg [15:0] tics;
+
+  always @ (posedge clk) begin
+    if (~rst) tics <= 0;
+    else begin
+      if (perform_operation_w) $display("DISTRIBUTE_IN: cycle %d, activations: valid %d data %x . weights: valid %d data %x", tics, valid_out, data_out, weights_valid_out, weights_data_out);
+      tics <= tics + 1;
+    end
+  end
+`endif
 
 endmodule
 
@@ -80,5 +251,7 @@ module DISTRIBUTE_OUT #(
 // modules
 
 // sequential logic
+
+
 
 endmodule
