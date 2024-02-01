@@ -26,8 +26,7 @@ module tb_2;
   reg [`LOG_MAX_ADDRESS-1:0]          base_address_r;
   reg                                 conf_mode_r;
   
-  reg [`NUM_LANES-1:0]                avail_in_r;
-  reg [`NUM_LANES-1:0]                weight_avail_in_r;
+  reg [`NUM_LANES-1:0]                mul_avail_in_r;
   
   // wires between MEM and READ for activations
   wire                                 read_w[`NUM_INPUTS-1:0];
@@ -70,6 +69,8 @@ module tb_2;
 
   // output wires for mul modules
   wire [2 * (`GROUP_SIZE * `DATA_WIDTH) - 1 : 0]          mul_data_out_w[`NUM_LANES-1:0];
+  wire [`NUM_LANES-1:0]                                   mul_avail_out;
+  wire [`NUM_LANES-1:0]                                   mul_weight_avail_out;
   wire [`NUM_LANES-1:0]                                   mul_valid_out_w;
 
   // MEM and READ modules for activations
@@ -175,35 +176,35 @@ module tb_2;
     .weights_avail_out      ( weight_avail_in_w      ),
     .data_out               ( distribute_data_out_w              ),
     .valid_out              ( distribute_valid_out_w             ),
-    .avail_in               ( avail_in_r              ),
+    .avail_in               ( mul_avail_out                     ),
     .weights_data_out       ( distribute_weight_data_out_w      ),
     .weights_valid_out      ( distribute_weight_valid_out_w     ),
-    .weights_avail_in       ( weight_avail_in_r      )
+    .weights_avail_in       ( mul_weight_avail_out              )
   );
 
   // mul modules
   generate
   for (i=0; i<`NUM_LANES; i=i+1) begin
     MUL #(
-      .GROUP_SIZE           ( `GROUP_SIZE ),
-      .DATA_WIDTH           ( `DATA_WIDTH ),
-      .LOG_MAX_ITERS        ( `LOG_MAX_ITERS ),
-      .LOG_MAX_READS_PER_ITER ( `LOG_MAX_READS_PER_ITER )
+      .GROUP_SIZE           ( `GROUP_SIZE                                                                          ),
+      .DATA_WIDTH           ( `DATA_WIDTH                                                                          ),
+      .LOG_MAX_ITERS        ( `LOG_MAX_ITERS                                                                       ),
+      .LOG_MAX_READS_PER_ITER ( `LOG_MAX_READS_PER_ITER                                                            )
     ) mul (
-      .clk                    ( clk_r ),
-      .rst                    ( rst_r ),
-      .configure              ( configure_r ),
-      .num_iters              ( num_iters_r ),
-      .num_reads_per_iter     ( num_reads_per_iter_r ),
-      .act_data_in            ( ),
-      .act_valid_in           ( ),
-      .act_avail_out          ( ),
-      .weight_data_in         ( ),
-      .weight_valid_in        ( ),
-      .weight_avail_out       ( ),
-      .data_out               ( ),
-      .valid_out              ( ),
-      .avail_in               ( )
+      .clk                    ( clk_r                                                                              ),
+      .rst                    ( rst_r                                                                              ),
+      .configure              ( configure_r                                                                        ),
+      .num_iters              ( num_iters_r                                                                        ),
+      .num_reads_per_iter     ( num_reads_per_iter_r                                                               ),
+      .act_data_in            ( distribute_data_out_w[((i+1)*`GROUP_SIZE*`DATA_WIDTH)-1:i*`GROUP_SIZE*`DATA_WIDTH] ),
+      .act_valid_in           ( distribute_valid_out_w[i]                                                          ),
+      .act_avail_out          ( mul_avail_out[i]                                                                   ),
+      .weight_data_in         ( distribute_weight_data_out_w[((i+1)*`DATA_WIDTH)-1:i*`DATA_WIDTH]                  ),
+      .weight_valid_in        ( distribute_weight_valid_out_w[i]                                                   ),
+      .weight_avail_out       ( mul_weight_avail_out[i]                                                            ),
+      .data_out               ( mul_data_out[i]                                                                    ),
+      .valid_out              ( mul_valid_out[i]                                                                   ),
+      .avail_in               ( mul_avail_in_r[r]                                                                  )
     );
   end
   endgenerate
@@ -219,8 +220,7 @@ initial begin
   num_iters_r <= `NUM_ITERS;
   num_reads_per_iter_r <= `NUM_OPS_PER_ITER;
   for (j=0; j<`NUM_LANES; j=j+1) begin
-    avail_in_r[j] <= 1;
-    weight_avail_in_r[j] <= 1;
+    mul_avail_in_r[j] <= 1;
   end
   base_address_r <= 32;
   conf_mode_r = 1;
@@ -238,14 +238,6 @@ initial begin
 
   #10
   configure_r <= 0;
-
-  #20
-  $display("no available!!!!");
-  avail_in_r[0] <= 0;
-
-  #1000
-  $display("available again");
-  avail_in_r[0] <= 1;
 
 end
 
