@@ -82,7 +82,7 @@ end
 // in this module whenever a write or next_read event occurs, the associated information is displayed
 //
 
-`define DEBUG
+//`define DEBUG
 
 `ifdef DEBUG
 reg [63:0] tics;

@@ -65,8 +65,8 @@ assign address_out  = base_address_r;                                      // ad
 assign request      = module_enabled_r & (read_fsm_state == `FSM_READ);    // read request to the block ram
 assign data_write_w = data_in;                                             // data to FIFO
 assign write_w      = valid_in;                                            // write signal to FIFO
-assign next_read_w  = write_fsm_state == `FSM_WRITE;                       // next_read signal to FIFO
-assign valid_out    = write_fsm_state == `FSM_WRITE;                       // valid signal to downstream module
+assign next_read_w  = avail_in & ~empty_w & (write_fsm_state == `FSM_WRITE);          // next_read signal to FIFO
+assign valid_out    = avail_in & ~empty_w & (write_fsm_state == `FSM_WRITE);          // valid signal to downstream module
 assign data_out     = data_read_w;                                         // data to downstream module
 
 // modules
@@ -196,9 +196,9 @@ end
   always @ (posedge clk) begin
     if (~rst) tics <= 0;
     else begin
-      $display("READ @ cycle %d", tics);
-      if (request) $display("%d, READ (read to bram): address_out %x, num_iters %d num_reads %d module_enabled %d", tics, address_out, num_iters_r, num_reads_per_iter_r, module_enabled_r);
-      if (valid_out) $display("%d, WRITE (forward): data_out %x (full %d almost_full %d empty %d)", tics, data_out, full_w, almost_full_w, empty_w); 
+      if (configure) $display("READ (configure): cycle %d", tics);
+      if (request) $display("READ (read to bram): cycle %d, address_out %x, num_iters %d num_reads %d module_enabled %d", tics, address_out, num_iters_r, num_reads_per_iter_r, module_enabled_r);
+      if (valid_out) $display("WRITE (forward): cycle %d, data_out %x (full %d almost_full %d empty %d)", tics, data_out, full_w, almost_full_w, empty_w); 
       tics <= tics + 1;
     end
   end

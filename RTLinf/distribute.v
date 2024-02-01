@@ -24,6 +24,7 @@
 
 module DISTRIBUTE_IN #(
     parameter NUM_DATA_INPUTS        = 8,                // number of data inputs
+    parameter GROUP_SIZE             = 4,                // group size
     parameter DATA_WIDTH             = 8,                // input and output data width
     parameter NUM_DATA_OUTPUTS       = 8,                // number of data outputs
     parameter LOG_MAX_ITERS          = 16,               // number of bits for max iters register
@@ -38,15 +39,15 @@ module DISTRIBUTE_IN #(
   input [LOG_MAX_ITERS-1:0]                num_iters,                    // CONFIGURE interface:: number of iterations for reads
   input [LOG_MAX_READS_PER_ITER-1:0]       num_reads_per_iter,           // CONFIGURE interface:: number of reads per iteration  
 
-  input [NUM_DATA_INPUTS*DATA_WIDTH-1:0]   act_data_in,                  // ACTIVATION interface:: data
+  input [NUM_DATA_INPUTS*GROUP_SIZE*DATA_WIDTH-1:0]   act_data_in,                  // ACTIVATION interface:: data
   input  [NUM_DATA_INPUTS-1:0]             act_valid_in,                 // ACTIVATION interface:: valid
   output [NUM_DATA_INPUTS-1:0]             act_avail_out,                // ACTIVATION interface:: avail
 
   input [NUM_WEIGHT_INPUTS*DATA_WIDTH-1:0] weights_data_in,              // WEIGHTS interface:: data
-  input [NUM_WEIGHT_INPUTS-1:0]            weights_valid_in,             // WEIGHTS interface:: valid
-  output[NUM_WEIGHT_INPUTS-1:0]            weights_avail_out,            // WEIGHTS interface:: avail
+  input                                    weights_valid_in,             // WEIGHTS interface:: valid
+  output                                   weights_avail_out,            // WEIGHTS interface:: avail
 
-  output [NUM_DATA_OUTPUTS*DATA_WIDTH-1:0] data_out,                     // OUT1 interface:: data
+  output [NUM_DATA_OUTPUTS*GROUP_SIZE*DATA_WIDTH-1:0] data_out,                     // OUT1 interface:: data
   output [NUM_DATA_OUTPUTS-1:0]            valid_out,                    // OUT1 interface:: valid
   input  [NUM_DATA_OUTPUTS-1:0]            avail_in,                     // OUT1 interface:: avail
   
@@ -57,15 +58,15 @@ module DISTRIBUTE_IN #(
 );
 
 // wires
-wire [DATA_WIDTH - 1: 0] data_write_w[NUM_DATA_INPUTS];                  // data to write to FIFO
-wire                     write_w[NUM_DATA_INPUTS];                       // write signal to FIFO
-wire                     full_w[NUM_DATA_INPUTS];                        // full signal from FIFO
-wire                     almost_full_w[NUM_DATA_INPUTS];                 // almost_full signal from FIFO
-wire [DATA_WIDTH - 1: 0] data_read_w[NUM_DATA_INPUTS];                   // data read from FIFO
-wire                     next_read_w[NUM_DATA_INPUTS];                   // next_read signal to FIFO
-wire                     empty_w[NUM_DATA_INPUTS];                       // empty signal from FIFO
+wire [(GROUP_SIZE*DATA_WIDTH) - 1: 0] data_write_w[NUM_DATA_INPUTS-1:0];                  // data to write to FIFO
+wire [NUM_DATA_INPUTS-1:0]            write_w;                       // write signal to FIFO
+wire [NUM_DATA_INPUTS-1:0]            full_w;                        // full signal from FIFO
+wire [NUM_DATA_INPUTS-1:0]            almost_full_w;                 // almost_full signal from FIFO
+wire [(GROUP_SIZE*DATA_WIDTH) - 1: 0] data_read_w[NUM_DATA_INPUTS-1:0];                   // data read from FIFO
+wire [NUM_DATA_INPUTS-1:0]            next_read_w;                   // next_read signal to FIFO
+wire [NUM_DATA_INPUTS-1:0]            empty_w;                                          // empty signal from FIFO
 //
-wire [NUM_WEIGHT_INPUTS*DATA_WIDTH - 1: 0] weights_write_w;              // data to write to weights FIFO
+wire [NUM_WEIGHT_INPUTS*DATA_WIDTH - 1: 0] weights_data_write_w;         // data to write to weights FIFO
 wire                                       weights_write_w;              // write signal to weights FIFO
 wire                                       weights_full_w;               // full signal from weights FIFO
 wire                                       weights_almost_full_w;        // almost_full signal from weights FIFO
@@ -81,36 +82,39 @@ wire perform_operation_w;                                                // when
 reg [LOG_MAX_ITERS-1:0]          num_iters_r;               // FIFO
 reg [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter_r;      // number of reads per iteration (down counter)
 reg [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter_copy_r; // copy of number of reads per iteration
-reg [LOG_MAX_ADDRESS-1:0]        conf_mode_r;               // configuration mode
+reg                              conf_mode_r;               // configuration mode
 reg                              module_enabled_r;          // module enabled
 
+genvar i;
 
 // combinational logic (activation FIFOs)
 generate
   for (i=0; i<NUM_DATA_INPUTS; i=i+1) begin
-    assign data_write_w[i] = act_data_in[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH];   // data to write to the FIFO
+    assign data_write_w[i] = act_data_in[((i+1)*GROUP_SIZE*DATA_WIDTH)-1:i*GROUP_SIZE*DATA_WIDTH];   // data to write to the FIFO
     assign write_w[i]      = act_valid_in[i];                                  // FIFO write signal
-    assign act_avail_out   = ~almost_full_w[i] & ~full_w[i];                   // avail signal from FIFO       
+    assign act_avail_out[i]= ~almost_full_w[i] & ~full_w[i];                   // avail signal from FIFO       
+    assign next_read_w[i]  = perform_operation_w;
   end
 endgenerate
 
 // combinational logic (weights FIFOs)
-assign weights_write_w   = weights_data_in;                                     // data to write to the weights FIFO
-assign weights_write_w   = weights_valid_in;                                    // weights FIFO write signal
-assign weights_avail_out = ~weights_almost_full_w & ~weights_full_w;            // avail signal from weights FIFO       
+assign weights_data_write_w = weights_data_in;                                     // data to write to the weights FIFO
+assign weights_write_w      = weights_valid_in;                                    // weights FIFO write signal
+assign weights_avail_out    = ~weights_almost_full_w & ~weights_full_w;            // avail signal from weights FIFO       
+assign weights_next_read_w  = perform_operation_w & first_read_cycle_w;
 
 // combinational logic (perform operation)
 // first_read_cycle_w indicates whether we are on the first "read" cycle of an iteration
 // perform_operation_w indicates whether in this cycle we perform the operation. We perform the operation if we have all data at the inputs
 // available (on a first read cycle we need to have both weights and activations, on the remaining cycles we need only the activations)
-assign first_read_cycle_w  = moduled_enabled_r & (num_reads_per_iter_r == num_reads_per_iter_copy_r);
+assign first_read_cycle_w  = module_enabled_r & (num_reads_per_iter_r == num_reads_per_iter_copy_r);
 assign perform_operation_w = first_read_cycle_w ? ~weights_empty_w & ~(|empty_w) & |avail_in & weights_avail_in :
                                                   ~(|empty_w) & |avail_in;
 
 // combinational logic (outputs of the module)
 generate
-  for (i=0; i<NUM_LANES;i?i+1) begin
-    assign data_out[((i+1)*NUM_LANES)-1:i*NUM_LANES] = (conf_mode_r == CONF_MODE_1) ? data_read_w[i] : 0;
+  for (i=0; i<NUM_DATA_OUTPUTS;i=i+1) begin
+    assign data_out[((i+1)*GROUP_SIZE*DATA_WIDTH)-1:i*GROUP_SIZE*DATA_WIDTH] = (conf_mode_r == `CONF_MODE_1) ? data_read_w[i] : 0;
     assign valid_out = perform_operation_w;
   end
 endgenerate
@@ -125,7 +129,7 @@ generate
     FIFO #(
       .NUM_SLOTS     ( 4               ),
       .LOG_NUM_SLOTS ( 2               ),
-      .DATA_WIDTH    ( DATA_WIDTH      )
+      .DATA_WIDTH    ( GROUP_SIZE*DATA_WIDTH      )
     ) fifo_in_data (
       .clk           ( clk             ),
       .rst           ( rst             ),
@@ -148,7 +152,7 @@ FIFO #(
 ) fifo_in_weights (
   .clk               ( clk                         ),
   .rst               ( rst                         ),
-  .data_write        ( weights_write_w             ),
+  .data_write        ( weights_data_write_w        ),
   .write             ( weights_write_w             ),
   .full              ( weights_full_w              ),
   .almost_full       ( weights_almost_full_w       ),
@@ -184,7 +188,6 @@ always @ (posedge clk) begin
       end else begin
         if (perform_operation_w) begin
           num_reads_per_iter_r <= num_reads_per_iter_r - 1;
-          base_address_r       <= base_address_r + 1;
         end
       end
     end
@@ -206,7 +209,7 @@ end
   always @ (posedge clk) begin
     if (~rst) tics <= 0;
     else begin
-      if (perform_operation_w) $display("DISTRIBUTE_IN: cycle %d, activations: valid %d data %x . weights: valid %d data %x", tics, valid_out, data_out, weights_valid_out, weights_data_out);
+      if (perform_operation_w) $display("DISTRIBUTE_IN: cycle %d, first_cycle: %d activations: valid %d data %x . weights: valid %d data %x", tics, first_read_cycle_w, valid_out, data_out, weights_valid_out, weights_data_out);
       tics <= tics + 1;
     end
   end

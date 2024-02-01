@@ -87,7 +87,7 @@ reg [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter_copy_r; // copy of number of
 reg                              module_enabled_r;          // module enabled
 
 // combinational logic
-assign act_avail_out       = ~almost_full_w & ~full_w;
+assign avail_out           = ~almost_full_w & ~full_w;
 assign perform_operation_w = module_enabled_r & (~empty_w) & avail_in;
 assign data_out            = data_read_w;  // for the moment no alignment
 assign valid_out           = perform_operation_w;
@@ -138,7 +138,7 @@ always @ (posedge clk) begin
           num_reads_per_iter_r <= num_reads_per_iter_copy_r;
         end
       end else begin
-        if (read_fsm_state == `FSM_READ) begin
+        if (perform_operation_w) begin
           num_reads_per_iter_r <= num_reads_per_iter_r - 1;
         end
       end

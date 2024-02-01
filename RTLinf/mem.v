@@ -48,7 +48,7 @@ always @ (posedge clk) if (read) begin data_read <= mem[addr_read]; valid_out <=
 // in this module whenever a read (valid_out) event occurs the associated information is shown as debug
 //
 
-`define DEBUG
+//`define DEBUG
 
 `ifdef DEBUG
   reg [15:0] tics;

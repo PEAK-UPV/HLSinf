@@ -24,7 +24,7 @@ module MUL #(
   input [LOG_MAX_ITERS-1:0]                num_iters,               // CONFIGURE interface:: number of iterations for reads
   input [LOG_MAX_READS_PER_ITER-1:0]       num_reads_per_iter,      // CONFIGURE interface:: number of reads per iteration
 
-  input [GROUPS_SIZE * DATA_WIDTH - 1 : 0] act_data_in,             // ACTIVATION interface:: activations data
+  input [GROUP_SIZE * DATA_WIDTH - 1 : 0]  act_data_in,             // ACTIVATION interface:: activations data
   input                                    act_valid_in,            // ACTIVATION interface:: activation valid in
   output                                   act_avail_out,           // ACTIVATION interface:: avail
 
@@ -54,9 +54,11 @@ reg [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter_copy_r; // copy of number of
 reg                              module_enabled_r;          // module enabled
 reg [DATA_WIDTH-1:0]             weight_r;                  // weight
 
+genvar i;
+
 // combinational logic
 assign act_avail_out = ~almost_full_w & ~full_w;
-assign weights_avail_out = 1'b1;                                         // always ready
+assign weight_avail_out = 1'b1;                                         // always ready
 assign perform_operation_w = module_enabled_r & (~empty_w) & avail_in;
 generate
   for (i=0; i<GROUP_SIZE; i=i+1) begin
@@ -91,7 +93,7 @@ always @ (posedge clk) begin
   if (~rst) begin
     weight_r <= 0;
   end else begin
-    if (weights_valid_in) weight_r <= weights_data_in;
+    if (weight_valid_in) weight_r <= weight_data_in;
   end
 end
 
@@ -120,7 +122,7 @@ always @ (posedge clk) begin
           num_reads_per_iter_r <= num_reads_per_iter_copy_r;
         end
       end else begin
-        if (read_fsm_state == `FSM_READ) begin
+        if (perform_operation_w) begin
           num_reads_per_iter_r <= num_reads_per_iter_r - 1;
         end
       end
