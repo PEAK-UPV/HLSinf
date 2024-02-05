@@ -49,7 +49,7 @@ wire                     next_read_w;                       // next_read signal 
 wire                     empty_w;                           // empty signal from FIFO
 
 // registers
-reg [LOG_MAX_ITERS-1:0]          num_iters_r;               // FIFO
+reg [LOG_MAX_ITERS-1:0]          num_iters_r;               // number of iterations (down counter)
 reg [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter_r;      // number of reads per iteration (down counter)
 reg [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter_copy_r; // copy of number of reads per iteration
 reg [LOG_MAX_ADDRESS-1:0]        base_address_r;            // base address to access block ram (up counter)

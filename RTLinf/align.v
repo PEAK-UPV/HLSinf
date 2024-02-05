@@ -1,6 +1,6 @@
 // ALIGN module
 //
-// This module perfoms alings the input and sends it downstream
+// This module alings the input and sends it downstream
 //
 // The module has one input port which receives a set of items (GROUP_SIZE items). Input data is stored in a FIFO.
 //
@@ -8,7 +8,7 @@
 // iteration will perform a given number of "read" operations.
 // 
 // A "read" operation will be run when data is available at the input and output is available. In a "read" operation
-// the module will align the input. Currently a transparent move between input and output is performed
+// the module will align the input. Currently a transparent move between input and output is performed.
 // 
 //
 
@@ -49,13 +49,13 @@
 //   - if (Wcur>Wout) Wcur = Wcur - Woff
 
 module ALIGN #(
-    parameter GROUP_SIZE = 8,                // number of inputs (group size)
-    parameter DATA_WIDTH = 8,                // input data width (output width is input width)
-    parameter LOG_MAX_ITERS = 16,            // number of bits for max iters register
-    parameter LOG_MAX_READS_PER_ITER = 16    // number of bits for max reads per iter
+    parameter GROUP_SIZE = 8,                                        // number of inputs (group size)
+    parameter DATA_WIDTH = 8,                                        // input data width (output width is input width)
+    parameter LOG_MAX_ITERS = 16,                                    // number of bits for max iters register
+    parameter LOG_MAX_READS_PER_ITER = 16                            // number of bits for max reads per iter
   )(
-    input clk,
-    input rst,
+    input                                   clk,                     // clock signal
+    input                                   rst,                     // reset signal
   
     input                                   configure,               // CONFIGURE interface:: configure signal
     input [LOG_MAX_ITERS-1:0]               num_iters,               // CONFIGURE interface:: number of iterations for reads
@@ -70,7 +70,7 @@ module ALIGN #(
     input                                   avail_in                 // OUT interface: avail
   );
   
-  // wires
+// wires
 wire [GROUP_SIZE * DATA_WIDTH - 1: 0] data_write_w;                      // data to write to FIFO
 wire                                  write_w;                           // write signal to FIFO
 wire                                  full_w;                            // full signal from FIFO
