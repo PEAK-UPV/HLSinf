@@ -8,10 +8,10 @@
 //
 
 module ACC #(
-    parameter NUM_INPUTS             = 8,                            // number of inputs (outpus == inputs)
     parameter DATA_WIDTH             = 8,                            // input data width (output width = input width)
     parameter GROUP_SIZE             = 4,                            // group size
     parameter LOG_MAX_ITERS          = 16,                           // number of bits for max iters register
+    parameter NUM_ADDRESSES          = 65536,                        // number of addresses
     parameter LOG_MAX_READS_PER_ITER = 16                            // number of bits for max reads per iter
   )(
     input clk,                                                       // clock signal
@@ -73,12 +73,13 @@ assign data_out            = data_added_w;                               // outp
 assign valid_out           = perform_operation_w & last_iteration_w;     // valid out to downstream module
 // memory
 assign mem_data_write_w    = data_added_w;             // data to write is the output of the adders
-assign mem_addr_write_w    = num_reads_per_iter_w;     // address to write is the current iteration (no problem if we have decreassing addresses)
+assign mem_addr_write_w    = num_reads_per_iter_r;     // address to write is the current iteration (no problem if we have decreassing addresses)
 assign mem_write_w         = perform_operation_w;      // write whenever we perform the operation
-assign mem_addr_read_w     = num_reads_per_iter_w;     // address to read is the current iteration (no problem if we have decreassing addresses)
+assign mem_addr_read_w     = num_reads_per_iter_r;     // address to read is the current iteration (no problem if we have decreassing addresses)
+
 // adders (one per item in the group size)
 generate
-  for (i=0; i<GROUP_SIZE; i++) begin
+  for (i=0; i<GROUP_SIZE; i=i+1) begin
     assign data_added_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] = 
                 first_iteration_w ? 0 : data_read_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] + 
                 mem_data_read_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH];
@@ -107,7 +108,7 @@ FIFO #(
 // memory (unregistered output)
 MEMU #(
   .DATA_WIDTH      ( GROUP_SIZE * DATA_WIDTH  ),
-  .NUM_ADDRESSES   ( MAX_READS_PER_ITER       ),
+  .NUM_ADDRESSES   ( NUM_ADDRESSES            ),
   .LOG_MAX_ADDRESS ( LOG_MAX_READS_PER_ITER   )
 ) mem (
   .clk             ( clk                      ),

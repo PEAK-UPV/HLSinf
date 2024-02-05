@@ -61,7 +61,7 @@ assign perform_operation_w = ~empty_w;                             // perform op
 assign address_out  = base_address_r;                              // address to downstream
 assign data_write_w = data_in;                                     // data to FIFO
 assign write_w      = valid_in;                                    // write signal to FIFO
-assign valid_out    = avail_in & ~empty_w & perform_operation_w;   // valid signal to downstream module
+assign valid_out    = perform_operation_w;                         // valid signal to downstream module (no avail signal needed as mem is always ready)
 //
 assign data_out     = data_read_w > max_clip_r ? max_clip_r : 
                       data_read_w < min_clip_r ? min_clip_r :
@@ -113,7 +113,7 @@ always @ (posedge clk) begin
       if (num_reads_per_iter_r == 1) begin
         module_enabled_r <= 0;
       end else begin
-        if (read_fsm_state == `FSM_READ) begin
+        if (perform_operation_w) begin
           num_reads_per_iter_r <= num_reads_per_iter_r - 1;
         end
       end

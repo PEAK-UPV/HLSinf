@@ -83,7 +83,7 @@ module MEMU #(
   input                         write,      // WRITE interface:: write signal
 
   input [LOG_MAX_ADDRESS-1:0]   addr_read,  // READ interface:: address
-  output reg [DATA_WIDTH-1:0]   data_read   // READ interface:: data
+  output [DATA_WIDTH-1:0]       data_read   // READ interface:: data
 );
 
 // wires

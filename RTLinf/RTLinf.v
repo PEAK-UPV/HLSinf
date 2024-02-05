@@ -27,8 +27,6 @@ module RTLinf #(
   input [DATA_WIDTH-1:0]                  max_clip,           // max cliping value
   input                                   conf_mode_in,       // conf mode for distribute_in module
   input                                   conf_mode_out       // conf mode for distribute_out module
-
-
 );
 
 // genvars
@@ -42,8 +40,8 @@ wire [NUM_INPUTS-1:0]             act_mem2read_valid_w[NUM_INPUTS-1:0];
 
 // wires between MEM and READ modules (weights)
 wire                              weight_mem2read_read_w;
-wire [LOG_MAX_ADDRESS-1:0]        weight_mem2read_addr_read_w;
-wire [NUM_LANES*DATA_WIDTH-1:0]   weight_mem2read_data_read_w;
+wire [LOG_MAX_ADDRESS-1:0]        weight_mem2read_addr_w;
+wire [NUM_LANES*DATA_WIDTH-1:0]   weight_mem2read_data_w;
 wire                              weight_mem2read_valid_w;
 
 // wires between READ and DISTRIBUTE_IN modules
@@ -64,10 +62,15 @@ wire [NUM_LANES*DATA_WIDTH-1:0]             weight_distr2mul_data_w;
 wire [NUM_LANES-1:0]                        weight_distr2mul_valid_w;
 wire [NUM_LANES-1:0]                        weight_distr2mul_avail_w;
 
-// wires between MUL and ACC modules
-wire [2*GROUP_SIZE*DATA_WIDTH-1:0]          mul2acc_data_w[NUM_LANES-1:0];
-wire [NUM_LANES-1:0]                        mul2acc_valid_w[NUM_LANES-1:0];
-wire [NUM_LANES-1:0]                        mul2acc_avail_w[NUM_LANES-1:0];
+// wires between MUL and ALIGN modules
+wire [2*GROUP_SIZE*DATA_WIDTH-1:0]          mul2align_data_w[NUM_LANES-1:0];
+wire [NUM_LANES-1:0]                        mul2align_valid_w[NUM_LANES-1:0];
+wire [NUM_LANES-1:0]                        mul2align_avail_w[NUM_LANES-1:0];
+
+// wires between ALIGN and ACC modules
+wire [2*GROUP_SIZE*DATA_WIDTH-1:0]          align2acc_data_w[NUM_LANES-1:0];
+wire [NUM_LANES-1:0]                        align2acc_valid_w[NUM_LANES-1:0];
+wire [NUM_LANES-1:0]                        align2acc_avail_w[NUM_LANES-1:0];
 
 // wires between ACC and DISTRIBUTE_IN modules
 wire [2*GROUP_SIZE*DATA_WIDTH-1:0]          acc2distr_data_w[NUM_LANES-1:0];
@@ -83,7 +86,7 @@ wire [NUM_OUTPUTS-1:0]                         distr2write_avail_w;
 // wires between WRITE and MEM modules
 wire [GROUP_SIZE*DATA_WIDTH-1:0]               write2mem_data_w[NUM_OUTPUTS-1:0];
 wire [LOG_MAX_ADDRESS-1:0]                     write2mem_addr_w[NUM_OUTPUTS-1:0];
-wire [NUM_OUPUTS-1:0]                          write2mem_valid_w;
+wire [NUM_OUTPUTS-1:0]                         write2mem_valid_w;
 
 // combinational logic
 
@@ -104,8 +107,6 @@ generate
   end
 endgenerate
 
-// registers
-
 // activation MEM and read modules
 generate
 for ( x=0; x<NUM_INPUTS; x=x+1) begin
@@ -121,21 +122,21 @@ for ( x=0; x<NUM_INPUTS; x=x+1) begin
     .write           ( 0                       ),
     .addr_read       ( act_mem2read_addr_w[i]  ),
     .read            ( act_mem2read_read_w[i]  ),
-    .data_read       ( act_mem2read_data[i]    ),
+    .data_read       ( act_mem2read_data_w[i]  ),
     .valid_out       ( act_mem2read_valid_w[i] )
   );
   READ #(
-    .DATA_WIDTH             ( GROUP_SIZE * ACTIVATION_WIDTH ),
+    .DATA_WIDTH             ( GROUP_SIZE * DATA_WIDTH       ),
     .LOG_MAX_ITERS          ( LOG_MAX_ITERS                 ),
     .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER        ),
     .LOG_MAX_ADDRESS        ( LOG_MAX_ADDRESS               )
   ) act_read_m (
     .clk                    ( clk                           ),
     .rst                    ( rst                           ),
-    .configure              ( configure_r                   ),
-    .num_iters              ( num_iters_r                   ),
-    .num_reads_per_iter     ( num_reads_per_iter_r          ),
-    .base_address           ( base_address_r                ),
+    .configure              ( configure                     ),
+    .num_iters              ( num_iters                     ),
+    .num_reads_per_iter     ( num_reads_per_iter            ),
+    .base_address           ( read_address                  ),
     .valid_in               ( act_mem2read_valid_w[i]       ),
     .data_in                ( act_mem2read_data_w[i]        ),
     .address_out            ( act_mem2read_addr_w[i]        ),
@@ -160,22 +161,22 @@ MEM #(
   .write           ( 0                       ),
   .addr_read       ( weight_mem2read_addr_w  ),
   .read            ( weight_mem2read_read_w  ),
-  .data_read       ( weight_mem2read_data    ),
+  .data_read       ( weight_mem2read_data_w  ),
   .valid_out       ( weight_mem2read_valid_w )
 );
 
 READ #(
-  .DATA_WIDTH             ( NUM_LANES * ACTIVATION_WIDTH ),
+  .DATA_WIDTH             ( NUM_LANES * DATA_WIDTH        ),
   .LOG_MAX_ITERS          ( LOG_MAX_ITERS                 ),
   .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER        ),
   .LOG_MAX_ADDRESS        ( LOG_MAX_ADDRESS               )
 ) weight_read_m (
   .clk                    ( clk                           ),
   .rst                    ( rst                           ),
-  .configure              ( configure_r                   ),
-  .num_iters              ( num_iters_r                   ),
-  .num_reads_per_iter     ( num_reads_per_iter_r          ),
-  .base_address           ( base_address_r                ),
+  .configure              ( configure                     ),
+  .num_iters              ( num_iters                     ),
+  .num_reads_per_iter     ( num_reads_per_iter            ),
+  .base_address           ( read_address                  ),
   .valid_in               ( weight_mem2read_valid_w       ),
   .data_in                ( weight_mem2read_data_w        ),
   .address_out            ( weight_mem2read_addr_w        ),
@@ -196,10 +197,10 @@ DISTRIBUTE_IN #(
 ) distribute_in_m (
  .clk                    ( clk                             ),
  .rst                    ( rst                             ),
- .configure              ( configure_r                     ),
- .conf_mode              ( conf_mode_in_r                  ),
- .num_iters              ( num_iters_r                     ),
- .num_reads_per_iter     ( num_reads_per_iter_r            ),
+ .configure              ( configure                       ),
+ .conf_mode              ( conf_mode_in                    ),
+ .num_iters              ( num_iters                       ),
+ .num_reads_per_iter     ( num_reads_per_iter              ),
  .act_data_in            ( act_read2distr_combined_data_w  ),
  .act_valid_in           ( act_read2distr_combined_valid_w ),
  .act_avail_out          ( act_read2distr_avail_w          ),
@@ -220,135 +221,129 @@ generate
     MUL #(
       .GROUP_SIZE             ( GROUP_SIZE ),
       .DATA_WIDTH             ( DATA_WIDTH ),
-      .LOG_MAX_ITERS          (),
-      .LOG_MAX_READS_PER_ITER ()
+      .LOG_MAX_ITERS          ( LOG_MAX_ITERS ),
+      .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER )
     ) mul_m (
-      .clk                    (),
-      .rst                    (),
-      .configure              (),
-      .num_iters              (),
-      .num_reads_per_iter     (),
-      .act_data_in            (),
-      .act_valid_in           (),
-      .act_avail_out          (),
-      .weight_data_in         (),
-      .weight_valid_in        (),
-      .weight_avail_out       (),
-      .data_out               (),
-      .valid_out              (),
-      .avail_in               ()
+      .clk                    ( clk                  ),
+      .rst                    ( rst                  ),
+      .configure              ( configure            ),
+      .num_iters              ( num_iters            ),
+      .num_reads_per_iter     ( num_reads_per_iter   ),
+      .act_data_in            ( act_distr2mul_data_w[((i+1)*GROUP_SIZE*DATA_WIDTH)-1:i*GROUP_SIZE*DATA_WIDTH] ),
+      .act_valid_in           ( act_distr2mul_valid_w[i] ),
+      .act_avail_out          ( act_distr2mul_avail_w[i] ),
+      .weight_data_in         ( weight_distr2mul_data_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] ),
+      .weight_valid_in        ( weight_distr2mul_valid_w[i] ),
+      .weight_avail_out       ( weight_distr2mul_avail_w[i] ),
+      .data_out               ( mul2align_data_w[i]           ),
+      .valid_out              ( mul2align_valid_w[i]          ),
+      .avail_in               ( mul2align_avail_w[i]          )
     );
 
-  ALIGN #(
-    .NUM_INPUTS             (),
-    .DATA_WIDTH             (),
-    .LOG_MAX_ITERS          (),
-    .LOG_MAX_READS_PER_ITER ()
+    ALIGN #(
+      .GROUP_SIZE             ( GROUP_SIZE ),
+      .DATA_WIDTH             ( DATA_WIDTH ),
+      .LOG_MAX_ITERS          ( LOG_MAX_ITERS ),
+      .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER )
   ) align_m (
-    .clk                    (),
-    .rst                    (),
-    .configure              (),
-    .num_iters              (),
-    .num_reads_per_iter     (),
-    .data_in                (),
-    .valid_in               (),
-    .avail_out              (),
-    .data_out               (),
-    .valid_out              (),
-    .avail_in               ()
+    .clk                    ( clk                  ),
+    .rst                    ( rst                  ),
+    .configure              ( configure            ),
+    .num_iters              ( num_iters            ),
+    .num_reads_per_iter     ( num_reads_per_iter   ),
+    .data_in                ( mul2align_data_w[i]  ),
+    .valid_in               ( mul2align_valid_w[i] ),
+    .avail_out              ( mul2align_avail_w[i] ),
+    .data_out               ( align2acc_data_w[i]  ),
+    .valid_out              ( align2acc_valid_w[i] ),
+    .avail_in               ( align2acc_avail_w[i] )
   );  
 
   ACC #(
-    .NUM_INPUTS             (),
-    .DATA_WIDTH             (),
-    .LOG_MAX_ITERS          (),
-    .LOG_MAX_READS_PER_ITER ()
+    .GROUP_SIZE             ( GROUP_SIZE             ),
+    .DATA_WIDTH             ( DATA_WIDTH             ),
+    .NUM_ADDRESSES          ( NUM_ADDRESSES          ),
+    .LOG_MAX_ITERS          ( LOG_MAX_ITERS          ),
+    .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER )
   ) acc_m (
-    .clk                    (),
-    .rst                    (),
-    .configure              (),
-    .num_iters              (),
-    .num_reads_per_iter     (),
-    .data_in                (),
-    .valid_in               (),
-    .avail_out              (),
-    .data_out               (),
-    .valid_out              (),
-    .avail_in               ()
+    .clk                    ( clk                    ),
+    .rst                    ( rst                    ),
+    .configure              ( configure              ),
+    .num_iters              ( num_iters              ),
+    .num_reads_per_iter     ( num_reads_per_iter     ),
+    .data_in                ( align2acc_data_w[i]    ),
+    .valid_in               ( align2acc_valid_w[i]   ),
+    .avail_out              ( align2acc_avail_w[i]   ),
+    .data_out               ( acc2distr_data_w[i]    ),
+    .valid_out              ( acc2distr_valid_w[i]   ),
+    .avail_in               ( acc2distr_avail_w[i]   )
   );
   end    
 endgenerate
 
 // distribute_out module
 DISTRIBUTE_OUT #(
- .NUM_DATA_INPUTS        (),
- .DATA_WIDTH             (),
- .NUM_DATA_OUTPUTS       (),
- .LOG_MAX_ITERS          (),
- .LOG_MAX_READS_PER_ITER ()
+ .NUM_DATA_INPUTS        ( NUM_LANES                 ),
+ .GROUP_SIZE             ( GROUP_SIZE                ),
+ .DATA_WIDTH             ( DATA_WIDTH                ),
+ .NUM_DATA_OUTPUTS       ( NUM_OUTPUTS               ),
+ .LOG_MAX_ITERS          ( LOG_MAX_ITERS             ),
+ .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER    )
 ) distribute_out_m (
- .clk                    (),
- .rst                    (),
- .configure              (),
- .conf_mode              (),
- .num_iters              (),
- .num_reads_per_iter     (),
- .data_in                (),
- .valid_in               (),
- .avail_out              (),
- .data_out               (),
- .valid_out              (),
- .avail_in               ()
+ .clk                    ( clk                       ),
+ .rst                    ( rst                       ),
+ .configure              ( configure                 ),
+ .conf_mode              ( conf_mode_out             ),
+ .num_iters              ( num_iters                 ),
+ .num_reads_per_iter     ( num_reads_per_iter        ),
+ .data_in                ( acc2distr_combined_data_w ),
+ .valid_in               ( acc2distr_valid_w         ),
+ .avail_out              ( acc2distr_avail_w         ),
+ .data_out               ( distr2write_data_w        ),
+ .valid_out              ( distr2write_valid_w       ),
+ .avail_in               ( distr2write_avail_w       )
 );
 
-// write modules
+// WRITE and MEM  modules
 generate
   for ( x=0; x<NUM_OUTPUTS; x=x+1) begin
     WRITE #(
-      .NUM_INPUTS             (),
-      .INPUT_DATA_WIDTH       (),
-      .OUTPUT_DATA_WIDTH      (),
-      .LOG_MAX_ITERS          (),
-      .LOG_MAX_READS_PER_ITER (),
-      .LOG_MAX_ADDRESS        ()
+      .DATA_WIDTH             ( DATA_WIDTH             ),
+      .LOG_MAX_ITERS          ( LOG_MAX_ITERS          ),
+      .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER )
     ) write_mem_m (
-      .clk                    (),
-      .rst                    (),
-      .configure              (),
-      .num_iters              (),
-      .num_reads_per_iter     (),
-      .base_address           (),
-      .min_clip               (),
-      .max_clip               (),
-      .data_in                (),
-      .valid_in               (),
-      .avail_out              (),
-      .data_out               (),
-      .address_out            (),
-      .valid_out              ()
+      .clk                    ( clk                                                                             ),
+      .rst                    ( rst                                                                             ),
+      .configure              ( configure                                                                       ),
+      .num_iters              ( num_iters                                                                       ),
+      .num_reads_per_iter     ( num_reads_per_iter                                                              ),
+      .base_address           ( write_address                                                                   ),
+      .min_clip               ( min_clip                                                                        ),
+      .max_clip               ( max_clip                                                                        ),
+      .data_in                ( distr2write_data_w[((i+1)*2*GROUP_SIZE*DATA_WIDTH)-1:i*2*GROUP_SIZE*DATA_WIDTH] ),
+      .valid_in               ( distr2write_valid_w[i] ),
+      .avail_out              ( distr2write_avail_w[i] ),
+      .data_out               ( write2mem_data_w[i]    ),
+      .address_out            ( write2mem_addr_w[i]    ),
+      .valid_out              ( write2mem_valid_w[i]   )
     );
-  end
-endgenerate
   
-// output memories
-generate
-  for ( x=0; x<NUM_OUTPUTS; x=x+1) begin
     MEM #(
-      .DATA_WIDTH      (),
-      .LOG_MAX_ADDRESS ()
+      .DATA_WIDTH      ( DATA_WIDTH        ),
+      .NUM_ADDRESSES   ( NUM_ADDRESSES     ),
+      .LOG_MAX_ADDRESS ( LOG_MAX_ADDRESS   )
     ) output_mem_m (
-      .clk             (),
-      .data_write      (),
-      .addr_write      (),
-      .write           (),
-      .addr_read       (),
-      .read            (),
-      .datsa_read      ()
+      .clk             ( clk                  ),
+      .rst             ( rst                  ),
+      .data_write      ( write2mem_data_w[i]  ),
+      .addr_write      ( write2mem_addr_w[i]  ),
+      .write           ( write2mem_valid_w[i] ),
+      .addr_read       ( 0                    ),
+      .read            ( 0                    ),
+      .data_read       (                      ),
+      .valid_out       (                      )
     );
   end
 endgenerate
-
-
-// sequential logic
 
 endmodule

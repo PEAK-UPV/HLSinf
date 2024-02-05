@@ -280,9 +280,9 @@ genvar i;
 // combinational logic (FIFOs)
 generate
   for (i=0; i<NUM_DATA_INPUTS; i=i+1) begin
-    assign data_write_w[i] = act_data_in[((i+1)*GROUP_SIZE*DATA_WIDTH)-1:i*GROUP_SIZE*DATA_WIDTH];   // data to write to the FIFO
-    assign write_w[i]      = act_valid_in[i];                                  // FIFO write signal
-    assign act_avail_out[i]= ~almost_full_w[i] & ~full_w[i];                   // avail signal from FIFO       
+    assign data_write_w[i] = data_in[((i+1)*GROUP_SIZE*DATA_WIDTH)-1:i*GROUP_SIZE*DATA_WIDTH];   // data to write to the FIFO
+    assign write_w[i]      = valid_in[i];                                  // FIFO write signal
+    assign avail_out[i]= ~almost_full_w[i] & ~full_w[i];                   // avail signal from FIFO       
     assign next_read_w[i]  = perform_operation_w;
   end
 endgenerate
