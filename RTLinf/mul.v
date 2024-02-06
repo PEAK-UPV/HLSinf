@@ -57,15 +57,20 @@ reg [DATA_WIDTH-1:0]             weight_r;                  // weight
 genvar i;
 
 // combinational logic
-assign act_avail_out = ~almost_full_w & ~full_w;
 assign weight_avail_out = 1'b1;                                         // always ready
 assign perform_operation_w = module_enabled_r & (~empty_w) & avail_in;
 generate
   for (i=0; i<GROUP_SIZE; i=i+1) begin
-    assign data_out[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] = data_read_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] * weight_r;
+    assign data_out[((i+1)*2*DATA_WIDTH)-1:i*2*DATA_WIDTH] = data_read_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] * weight_r;
   end
 endgenerate
 assign valid_out = perform_operation_w;
+
+// FIFO write and read
+assign data_write_w = act_data_in;
+assign write_w = act_valid_in;
+assign act_avail_out = ~almost_full_w & ~full_w;
+assign next_read_w = perform_operation_w;
 
 // modules
 

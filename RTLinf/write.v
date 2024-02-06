@@ -15,6 +15,7 @@
 `define FSM_WRITE 2
 
 module WRITE #(
+    parameter GROUP_SIZE = 4,                                      // group size
     parameter DATA_WIDTH = 8,                                      // data width
     parameter LOG_MAX_READS_PER_ITER = 16,                         // number of bits for max reads per iter
     parameter LOG_MAX_ADDRESS = 16,                                // number of bits for addresses
@@ -29,21 +30,21 @@ module WRITE #(
   input [OUTPUT_DATA_WIDTH-1:0]      min_clip,                     // CONFIGURE interface:: clip minimum value
   input [OUTPUT_DATA_WIDTH-1:0]      max_clip,                     // CONFIGURE interface:: clip maximum value
 
-  input [DATA_WIDTH-1:0]             data_in,                      // IN interface:: input valid data
+  input [GROUP_SIZE*DATA_WIDTH-1:0]  data_in,                      // IN interface:: input valid data
   input                              valid_in,                     // IN interface:: input valid signal
   output                             avail_out,                    // IN interface:: avail signal
 
-  output [OUTPUT_DATA_WIDTH-1:0]     data_out,                     // OUT interface:: output data
-  output [LOG_MAX_ADDRESS-1:0]       address_out,                  // OUT interface:: address
-  output                             valid_out                     // OUT interface:: valid
+  output [GROUP_SIZE*OUTPUT_DATA_WIDTH-1:0] data_out,              // OUT interface:: output data
+  output [LOG_MAX_ADDRESS-1:0]              address_out,           // OUT interface:: address
+  output                                    valid_out              // OUT interface:: valid
 );
 
 // wires
-wire [DATA_WIDTH - 1: 0] data_write_w;                      // data to write to FIFO
+wire [GROUP_SIZE*DATA_WIDTH - 1: 0] data_write_w;           // data to write to FIFO
 wire                     write_w;                           // write signal to FIFO
 wire                     full_w;                            // full signal from FIFO
 wire                     almost_full_w;                     // almost_full signal from FIFO
-wire [DATA_WIDTH - 1: 0] data_read_w;                       // data read from FIFO
+wire [GROUP_SIZE*DATA_WIDTH - 1: 0] data_read_w;                       // data read from FIFO
 wire                     next_read_w;                       // next_read signal to FIFO
 wire                     empty_w;                           // empty signal from FIFO
 // 
@@ -57,15 +58,25 @@ reg [OUTPUT_DATA_WIDTH-1:0]      max_clip_r;                // max clip value
 reg                              module_enabled_r;          // module enabled
 
 // combinational logic
+assign avail_out    = ~full_w & ~almost_full_w;
 assign perform_operation_w = ~empty_w;                             // perform operation if data available at the input
 assign address_out  = base_address_r;                              // address to downstream
 assign data_write_w = data_in;                                     // data to FIFO
 assign write_w      = valid_in;                                    // write signal to FIFO
+assign next_read_w  = perform_operation_w;
 assign valid_out    = perform_operation_w;                         // valid signal to downstream module (no avail signal needed as mem is always ready)
 //
-assign data_out     = data_read_w > max_clip_r ? max_clip_r : 
-                      data_read_w < min_clip_r ? min_clip_r :
-                      data_read_w;                                 // data to downstream module
+
+genvar i;
+
+generate
+  for (i=0; i<GROUP_SIZE; i=i+1) begin
+    assign data_out[((i+1)*OUTPUT_DATA_WIDTH)-1:i*OUTPUT_DATA_WIDTH] = 
+	                                                 data_read_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] > max_clip_r ? max_clip_r : 
+                                                         data_read_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] < min_clip_r ? min_clip_r :
+                                                         data_read_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH]; // data to downstream module
+  end
+endgenerate
 
 // modules
 
@@ -73,7 +84,7 @@ assign data_out     = data_read_w > max_clip_r ? max_clip_r :
 FIFO #(
   .NUM_SLOTS     ( 4               ),
   .LOG_NUM_SLOTS ( 2               ),
-  .DATA_WIDTH    ( DATA_WIDTH      )
+  .DATA_WIDTH    ( GROUP_SIZE * DATA_WIDTH      )
 ) fifo_in (
   .clk           ( clk             ),
   .rst           ( rst             ),
@@ -115,6 +126,7 @@ always @ (posedge clk) begin
       end else begin
         if (perform_operation_w) begin
           num_reads_per_iter_r <= num_reads_per_iter_r - 1;
+	  base_address_r <= base_address_r + 1;
         end
       end
     end
@@ -136,7 +148,7 @@ end
   always @ (posedge clk) begin
     if (~rst) tics <= 0;
     else begin
-      if (valid_out) $display("WRITE: cycle %d, data_out %x", tics, data_out); 
+      if (perform_operation_w) $display("WRITE: cycle %d, data_out %x", tics, data_out); 
       tics <= tics + 1;
     end
   end

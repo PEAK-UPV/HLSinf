@@ -18,7 +18,8 @@ module READ #(
     parameter DATA_WIDTH = 8,                                      // data width
     parameter LOG_MAX_ITERS = 16,                                  // number of bits for max iters register
     parameter LOG_MAX_READS_PER_ITER = 16,                         // number of bits for max reads per iter
-    parameter LOG_MAX_ADDRESS = 16                                 // number of bits for addresses
+    parameter LOG_MAX_ADDRESS = 16,                                 // number of bits for addresses
+    parameter TYPE = "unspecified"                                 // module type
 )(
   input clk,                                                       // clock input
   input rst,                                                       // reset input
@@ -122,7 +123,7 @@ always @ (posedge clk) begin
       end else begin
         if (read_fsm_state == `FSM_READ) begin
           num_reads_per_iter_r <= num_reads_per_iter_r - 1;
-          base_address_r <= base_address_r + 1;
+          if (request) base_address_r <= base_address_r + 1;  // address increments only if we perform a read to the BRAM)
         end
       end
     end
@@ -197,8 +198,8 @@ end
     if (~rst) tics <= 0;
     else begin
       if (configure) $display("READ (configure): cycle %d", tics);
-      if (request) $display("READ (read to bram): cycle %d, address_out %x, num_iters %d num_reads %d module_enabled %d", tics, address_out, num_iters_r, num_reads_per_iter_r, module_enabled_r);
-      if (valid_out) $display("WRITE (forward): cycle %d, data_out %x (full %d almost_full %d empty %d)", tics, data_out, full_w, almost_full_w, empty_w); 
+      if (request) $display("READ (type %s, read from bram): cycle %d, address_out %x, num_iters %d num_reads %d module_enabled %d", TYPE, tics, address_out, num_iters_r, num_reads_per_iter_r, module_enabled_r);
+      if (valid_out) $display("READ (type %s, forward): cycle %d, data_out %x (full %d almost_full %d empty %d)", TYPE, tics, data_out, full_w, almost_full_w, empty_w); 
       tics <= tics + 1;
     end
   end

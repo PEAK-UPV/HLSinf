@@ -62,8 +62,11 @@ reg                              module_enabled_r;                       // modu
 genvar i;
 
 // combinational logic 
-// to upstream module
+// to upstream module (via FIFO)
+assign data_write_w        = data_in;
+assign write_w             = valid_in;
 assign avail_out           = ~almost_full_w & ~full_w;                   // avail out to upstream module
+assign next_read_w         = perform_operation_w;
 // module and iterations
 assign perform_operation_w = module_enabled_r & (~empty_w) & avail_in;   // perform operation when enabled, with input data and output available
 assign first_iteration_w   = num_iters_r == num_iters_copy_r;            // is this first iteration?
@@ -81,8 +84,8 @@ assign mem_addr_read_w     = num_reads_per_iter_r;     // address to read is the
 generate
   for (i=0; i<GROUP_SIZE; i=i+1) begin
     assign data_added_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] = 
-                first_iteration_w ? 0 : data_read_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] + 
-                mem_data_read_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH];
+                first_iteration_w ?  data_read_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] : 
+		data_read_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] + mem_data_read_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH];
   end
 endgenerate
 
@@ -171,7 +174,7 @@ end
   always @ (posedge clk) begin
     if (~rst) tics <= 0;
     else begin
-      if (perform_operation_w) $display("ACC: cycle %d", tics);
+      if (perform_operation_w) $display("ACC: cycle %d data_added %d", tics, data_added_w);
       tics <= tics + 1;
     end
   end

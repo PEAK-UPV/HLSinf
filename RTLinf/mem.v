@@ -7,7 +7,8 @@
 module MEM #(
     parameter DATA_WIDTH = 8,               // data width
     parameter NUM_ADDRESSES = 65536,        // number of addresses
-    parameter LOG_MAX_ADDRESS = 16          // number of bits for addresses
+    parameter LOG_MAX_ADDRESS = 16,         // number of bits for addresses
+    parameter ID = 0                        // identifier (useful for debug and initialization for simulation)
 )(
   input clk,                                // clock input
   input rst,                                // needed for debug
@@ -29,9 +30,29 @@ reg [DATA_WIDTH-1:0]    mem[NUM_ADDRESSES-1:0];
 
 integer i;
 begin initial
-for (i=0; i<NUM_ADDRESSES; i=i+1) mem[i] <= i;
+if (DATA_WIDTH==8) begin
+  for (i=0; i<NUM_ADDRESSES; i=i+1) mem[i] <= i+1; 
+end
 end
 
+begin initial
+if (DATA_WIDTH==16) begin
+  for (i=0; i<NUM_ADDRESSES; i=i+1) mem[i] <= (((i*2)+2) << 8) + ((i*2)+1);
+end
+end
+
+begin initial
+if (DATA_WIDTH==32) begin
+  for (i=0; i<NUM_ADDRESSES; i=i+1) mem[i] <= (((i*4)+4) << 24) + (((i*4)+3) << 16) + (((i*4)+2) << 8) + ((i*4)+1);
+end
+end
+
+begin initial
+if (DATA_WIDTH==64) begin
+  for (i=0; i<NUM_ADDRESSES; i=i+1) mem[i] <= (((i*8)+8) << 56) + (((i*8)+7) << 48) + (((i*8)+6) << 40) + (((i*8)+5) << 32) +
+                                               (((i*8)+4) << 24) + (((i*8)+3) << 16) + (((i*8)+2) << 8) + ((i*8)+1);
+end
+end
 
 // sequential logic for write logic
 always @ (posedge clk) if (write) mem[addr_write] <= data_write;
@@ -46,7 +67,7 @@ always @ (posedge clk) if (read) begin data_read <= mem[addr_read]; valid_out <=
 // in this module whenever a read (valid_out) event occurs the associated information is shown as debug
 //
 
-//`define DEBUG
+`define DEBUG
 
 `ifdef DEBUG
   reg [15:0] tics;
@@ -54,7 +75,8 @@ always @ (posedge clk) if (read) begin data_read <= mem[addr_read]; valid_out <=
   always @ (posedge clk) begin
     if (~rst) tics <= 0;
     else begin
-      if (valid_out) $display("MEM: cycle %d data_out %x", tics, data_read);
+      if (valid_out) $display("MEM (read): cycle %d data_out %x", tics, data_read);
+      if (write) $display("MEM (write): cycle %d address %x data %x", tics, addr_write, data_write);
       tics <= tics + 1;
     end
   end

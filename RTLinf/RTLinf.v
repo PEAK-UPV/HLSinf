@@ -5,10 +5,10 @@
 //
 
 module RTLinf #(
-  parameter GROUP_SIZE             = 2,    // group size
+  parameter GROUP_SIZE             = 1,    // group size
   parameter DATA_WIDTH             = 8,    // data width
   parameter NUM_INPUTS             = 1,    // number of inputs
-  parameter NUM_LANES              = 9,    // number of lanes
+  parameter NUM_LANES              = 1,    // number of lanes
   parameter NUM_OUTPUTS            = 1,    // number of outputs
   parameter LOG_MAX_ITERS          = 16,   // number of bits for max iters
   parameter LOG_MAX_READS_PER_ITER = 16,   // number of bits for reads_per_iter
@@ -109,7 +109,7 @@ endgenerate
 
 // activation MEM and read modules
 generate
-for ( x=0; x<NUM_INPUTS; x=x+1) begin
+for ( i=0; i<NUM_INPUTS; i=i+1) begin
   MEM #(
     .DATA_WIDTH      ( GROUP_SIZE * DATA_WIDTH ),
     .NUM_ADDRESSES   ( NUM_ADDRESSES           ),
@@ -129,7 +129,8 @@ for ( x=0; x<NUM_INPUTS; x=x+1) begin
     .DATA_WIDTH             ( GROUP_SIZE * DATA_WIDTH       ),
     .LOG_MAX_ITERS          ( LOG_MAX_ITERS                 ),
     .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER        ),
-    .LOG_MAX_ADDRESS        ( LOG_MAX_ADDRESS               )
+    .LOG_MAX_ADDRESS        ( LOG_MAX_ADDRESS               ),
+    .TYPE                   ( "activations"                 )
   ) act_read_m (
     .clk                    ( clk                           ),
     .rst                    ( rst                           ),
@@ -169,13 +170,14 @@ READ #(
   .DATA_WIDTH             ( NUM_LANES * DATA_WIDTH        ),
   .LOG_MAX_ITERS          ( LOG_MAX_ITERS                 ),
   .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER        ),
-  .LOG_MAX_ADDRESS        ( LOG_MAX_ADDRESS               )
+  .LOG_MAX_ADDRESS        ( LOG_MAX_ADDRESS               ),
+  .TYPE                   ( "weights"                     )
 ) weight_read_m (
   .clk                    ( clk                           ),
   .rst                    ( rst                           ),
   .configure              ( configure                     ),
-  .num_iters              ( num_iters                     ),
-  .num_reads_per_iter     ( num_reads_per_iter            ),
+  .num_iters              ( 1                             ),   // weights are read, one per iteration (thus, only one iteration)
+  .num_reads_per_iter     ( num_iters                     ),
   .base_address           ( read_address                  ),
   .valid_in               ( weight_mem2read_valid_w       ),
   .data_in                ( weight_mem2read_data_w        ),
@@ -217,7 +219,7 @@ DISTRIBUTE_IN #(
 
 // MUL, ALIGN, ACC modules
 generate
-  for (x=0; x<NUM_LANES; x=x+1) begin
+  for (i=0; i<NUM_LANES; i=i+1) begin
     MUL #(
       .GROUP_SIZE             ( GROUP_SIZE ),
       .DATA_WIDTH             ( DATA_WIDTH ),
@@ -242,7 +244,7 @@ generate
 
     ALIGN #(
       .GROUP_SIZE             ( GROUP_SIZE ),
-      .DATA_WIDTH             ( DATA_WIDTH ),
+      .DATA_WIDTH             ( 2*DATA_WIDTH ),
       .LOG_MAX_ITERS          ( LOG_MAX_ITERS ),
       .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER )
   ) align_m (
@@ -261,7 +263,7 @@ generate
 
   ACC #(
     .GROUP_SIZE             ( GROUP_SIZE             ),
-    .DATA_WIDTH             ( DATA_WIDTH             ),
+    .DATA_WIDTH             ( 2*DATA_WIDTH           ),
     .NUM_ADDRESSES          ( NUM_ADDRESSES          ),
     .LOG_MAX_ITERS          ( LOG_MAX_ITERS          ),
     .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER )
@@ -285,7 +287,7 @@ endgenerate
 DISTRIBUTE_OUT #(
  .NUM_DATA_INPUTS        ( NUM_LANES                 ),
  .GROUP_SIZE             ( GROUP_SIZE                ),
- .DATA_WIDTH             ( DATA_WIDTH                ),
+ .DATA_WIDTH             ( 2*DATA_WIDTH              ),
  .NUM_DATA_OUTPUTS       ( NUM_OUTPUTS               ),
  .LOG_MAX_ITERS          ( LOG_MAX_ITERS             ),
  .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER    )
@@ -306,16 +308,16 @@ DISTRIBUTE_OUT #(
 
 // WRITE and MEM  modules
 generate
-  for ( x=0; x<NUM_OUTPUTS; x=x+1) begin
+  for ( i=0; i<NUM_OUTPUTS; i=i+1) begin
     WRITE #(
-      .DATA_WIDTH             ( DATA_WIDTH             ),
-      .LOG_MAX_ITERS          ( LOG_MAX_ITERS          ),
+      .GROUP_SIZE             ( GROUP_SIZE             ),
+      .DATA_WIDTH             ( 2*DATA_WIDTH           ),
+      .LOG_MAX_ADDRESS        ( LOG_MAX_ADDRESS        ),
       .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER )
     ) write_mem_m (
       .clk                    ( clk                                                                             ),
       .rst                    ( rst                                                                             ),
       .configure              ( configure                                                                       ),
-      .num_iters              ( num_iters                                                                       ),
       .num_reads_per_iter     ( num_reads_per_iter                                                              ),
       .base_address           ( write_address                                                                   ),
       .min_clip               ( min_clip                                                                        ),
@@ -329,7 +331,7 @@ generate
     );
   
     MEM #(
-      .DATA_WIDTH      ( DATA_WIDTH        ),
+      .DATA_WIDTH      ( GROUP_SIZE * DATA_WIDTH        ),
       .NUM_ADDRESSES   ( NUM_ADDRESSES     ),
       .LOG_MAX_ADDRESS ( LOG_MAX_ADDRESS   )
     ) output_mem_m (
