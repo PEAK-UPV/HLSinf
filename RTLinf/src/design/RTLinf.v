@@ -7,9 +7,9 @@
 module RTLinf #(
   parameter GROUP_SIZE             = 4,    // group size
   parameter DATA_WIDTH             = 8,    // data width
-  parameter NUM_INPUTS             = 9,    // number of inputs
-  parameter NUM_LANES              = 9,    // number of lanes
-  parameter NUM_OUTPUTS            = 9,    // number of outputs
+  parameter NUM_INPUTS             = 1,    // number of inputs
+  parameter NUM_LANES              = 1,    // number of lanes
+  parameter NUM_OUTPUTS            = 1,    // number of outputs
   parameter LOG_MAX_ITERS          = 16,   // number of bits for max iters
   parameter LOG_MAX_READS_PER_ITER = 16,   // number of bits for reads_per_iter
   parameter LOG_MAX_ADDRESS        = 16,   // number of bits for addresses
@@ -17,7 +17,17 @@ module RTLinf #(
 )(
   input                                   clk,                // clock input
   input                                   rst,                // reset input
-
+  
+  output [NUM_INPUTS*LOG_MAX_ADDRESS-1:0]      act_addr,          // read address to BRAM memories (activations)
+  output [NUM_INPUTS-1:0]                      act_read,          // read signal to BRAM memories (activations)
+  input [NUM_INPUTS*GROUP_SIZE*DATA_WIDTH-1:0] act_data,          // data input from BRAM memories (activations)
+  input [NUM_INPUTS-1:0]                       act_valid,         // valid input from BRAM memories
+  
+  output [LOG_MAX_ADDRESS-1:0]                 weight_addr,       // read address to BRAM memory (weights)
+  output                                       weight_read,       // read signal to BRAM memory (weights)
+  input [NUM_LANES*DATA_WIDTH-1:0]             weight_data,       // data input from BRAM memory (weights)
+  input                                        weight_valid,      // valid input from BRAM memory
+   
   input                                   configure,          // configure signal
   input [LOG_MAX_ITERS-1:0]               num_iters,          // num iterations
   input [LOG_MAX_READS_PER_ITER-1:0]      num_reads_per_iter, // num reads per iteration
@@ -28,25 +38,14 @@ module RTLinf #(
   input                                   conf_mode_in,       // conf mode for distribute_in module
   input                                   conf_mode_out,      // conf mode for distribute_out module
   
-  output [NUM_OUTPUTS*GROUP_SIZE*DATA_WIDTH-1:0] data,        // data output to BRAM memories
-  output [NUM_OUTPUTS*LOG_MAX_ADDRESS-1:0]       addr,        // address output to BRAM memories
-  output [NUM_OUTPUTS-1:0]                       valid        // valid signals to BRAM memories
+  output [NUM_OUTPUTS*GROUP_SIZE*DATA_WIDTH-1:0] data_out,        // data output to BRAM memories
+  output [NUM_OUTPUTS*LOG_MAX_ADDRESS-1:0]       addr_out,        // address output to BRAM memories
+  output [NUM_OUTPUTS-1:0]                       valid_out        // valid signals to BRAM memories
 );  
 
 // genvars
 genvar x;
 
-// wires between MEM and READ modules (activations)
-wire [NUM_INPUTS-1:0]             act_mem2read_read_w;
-wire [LOG_MAX_ADDRESS-1:0]        act_mem2read_addr_w[NUM_INPUTS-1:0];
-wire [GROUP_SIZE*DATA_WIDTH-1:0]  act_mem2read_data_w[NUM_INPUTS-1:0];
-wire [NUM_INPUTS-1:0]             act_mem2read_valid_w[NUM_INPUTS-1:0];
-
-// wires between MEM and READ modules (weights)
-wire                              weight_mem2read_read_w;
-wire [LOG_MAX_ADDRESS-1:0]        weight_mem2read_addr_w;
-wire [NUM_LANES*DATA_WIDTH-1:0]   weight_mem2read_data_w;
-wire                              weight_mem2read_valid_w;
 
 // wires between READ and DISTRIBUTE_IN modules
 wire [NUM_INPUTS-1:0]                       act_read2distr_valid_w;
@@ -92,7 +91,6 @@ wire [GROUP_SIZE*DATA_WIDTH-1:0]               write2mem_data_w[NUM_OUTPUTS-1:0]
 wire [LOG_MAX_ADDRESS-1:0]                     write2mem_addr_w[NUM_OUTPUTS-1:0];
 wire [NUM_OUTPUTS-1:0]                         write2mem_valid_w;
 
-
 // combinational logic
 
 genvar i;
@@ -100,9 +98,9 @@ genvar i;
 // module output to BRAM memories
 generate
   for (i=0; i<NUM_OUTPUTS; i=i+1) begin
-    assign data[((i+1)*GROUP_SIZE*DATA_WIDTH)-1:i*GROUP_SIZE*DATA_WIDTH] = write2mem_data_w[i];
-    assign addr[((i+1)*LOG_MAX_ADDRESS)-1:i*LOG_MAX_ADDRESS] = write2mem_addr_w[i];
-    assign valid[i] = write2mem_valid_w[i];
+    assign data_out[((i+1)*GROUP_SIZE*DATA_WIDTH)-1:i*GROUP_SIZE*DATA_WIDTH] = write2mem_data_w[i];
+    assign addr_out[((i+1)*LOG_MAX_ADDRESS)-1:i*LOG_MAX_ADDRESS]             = write2mem_addr_w[i];
+    assign valid_out[i]                                                      = write2mem_valid_w[i];
   end
  endgenerate
 
@@ -110,7 +108,7 @@ generate
 generate
   for (i=0; i<NUM_INPUTS; i=i+1) begin
     assign act_read2distr_combined_data_w[((i+1)*GROUP_SIZE*DATA_WIDTH)-1:i*GROUP_SIZE*DATA_WIDTH] = act_read2distr_data_w[i];
-    assign act_read2distr_combined_valid_w[i] = act_read2distr_valid_w[i];
+    assign act_read2distr_combined_valid_w[i]                                                      = act_read2distr_valid_w[i];
   end
 endgenerate
 
@@ -121,24 +119,10 @@ generate
   end
 endgenerate
 
-// activation MEM and read modules
+// activation READ modules
 generate
 for ( i=0; i<NUM_INPUTS; i=i+1) begin
-  MEM #(
-    .DATA_WIDTH      ( GROUP_SIZE * DATA_WIDTH ),
-    .NUM_ADDRESSES   ( NUM_ADDRESSES           ),
-    .LOG_MAX_ADDRESS ( LOG_MAX_ADDRESS         )
-  ) act_mem_m (
-    .clk             ( clk                     ),
-    .rst             ( rst                     ),
-    .data_write      ( 0                       ),
-    .addr_write      ( 0                       ),
-    .write           ( 0                       ),
-    .addr_read       ( act_mem2read_addr_w[i]  ),
-    .read            ( act_mem2read_read_w[i]  ),
-    .data_read       ( act_mem2read_data_w[i]  ),
-    .valid_out       ( act_mem2read_valid_w[i] )
-  );
+
   READ #(
     .DATA_WIDTH             ( GROUP_SIZE * DATA_WIDTH       ),
     .LOG_MAX_ITERS          ( LOG_MAX_ITERS                 ),
@@ -152,10 +136,10 @@ for ( i=0; i<NUM_INPUTS; i=i+1) begin
     .num_iters              ( num_iters                     ),
     .num_reads_per_iter     ( num_reads_per_iter            ),
     .base_address           ( read_address                  ),
-    .valid_in               ( act_mem2read_valid_w[i]       ),
-    .data_in                ( act_mem2read_data_w[i]        ),
-    .address_out            ( act_mem2read_addr_w[i]        ),
-    .request                ( act_mem2read_read_w[i]        ),
+    .valid_in               ( act_valid[i]                  ),
+    .data_in                ( act_data[((i+1)*GROUP_SIZE*DATA_WIDTH)-1:i*GROUP_SIZE*DATA_WIDTH] ),
+    .address_out            ( act_addr[((i+1)*LOG_MAX_ADDRESS)-1:i*LOG_MAX_ADDRESS]             ),
+    .request                ( act_read[i]                   ),
     .avail_in               ( act_read2distr_avail_w[i]     ),
     .valid_out              ( act_read2distr_valid_w[i]     ),
     .data_out               ( act_read2distr_data_w[i]      )
@@ -163,23 +147,7 @@ for ( i=0; i<NUM_INPUTS; i=i+1) begin
 end
 endgenerate  
 
-// weight MEM and READ modules
-MEM #(
-  .DATA_WIDTH      ( NUM_LANES * DATA_WIDTH ),
-  .NUM_ADDRESSES   ( NUM_ADDRESSES           ),
-  .LOG_MAX_ADDRESS ( LOG_MAX_ADDRESS         )
-) weight_mem_m (
-  .clk             ( clk                     ),
-  .rst             ( rst                     ),
-  .data_write      ( 0                       ),
-  .addr_write      ( 0                       ),
-  .write           ( 0                       ),
-  .addr_read       ( weight_mem2read_addr_w  ),
-  .read            ( weight_mem2read_read_w  ),
-  .data_read       ( weight_mem2read_data_w  ),
-  .valid_out       ( weight_mem2read_valid_w )
-);
-
+// weight READ module
 READ #(
   .DATA_WIDTH             ( NUM_LANES * DATA_WIDTH        ),
   .LOG_MAX_ITERS          ( LOG_MAX_ITERS                 ),
@@ -193,10 +161,10 @@ READ #(
   .num_iters              ( 1                             ),   // weights are read, one per iteration (thus, only one iteration)
   .num_reads_per_iter     ( num_iters                     ),
   .base_address           ( read_address                  ),
-  .valid_in               ( weight_mem2read_valid_w       ),
-  .data_in                ( weight_mem2read_data_w        ),
-  .address_out            ( weight_mem2read_addr_w        ),
-  .request                ( weight_mem2read_read_w        ),
+  .valid_in               ( weight_valid                  ),
+  .data_in                ( weight_data                   ),
+  .address_out            ( weight_addr                   ),
+  .request                ( weight_read                   ),
   .avail_in               ( weight_read2distr_avail_w     ),
   .valid_out              ( weight_read2distr_valid_w     ),
   .data_out               ( weight_read2distr_data_w      )
@@ -320,7 +288,7 @@ DISTRIBUTE_OUT #(
  .avail_in               ( distr2write_avail_w       )
 );
 
-// WRITE and MEM  modules
+// WRITE modules (these modules are directly connected to external BRAMs
 generate
   for ( i=0; i<NUM_OUTPUTS; i=i+1) begin
     WRITE #(
@@ -342,22 +310,6 @@ generate
       .data_out               ( write2mem_data_w[i]    ),
       .address_out            ( write2mem_addr_w[i]    ),
       .valid_out              ( write2mem_valid_w[i]   )
-    );
-  
-    MEM #(
-      .DATA_WIDTH      ( GROUP_SIZE * DATA_WIDTH        ),
-      .NUM_ADDRESSES   ( NUM_ADDRESSES     ),
-      .LOG_MAX_ADDRESS ( LOG_MAX_ADDRESS   )
-    ) output_mem_m (
-      .clk             ( clk                  ),
-      .rst             ( rst                  ),
-      .data_write      ( write2mem_data_w[i]  ),
-      .addr_write      ( write2mem_addr_w[i]  ),
-      .write           ( write2mem_valid_w[i] ),
-      .addr_read       ( 0                    ),
-      .read            ( 0                    ),
-      .data_read       (                      ),
-      .valid_out       (                      )
     );
   end
 endgenerate

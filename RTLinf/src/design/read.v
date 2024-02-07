@@ -182,6 +182,8 @@ always @ (posedge clk) begin
   end
 end
 
+// synthesis translate_off
+
 // debug support. When enabled (through the DEBUG define) the module will generate
 // debug information on every specific cycle, depending on the debug conditions implemented
 // the module has a tics counter register to keep up with current cycle
@@ -205,5 +207,7 @@ end
     end
   end
 `endif
+
+// synthesis translate_on
 
 endmodule

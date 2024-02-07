@@ -84,6 +84,8 @@ end
 
 //`define DEBUG
 
+// synthesis translate_off
+
 `ifdef DEBUG
 reg [63:0] tics;
 
@@ -97,5 +99,7 @@ always @ (posedge clk) begin
   end
 end
 `endif
+
+// synthesis translate on
 
 endmodule

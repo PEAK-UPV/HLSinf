@@ -157,6 +157,8 @@ end
 // in this module whenever a "read" cycle is performed the associated information is shown as debug
 //
 
+// synthesis translate_off
+
 `define DEBUG
 
 `ifdef DEBUG
@@ -170,6 +172,8 @@ end
     end
   end
 `endif
+
+// synthesis translate_on
   
 endmodule
   

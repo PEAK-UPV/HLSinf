@@ -67,6 +67,8 @@ always @ (posedge clk) if (read) begin data_read <= mem[addr_read]; valid_out <=
 // in this module whenever a read (valid_out) event occurs the associated information is shown as debug
 //
 
+// synthesis translate_off
+
 `define DEBUG
 
 `ifdef DEBUG
@@ -82,6 +84,7 @@ always @ (posedge clk) if (read) begin data_read <= mem[addr_read]; valid_out <=
   end
 `endif
 
+// synthesis translate_on
 
 endmodule
 
