@@ -1,4 +1,4 @@
-create_clock -period 3.33 -name Clk -waveform {0.000 1.667} [get_ports clk]
+create_clock -period 5 -name Clk -waveform {0.000 1.667} [get_ports clk]
 
 # Rising Edge System Synchronous Inputs
 #
