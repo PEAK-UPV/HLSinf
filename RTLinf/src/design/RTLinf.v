@@ -5,11 +5,11 @@
 //
 
 module RTLinf #(
-  parameter GROUP_SIZE             = 1,    // group size
+  parameter GROUP_SIZE             = 4,    // group size
   parameter DATA_WIDTH             = 8,    // data width
-  parameter NUM_INPUTS             = 1,    // number of inputs
-  parameter NUM_LANES              = 1,    // number of lanes
-  parameter NUM_OUTPUTS            = 1,    // number of outputs
+  parameter NUM_INPUTS             = 9,    // number of inputs
+  parameter NUM_LANES              = 9,    // number of lanes
+  parameter NUM_OUTPUTS            = 9,    // number of outputs
   parameter LOG_MAX_ITERS          = 16,   // number of bits for max iters
   parameter LOG_MAX_READS_PER_ITER = 16,   // number of bits for reads_per_iter
   parameter LOG_MAX_ADDRESS        = 16,   // number of bits for addresses
@@ -26,8 +26,12 @@ module RTLinf #(
   input [DATA_WIDTH-1:0]                  min_clip,           // min cliping value
   input [DATA_WIDTH-1:0]                  max_clip,           // max cliping value
   input                                   conf_mode_in,       // conf mode for distribute_in module
-  input                                   conf_mode_out       // conf mode for distribute_out module
-);
+  input                                   conf_mode_out,      // conf mode for distribute_out module
+  
+  output [NUM_OUTPUTS*GROUP_SIZE*DATA_WIDTH-1:0] data,        // data output to BRAM memories
+  output [NUM_OUTPUTS*LOG_MAX_ADDRESS-1:0]       addr,        // address output to BRAM memories
+  output [NUM_OUTPUTS-1:0]                       valid        // valid signals to BRAM memories
+);  
 
 // genvars
 genvar x;
@@ -83,14 +87,24 @@ wire [NUM_OUTPUTS*2*GROUP_SIZE*DATA_WIDTH-1:0] distr2write_data_w;
 wire [NUM_OUTPUTS-1:0]                         distr2write_valid_w;
 wire [NUM_OUTPUTS-1:0]                         distr2write_avail_w;
 
-// wires between WRITE and MEM modules
+// output wires from WRITE modules
 wire [GROUP_SIZE*DATA_WIDTH-1:0]               write2mem_data_w[NUM_OUTPUTS-1:0];
 wire [LOG_MAX_ADDRESS-1:0]                     write2mem_addr_w[NUM_OUTPUTS-1:0];
 wire [NUM_OUTPUTS-1:0]                         write2mem_valid_w;
 
+
 // combinational logic
 
 genvar i;
+
+// module output to BRAM memories
+generate
+  for (i=0; i<NUM_OUTPUTS; i=i+1) begin
+    assign data[((i+1)*GROUP_SIZE*DATA_WIDTH)-1:i*GROUP_SIZE*DATA_WIDTH] = write2mem_data_w[i];
+    assign addr[((i+1)*LOG_MAX_ADDRESS)-1:i*LOG_MAX_ADDRESS] = write2mem_addr_w[i];
+    assign valid[i] = write2mem_valid_w[i];
+  end
+ endgenerate
 
 // combined data and valid signal between READ and DISTRIBUTE_IN modules
 generate
