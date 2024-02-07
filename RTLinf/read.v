@@ -63,7 +63,7 @@ reg [1:0]                        write_fsm_next_state;      // FSM state for wri
 
 // combinational logic
 assign address_out  = base_address_r;                                      // address to the block ream
-assign request      = module_enabled_r & (read_fsm_state == `FSM_READ);    // read request to the block ram
+assign request      = ~almost_full_w & ~ full_w & module_enabled_r & (read_fsm_state == `FSM_READ);    // read request to the block ram
 assign data_write_w = data_in;                                             // data to FIFO
 assign write_w      = valid_in;                                            // write signal to FIFO
 assign next_read_w  = avail_in & ~empty_w & (write_fsm_state == `FSM_WRITE);          // next_read signal to FIFO
@@ -113,7 +113,7 @@ always @ (posedge clk) begin
       base_address_copy_r  <= base_address;
       module_enabled_r     <= 1'b1;
     end else begin
-      if (num_reads_per_iter_r == 1) begin
+      if (request & (num_reads_per_iter_r == 1)) begin
         if (num_iters_r == 1) module_enabled_r <= 0;
         else begin
           num_iters_r <= num_iters_r - 1;
@@ -122,7 +122,7 @@ always @ (posedge clk) begin
         end
       end else begin
         if (read_fsm_state == `FSM_READ) begin
-          num_reads_per_iter_r <= num_reads_per_iter_r - 1;
+          if (request) num_reads_per_iter_r <= num_reads_per_iter_r - 1;
           if (request) base_address_r <= base_address_r + 1;  // address increments only if we perform a read to the BRAM)
         end
       end
@@ -199,7 +199,8 @@ end
     else begin
       if (configure) $display("READ (configure): cycle %d", tics);
       if (request) $display("READ (type %s, read from bram): cycle %d, address_out %x, num_iters %d num_reads %d module_enabled %d", TYPE, tics, address_out, num_iters_r, num_reads_per_iter_r, module_enabled_r);
-      if (valid_out) $display("READ (type %s, forward): cycle %d, data_out %x (full %d almost_full %d empty %d)", TYPE, tics, data_out, full_w, almost_full_w, empty_w); 
+      if (valid_out) $display("READ (type %s, forward): cycle %d, data_out %x (full %d almost_full %d empty %d, enabled %d)", TYPE, tics, data_out, full_w, almost_full_w, empty_w, module_enabled_r); 
+      if (valid_in) $display("READ (type %s, valid_in) data %x", TYPE, data_in);
       tics <= tics + 1;
     end
   end
