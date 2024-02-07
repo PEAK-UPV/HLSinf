@@ -1,0 +1,13 @@
+#-----------------------------------------------------------
+# Vivado v2022.2 (64-bit)
+# SW Build 3671981 on Fri Oct 14 04:59:54 MDT 2022
+# IP Build 3669848 on Fri Oct 14 08:30:02 MDT 2022
+# Start of session at: Wed Feb  7 12:47:10 2024
+# Process ID: 1222949
+# Current directory: /home/laumecha/HLSinf/RTLinf/RTLinf_project/RTLinf_project.runs/synth_1
+# Command line: vivado -log RTLinf.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source RTLinf.tcl
+# Log file: /home/laumecha/HLSinf/RTLinf/RTLinf_project/RTLinf_project.runs/synth_1/RTLinf.vds
+# Journal file: /home/laumecha/HLSinf/RTLinf/RTLinf_project/RTLinf_project.runs/synth_1/vivado.jou
+# Running On: peak9, OS: Linux, CPU Frequency: 3000.000 MHz, CPU Physical cores: 16, Host memory: 134173 MB
+#-----------------------------------------------------------
+source RTLinf.tcl -notrace

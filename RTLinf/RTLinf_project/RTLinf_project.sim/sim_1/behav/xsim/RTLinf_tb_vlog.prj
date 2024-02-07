@@ -1,0 +1,18 @@
+# compile verilog/system verilog design source files
+verilog xil_defaultlib  \
+"../../../../../src/design/RTLinf.v" \
+"../../../../../src/design/acc.v" \
+"../../../../../src/design/align.v" \
+"../../../../../src/design/distribute.v" \
+"../../../../../src/design/fifo.v" \
+"../../../../../src/design/mem.v" \
+"../../../../../src/design/mul.v" \
+"../../../../../src/design/read.v" \
+"../../../../../src/design/write.v" \
+"../../../../../src/tb/RTLinf_tb.v" \
+
+# compile glbl module
+verilog xil_defaultlib "glbl.v"
+
+# Do not sort compile order
+nosort

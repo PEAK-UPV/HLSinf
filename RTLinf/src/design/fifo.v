@@ -6,7 +6,7 @@
 // only one slot is available.
 //
 
-`include "RTLinf.vh"
+//`include "RTLinf.vh"
 
 module FIFO #(
     parameter NUM_SLOTS = 4,              // number of slots (depth)
