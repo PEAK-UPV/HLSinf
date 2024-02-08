@@ -54,6 +54,13 @@ if (DATA_WIDTH==64) begin
 end
 end
 
+begin initial
+if (DATA_WIDTH==72) begin
+  for (i=0; i<NUM_ADDRESSES; i=i+1) mem[i] <= (((i*8)+9) << 64) + (((i*8)+8) << 56) + (((i*8)+7) << 48) + (((i*8)+6) << 40) + (((i*8)+5) << 32) +
+                                               (((i*8)+4) << 24) + (((i*8)+3) << 16) + (((i*8)+2) << 8) + ((i*8)+1);
+end
+end
+
 // sequential logic for write logic
 always @ (posedge clk) if (write) mem[addr_write] <= data_write;
 
@@ -69,9 +76,9 @@ always @ (posedge clk) if (read) begin data_read <= mem[addr_read]; valid_out <=
 
 // synthesis translate_off
 
-`define DEBUG
+//`define DEBUG_MEM
 
-`ifdef DEBUG
+`ifdef DEBUG_MEM
   reg [15:0] tics;
 
   always @ (posedge clk) begin

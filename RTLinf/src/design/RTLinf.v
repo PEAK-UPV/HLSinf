@@ -2,13 +2,32 @@
 //
 // This module implements the whole RTLinf accelerator
 //
+// The module implements NUM_INPUTS input read streams that feed a DISTRIBUTE_IN module. This module
+// distributes incoming data to NUM_LANES multipliers, aligners, and accumulator modules. All these 
+// lanes feed a DISTRIBUTE_OUT module which collects all data and forwards it to NUM_OUTPUTS write modules
+//
+// The module runs for a given number of iterations and within each iteration performs a given number of operational cycles.
+// READ, DISTRIBUTE_IN, MUL, ALIGN, and ACC run for each iteration whereas DISTRIBUTE_OUT and WRITE run whenever input
+// data is available at the module (indeed, the ACC module only forwards data in the last iteration).
+// 
+// DISTRIBUTE_IN module forwards on the first operation cycle of an iteration a weight value (read from external memory).
+// 
+// DISTRIBUTE_IN module can work in two modes (conf_mode_in paraneter):
+//    CONF_MODE_0 only input 0 is read and data is broadcasterd to all lanes
+//    CONF_MODE_1 every input is read and sent to the output with the same port number (input i to output i)
+// 
+// DISTRIBUTE_OUT module can work in two modes (conf_mode_out parameter):
+//    CONF_MODE_0 all inputs are accumulated on every cycle and output is sent through output port 0
+//    CONF_MODE_1 all inputs are forwarded to the same port identifier (input i to output i)
+//
+// Input data (activations and weights) and output data (produced activations) is external to the module.
 //
 
 module RTLinf #(
   parameter GROUP_SIZE             = 4,    // group size
   parameter DATA_WIDTH             = 8,    // data width
   parameter NUM_INPUTS             = 1,    // number of inputs
-  parameter NUM_LANES              = 1,    // number of lanes
+  parameter NUM_LANES              = 9,    // number of lanes
   parameter NUM_OUTPUTS            = 1,    // number of outputs
   parameter LOG_MAX_ITERS          = 16,   // number of bits for max iters
   parameter LOG_MAX_READS_PER_ITER = 16,   // number of bits for reads_per_iter
@@ -67,13 +86,13 @@ wire [NUM_LANES-1:0]                        weight_distr2mul_avail_w;
 
 // wires between MUL and ALIGN modules
 wire [2*GROUP_SIZE*DATA_WIDTH-1:0]          mul2align_data_w[NUM_LANES-1:0];
-wire [NUM_LANES-1:0]                        mul2align_valid_w[NUM_LANES-1:0];
-wire [NUM_LANES-1:0]                        mul2align_avail_w[NUM_LANES-1:0];
+wire [NUM_LANES-1:0]                        mul2align_valid_w;
+wire [NUM_LANES-1:0]                        mul2align_avail_w;
 
 // wires between ALIGN and ACC modules
 wire [2*GROUP_SIZE*DATA_WIDTH-1:0]          align2acc_data_w[NUM_LANES-1:0];
-wire [NUM_LANES-1:0]                        align2acc_valid_w[NUM_LANES-1:0];
-wire [NUM_LANES-1:0]                        align2acc_avail_w[NUM_LANES-1:0];
+wire [NUM_LANES-1:0]                        align2acc_valid_w;
+wire [NUM_LANES-1:0]                        align2acc_avail_w;
 
 // wires between ACC and DISTRIBUTE_IN modules
 wire [2*GROUP_SIZE*DATA_WIDTH-1:0]          acc2distr_data_w[NUM_LANES-1:0];
@@ -90,6 +109,10 @@ wire [NUM_OUTPUTS-1:0]                         distr2write_avail_w;
 wire [GROUP_SIZE*DATA_WIDTH-1:0]               write2mem_data_w[NUM_OUTPUTS-1:0];
 wire [LOG_MAX_ADDRESS-1:0]                     write2mem_addr_w[NUM_OUTPUTS-1:0];
 wire [NUM_OUTPUTS-1:0]                         write2mem_valid_w;
+
+// read modules will be configured depending on the conf_mode_in mode. If set to zero then
+// only read module 0 will be configured, if set to one then all memory modules will be enabled
+wire only_input_0_configured_w = ~conf_mode_in;
 
 // combinational logic
 
@@ -132,7 +155,7 @@ for ( i=0; i<NUM_INPUTS; i=i+1) begin
   ) act_read_m (
     .clk                    ( clk                           ),
     .rst                    ( rst                           ),
-    .configure              ( configure                     ),
+    .configure              ( only_input_0_configured_w & (i!=0) ? 0 : configure                     ),
     .num_iters              ( num_iters                     ),
     .num_reads_per_iter     ( num_reads_per_iter            ),
     .base_address           ( read_address                  ),
@@ -214,14 +237,14 @@ generate
       .num_iters              ( num_iters            ),
       .num_reads_per_iter     ( num_reads_per_iter   ),
       .act_data_in            ( act_distr2mul_data_w[((i+1)*GROUP_SIZE*DATA_WIDTH)-1:i*GROUP_SIZE*DATA_WIDTH] ),
-      .act_valid_in           ( act_distr2mul_valid_w[i] ),
-      .act_avail_out          ( act_distr2mul_avail_w[i] ),
-      .weight_data_in         ( weight_distr2mul_data_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] ),
-      .weight_valid_in        ( weight_distr2mul_valid_w[i] ),
-      .weight_avail_out       ( weight_distr2mul_avail_w[i] ),
-      .data_out               ( mul2align_data_w[i]           ),
-      .valid_out              ( mul2align_valid_w[i]          ),
-      .avail_in               ( mul2align_avail_w[i]          )
+      .act_valid_in           ( act_distr2mul_valid_w[i]                                                      ),
+      .act_avail_out          ( act_distr2mul_avail_w[i]                                                      ),
+      .weight_data_in         ( weight_distr2mul_data_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH]                    ),
+      .weight_valid_in        ( weight_distr2mul_valid_w[i]                                                   ),
+      .weight_avail_out       ( weight_distr2mul_avail_w[i]                                                   ),
+      .data_out               ( mul2align_data_w[i]                                                           ),
+      .valid_out              ( mul2align_valid_w[i]                                                          ),
+      .avail_in               ( mul2align_avail_w[i]                                                          )
     );
 
     ALIGN #(
@@ -270,16 +293,12 @@ DISTRIBUTE_OUT #(
  .NUM_DATA_INPUTS        ( NUM_LANES                 ),
  .GROUP_SIZE             ( GROUP_SIZE                ),
  .DATA_WIDTH             ( 2*DATA_WIDTH              ),
- .NUM_DATA_OUTPUTS       ( NUM_OUTPUTS               ),
- .LOG_MAX_ITERS          ( LOG_MAX_ITERS             ),
- .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER    )
+ .NUM_DATA_OUTPUTS       ( NUM_OUTPUTS               )
 ) distribute_out_m (
  .clk                    ( clk                       ),
  .rst                    ( rst                       ),
  .configure              ( configure                 ),
  .conf_mode              ( conf_mode_out             ),
- .num_iters              ( num_iters                 ),
- .num_reads_per_iter     ( num_reads_per_iter        ),
  .data_in                ( acc2distr_combined_data_w ),
  .valid_in               ( acc2distr_valid_w         ),
  .avail_out              ( acc2distr_avail_w         ),
@@ -294,13 +313,11 @@ generate
     WRITE #(
       .GROUP_SIZE             ( GROUP_SIZE             ),
       .DATA_WIDTH             ( 2*DATA_WIDTH           ),
-      .LOG_MAX_ADDRESS        ( LOG_MAX_ADDRESS        ),
-      .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER )
+      .LOG_MAX_ADDRESS        ( LOG_MAX_ADDRESS        )
     ) write_mem_m (
       .clk                    ( clk                                                                             ),
       .rst                    ( rst                                                                             ),
       .configure              ( configure                                                                       ),
-      .num_reads_per_iter     ( num_reads_per_iter                                                              ),
       .base_address           ( write_address                                                                   ),
       .min_clip               ( min_clip                                                                        ),
       .max_clip               ( max_clip                                                                        ),

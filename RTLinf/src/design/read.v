@@ -199,10 +199,10 @@ end
   always @ (posedge clk) begin
     if (~rst) tics <= 0;
     else begin
-      if (configure) $display("READ (configure): cycle %d", tics);
-      if (request) $display("READ (type %s, read from bram): cycle %d, address_out %x, num_iters %d num_reads %d module_enabled %d", TYPE, tics, address_out, num_iters_r, num_reads_per_iter_r, module_enabled_r);
+      //if (configure) $display("READ (configure): cycle %d", tics);
+      //if (request) $display("READ (type %s, read from bram): cycle %d, address_out %x, num_iters %d num_reads %d module_enabled %d", TYPE, tics, address_out, num_iters_r, num_reads_per_iter_r, module_enabled_r);
       if (valid_out) $display("READ (type %s, forward): cycle %d, data_out %x (full %d almost_full %d empty %d, enabled %d)", TYPE, tics, data_out, full_w, almost_full_w, empty_w, module_enabled_r); 
-      if (valid_in) $display("READ (type %s, valid_in) data %x", TYPE, data_in);
+      //if (valid_in) $display("READ (type %s, valid_in) data %x", TYPE, data_in);
       tics <= tics + 1;
     end
   end

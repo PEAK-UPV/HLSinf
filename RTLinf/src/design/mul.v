@@ -120,14 +120,14 @@ always @ (posedge clk) begin
       num_reads_per_iter_copy_r <= num_reads_per_iter;
       module_enabled_r     <= 1'b1;
     end else begin
-      if (num_reads_per_iter_r == 1) begin
-        if (num_iters_r == 1) module_enabled_r <= 0;
-        else begin
-          num_iters_r <= num_iters_r - 1;
-          num_reads_per_iter_r <= num_reads_per_iter_copy_r;
-        end
-      end else begin
-        if (perform_operation_w) begin
+      if (perform_operation_w) begin
+        if (num_reads_per_iter_r == 1) begin
+          if (num_iters_r == 1) module_enabled_r <= 0;
+          else begin
+            num_iters_r <= num_iters_r - 1;
+            num_reads_per_iter_r <= num_reads_per_iter_copy_r;
+          end
+        end else begin
           num_reads_per_iter_r <= num_reads_per_iter_r - 1;
         end
       end

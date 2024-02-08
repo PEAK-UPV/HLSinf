@@ -83,9 +83,8 @@ assign mem_addr_read_w     = num_reads_per_iter_r;     // address to read is the
 // adders (one per item in the group size)
 generate
   for (i=0; i<GROUP_SIZE; i=i+1) begin
-    assign data_added_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] = 
-                first_iteration_w ?  data_read_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] : 
-		data_read_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] + mem_data_read_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH];
+    assign data_added_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] = first_iteration_w ?  data_read_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] : 
+		                                                                          data_read_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] + mem_data_read_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH];
   end
 endgenerate
 
@@ -144,14 +143,14 @@ always @ (posedge clk) begin
       num_reads_per_iter_copy_r <= num_reads_per_iter;
       module_enabled_r          <= 1'b1;
     end else begin
-      if (num_reads_per_iter_r == 1) begin
-        if (num_iters_r == 1) module_enabled_r <= 0;
-        else begin
-          num_iters_r <= num_iters_r - 1;
-          num_reads_per_iter_r <= num_reads_per_iter_copy_r;
-        end
-      end else begin
-        if (perform_operation_w) begin
+      if (perform_operation_w) begin
+        if (num_reads_per_iter_r == 1) begin
+          if (num_iters_r == 1) module_enabled_r <= 0;
+          else begin
+            num_iters_r <= num_iters_r - 1;
+            num_reads_per_iter_r <= num_reads_per_iter_copy_r;
+          end
+        end else begin
           num_reads_per_iter_r <= num_reads_per_iter_r - 1;
         end
       end
@@ -176,7 +175,7 @@ end
   always @ (posedge clk) begin
     if (~rst) tics <= 0;
     else begin
-      if (perform_operation_w) $display("ACC: cycle %d data_added %d", tics, data_added_w);
+      if (perform_operation_w) $display("ACC: cycle %d data_added %x", tics, data_added_w);
       tics <= tics + 1;
     end
   end

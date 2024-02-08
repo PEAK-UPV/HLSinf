@@ -10,11 +10,11 @@
 `define LOG_MAX_ADDRESS        12
 `define DATA_WIDTH             8
 `define GROUP_SIZE             4
-`define NUM_INPUTS             1
-`define NUM_LANES              1
-`define NUM_OUTPUTS            1
-`define NUM_ITERS              2
-`define NUM_OPS_PER_ITER       4
+`define NUM_INPUTS             9
+`define NUM_LANES              9
+`define NUM_OUTPUTS            9
+`define NUM_ITERS              4
+`define NUM_OPS_PER_ITER       16
 
 module RTLinf_tb;
 
@@ -160,8 +160,8 @@ initial begin
   num_reads_per_iter_r <= `NUM_OPS_PER_ITER;
   read_address_r       <= 0;
   write_address_r      <= 0;
-  conf_mode_in_r       <= 1;
-  conf_mode_out_r      <= 1;
+  conf_mode_in_r       <= 0;  // input 0 broadcasted to all lanes
+  conf_mode_out_r      <= 0;  // all inputs added and sent to all outputs
   min_clip_r           <= 0;
   max_clip_r           <= 255;
   

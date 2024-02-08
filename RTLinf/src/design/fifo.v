@@ -86,7 +86,7 @@ end
 
 // synthesis translate_off
 
-`ifdef DEBUG
+`ifdef DEBUG_FIFO
 reg [63:0] tics;
 
 always @ (posedge clk) begin
