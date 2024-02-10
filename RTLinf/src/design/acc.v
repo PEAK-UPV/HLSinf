@@ -7,12 +7,15 @@
 // the accumulated data is forwarded through the output port.
 //
 
+`include "RTLinf.vh"
+
 module ACC #(
     parameter DATA_WIDTH             = 8,                            // input data width (output width = input width)
     parameter GROUP_SIZE             = 4,                            // group size
     parameter LOG_MAX_ITERS          = 16,                           // number of bits for max iters register
-    parameter NUM_ADDRESSES          = 65536,                        // number of addresses
-    parameter LOG_MAX_READS_PER_ITER = 16                            // number of bits for max reads per iter
+    parameter NUM_ADDRESSES          = 4096,                         // number of addresses
+    parameter LOG_MAX_ADDRESS        = 12,                           // number of address bits
+    parameter LOG_MAX_READS_PER_ITER = 12                            // number of bits for max reads per iter
   )(
     input clk,                                                       // clock signal
     input rst,                                                       // reset signal
@@ -42,12 +45,27 @@ wire                                  empty_w;                           // empt
 wire                                  perform_operation_w;               // whether we perform a "read" operation in this cycle
 wire                                  first_iteration_w;                 // whether we are in the first iteration
 wire                                  last_iteration_w;                  // whether we are in the last iteration
-// wires (mem)
-wire [GROUP_SIZE * DATA_WIDTH-1 : 0]  mem_data_write_w;                  // data to write to memory
-wire [LOG_MAX_READS_PER_ITER-1 : 0]   mem_addr_write_w;                  // write address to memory
-wire                                  mem_write_w;                       // write signal
-wire [LOG_MAX_READS_PER_ITER-1 : 0]   mem_addr_read_w;                   // read address to memory
-wire [GROUP_SIZE * DATA_WIDTH-1 : 0]  mem_data_read_w;                   // data read from memory
+
+// pipeline (read -> add -> write stages)
+reg                                  read_r;
+reg  [LOG_MAX_ADDRESS-1 : 0]         read_addr_r;
+wire [GROUP_SIZE * DATA_WIDTH-1 : 0] read_data_w;
+reg  [GROUP_SIZE * DATA_WIDTH-1 : 0] read_data_fifo_r;
+reg                                  read_first_iteration_r;
+reg                                  read_last_iteration_r;
+//
+reg                                  add_r;
+reg [LOG_MAX_ADDRESS-1 : 0]          add_addr_r;
+reg [GROUP_SIZE * DATA_WIDTH-1 : 0]  add_data_fifo_r;
+reg [GROUP_SIZE * DATA_WIDTH-1 : 0]  add_data_r;
+reg                                  add_first_iteration_r;
+reg                                  add_last_iteration_r;
+
+reg                                  write_r;
+reg [LOG_MAX_ADDRESS-1 : 0]          write_addr_r;
+reg [GROUP_SIZE * DATA_WIDTH-1 : 0]  write_data_r;
+reg                                  write_last_iteration_r;
+//
 
 // wires (data added)
 wire [GROUP_SIZE * DATA_WIDTH-1 : 0]  data_added_w;                      // contains the added values from mem and from input
@@ -58,6 +76,7 @@ reg [LOG_MAX_ITERS-1:0]          num_iters_copy_r;                       // copy
 reg [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter_r;                   // number of reads per iteration (down counter)
 reg [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter_copy_r;              // copy of number of reads per iteration
 reg                              module_enabled_r;                       // module enabled
+reg                              first_iteration_r;
 
 genvar i;
 
@@ -72,19 +91,14 @@ assign perform_operation_w = module_enabled_r & (~empty_w) & avail_in;   // perf
 assign first_iteration_w   = num_iters_r == num_iters_copy_r;            // is this first iteration?
 assign last_iteration_w    = num_iters_r == 1;                           // is this last iteration?
 // to downstream module
-assign data_out            = data_added_w;                               // output data
-assign valid_out           = perform_operation_w & last_iteration_w;     // valid out to downstream module
+assign data_out            = write_data_r;                               // output data
+assign valid_out           = write_r & write_last_iteration_r;           // valid out to downstream module
 // memory
-assign mem_data_write_w    = data_added_w;             // data to write is the output of the adders
-assign mem_addr_write_w    = num_reads_per_iter_r;     // address to write is the current iteration (no problem if we have decreassing addresses)
-assign mem_write_w         = perform_operation_w;      // write whenever we perform the operation
-assign mem_addr_read_w     = num_reads_per_iter_r;     // address to read is the current iteration (no problem if we have decreassing addresses)
 
 // adders (one per item in the group size)
 generate
   for (i=0; i<GROUP_SIZE; i=i+1) begin
-    assign data_added_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] = first_iteration_w ?  data_read_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] : 
-		                                                                          data_read_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] + mem_data_read_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH];
+    assign data_added_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] = add_first_iteration_r ?  add_data_fifo_r[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] : add_data_fifo_r[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] + read_data_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH];
   end
 endgenerate
 
@@ -108,18 +122,19 @@ FIFO #(
 );
 
 // memory (unregistered output)
-MEMU #(
+MEM #(
   .DATA_WIDTH      ( GROUP_SIZE * DATA_WIDTH  ),
   .NUM_ADDRESSES   ( NUM_ADDRESSES            ),
-  .LOG_MAX_ADDRESS ( LOG_MAX_READS_PER_ITER   )
+  .LOG_MAX_ADDRESS ( LOG_MAX_ADDRESS          )
 ) mem (
   .clk             ( clk                      ),
   .rst             ( rst                      ),
-  .data_write      ( mem_data_write_w         ),
-  .addr_write      ( mem_addr_write_w         ),
-  .write           ( mem_write_w              ),
-  .addr_read       ( mem_addr_read_w          ),
-  .data_read       ( mem_data_read_w          )
+  .data_write      ( write_data_r             ),
+  .addr_write      ( write_addr_r             ),
+  .write           ( write_r                  ),
+  .addr_read       ( read_addr_r              ),
+  .data_read       ( read_data_w              ),
+  .read            ( read_r                   )
 );
 
 // sequential logic
@@ -142,7 +157,26 @@ always @ (posedge clk) begin
       num_reads_per_iter_r      <= num_reads_per_iter;
       num_reads_per_iter_copy_r <= num_reads_per_iter;
       module_enabled_r          <= 1'b1;
+      read_data_fifo_r          <= 0;
     end else begin
+      // pipelined operations: READ -> ADD -> WRITE
+      read_r                 <= perform_operation_w;      // read cycle
+      read_addr_r            <= num_reads_per_iter_r;     // address is the current iteration cycle
+      read_data_fifo_r       <= data_read_w;              // we capture the input data for the next stage (add)
+      read_first_iteration_r <= first_iteration_w;        // first iteration
+      read_last_iteration_r  <= last_iteration_w;         // last iteration
+      //
+      add_r                  <= read_r;                   // add cycle (one cycle after read cycle)
+      add_addr_r             <= read_addr_r;              // we keep the address for the next stage (write)
+      add_data_fifo_r        <= read_data_fifo_r;         // we keep the data from the fifo to this stage (add)
+      add_first_iteration_r  <= read_first_iteration_r;   // first iteration
+      add_last_iteration_r   <= read_last_iteration_r;    // last iteration
+      //
+      write_r      <= add_r;                              // write cycle (one cycle after add cycle)
+      write_addr_r <= add_addr_r;                         // write address comes from previous stage
+      write_data_r <= data_added_w;                       // data to write comes from the logic (data_added_w)
+      write_last_iteration_r <= add_last_iteration_r;     // last iteration
+      
       if (perform_operation_w) begin
         if (num_reads_per_iter_r == 1) begin
           if (num_iters_r == 1) module_enabled_r <= 0;
@@ -167,15 +201,14 @@ end
 
 // synthesis translate_off
 
-`define DEBUG
-
-`ifdef DEBUG
+`ifdef DEBUG_ACC
   reg [15:0] tics;
 
   always @ (posedge clk) begin
     if (~rst) tics <= 0;
     else begin
-      if (perform_operation_w) $display("ACC: cycle %d data_added %x", tics, data_added_w);
+      if (write_r) $display("ACC: cycle %d writing %x in address %x", tics, write_data_r, write_addr_r);
+      if (valid_out) $display("ACC: cycle %d forwarding %x", tics, data_out);
       tics <= tics + 1;
     end
   end

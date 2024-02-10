@@ -11,10 +11,12 @@
 // the module will multiply the input data (each item) by the current weight.
 // 
 
+`include "RTLinf.vh"
+
 module MUL #(
-  parameter GROUP_SIZE = 8,                                      // group size
-  parameter DATA_WIDTH = 8,                                      // input data width (output is 2x input width)
-  parameter LOG_MAX_ITERS = 16,                                  // number of bits for max iters register
+  parameter GROUP_SIZE             = 4,                          // group size
+  parameter DATA_WIDTH             = 8,                          // input data width (output is 2x input width)
+  parameter LOG_MAX_ITERS          = 16,                         // number of bits for max iters register
   parameter LOG_MAX_READS_PER_ITER = 16                          // number of bits for max reads per iter
 )(
   input clk,
@@ -144,9 +146,7 @@ end
 
 // synthesis translate_off
 
-`define DEBUG
-
-`ifdef DEBUG
+`ifdef DEBUG_MUL
   reg [15:0] tics;
 
   always @ (posedge clk) begin

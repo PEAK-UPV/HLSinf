@@ -1,10 +1,10 @@
 // Module RTLinf
 //
-// This module implements the whole RTLinf accelerator
+// This module implements the whole RTLinf accelerator basic kernel
 //
 // The module implements NUM_INPUTS input read streams that feed a DISTRIBUTE_IN module. This module
 // distributes incoming data to NUM_LANES multipliers, aligners, and accumulator modules. All these 
-// lanes feed a DISTRIBUTE_OUT module which collects all data and forwards it to NUM_OUTPUTS write modules
+// lanes feed a DISTRIBUTE_OUT module which collects all data and forwards it to NUM_OUTPUTS write modules.
 //
 // The module runs for a given number of iterations and within each iteration performs a given number of operational cycles.
 // READ, DISTRIBUTE_IN, MUL, ALIGN, and ACC run for each iteration whereas DISTRIBUTE_OUT and WRITE run whenever input
@@ -22,17 +22,24 @@
 //
 // Input data (activations and weights) and output data (produced activations) is external to the module.
 //
+// IMPORTANT: The module is implemented with customized RAM memories. Current memory supported configurations are 4Kx32, 4Kx64 and 4Kx72. This
+// means the following configurations of the module are possible:
+//   - NUM_ADDRESSES 4096, DATA_WIDTH 8, GROUP_SIZE 4, NUM_INPUTS 9, NUM_LANES 9, NUM_OUTPUTS 9
+//
+// Any other configuration needing a different memory configuration is not currently supported.
+
+`include "RTLinf.vh"
 
 module RTLinf #(
   parameter GROUP_SIZE             = 4,    // group size
   parameter DATA_WIDTH             = 8,    // data width
-  parameter NUM_INPUTS             = 1,    // number of inputs
+  parameter NUM_INPUTS             = 9,    // number of inputs
   parameter NUM_LANES              = 9,    // number of lanes
-  parameter NUM_OUTPUTS            = 1,    // number of outputs
+  parameter NUM_OUTPUTS            = 9,    // number of outputs
   parameter LOG_MAX_ITERS          = 16,   // number of bits for max iters
   parameter LOG_MAX_READS_PER_ITER = 16,   // number of bits for reads_per_iter
-  parameter LOG_MAX_ADDRESS        = 16,   // number of bits for addresses
-  parameter NUM_ADDRESSES          = 65536 // number of addresses in memories
+  parameter LOG_MAX_ADDRESS        = 12,   // number of bits for addresses
+  parameter NUM_ADDRESSES          = 4096  // number of addresses in memories
 )(
   input                                   clk,                // clock input
   input                                   rst,                // reset input
@@ -270,6 +277,7 @@ generate
     .GROUP_SIZE             ( GROUP_SIZE             ),
     .DATA_WIDTH             ( 2*DATA_WIDTH           ),
     .NUM_ADDRESSES          ( NUM_ADDRESSES          ),
+    .LOG_MAX_ADDRESS        ( LOG_MAX_ADDRESS        ),
     .LOG_MAX_ITERS          ( LOG_MAX_ITERS          ),
     .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER )
   ) acc_m (

@@ -1,8 +1,14 @@
 //
-// TB_2: Testbench for n BRAM/READ activation modules plus one BRAM/READ weight modules and one distribute module.
-// The distribute module has n lanes. Distribute conf mode set to 1 (input i goes to output i)
-// n can be instantiated by the NUM_INPUTS/NUM_LANES defines below
+// This is the testbench for RTLinf accelerator. The accelerator currently has two operational modes.
 //
+// Mode 0 where 1 input is read, broadcasted to all lanes, and all lanes then reduced to one single output
+// Mode 1 where n inputs are read in parallel, each input is forwarded to a lane and each lane forwards data to an output (inputs must be equal to lanes and outputs)
+//
+// IMPORTANT: The module is implemented with customized RAM memories. Current memory supported configurations are 4Kx32, 4Kx64 and 4Kx72. This
+// means the following configurations of the module are possible:
+//   - NUM_ADDRESSES 4096, DATA_WIDTH 8, GROUP_SIZE 4, NUM_INPUTS 9, NUM_LANES 9, NUM_OUTPUTS 9
+//
+// Any other configuration needing a different memory configuration is not currently supported
 
 `define LOG_MAX_ITERS          8     // LOG_MAX_ITERS and LOG_MAX_READS_PER_ITER must be equal (to avoid data lenght problems when reading weights)
 `define LOG_MAX_READS_PER_ITER 8
@@ -13,8 +19,8 @@
 `define NUM_INPUTS             9
 `define NUM_LANES              9
 `define NUM_OUTPUTS            9
-`define NUM_ITERS              4
-`define NUM_OPS_PER_ITER       16
+`define NUM_ITERS              2
+`define NUM_OPS_PER_ITER       256
 
 module RTLinf_tb;
 
@@ -99,8 +105,8 @@ module RTLinf_tb;
       ) act_mem_m (
          .clk            ( clk_r                     ),
          .rst            ( rst_r                     ),
-         .data_write     ( 0                         ),
-         .addr_write     ( 0                         ),
+         .data_write     ( 32'b0                     ),
+         .addr_write     ( 12'b0                     ),
          .write          ( 0                         ),
          .addr_read      ( act_addr_w[((i+1)*`LOG_MAX_ADDRESS)-1:i*`LOG_MAX_ADDRESS]               ),
          .read           ( act_read_w[i]                                                           ),
@@ -160,8 +166,8 @@ initial begin
   num_reads_per_iter_r <= `NUM_OPS_PER_ITER;
   read_address_r       <= 0;
   write_address_r      <= 0;
-  conf_mode_in_r       <= 0;  // input 0 broadcasted to all lanes
-  conf_mode_out_r      <= 0;  // all inputs added and sent to all outputs
+  conf_mode_in_r       <= 1; //0;  // input 0 broadcasted to all lanes
+  conf_mode_out_r      <= 1; //0;  // all inputs added and sent to all outputs
   min_clip_r           <= 0;
   max_clip_r           <= 255;
   

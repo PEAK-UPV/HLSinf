@@ -19,14 +19,16 @@
 //    - CONF_MODE_1: Every input activation i is sent to output data i
 //
 
+`include "RTLinf.vh"
+
 `define CONF_MODE_0 0
 `define CONF_MODE_1 1
 
 module DISTRIBUTE_IN #(
-    parameter NUM_DATA_INPUTS        = 8,                // number of data inputs
+    parameter NUM_DATA_INPUTS        = 9,                // number of data inputs
     parameter GROUP_SIZE             = 4,                // group size
     parameter DATA_WIDTH             = 8,                // input and output data width
-    parameter NUM_DATA_OUTPUTS       = 8,                // number of data outputs
+    parameter NUM_DATA_OUTPUTS       = 9,                // number of data outputs
     parameter LOG_MAX_ITERS          = 16,               // number of bits for max iters register
     parameter LOG_MAX_READS_PER_ITER = 16,               // number of bits for max reads per iter
     localparam NUM_WEIGHT_INPUTS     = NUM_DATA_OUTPUTS  // The number of input weights equals the number of outputs
@@ -209,9 +211,7 @@ end
 
 // synthesis translate_off
 
-`define DEBUG
-
-`ifdef DEBUG
+`ifdef DEBUG_DISTRIBUTE_IN
   reg [15:0] tics;
 
   always @ (posedge clk) begin
@@ -366,9 +366,7 @@ end
 
 // synthesis translate_off
 
-`define DEBUG
-
-`ifdef DEBUG
+`ifdef DEBUG_DISTRIBUTE_OUT
   reg [15:0] tics;
 
   always @ (posedge clk) begin

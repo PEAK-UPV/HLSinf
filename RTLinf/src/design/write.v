@@ -9,6 +9,8 @@
 // applies cliping and sends a write to the downstream module (block RAM). 
 //
 
+`include "RTLinf.vh"
+
 module WRITE #(
     parameter GROUP_SIZE             = 4,                          // group size
     parameter DATA_WIDTH             = 8,                          // data width
@@ -47,11 +49,12 @@ wire                     perform_operation_w;               // whether an operat
 reg [LOG_MAX_ADDRESS-1:0]        base_address_r;            // base address to access block ram (up counter)
 reg [OUTPUT_DATA_WIDTH-1:0]      min_clip_r;                // min clip value
 reg [OUTPUT_DATA_WIDTH-1:0]      max_clip_r;                // max clip value
+reg [LOG_MAX_ADDRESS-1:0]        offset_address_r;          // offset address counter
 
 // combinational logic
 assign avail_out    = ~full_w & ~almost_full_w;
 assign perform_operation_w = ~empty_w;                             // perform operation if data available at the input
-assign address_out  = base_address_r;                              // address to downstream
+assign address_out  = base_address_r + offset_address_r;           // address to downstream
 assign data_write_w = data_in;                                     // data to FIFO
 assign write_w      = valid_in;                                    // write signal to FIFO
 assign next_read_w  = perform_operation_w;
@@ -102,12 +105,14 @@ always @ (posedge clk) begin
     base_address_r       <= 0;
     min_clip_r           <= 0;
     max_clip_r           <= 0;
+    offset_address_r     <= 0;
   end else begin
     if (configure) begin
       base_address_r            <= base_address;
       min_clip_r                <= min_clip;
       max_clip_r                <= max_clip;
     end
+    if (valid_out) offset_address_r <= offset_address_r + 1;
   end 
 end
 
@@ -120,15 +125,13 @@ end
 
 // synthesis translate_off
 
-`define DEBUG
-
-`ifdef DEBUG
+`ifdef DEBUG_WRITE
   reg [15:0] tics;
 
   always @ (posedge clk) begin
     if (~rst) tics <= 0;
     else begin
-      if (perform_operation_w) $display("WRITE: cycle %d, data_out %x", tics, data_out); 
+      if (perform_operation_w) $display("WRITE: cycle %d, address %d data_out %x", tics, address_out, data_out); 
       tics <= tics + 1;
     end
   end

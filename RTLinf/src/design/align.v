@@ -12,46 +12,12 @@
 // 
 //
 
-// TODO: Este modulo debe alinear los items de entrada. En la entrada llegan GS items, pero algunos de ellos se deben 
-// descartar. Una posibilidad es que el modulo reciba el H y el W de la salida. Tambien recibirá un offset inicial de Hoff y Woff.
-// Por ejemplo, H=W=3 y Hoff=0 y Woff=-2. Si GS=4 entonces se recibirá:
-//
-//   ( 0, 0) ( 0, 1) ( 0, 2) ( 0, 3)
-//   ( 0, 4) ( 1, 0) ( 1, 1) ( 1, 2)
-//   ( 1, 3) ( 1, 4) ( 2, 0) ( 2, 1)
-//   ( 2, 2) ( 2, 3) ( 2, 4) ( 3, 0)
-//   ( 3, 1) ( 3, 2) ( 3, 3) ( 3, 4)
-//   ( 4, 0) ( 4, 1) ( 4, 2) ( 4, 3)
-//   ( 4, 4) ( 5, 0) ( 5, 1) ( 5, 2)   // tres ultimos son padding, deben venir con valor 0
-//
-// al tener un offset Hoff=0 y Woff=-2 las posiciones de salida son:
-//
-//   ( 0,-2) ( 0,-1) ( 0, 0) ( 0, 1)
-//   ( 0, 2) ( 1,-2) ( 1,-1) ( 1, 0)
-//   ( 1, 1) ( 1, 2) ( 2,-2) ( 2,-1)
-//   ( 2, 0) ( 2, 1) ( 2, 2) ( 3,-2)
-//   ( 3,-1) ( 3, 0) ( 3, 1) ( 3, 2)
-//   ( 4,-2) ( 4,-1) ( 4, 0) ( 4, 1)
-//   ( 4, 2) ( 5,-2) ( 5,-1) ( 5, 0)
-//
-// Los pixels de salida con indices negativos se deben filtrar y los positivos deben agruparse en grupos de GS (4):
-//
-//   ( 0, 0) ( 0, 1) ( 0, 2) ( 1, 0)
-//   ( 1, 1) ( 1, 2) ( 2, 0) ( 2, 1) 
-//   ( 2, 2) ( 3, 0) ( 3, 1) ( 3, 2)
-//   ( 4, 0) ( 4, 1) ( 4, 2)            // padding necesario
-//
-//
-// Posible algoritmo:
-//   - Hcur=Hoff, Wcur=Woff
-//   - read GS items
-//   - Wcur=Wcur + GS
-//   - if (Wcur>Wout) Wcur = Wcur - Woff
+`include "RTLinf.vh"
 
 module ALIGN #(
-    parameter GROUP_SIZE = 8,                                        // number of inputs (group size)
-    parameter DATA_WIDTH = 8,                                        // input data width (output width is input width)
-    parameter LOG_MAX_ITERS = 16,                                    // number of bits for max iters register
+    parameter GROUP_SIZE             = 4,                            // number of inputs (group size)
+    parameter DATA_WIDTH             = 8,                            // input data width (output width is input width)
+    parameter LOG_MAX_ITERS          = 16,                           // number of bits for max iters register
     parameter LOG_MAX_READS_PER_ITER = 16                            // number of bits for max reads per iter
   )(
     input                                   clk,                     // clock signal
@@ -159,9 +125,7 @@ end
 
 // synthesis translate_off
 
-`define DEBUG
-
-`ifdef DEBUG
+`ifdef DEBUG_ALIGN
   reg [15:0] tics;
 
   always @ (posedge clk) begin
