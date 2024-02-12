@@ -8,10 +8,12 @@
 
 //`include "RTLinf.vh"
 
+`include "RTLinf.vh"
+
 module FIFO #(
-    parameter NUM_SLOTS = 4,              // number of slots (depth)
+    parameter NUM_SLOTS     = 4,          // number of slots (depth)
     parameter LOG_NUM_SLOTS = 2,          // number of bits for number of slots
-    parameter DATA_WIDTH = 8              // data width
+    parameter DATA_WIDTH    = 8           // data width
 )(
   input clk,                              // clock input
   input rst,                              // reset input
@@ -38,7 +40,7 @@ reg [LOG_NUM_SLOTS:0]   counter;
 assign full        = counter == NUM_SLOTS;
 assign almost_full = counter == NUM_SLOTS-1;
 assign empty       = counter == 0;
-assign data_read   = fifo[read_ptr];
+assign data_read   = counter==0? 0 : fifo[read_ptr];
 
 // sequential logic for write logic
 always @ (posedge clk) begin
@@ -82,9 +84,9 @@ end
 // in this module whenever a write or next_read event occurs, the associated information is displayed
 //
 
-//`define DEBUG
+// synthesis translate_off
 
-`ifdef DEBUG
+`ifdef DEBUG_FIFO
 reg [63:0] tics;
 
 always @ (posedge clk) begin
@@ -97,5 +99,7 @@ always @ (posedge clk) begin
   end
 end
 `endif
+
+// synthesis translate on
 
 endmodule

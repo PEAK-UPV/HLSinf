@@ -10,16 +10,18 @@
 // completes all writes even if the module is disabled (the fifo still has some pending data to send)
 //
 
+`include "RTLinf.vh"
+
 `define FSM_IDLE  0
 `define FSM_READ  1
 `define FSM_WRITE 2
 
 module READ #(
-    parameter DATA_WIDTH = 8,                                      // data width
-    parameter LOG_MAX_ITERS = 16,                                  // number of bits for max iters register
+    parameter DATA_WIDTH             = 8,                          // data width
+    parameter LOG_MAX_ITERS          = 16,                         // number of bits for max iters register
     parameter LOG_MAX_READS_PER_ITER = 16,                         // number of bits for max reads per iter
-    parameter LOG_MAX_ADDRESS = 16,                                 // number of bits for addresses
-    parameter TYPE = "unspecified"                                 // module type
+    parameter LOG_MAX_ADDRESS        = 16,                         // number of bits for addresses
+    parameter TYPE                   = "unspecified"               // module type
 )(
   input clk,                                                       // clock input
   input rst,                                                       // reset input
@@ -32,8 +34,8 @@ module READ #(
   input valid_in,                                                  // IN interface:: input valid signal
   input [DATA_WIDTH-1:0] data_in,                                  // IN interface:: input valid data
 
-  output [LOG_MAX_ADDRESS-1:0] address_out,                        // OUT1 interface:: address
-  output request,                                                  // OUT1 interface:: request signal 
+  output reg [LOG_MAX_ADDRESS-1:0] address_out,                    // OUT1 interface:: address
+  output reg                       request,                        // OUT1 interface:: request signal 
 
   input  avail_in,                                                 // OUT2 interface:: downstream module available
   output valid_out,                                                // OUT2 interface:: output valid signal
@@ -48,6 +50,11 @@ wire                     almost_full_w;                     // almost_full signa
 wire [DATA_WIDTH - 1: 0] data_read_w;                       // data read from FIFO
 wire                     next_read_w;                       // next_read signal to FIFO
 wire                     empty_w;                           // empty signal from FIFO
+//
+wire                     perform_operation_w;               // control signal to perform a forward operation
+//
+wire [LOG_MAX_ADDRESS-1:0] address_out_w;
+wire                       request_w;
 
 // registers
 reg [LOG_MAX_ITERS-1:0]          num_iters_r;               // number of iterations (down counter)
@@ -56,19 +63,17 @@ reg [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter_copy_r; // copy of number of
 reg [LOG_MAX_ADDRESS-1:0]        base_address_r;            // base address to access block ram (up counter)
 reg [LOG_MAX_ADDRESS-1:0]        base_address_copy_r;       // copy of base address to access block ram 
 reg                              module_enabled_r;          // module enabled
-reg [1:0]                        read_fsm_state;            // FSM state for read from BRAM
-reg [1:0]                        read_fsm_next_state;       // FSM next state for read from BRAM
-reg [1:0]                        write_fsm_state;           // FSM state for write to downstream
-reg [1:0]                        write_fsm_next_state;      // FSM state for write to downstream
 
 // combinational logic
-assign address_out  = base_address_r;                                      // address to the block ream
-assign request      = ~almost_full_w & ~ full_w & module_enabled_r & (read_fsm_state == `FSM_READ);    // read request to the block ram
-assign data_write_w = data_in;                                             // data to FIFO
-assign write_w      = valid_in;                                            // write signal to FIFO
-assign next_read_w  = avail_in & ~empty_w & (write_fsm_state == `FSM_WRITE);          // next_read signal to FIFO
-assign valid_out    = avail_in & ~empty_w & (write_fsm_state == `FSM_WRITE);          // valid signal to downstream module
-assign data_out     = data_read_w;                                         // data to downstream module
+assign address_out_w= base_address_r;                                  // address to the block ream
+assign request_w    = ~almost_full_w & ~ full_w & module_enabled_r;    // read request to the block ram
+assign data_write_w = data_in;                                         // data to FIFO
+assign write_w      = valid_in;                                        // write signal to FIFO
+assign next_read_w  = perform_operation_w;                             // next_read signal to FIFO
+assign valid_out    = perform_operation_w;                             // valid signal to downstream module
+assign data_out     = data_read_w;                                     // data to downstream module
+//
+assign perform_operation_w = ~empty_w & avail_in;                      // control signal to indicate when to perform a forward operation
 
 // modules
 
@@ -96,7 +101,7 @@ FIFO #(
 // We also increment the base address for the next read.
 // When the reads per iteration reaches zero we decrement number of iterations and restore
 // both the base address and the reads per iteration. If number of iterations reaches zero
-// then we disable the module. Notice the write FSM state will be still working draining the FIFO
+// then we disable the module. Notice forward operations will be still working draining the FIFO
 //
 always @ (posedge clk) begin
   if (~rst) begin
@@ -113,74 +118,27 @@ always @ (posedge clk) begin
       base_address_copy_r  <= base_address;
       module_enabled_r     <= 1'b1;
     end else begin
-      if (request & (num_reads_per_iter_r == 1)) begin
-        if (num_iters_r == 1) module_enabled_r <= 0;
-        else begin
-          num_iters_r <= num_iters_r - 1;
-          num_reads_per_iter_r <= num_reads_per_iter_copy_r;
-          base_address_r <= base_address_copy_r;
-        end
-      end else begin
-        if (read_fsm_state == `FSM_READ) begin
-          if (request) num_reads_per_iter_r <= num_reads_per_iter_r - 1;
-          if (request) base_address_r <= base_address_r + 1;  // address increments only if we perform a read to the BRAM)
+      request <= request_w;
+      address_out <= address_out_w;
+      if (request_w) begin   // when we trigger a read to bram update the counters for iteration control
+        if (num_reads_per_iter_r == 1) begin
+          if (num_iters_r == 1) begin
+            module_enabled_r <= 0; 
+          end else begin
+            num_iters_r <= num_iters_r - 1;
+            num_reads_per_iter_r <= num_reads_per_iter_copy_r;
+            base_address_r <= base_address_copy_r;
+          end
+        end else begin
+          num_reads_per_iter_r <= num_reads_per_iter_r - 1;
+          base_address_r <= base_address_r + 1;
         end
       end
     end
   end 
 end
 
-// write to the fifo: FSM with two states (IDLE, READ)
-// IDLE when FIFO is almost full or module is not enabled, READ otherwise
-//
-//  --------  enabled & !almost_full  --------
-//  |      | ------------------------>|      |
-//  | IDLE |                          | READ |
-//  |      | <------------------------|      |
-//  --------  almost_full | !enabled  --------
-//
-// in read state a read request is sent to the BRAM
-// the write logic to the FIFO depends on the availability of data
-// at the input interface
-//
-always @ (posedge clk) begin
-  if (~rst) begin
-    read_fsm_state <= `FSM_IDLE;
-    read_fsm_next_state <= `FSM_IDLE;
-  end else begin
-    read_fsm_state <= read_fsm_next_state;
-    if (read_fsm_state == `FSM_IDLE) begin
-      if (module_enabled_r & ~almost_full_w) read_fsm_next_state <= `FSM_READ;
-    end else if (read_fsm_state == `FSM_READ) begin
-      if (almost_full_w | ~module_enabled_r) read_fsm_next_state <= `FSM_IDLE;
-    end    
-  end
-end
-
-// read from the fifo: FSM with two states (IDLE, WRITE)
-// IDLE when downstream module is not available or module is not enabled and FIFO is empty, READ otherwise
-//
-//  --------         avail_downstream  & !fifo_empty          ---------
-//  |      | ------------------------------------------------>|       |
-//  | IDLE |                                                  | WRITE |
-//  |      | <------------------------------------------------|       |
-//  --------            !avail_downstream | fifo_empty        ---------
-//
-// in write state data read from the fifo is assigned to the OUT2 interface
-// and next_read signal is triggered
-always @ (posedge clk) begin
-  if (~rst) begin
-    write_fsm_state      <= `FSM_IDLE;
-    write_fsm_next_state <= `FSM_IDLE;
-  end else begin
-    write_fsm_state <= write_fsm_next_state;
-    if (write_fsm_state == `FSM_IDLE) begin
-      if (avail_in & ~empty_w) write_fsm_next_state <= `FSM_WRITE;
-    end else if (write_fsm_state == `FSM_WRITE) begin
-      if (~avail_in | empty_w) write_fsm_next_state <= `FSM_IDLE;
-    end    
-  end
-end
+// synthesis translate_off
 
 // debug support. When enabled (through the DEBUG define) the module will generate
 // debug information on every specific cycle, depending on the debug conditions implemented
@@ -189,15 +147,13 @@ end
 // in this module whenever a read or write event is performed the associated information is shown as debug
 //
 
-`define DEBUG
-
-`ifdef DEBUG
+`ifdef DEBUG_READ
   reg [15:0] tics;
 
   always @ (posedge clk) begin
     if (~rst) tics <= 0;
     else begin
-      if (configure) $display("READ (configure): cycle %d", tics);
+      if (configure) $display("READ (configure): cycle %d base_address %x num_iters %d num_reads_per_iter %d", tics, base_address, num_iters, num_reads_per_iter);
       if (request) $display("READ (type %s, read from bram): cycle %d, address_out %x, num_iters %d num_reads %d module_enabled %d", TYPE, tics, address_out, num_iters_r, num_reads_per_iter_r, module_enabled_r);
       if (valid_out) $display("READ (type %s, forward): cycle %d, data_out %x (full %d almost_full %d empty %d, enabled %d)", TYPE, tics, data_out, full_w, almost_full_w, empty_w, module_enabled_r); 
       if (valid_in) $display("READ (type %s, valid_in) data %x", TYPE, data_in);
@@ -205,5 +161,7 @@ end
     end
   end
 `endif
+
+// synthesis translate_on
 
 endmodule

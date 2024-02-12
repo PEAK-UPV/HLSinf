@@ -11,10 +11,12 @@
 // the module will multiply the input data (each item) by the current weight.
 // 
 
+`include "RTLinf.vh"
+
 module MUL #(
-  parameter GROUP_SIZE = 8,                                      // group size
-  parameter DATA_WIDTH = 8,                                      // input data width (output is 2x input width)
-  parameter LOG_MAX_ITERS = 16,                                  // number of bits for max iters register
+  parameter GROUP_SIZE             = 4,                          // group size
+  parameter DATA_WIDTH             = 8,                          // input data width (output is 2x input width)
+  parameter LOG_MAX_ITERS          = 16,                         // number of bits for max iters register
   parameter LOG_MAX_READS_PER_ITER = 16                          // number of bits for max reads per iter
 )(
   input clk,
@@ -120,14 +122,14 @@ always @ (posedge clk) begin
       num_reads_per_iter_copy_r <= num_reads_per_iter;
       module_enabled_r     <= 1'b1;
     end else begin
-      if (num_reads_per_iter_r == 1) begin
-        if (num_iters_r == 1) module_enabled_r <= 0;
-        else begin
-          num_iters_r <= num_iters_r - 1;
-          num_reads_per_iter_r <= num_reads_per_iter_copy_r;
-        end
-      end else begin
-        if (perform_operation_w) begin
+      if (perform_operation_w) begin
+        if (num_reads_per_iter_r == 1) begin
+          if (num_iters_r == 1) module_enabled_r <= 0;
+          else begin
+            num_iters_r <= num_iters_r - 1;
+            num_reads_per_iter_r <= num_reads_per_iter_copy_r;
+          end
+        end else begin
           num_reads_per_iter_r <= num_reads_per_iter_r - 1;
         end
       end
@@ -142,9 +144,9 @@ end
 // in this module whenever a "read" cycle is performed the associated information is shown as debug
 //
 
-`define DEBUG
+// synthesis translate_off
 
-`ifdef DEBUG
+`ifdef DEBUG_MUL
   reg [15:0] tics;
 
   always @ (posedge clk) begin
@@ -155,6 +157,8 @@ end
     end
   end
 `endif
+
+// synthesis translate_on
 
 endmodule
 
