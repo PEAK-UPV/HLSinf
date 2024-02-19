@@ -217,7 +217,7 @@ end
   always @ (posedge clk) begin
     if (~rst) tics <= 0;
     else begin
-      if (perform_operation_w) $display("DISTRIBUTE_IN: cycle %d, first_cycle: %d activations: valid %d data %x . weights: valid %d data %x, first_cycle %d module enabled %d", tics, first_read_cycle_w, valid_out, data_out, weights_valid_out, weights_data_out, first_read_cycle_w, module_enabled_r);
+      if (perform_operation_w) $display("DISTRIBUTE_IN: cycle %d, first_cycle: %d activations: valid %b data %x . weights: valid %b data %x, first_cycle %d module enabled %d", tics, first_read_cycle_w, valid_out, data_out, weights_valid_out, weights_data_out, first_read_cycle_w, module_enabled_r);
       tics <= tics + 1;
     end
   end

@@ -10,17 +10,30 @@
 //
 // Any other configuration needing a different memory configuration is not currently supported
 
-`define LOG_MAX_ITERS          8     // LOG_MAX_ITERS and LOG_MAX_READS_PER_ITER must be equal (to avoid data lenght problems when reading weights)
-`define LOG_MAX_READS_PER_ITER 8
-`define NUM_ADDRESSES          4096
-`define LOG_MAX_ADDRESS        12
-`define DATA_WIDTH             8
-`define GROUP_SIZE             4
-`define NUM_INPUTS             9
-`define NUM_LANES              9
-`define NUM_OUTPUTS            9
-`define NUM_ITERS              2
-`define NUM_OPS_PER_ITER       256
+
+`define NUM_ADDRESSES         4096
+`define LOG_MAX_ADDRESS         12
+
+`define GROUP_SIZE               4
+`define DATA_WIDTH               8
+
+`define NUM_KERNELS              1
+`define LOG_NUM_KERNELS          1
+
+`define NUM_ACT_MEMORIES         1
+`define LOG_NUM_ACT_MEMORIES     1
+
+`define NUM_WEIGHT_MEMORIES      1
+`define LOG_NUM_WEIGHT_MEMORIES  1
+
+`define NUM_INPUTS               1
+`define NUM_LANES                9
+`define NUM_OUTPUTS              1
+
+`define NUM_ITERS                2
+`define LOG_MAX_ITERS            8     // LOG_MAX_ITERS and LOG_MAX_READS_PER_ITER must be equal (to avoid data lenght problems when reading weights)
+`define NUM_OPS_PER_ITER        16
+`define LOG_MAX_READS_PER_ITER   8
 
 module RTLinf_tb;
 
@@ -30,35 +43,50 @@ module RTLinf_tb;
   reg                                 configure_r;
   reg [`LOG_MAX_ITERS-1:0]            num_iters_r;
   reg [`LOG_MAX_READS_PER_ITER-1:0]   num_reads_per_iter_r;
-  reg [`LOG_MAX_ADDRESS-1:0]          read_address_r;
-  reg [`LOG_MAX_ADDRESS-1:0]          write_address_r;
   reg                                 conf_mode_in_r;
   reg                                 conf_mode_out_r;
   reg [`DATA_WIDTH-1:0]               min_clip_r;
   reg [`DATA_WIDTH-1:0]               max_clip_r;
-  // outputs
-  wire [`NUM_OUTPUTS*`GROUP_SIZE*`DATA_WIDTH-1:0] data_w;
-  wire [`NUM_OUTPUTS*`LOG_MAX_ADDRESS-1:0]        addr_w;
-  wire [`NUM_OUTPUTS-1:0]                         valid_w;
-
-  // wires between activation memories and RTLinf  
-  wire [`NUM_INPUTS*`GROUP_SIZE*`DATA_WIDTH-1:0] act_data_w;
-  wire [`NUM_INPUTS*`LOG_MAX_ADDRESS-1:0]        act_addr_w;
-  wire [`NUM_INPUTS-1:0]                         act_read_w;
-  wire [`NUM_INPUTS-1:0]                         act_valid_w;
+  //
+  reg                                 cmd_act_assign_r;
+  reg                                 cmd_act_unassign_r;
+  reg [`LOG_NUM_KERNELS+1-1:0]        cmd_act_read_port_r;
+  reg [`LOG_NUM_KERNELS+1-1:0]        cmd_act_write_port_r;
+  reg [`LOG_NUM_ACT_MEMORIES-1:0]     cmd_act_memory_r;
+  //
+  reg                                 cmd_weight_assign_r;
+  reg                                 cmd_weight_unassign_r;
+  reg [`LOG_NUM_KERNELS-1:0]          cmd_weight_read_port_r;
+  reg                                 cmd_weight_write_port_r;
+  reg [`LOG_NUM_WEIGHT_MEMORIES-1:0]  cmd_weight_memory_r;
+  //
+  reg                                 act_read_r;
+  reg [`LOG_MAX_ADDRESS-1:0]          act_read_addr_r;
+  //
+  reg                                   act_write_r;
+  reg [`LOG_MAX_ADDRESS-1:0]            act_write_addr_r;
+  reg [(`GROUP_SIZE * `DATA_WIDTH)-1:0] act_write_data_r;
+  //
+  reg                                   weight_write_r;
+  reg [`LOG_MAX_ADDRESS-1:0]            weight_write_addr_r;
+  reg [(`NUM_LANES * `DATA_WIDTH)-1:0]  weight_write_data_r;
   
-  // wires between  weight memory and RTLinf  
-  wire [`NUM_LANES*`DATA_WIDTH-1:0]              weight_data_w;
-  wire [`LOG_MAX_ADDRESS-1:0]                    weight_addr_w;
-  wire                                           weight_read_w;
-  wire                                           weight_valid_w;
+  // outputs
+  wire [(`GROUP_SIZE * `DATA_WIDTH)-1:0] act_read_data_w;
+  wire                                   act_read_valid_w;
       
   RTLinf #(
     .GROUP_SIZE             ( `GROUP_SIZE             ),
     .DATA_WIDTH             ( `DATA_WIDTH             ),
+    .NUM_KERNELS            ( `NUM_KERNELS            ),
+    .LOG_NUM_KERNELS        ( `LOG_NUM_KERNELS        ),
     .NUM_INPUTS             ( `NUM_INPUTS             ),
     .NUM_LANES              ( `NUM_LANES              ),
     .NUM_OUTPUTS            ( `NUM_OUTPUTS            ),
+    .NUM_ACT_MEMORIES       ( `NUM_ACT_MEMORIES       ),
+    .LOG_NUM_ACT_MEMORIES   ( `LOG_NUM_ACT_MEMORIES   ),
+    .NUM_WEIGHT_MEMORIES    ( `NUM_WEIGHT_MEMORIES    ),
+    .LOG_NUM_WEIGHT_MEMORIES( `LOG_NUM_WEIGHT_MEMORIES),
     .LOG_MAX_ITERS          ( `LOG_MAX_ITERS          ),
     .LOG_MAX_READS_PER_ITER ( `LOG_MAX_READS_PER_ITER ),
     .LOG_MAX_ADDRESS        ( `LOG_MAX_ADDRESS        ),
@@ -67,123 +95,156 @@ module RTLinf_tb;
   ) RTLinf_m (
     .clk                    ( clk_r                   ),
     .rst                    ( rst_r                   ),
-    
-    .act_read               ( act_read_w              ), // module input (act)
-    .act_addr               ( act_addr_w              ), // module input (act)
-    .act_data               ( act_data_w              ), // module input (act)
-    .act_valid              ( act_valid_w             ), // module input (act)
-    
-    .weight_read            ( weight_read_w           ), // module input (weight)
-    .weight_addr            ( weight_addr_w           ), // module input (weight)
-    .weight_data            ( weight_data_w           ), // module input (weight)
-    .weight_valid           ( weight_valid_w          ), // module input (weight)
-    
+    //
+    .act_read               ( act_read_r              ),
+    .act_read_addr          ( act_read_addr_r         ),
+    .act_read_data          ( act_read_data_w         ),
+    .act_read_valid         ( act_read_valid_w        ),
+    //
+    .act_write              ( act_write_r             ),
+    .act_write_addr         ( act_write_addr_r        ),
+    .act_write_data         ( act_write_data_r        ),
+    //
+    .weight_write           ( weight_write_r          ),
+    .weight_write_addr      ( weight_write_addr_r     ),
+    .weight_write_data      ( weight_write_data_r     ),
+    //
     .configure              ( configure_r             ),
     .num_iters              ( num_iters_r             ),
     .num_reads_per_iter     ( num_reads_per_iter_r    ),
-    .read_address           ( read_address_r          ),
-    .write_address          ( write_address_r         ),
     .min_clip               ( min_clip_r              ),
     .max_clip               ( max_clip_r              ),
     .conf_mode_in           ( conf_mode_in_r          ),
     .conf_mode_out          ( conf_mode_out_r         ),
-    .data_out               ( data_w                  ),  // module output
-    .addr_out               ( addr_w                  ),  // module output
-    .valid_out              ( valid_w                 )   // module output
+    //
+    .cmd_act_assign         ( cmd_act_assign_r        ),
+    .cmd_act_unassign       ( cmd_act_unassign_r      ),
+    .cmd_act_read_port      ( cmd_act_read_port_r     ),
+    .cmd_act_write_port     ( cmd_act_write_port_r    ),
+    .cmd_act_memory         ( cmd_act_memory_r        ),
+    //
+    .cmd_weight_assign         ( cmd_weight_assign_r        ),
+    .cmd_weight_unassign       ( cmd_weight_unassign_r      ),
+    .cmd_weight_read_port      ( cmd_weight_read_port_r     ),
+    .cmd_weight_write_port     ( cmd_weight_write_port_r    ),
+    .cmd_weight_memory         ( cmd_weight_memory_r        )
   );
   
-  // memories
-  genvar i;
   
-  // input actvivation memories
-  generate
-    for (i=0; i<`NUM_INPUTS; i=i+1) begin
-      MEM #(
-        .DATA_WIDTH      ( `GROUP_SIZE * `DATA_WIDTH ),
-        .NUM_ADDRESSES   ( `NUM_ADDRESSES            ),
-        .LOG_MAX_ADDRESS ( `LOG_MAX_ADDRESS          )
-      ) act_mem_m (
-         .clk            ( clk_r                     ),
-         .rst            ( rst_r                     ),
-         .data_write     ( 32'b0                     ),
-         .addr_write     ( 12'b0                     ),
-         .write          ( 0                         ),
-         .addr_read      ( act_addr_w[((i+1)*`LOG_MAX_ADDRESS)-1:i*`LOG_MAX_ADDRESS]               ),
-         .read           ( act_read_w[i]                                                           ),
-         .data_read      ( act_data_w[((i+1)*`GROUP_SIZE*`DATA_WIDTH)-1:i*`GROUP_SIZE*`DATA_WIDTH] ),
-         .valid_out      ( act_valid_w[i]                                                          )
-       );
-     end
-   endgenerate
-   
-   // input weight memory
-   MEM #(
-     .DATA_WIDTH      ( `NUM_LANES * `DATA_WIDTH ),
-     .NUM_ADDRESSES   ( `NUM_ADDRESSES           ),
-     .LOG_MAX_ADDRESS ( `LOG_MAX_ADDRESS         )
-   ) weight_mem_m (
-     .clk             ( clk_r                     ),
-     .rst             ( rst_r                     ),
-     .data_write      ( 0                         ),
-     .addr_write      ( 0                         ),
-     .write           ( 0                         ),
-     .addr_read       ( weight_addr_w             ),
-     .read            ( weight_read_w             ),
-     .data_read       ( weight_data_w             ),
-     .valid_out       ( weight_valid_w            )
-    );
-  
-  // output memories
-  generate
-    for (i=0; i<`NUM_OUTPUTS; i=i+1) begin
-    MEM #(
-      .DATA_WIDTH      ( `GROUP_SIZE * `DATA_WIDTH   ),
-      .NUM_ADDRESSES   ( `NUM_ADDRESSES              ),
-      .LOG_MAX_ADDRESS ( `LOG_MAX_ADDRESS            )
-    ) output_mem_m (
-      .clk             ( clk_r                       ),
-      .rst             ( rst_r                       ),
-      .data_write      ( data_w[((i+1)*`GROUP_SIZE * `DATA_WIDTH)-1:i*`GROUP_SIZE*`DATA_WIDTH]  ),
-      .addr_write      ( addr_w[((i+1)*`LOG_MAX_ADDRESS)-1:i*`LOG_MAX_ADDRESS]                  ),
-      .write           ( valid_w[i]                                                             ),
-      .addr_read       ( 0                    ),
-      .read            ( 0                    ),
-      .data_read       (                      ),
-      .valid_out       (                      )
-    );    
-    end
-  endgenerate
-
 always #5 clk_r <= ~clk_r;
 
-integer j;
+integer j, m;
 
 initial begin
-  rst_r <= 1;
-  clk_r <= 0;
+  rst_r                <= 1;
+  clk_r                <= 0;
   configure_r          <= 0;
   num_iters_r          <= `NUM_ITERS;
   num_reads_per_iter_r <= `NUM_OPS_PER_ITER;
-  read_address_r       <= 0;
-  write_address_r      <= 0;
-  conf_mode_in_r       <= 1; //0;  // input 0 broadcasted to all lanes
-  conf_mode_out_r      <= 1; //0;  // all inputs added and sent to all outputs
+  conf_mode_in_r       <= 0;  // input 0 broadcasted to all lanes
+  conf_mode_out_r      <= 0;  // all inputs added and sent to all outputs
   min_clip_r           <= 0;
   max_clip_r           <= 255;
+  //
+  cmd_act_assign_r    <= 0;
+  cmd_act_unassign_r  <= 0;
+  cmd_act_read_port_r <= 0;
+  cmd_act_write_port_r <= 0;
+  cmd_act_memory_r <= 0;
+  //
+  cmd_weight_assign_r <= 0;
+  cmd_weight_unassign_r <= 0;
+  cmd_weight_read_port_r <= 0;
+  cmd_weight_write_port_r <= 0;
+  cmd_weight_memory_r <= 0;
+  //  
+  act_read_r            <= 0;
+  act_read_addr_r       <= 0;
+  act_write_r           <= 0;
+  act_write_data_r      <= 0;
+  act_write_addr_r      <= 0;
+  weight_write_r        <= 0;
+  weight_write_addr_r   <= 0;
+  weight_write_data_r   <= 0;
   
-  #20 
-  rst_r <= 0;
+  // reset
+  #20 rst_r <= 0;
+  #20 rst_r <= 1;
+  
+  #200  // some cycles to let BRAMs to be ready
+    
+  // we write (fill) every activation memory with data, first we assign the last read and write ports to the memory. The last read and write ports are the local ports which we do have external access
+  for (m=0; m<`NUM_ACT_MEMORIES; m=m+1) begin
+    cmd_act_assign_r <= 1; cmd_act_read_port_r <= `NUM_KERNELS; cmd_act_write_port_r <= `NUM_KERNELS; cmd_act_memory_r <= m; #10
+    cmd_act_assign_r <= 0;
+    //
+    act_write_r <= 1; act_write_addr_r = 0; act_write_data_r <= 32'h03_02_01_00; #10;
+    act_write_r <= 1; act_write_addr_r = 1; act_write_data_r <= 32'h07_06_05_04; #10;
+    act_write_r <= 1; act_write_addr_r = 2; act_write_data_r <= 32'h0b_0a_09_08; #10;
+    act_write_r <= 1; act_write_addr_r = 3; act_write_data_r <= 32'h0f_0e_0d_0c; #10;
+    act_write_r <= 1; act_write_addr_r = 4; act_write_data_r <= 32'h13_12_11_10; #10;
+    act_write_r <= 1; act_write_addr_r = 5; act_write_data_r <= 32'h17_16_15_14; #10;
+    act_write_r <= 1; act_write_addr_r = 6; act_write_data_r <= 32'h1b_1a_19_18; #10;
+    act_write_r <= 1; act_write_addr_r = 7; act_write_data_r <= 32'h1f_1e_1d_1c; #10;
+    act_write_r <= 1; act_write_addr_r = 8; act_write_data_r <= 32'h23_22_21_20; #10;
+    act_write_r <= 1; act_write_addr_r = 9; act_write_data_r <= 32'h27_26_25_24; #10;
+    act_write_r <= 1; act_write_addr_r =10; act_write_data_r <= 32'h2b_2a_29_28; #10;
+    act_write_r <= 1; act_write_addr_r =11; act_write_data_r <= 32'h2f_2e_2d_2c; #10;
+    act_write_r <= 1; act_write_addr_r =12; act_write_data_r <= 32'h33_32_31_30; #10;
+    act_write_r <= 1; act_write_addr_r =13; act_write_data_r <= 32'h37_36_35_34; #10;
+    act_write_r <= 1; act_write_addr_r =14; act_write_data_r <= 32'h3b_3a_39_38; #10;
+    act_write_r <= 1; act_write_addr_r =15; act_write_data_r <= 32'h3f_3e_3d_3c; #10;
+    act_write_r <= 0;
+    //
+    // unasign the ports/memory
+    cmd_act_unassign_r <= 1; cmd_act_read_port_r <= `NUM_KERNELS; cmd_act_write_port_r <= `NUM_KERNELS; cmd_act_memory_r <= m; #10
+    cmd_act_unassign_r <= 0;
+  end
+  
+  // we now write (fill every weight memory with data, first we assign the write port to the memory
+  for (m=0; m<`NUM_WEIGHT_MEMORIES; m=m+1) begin
+    cmd_weight_assign_r <= 1; cmd_weight_read_port_r <= 0; cmd_weight_write_port_r <= 0; cmd_weight_memory_r <= m; 
+    #10 cmd_weight_assign_r <= 0;
+    
+    weight_write_r <= 1; weight_write_addr_r = 0; weight_write_data_r <= 72'h00_00_00_00_00_00_00_00_01; #10;
+    weight_write_r <= 1; weight_write_addr_r = 1; weight_write_data_r <= 72'h00_00_01_00_00_00_00_00_00; #10;
+    weight_write_r <= 0;
+ 
+    // unasign the ports/memory
+    cmd_weight_unassign_r <= 1; cmd_weight_read_port_r <= 0; cmd_weight_write_port_r <= 0; cmd_weight_memory_r <= m; #10
+    cmd_weight_unassign_r <= 0;
+  end
+  
+  
+  // we assign activation memory {0} to read port {0} and write port {0}
+  cmd_act_assign_r <= 1; cmd_act_read_port_r <= 0; cmd_act_write_port_r <= 0; cmd_act_memory_r <= 0; #10
+  cmd_act_assign_r <= 0;
+  
+  // we assign weight memory {0} to read port {0} and write port {0}
+  cmd_weight_assign_r <= 1; cmd_weight_read_port_r <= 0; cmd_weight_write_port_r <= 0; cmd_weight_memory_r <= 0; #10
+  cmd_weight_assign_r <= 0;
 
-  #20 
-  rst_r <= 1;
+  // now we trigger the kernels
+  #40 configure_r <= 1;
+  #10 configure_r <= 0;
 
-  $display("GROUP_SIZE %d NUM_INPUTS %d NUM_LANES %d NUM_OUTPUTS %d NUM_ITERS %d NUM_OPS_PER_ITER %d", `GROUP_SIZE, `NUM_INPUTS, `NUM_LANES, `NUM_OUTPUTS, `NUM_ITERS, `NUM_OPS_PER_ITER);
-
-  #40 
-  configure_r <= 1;
-
-  #10
-  configure_r <= 0;
+  // we wait long for the finish of the kernels
+  #1000
+  
+  // we now read every activation memory
+  for (m=0; m<`NUM_ACT_MEMORIES; m=m+1) begin
+    cmd_act_assign_r <= 1; cmd_act_read_port_r <= `NUM_KERNELS; cmd_act_write_port_r <= `NUM_KERNELS; cmd_act_memory_r <= m; #10
+    cmd_act_assign_r <= 0;
+    //
+    for (j=0; j<16; j=j+1) begin
+      act_read_r <= 1; act_read_addr_r = j; #10;
+      $display("Data read from memory %d addr %x: -> valid %d data %x", m, j, act_read_valid_w, act_read_data_w);
+    end
+    act_read_r <= 0;
+    // unasign the ports/memory
+    cmd_act_unassign_r <= 1; cmd_act_read_port_r <= `NUM_KERNELS; cmd_act_write_port_r <= `NUM_KERNELS; cmd_act_memory_r <= m; #10
+    cmd_act_unassign_r <= 0;
+  end
 
 
 end

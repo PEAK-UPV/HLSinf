@@ -6,6 +6,165 @@
 
 `include "RTLinf.vh"
 
+// Module MEMORY_BANK.
+//
+// This module instantiates a set of memories. The module
+// implements a set of read ports and a set of write ports.
+// Each memory can be configured to use a specific read port and write port
+//
+
+module MEMORY_BANK #(
+  parameter DATA_WIDTH             = 32,   // data width
+  parameter NUM_ADDRESSES          = 1024, // number of addresses
+  parameter LOG_MAX_ADDRESS        = 10,   // number of bit addresses
+  parameter NUM_MEMORIES           = 4,    // number of memories
+  parameter LOG_NUM_MEMORIES       = 2,    // number of bits to encode a memory id
+  parameter NUM_READ_PORTS         = 2,    // number of read ports
+  parameter LOG_NUM_READ_PORTS     = 1,    // number of bits to encode a read port id
+  parameter NUM_WRITE_PORTS        = 2,    // number of write ports
+  parameter LOG_NUM_WRITE_PORTS    = 1     // number of bits to encode a write port id
+) (
+  input                                                clk,
+  input                                                rst,
+  //
+  input                                                cmd_assign,
+  input                                                cmd_unassign,
+  input [LOG_NUM_READ_PORTS-1:0]                       read_port,
+  input [LOG_NUM_WRITE_PORTS-1:0]                      write_port,
+  input [LOG_NUM_MEMORIES-1:0]                         memory,
+  //
+  //
+  input [(NUM_WRITE_PORTS * DATA_WIDTH) - 1 : 0]       write_data_in,
+  input [(NUM_WRITE_PORTS * LOG_MAX_ADDRESS) - 1 : 0]  write_addr_in,
+  input [NUM_WRITE_PORTS-1 : 0]                        write_in,
+  //
+  output [(NUM_READ_PORTS * DATA_WIDTH) - 1: 0]        read_data_out,
+  output [NUM_READ_PORTS-1:0]                          read_valid_out,
+  input  [(NUM_READ_PORTS * LOG_MAX_ADDRESS) - 1: 0]   read_addr_in,
+  input  [NUM_READ_PORTS-1 : 0]                        read_in            
+);
+
+genvar i;
+
+// wires to connect to memories
+wire [DATA_WIDTH-1:0]      data_write_w[NUM_MEMORIES-1:0];
+wire [LOG_MAX_ADDRESS-1:0] addr_write_w[NUM_MEMORIES-1:0];
+wire [NUM_MEMORIES-1:0]    write_w;
+wire [LOG_MAX_ADDRESS-1:0] addr_read_w[NUM_MEMORIES-1:0];
+wire [NUM_MEMORIES-1:0]    read_w;
+wire [DATA_WIDTH-1:0]      data_read_w[NUM_MEMORIES-1:0];
+wire [NUM_MEMORIES-1:0]    valid_read_w;
+
+// registers to assign ports to mems
+reg [LOG_NUM_READ_PORTS-1:0]  sel_read_port_r[NUM_MEMORIES-1:0];                  // assigned read port to each memory
+reg [NUM_READ_PORTS-1:0]      is_assigned_read_port_to_memory_r;                  // whether a read port has an assigned memory
+reg [LOG_NUM_MEMORIES-1:0]    is_memory_assigned_to_read_port_r;                  // whether a memory is assigned to a read port
+reg [LOG_NUM_MEMORIES-1:0]    assigned_memory_to_read_port_r[NUM_READ_PORTS-1:0]; // assigned memory to each read port
+//
+reg [LOG_NUM_WRITE_PORTS-1:0] sel_write_port_r[NUM_MEMORIES-1:0];                   // assigned write port to each memory
+reg [NUM_MEMORIES-1:0]        is_memory_assigned_to_write_port_r;                   // whether a memory is assigned to a write por
+
+// read interface to memories (mux & demux)
+generate
+  for (i=0; i<NUM_MEMORIES; i=i+1) begin
+    assign read_w[i]         = is_memory_assigned_to_read_port_r[i] & read_in[sel_read_port_r[i]];
+    assign addr_read_w[i]    = read_addr_in[((sel_read_port_r[i]+1)*LOG_MAX_ADDRESS)-1 -: LOG_MAX_ADDRESS];
+  end
+  for (i=0; i<NUM_READ_PORTS; i=i+1) begin
+    assign read_valid_out[i] = is_assigned_read_port_to_memory_r[i] ? valid_read_w[assigned_memory_to_read_port_r[i]] : 0;
+    assign read_data_out[((i+1)*DATA_WIDTH)-1 -: DATA_WIDTH] = is_assigned_read_port_to_memory_r[i] ? data_read_w[assigned_memory_to_read_port_r[i]] : 0;
+  end
+endgenerate
+
+// write interface to memories (mux & demux)
+generate
+  for (i=0; i<NUM_MEMORIES; i=i+1) begin
+    assign write_w[i]       = is_memory_assigned_to_write_port_r[i] & write_in[sel_write_port_r[i]];
+    assign addr_write_w[i]  = write_addr_in[((sel_write_port_r[i]+1)*LOG_MAX_ADDRESS)-1 -: LOG_MAX_ADDRESS];
+    assign data_write_w[i]  = write_data_in[((sel_write_port_r[i]+1)*DATA_WIDTH)-1 -: DATA_WIDTH];
+  end
+endgenerate
+
+// modules
+generate
+  for (i = 0; i<NUM_MEMORIES; i=i+1) begin
+   // input weight memory
+   MEM #(
+     .DATA_WIDTH      ( DATA_WIDTH      ),
+     .NUM_ADDRESSES   ( NUM_ADDRESSES   ),
+     .LOG_MAX_ADDRESS ( LOG_MAX_ADDRESS )
+   ) mem_m (
+     .clk             ( clk                       ),
+     .rst             ( rst                       ),
+     .data_write      ( data_write_w[i]           ),
+     .addr_write      ( addr_write_w[i]           ),
+     .write           ( write_w[i]                ),
+     .addr_read       ( addr_read_w[i]            ),
+     .read            ( read_w[i]                 ),
+     .data_read       ( data_read_w[i]            ),
+     .valid_out       ( valid_read_w[i]           )
+    );
+  end
+endgenerate
+
+integer m;
+integer p;
+
+// sequential
+always @ (posedge clk) begin
+  if (~rst) begin
+    for (m=0; m<NUM_MEMORIES; m=m+1) begin
+      sel_read_port_r[m] <= 0;
+      sel_write_port_r[m] <= 0;
+      is_memory_assigned_to_read_port_r[m] <= 1'b0;
+      is_memory_assigned_to_write_port_r[m] <= 1'b0;
+    end
+    for (p=0; p<NUM_READ_PORTS; p=p+1) begin
+      is_assigned_read_port_to_memory_r[p] = 0;
+      assigned_memory_to_read_port_r[p] = 0;
+    end
+  end else begin
+    if (cmd_assign) begin
+      sel_read_port_r[memory] <= read_port;
+      sel_write_port_r[memory]<= write_port;
+      is_assigned_read_port_to_memory_r[read_port] <= 1'b1;
+      is_memory_assigned_to_read_port_r[memory] <= 1'b1;
+      is_memory_assigned_to_write_port_r[memory] <= 1'b1;
+      assigned_memory_to_read_port_r[read_port] <= memory;
+    end
+    else if (cmd_unassign) begin
+      is_assigned_read_port_to_memory_r[read_port] <= 1'b0;
+      is_memory_assigned_to_read_port_r[memory] <= 1'b0;
+      is_memory_assigned_to_write_port_r[memory] <= 1'b0;
+      assigned_memory_to_read_port_r[read_port] <= memory;
+    end
+  end
+end
+
+// debug support
+// synthesis translate_off
+`ifdef DEBUG_MEMORY_BANK
+  reg [15:0] tics;
+
+  always @ (posedge clk) begin
+    if (~rst) tics <= 0;
+    else begin
+      if (cmd_assign) $display("MEMORY_BANK: cycle %d assigning memory %d to read port %d and write port %d", tics, memory, read_port, write_port);
+      if (cmd_unassign) $display("MEMORY_BANK: cycle %d unassigning memory %d from read port %d and write port %d", tics, memory, read_port, write_port);
+      tics <= tics + 1;
+    end
+  end
+`endif
+// synthesis translate_on
+
+
+endmodule
+
+// Module MEMORY
+// Provides a memory for a given data width and number of addresses. Separate read and write ports
+// are provided.
+//
+
 module MEM #(
     parameter DATA_WIDTH      = 32,         // data width
     parameter NUM_ADDRESSES   = 4096,       // number of addresses
@@ -76,11 +235,28 @@ always @ (posedge clk) begin
   end
 end
 
+// debug support
+// synthesis translate_off
+`ifdef DEBUG_MEMORY
+  reg [15:0] tics;
+
+  always @ (posedge clk) begin
+    if (~rst) tics <= 0;
+    else begin
+      if (write) $display("MEMORY: cycle %d write operation address %x data %x", tics, addr_write, data_write);
+      if (read) $display("MEMORY: cycle %d read operation address %x", tics, addr_read);
+      if (valid1) $display("MEMORY: cycle %d read data -> %x", tics, data_read);
+      tics <= tics + 1;
+    end
+  end
+`endif
+// synthesis translate_on
+
+
 endmodule
 
 // -------------------------------------------------------------------------------------------
-// 4Kx72 memory implemented as 8 512x72 memories plus one 4096x9 memory
-// Each memory has a one bit extra for each byte
+// 4Kx72 memory implemented as 8 512x72 memories 
 //
  
 module MEM_4Kx72 #(
@@ -101,10 +277,8 @@ module MEM_4Kx72 #(
 );
 
   wire [71:0] data_read_bram[7:0];
-  wire [8:0] data_read_bram_last;
   wire [7:0]  write_bram;
   wire [7:0]  read_bram;
-  wire [80:0] data_read_final;
   
   genvar i;
   
@@ -115,9 +289,7 @@ module MEM_4Kx72 #(
     end
   endgenerate
   
-  assign data_read_final = {data_read_bram_last,data_read_bram[addr_write[11:9]]};
-  
-  assign data_read = {data_read_final[79:72],data_read_final[70:63],data_read_final[61:54],data_read_final[52:45],data_read_final[43:36],data_read_final[34:27],data_read_final[25:18],data_read_final[16:9],data_read_final[7:0]};
+  assign data_read = data_read_bram[addr_read[11:9]];
   
   generate
     for (i=0; i<8; i=i+1) begin
@@ -130,51 +302,23 @@ module MEM_4Kx72 #(
         .INIT_FILE     ( "NONE"    ),
         .SIM_COLLISION_CHECK ( "ALL"                  ), // Collision check enable "ALL", "WARNING_ONLY", "GENERATE_X_ONLY" or "NONE" 
         .SRVAL               ( 72'h000000000000000000 ), // Set/Reset value for port output
-        .INIT                ( 72'h000000000000000000 ), // Initial values on output port
-        .WRITE_MODE          ( "READ_FIRST"           ), // Specify "READ_FIRST" for same clock or synchronous clocks, Specify "WRITE_FIRST for asynchronous clocks on ports
-        .INIT_00(256'h23222120_1f1e1d1c_1a191817_16151413_11100f0e_0d0c0b0a_08070605_04030201)
+        .WRITE_MODE          ( "READ_FIRST"           )  // Specify "READ_FIRST" for same clock or synchronous clocks, Specify "WRITE_FIRST for asynchronous clocks on ports
      ) BRAM_SDP_MACRO_inst_0 (
         .DO            ( data_read_bram[i]  ), // Output read data port, width defined by READ_WIDTH parameter
         .DI            ( data_write         ), // Input write data port, width defined by WRITE_WIDTH parameter
         .RDADDR        ( addr_read[8:0]     ), // Input read address, width defined by read port depth
         .RDCLK         ( clk                ), // 1-bit input read clock
-        .RDEN          ( read                  ), // 1-bit input read port enable
+        .RDEN          ( read_bram[i]       ), // 1-bit input read port enable
         .REGCE         ( 0                  ), // 1-bit input read output register enable
         .RST           ( ~rst               ), // 1-bit input reset
-        .WE            ( 8'b00000000        ), // Input write enable, width defined by write port depth
+        .WE            ( 9'b111111111       ), // Input write enable, width defined by write port depth
         .WRADDR        ( addr_write[8:0]    ), // Input write address, width defined by write port depth
         .WRCLK         ( clk                ), // 1-bit input write clock
-        .WREN          ( 0                  )  // 1-bit input write port enable
+        .WREN          ( write_bram[i]      )  // 1-bit input write port enable
      );
    end
   endgenerate
-  
-  BRAM_SDP_MACRO #(
-    .BRAM_SIZE     ( "36Kb"    ), // Target BRAM, "18Kb" or "36Kb" 
-    .DEVICE        ( "7SERIES" ), // Target device: "7SERIES" 
-    .WRITE_WIDTH   ( 9         ), // Valid values are 1-72 (37-72 only valid when BRAM_SIZE="36Kb")
-    .READ_WIDTH    ( 9         ), // Valid values are 1-72 (37-72 only valid when BRAM_SIZE="36Kb")
-    .DO_REG        ( 0         ), // Optional output register (0 or 1)
-    .INIT_FILE     ( "NONE"    ),
-    .SIM_COLLISION_CHECK ( "ALL"                  ), // Collision check enable "ALL", "WARNING_ONLY", "GENERATE_X_ONLY" or "NONE" 
-    .SRVAL               ( 72'h000000000000000000 ), // Set/Reset value for port output
-    .INIT                ( 72'h000000000000000000 ), // Initial values on output port
-    .WRITE_MODE          ( "READ_FIRST"           ), // Specify "READ_FIRST" for same clock or synchronous clocks, Specify "WRITE_FIRST for asynchronous clocks on ports
-    .INIT_00(256'h00000000_00000000_00000000_00000000_00000000_00000000_00000000_241b1209)
-  ) BRAM_SDP_MACRO_inst_0 (
-    .DO            ( data_read_bram_last  ), // Output read data port, width defined by READ_WIDTH parameter
-    .DI            ( data_write         ), // Input write data port, width defined by WRITE_WIDTH parameter
-    .RDADDR        ( addr_read[11:0]    ), // Input read address, width defined by read port depth
-    .RDCLK         ( clk                ), // 1-bit input read clock
-    .RDEN          ( read               ), // 1-bit input read port enable
-    .REGCE         ( 0                  ), // 1-bit input read output register enable
-    .RST           ( ~rst               ), // 1-bit input reset
-    .WE            ( 1'b0               ), // Input write enable, width defined by write port depth
-    .WRADDR        ( addr_write[11:0]   ), // Input write address, width defined by write port depth
-    .WRCLK         ( clk                ), // 1-bit input write clock
-    .WREN          ( 0                  )  // 1-bit input write port enable
-  );
-    
+      
  endmodule
 
 // -------------------------------------------------------------------------------------------
@@ -210,7 +354,7 @@ module MEM_4Kx64 #(
     end
   endgenerate
   
-  assign data_read = data_read_bram[ addr_write[11:9] ];
+  assign data_read = data_read_bram[ addr_read[11:9] ];
   
   generate
    for (i=0; i<8; i=i+1) begin
@@ -264,10 +408,11 @@ module MEM_4Kx32 #(
   input                         read        // READ interface:: read
 );
 
-  wire [35:0] data_read_bram[3:0];
+  wire [31:0] data_read_bram[3:0];
   wire [3:0]  write_bram;
   wire [3:0]  read_bram;
-  wire [35:0] data_read_final;
+  wire [31:0] data_read_final;
+  wire [31:0] data_write_final;
   
   genvar i;
   
@@ -278,9 +423,13 @@ module MEM_4Kx32 #(
     end
   endgenerate
   
-  assign data_read_final = data_read_bram[addr_write[11:10]];
+  assign data_read_final = data_read_bram[addr_read[11:10]];
   
-  assign data_read = {data_read_final[34:27],data_read_final[25:18],data_read_final[16:9],data_read_final[7:0]};
+  assign data_read = data_read_final;
+  assign data_write_final = data_write;
+  
+  //assign data_read = {data_read_final[34:27],data_read_final[25:18],data_read_final[16:9],data_read_final[7:0]};
+  //assign data_write_final = {1'b0,data_write[34:27],1'b0,data_write[25:18],1'b0,data_write[16:9],1'b0,data_write[7:0]};
   
    ///////////////////////////////////////////////////////////////////////
    //  READ_WIDTH | BRAM_SIZE | READ Depth  | RDADDR Width |            //
@@ -306,145 +455,18 @@ module MEM_4Kx32 #(
        BRAM_SDP_MACRO #(
         .BRAM_SIZE     ( "36Kb"    ), // Target BRAM, "18Kb" or "36Kb" 
         .DEVICE        ( "7SERIES" ), // Target device: "7SERIES" 
-        .WRITE_WIDTH   ( 36        ), // Valid values are 1-72 (37-72 only valid when BRAM_SIZE="36Kb")
-        .READ_WIDTH    ( 36        ), // Valid values are 1-72 (37-72 only valid when BRAM_SIZE="36Kb")
+        .WRITE_WIDTH   ( 32        ), // Valid values are 1-72 (37-72 only valid when BRAM_SIZE="36Kb")
+        .READ_WIDTH    ( 32        ), // Valid values are 1-72 (37-72 only valid when BRAM_SIZE="36Kb")
         .DO_REG        ( 0         ), // Optional output register (0 or 1)
         .INIT_FILE     ( "NONE"    ),
-        .SIM_COLLISION_CHECK ( "ALL"                  ), // Collision check enable "ALL", "WARNING_ONLY", "GENERATE_X_ONLY" or "NONE" 
+        .SIM_COLLISION_CHECK ( "ALL"                           ), // Collision check enable "ALL", "WARNING_ONLY", "GENERATE_X_ONLY" or "NONE" 
         .SRVAL               ( 72'h000000000000000000          ), // Set/Reset value for port output
         .INIT                ( 72'h000000000000000000          ), // Initial values on output port
-        .WRITE_MODE          ( "READ_FIRST"          ), // Specify "READ_FIRST" for same clock or synchronous clocks, Specify "WRITE_FIRST for asynchronous clocks on ports
-      .INIT_00(256'h201f1e1d_1c1b1a19_18171615_14131211_100f0e0d_0c0b0a09_08070605_04030201),
-      .INIT_01(256'h403f3e3d_3c3b3a39_38373635_34333231_302f2e2c_2c2b2a29_28272625_24232221),
-      .INIT_02(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_03(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_04(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_05(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_06(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_07(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_08(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_09(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_0A(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_0B(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_0C(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_0D(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_0E(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_0F(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_10(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_11(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_12(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_13(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_14(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_15(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_16(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_17(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_18(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_19(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_1A(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_1B(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_1C(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_1D(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_1E(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_1F(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_20(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_21(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_22(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_23(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_24(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_25(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_26(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_27(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_28(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_29(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_2A(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_2B(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_2C(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_2D(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_2E(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_2F(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_30(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_31(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_32(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_33(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_34(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_35(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_36(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_37(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_38(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_39(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_3A(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_3B(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_3C(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_3D(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_3E(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_3F(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_40(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_41(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_42(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_43(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_44(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_45(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_46(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_47(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_48(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_49(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_4A(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_4B(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_4C(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_4D(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_4E(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_4F(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_50(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_51(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_52(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_53(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_54(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_55(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_56(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_57(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_58(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_59(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_5A(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_5B(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_5C(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_5D(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_5E(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_5F(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_60(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_61(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_62(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_63(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_64(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_65(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_66(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_67(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_68(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_69(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_6A(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_6B(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_6C(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_6D(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_6E(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_6F(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_70(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_71(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_72(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_73(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_74(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_75(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_76(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_77(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_78(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_79(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_7A(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_7B(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_7C(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_7D(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_7E(256'h0000000000000000000000000000000000000000000000000000000000000000),
-      .INIT_7F(256'h0000000000000000000000000000000000000000000000000000000000000000)
+        .WRITE_MODE          ( "READ_FIRST"                    ) // Specify "READ_FIRST" for same clock or synchronous clocks, Specify "WRITE_FIRST" for asynchronous clocks on ports
+
        ) BRAM_SDP_MACRO_inst_0 (
         .DO            ( data_read_bram[i]  ), // Output read data port, width defined by READ_WIDTH parameter
-        .DI            ( data_write         ), // Input write data port, width defined by WRITE_WIDTH parameter
+        .DI            ( data_write_final   ), // Input write data port, width defined by WRITE_WIDTH parameter
         .RDADDR        ( addr_read[9:0]     ), // Input read address, width defined by read port depth
         .RDCLK         ( clk                ), // 1-bit input read clock
         .RDEN          ( read_bram[i]       ), // 1-bit input read port enable
