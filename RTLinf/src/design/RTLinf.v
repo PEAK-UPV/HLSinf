@@ -117,10 +117,6 @@ wire [GROUP_SIZE*DATA_WIDTH-1:0]               write2mem_data_w[NUM_OUTPUTS-1:0]
 wire [LOG_MAX_ADDRESS-1:0]                     write2mem_addr_w[NUM_OUTPUTS-1:0];
 wire [NUM_OUTPUTS-1:0]                         write2mem_valid_w;
 
-// read modules will be configured depending on the conf_mode_in mode. If set to zero then
-// only read module 0 will be configured, if set to one then all memory modules will be enabled
-wire only_input_0_configured_w = ~conf_mode_in;
-
 // combinational logic
 
 genvar i;
@@ -162,7 +158,7 @@ for ( i=0; i<NUM_INPUTS; i=i+1) begin
   ) act_read_m (
     .clk                    ( clk                           ),
     .rst                    ( rst                           ),
-    .configure              ( only_input_0_configured_w & (i!=0) ? 0 : configure                     ),
+    .configure              ( configure                     ),
     .num_iters              ( num_iters                     ),
     .num_reads_per_iter     ( num_reads_per_iter            ),
     .base_address           ( read_address                  ),
@@ -342,22 +338,22 @@ endgenerate
 endmodule
 
 
-// Module RTLinf (será el final)
+// Module RTLinf
 //
 //
 
 module RTLinf #(
   parameter GROUP_SIZE             = 4,    // group size (data is read in groups of GROUP SIZE items)
   parameter DATA_WIDTH             = 8,    // data width (each data and weight item data width)
-  parameter NUM_KERNELS            = 4,    // number of kernels
-  parameter LOG_NUM_KERNELS        = 2,    // number of bits to encode a kernel id
-  parameter NUM_ACT_MEMORIES       = 4,    // number of activation memories
-  parameter LOG_NUM_ACT_MEMORIES   = 2,    // number of bits to encode an activation memory id
-  parameter NUM_WEIGHT_MEMORIES    = 4,    // number of weight memories
-  parameter LOG_NUM_WEIGHT_MEMORIES= 2,    // number of bits to encode a weight memory id
-  parameter NUM_INPUTS             = 9,    // number of inputs of each kernel
+  parameter NUM_KERNELS            = 8,    // number of kernels
+  parameter LOG_NUM_KERNELS        = 3,    // number of bits to encode a kernel id
+  parameter NUM_ACT_MEMORIES       = 8,    // number of activation memories
+  parameter LOG_NUM_ACT_MEMORIES   = 3,    // number of bits to encode an activation memory id
+  parameter NUM_WEIGHT_MEMORIES    = 8,    // number of weight memories
+  parameter LOG_NUM_WEIGHT_MEMORIES= 3,    // number of bits to encode a weight memory id
+  parameter NUM_INPUTS             = 1,    // number of inputs of each kernel
   parameter NUM_LANES              = 9,    // number of lanes of each kernel
-  parameter NUM_OUTPUTS            = 9,    // number of outputs of each kernel
+  parameter NUM_OUTPUTS            = 1,    // number of outputs of each kernel
   parameter LOG_MAX_ITERS          = 16,   // number of bits for max iters
   parameter LOG_MAX_READS_PER_ITER = 16,   // number of bits for reads_per_iter
   parameter LOG_MAX_ADDRESS        = 12,   // number of bits for addresses
@@ -371,7 +367,7 @@ module RTLinf #(
   input                                   clk,                // clock input
   input                                   rst,                // reset input
   // configuration
-  input                                   configure,          // configure signal
+  input [NUM_KERNELS-1:0]                 configure,          // configure signal
   input [LOG_MAX_ITERS-1:0]               num_iters,          // num iterations
   input [LOG_MAX_READS_PER_ITER-1:0]      num_reads_per_iter, // num reads per iteration
   input [DATA_WIDTH-1:0]                  min_clip,           // min cliping value
@@ -474,7 +470,7 @@ generate
       .weight_data            ( weight_read_data_w[((i+1)*(NUM_LANES*DATA_WIDTH))-1 -: NUM_LANES*DATA_WIDTH] ),
       .weight_valid           ( weight_read_valid_w[i]                                                       ),
       //
-      .configure              ( configure              ),
+      .configure              ( configure[i]           ),
       .num_iters              ( num_iters              ),
       .num_reads_per_iter     ( num_reads_per_iter     ),
       .read_address           ( 0                      ),  // TODO
@@ -484,9 +480,9 @@ generate
       .conf_mode_in           ( conf_mode_in           ),
       .conf_mode_out          ( conf_mode_out          ),
       //
-      .data_out               ( act_write_data_w       ),
-      .addr_out               ( act_write_addr_w       ),
-      .valid_out              ( act_write_w            )
+      .data_out               ( act_write_data_w[((i+1)*(GROUP_SIZE*DATA_WIDTH))-1 -: GROUP_SIZE*DATA_WIDTH] ),
+      .addr_out               ( act_write_addr_w[((i+1)*LOG_MAX_ADDRESS)-1 -: LOG_MAX_ADDRESS]               ),
+      .valid_out              ( act_write_w[i]                                                               )
     );
   end
   

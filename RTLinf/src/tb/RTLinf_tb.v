@@ -17,14 +17,14 @@
 `define GROUP_SIZE               4
 `define DATA_WIDTH               8
 
-`define NUM_KERNELS              1
-`define LOG_NUM_KERNELS          1
+`define NUM_KERNELS              8
+`define LOG_NUM_KERNELS          3
 
-`define NUM_ACT_MEMORIES         1
-`define LOG_NUM_ACT_MEMORIES     1
+`define NUM_ACT_MEMORIES         8
+`define LOG_NUM_ACT_MEMORIES     3
 
-`define NUM_WEIGHT_MEMORIES      1
-`define LOG_NUM_WEIGHT_MEMORIES  1
+`define NUM_WEIGHT_MEMORIES      8
+`define LOG_NUM_WEIGHT_MEMORIES  3
 
 `define NUM_INPUTS               1
 `define NUM_LANES                9
@@ -40,7 +40,7 @@ module RTLinf_tb;
   // inputs
   reg                                 clk_r;
   reg                                 rst_r;
-  reg                                 configure_r;
+  reg [`NUM_KERNELS-1:0]              configure_r;
   reg [`LOG_MAX_ITERS-1:0]            num_iters_r;
   reg [`LOG_MAX_READS_PER_ITER-1:0]   num_reads_per_iter_r;
   reg                                 conf_mode_in_r;
@@ -220,13 +220,21 @@ initial begin
   cmd_act_assign_r <= 1; cmd_act_read_port_r <= 0; cmd_act_write_port_r <= 0; cmd_act_memory_r <= 0; #10
   cmd_act_assign_r <= 0;
   
+  // we assign activation memory {1} to read port {1} and write port {1}
+  cmd_act_assign_r <= 1; cmd_act_read_port_r <= 1; cmd_act_write_port_r <= 1; cmd_act_memory_r <= 1; #10
+  cmd_act_assign_r <= 0;  
+  
   // we assign weight memory {0} to read port {0} and write port {0}
   cmd_weight_assign_r <= 1; cmd_weight_read_port_r <= 0; cmd_weight_write_port_r <= 0; cmd_weight_memory_r <= 0; #10
   cmd_weight_assign_r <= 0;
-
-  // now we trigger the kernels
-  #40 configure_r <= 1;
-  #10 configure_r <= 0;
+  
+  // we assign weight memory {1} to read port {1} and write port {1}
+  cmd_weight_assign_r <= 1; cmd_weight_read_port_r <= 1; cmd_weight_write_port_r <= 1; cmd_weight_memory_r <= 1; #10
+  cmd_weight_assign_r <= 0;
+  
+  // now we trigger the two kernels
+  #40 configure_r[0] <= 1'b1; configure_r[1] <= 1'b1;
+  #10 configure_r[0] <= 1'b0; configure_r[1] <= 1'b0;
 
   // we wait long for the finish of the kernels
   #1000

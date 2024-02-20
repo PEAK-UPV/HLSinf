@@ -17,8 +17,8 @@ module MEMORY_BANK #(
   parameter DATA_WIDTH             = 32,   // data width
   parameter NUM_ADDRESSES          = 1024, // number of addresses
   parameter LOG_MAX_ADDRESS        = 10,   // number of bit addresses
-  parameter NUM_MEMORIES           = 4,    // number of memories
-  parameter LOG_NUM_MEMORIES       = 2,    // number of bits to encode a memory id
+  parameter NUM_MEMORIES           = 1,    // number of memories
+  parameter LOG_NUM_MEMORIES       = 1,    // number of bits to encode a memory id
   parameter NUM_READ_PORTS         = 2,    // number of read ports
   parameter LOG_NUM_READ_PORTS     = 1,    // number of bits to encode a read port id
   parameter NUM_WRITE_PORTS        = 2,    // number of write ports
@@ -58,7 +58,7 @@ wire [NUM_MEMORIES-1:0]    valid_read_w;
 // registers to assign ports to mems
 reg [LOG_NUM_READ_PORTS-1:0]  sel_read_port_r[NUM_MEMORIES-1:0];                  // assigned read port to each memory
 reg [NUM_READ_PORTS-1:0]      is_assigned_read_port_to_memory_r;                  // whether a read port has an assigned memory
-reg [LOG_NUM_MEMORIES-1:0]    is_memory_assigned_to_read_port_r;                  // whether a memory is assigned to a read port
+reg [NUM_MEMORIES-1:0]        is_memory_assigned_to_read_port_r;                  // whether a memory is assigned to a read port
 reg [LOG_NUM_MEMORIES-1:0]    assigned_memory_to_read_port_r[NUM_READ_PORTS-1:0]; // assigned memory to each read port
 //
 reg [LOG_NUM_WRITE_PORTS-1:0] sel_write_port_r[NUM_MEMORIES-1:0];                   // assigned write port to each memory
