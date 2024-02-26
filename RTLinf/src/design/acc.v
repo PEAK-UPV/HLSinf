@@ -57,7 +57,6 @@ reg                                  read_last_iteration_r;
 reg                                  add_r;
 reg [LOG_MAX_ADDRESS-1 : 0]          add_addr_r;
 reg [GROUP_SIZE * DATA_WIDTH-1 : 0]  add_data_fifo_r;
-reg [GROUP_SIZE * DATA_WIDTH-1 : 0]  add_data_r;
 reg                                  add_first_iteration_r;
 reg                                  add_last_iteration_r;
 
@@ -76,7 +75,6 @@ reg [LOG_MAX_ITERS-1:0]          num_iters_copy_r;                       // copy
 reg [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter_r;                   // number of reads per iteration (down counter)
 reg [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter_copy_r;              // copy of number of reads per iteration
 reg                              module_enabled_r;                       // module enabled
-reg                              first_iteration_r;
 
 genvar i;
 
@@ -201,7 +199,7 @@ end
 
 // synthesis translate_off
 
-`ifdef DEBUG_ACC
+//`ifdef DEBUG_ACC
   reg [15:0] tics;
 
   always @ (posedge clk) begin
@@ -212,7 +210,7 @@ end
       tics <= tics + 1;
     end
   end
-`endif
+//`endif
 
 // synthesis translate_on
   

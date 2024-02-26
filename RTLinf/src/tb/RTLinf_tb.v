@@ -20,7 +20,7 @@
 `define NUM_LANES              9
 `define NUM_OUTPUTS            9
 `define NUM_ITERS              2
-`define NUM_OPS_PER_ITER       256
+`define NUM_OPS_PER_ITER       4
 
 module RTLinf_tb;
 
@@ -107,7 +107,7 @@ module RTLinf_tb;
          .rst            ( rst_r                     ),
          .data_write     ( 32'b0                     ),
          .addr_write     ( 12'b0                     ),
-         .write          ( 0                         ),
+         .write          ( 1'b0                      ),
          .addr_read      ( act_addr_w[((i+1)*`LOG_MAX_ADDRESS)-1:i*`LOG_MAX_ADDRESS]               ),
          .read           ( act_read_w[i]                                                           ),
          .data_read      ( act_data_w[((i+1)*`GROUP_SIZE*`DATA_WIDTH)-1:i*`GROUP_SIZE*`DATA_WIDTH] ),
@@ -126,7 +126,7 @@ module RTLinf_tb;
      .rst             ( rst_r                     ),
      .data_write      ( 0                         ),
      .addr_write      ( 0                         ),
-     .write           ( 0                         ),
+     .write           ( 1'b0                      ),
      .addr_read       ( weight_addr_w             ),
      .read            ( weight_read_w             ),
      .data_read       ( weight_data_w             ),
@@ -146,8 +146,8 @@ module RTLinf_tb;
       .data_write      ( data_w[((i+1)*`GROUP_SIZE * `DATA_WIDTH)-1:i*`GROUP_SIZE*`DATA_WIDTH]  ),
       .addr_write      ( addr_w[((i+1)*`LOG_MAX_ADDRESS)-1:i*`LOG_MAX_ADDRESS]                  ),
       .write           ( valid_w[i]                                                             ),
-      .addr_read       ( 0                    ),
-      .read            ( 0                    ),
+      .addr_read       ( 1'b0                 ),
+      .read            ( 1'b0                 ),
       .data_read       (                      ),
       .valid_out       (                      )
     );    

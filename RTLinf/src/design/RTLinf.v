@@ -39,7 +39,9 @@ module RTLinf #(
   parameter LOG_MAX_ITERS          = 16,   // number of bits for max iters
   parameter LOG_MAX_READS_PER_ITER = 16,   // number of bits for reads_per_iter
   parameter LOG_MAX_ADDRESS        = 12,   // number of bits for addresses
-  parameter NUM_ADDRESSES          = 4096  // number of addresses in memories
+  parameter NUM_ADDRESSES          = 4096,  // number of addresses in memories
+  localparam REP_INFO              = GROUP_SIZE*GROUP_SIZE, // bits of repetition information
+  localparam REP_DET_OUTPUT_WIDTH  = (GROUP_SIZE * DATA_WIDTH + REP_INFO)
 )(
   input                                   clk,                // clock input
   input                                   rst,                // reset input
@@ -73,23 +75,31 @@ module RTLinf #(
 genvar x;
 
 
-// wires between READ and DISTRIBUTE_IN modules
-wire [NUM_INPUTS-1:0]                       act_read2distr_valid_w;
-wire [GROUP_SIZE*DATA_WIDTH-1:0]            act_read2distr_data_w[NUM_INPUTS-1:0];
-wire [NUM_INPUTS-1:0]                       act_read2distr_avail_w;
+// wires between READ and REP_DETECTOR modules
+wire [NUM_INPUTS-1:0]                       act_read2repdet_valid_w;
+wire [GROUP_SIZE*DATA_WIDTH-1:0]            act_read2repdet_data_w[NUM_INPUTS-1:0];
+wire [NUM_INPUTS-1:0]                       act_read2repdet_avail_w;
+
+// wires between REP_DETECTOR and DISTRIBUTE_IN modules
+wire [NUM_INPUTS-1:0]                       act_repdet2distr_avail_w;
+wire [REP_DET_OUTPUT_WIDTH-1:0]             act_repdet2distr_data_w[NUM_INPUTS-1:0];
+wire [NUM_INPUTS-1:0]                       act_repdet2distr_valid_w;
+
+wire [NUM_INPUTS*REP_DET_OUTPUT_WIDTH-1:0]  act_repdet2distr_combined_data_w;
+wire [NUM_INPUTS-1:0]                       act_repdet2distr_combined_valid_w;
+
+// wires between WEIGHT READ and DISTRIBUTE_IN modules
 wire                                        weight_read2distr_valid_w;
 wire [NUM_LANES*DATA_WIDTH-1:0]             weight_read2distr_data_w;
 wire                                        weight_read2distr_avail_w;
-wire [NUM_INPUTS*GROUP_SIZE*DATA_WIDTH-1:0] act_read2distr_combined_data_w;
-wire [NUM_INPUTS-1:0]                       act_read2distr_combined_valid_w;
 
 // wires between DISTRIBUTE_IN and MUL modules
-wire [NUM_LANES*GROUP_SIZE*DATA_WIDTH-1:0]  act_distr2mul_data_w;
-wire [NUM_LANES-1:0]                        act_distr2mul_valid_w;
-wire [NUM_LANES-1:0]                        act_distr2mul_avail_w; 
-wire [NUM_LANES*DATA_WIDTH-1:0]             weight_distr2mul_data_w;
-wire [NUM_LANES-1:0]                        weight_distr2mul_valid_w;
-wire [NUM_LANES-1:0]                        weight_distr2mul_avail_w;
+wire [NUM_LANES*(REP_DET_OUTPUT_WIDTH)-1:0]  act_distr2mul_data_w;
+wire [NUM_LANES-1:0]                         act_distr2mul_valid_w;
+wire [NUM_LANES-1:0]                         act_distr2mul_avail_w; 
+wire [NUM_LANES*DATA_WIDTH-1:0]              weight_distr2mul_data_w;
+wire [NUM_LANES-1:0]                         weight_distr2mul_valid_w;
+wire [NUM_LANES-1:0]                         weight_distr2mul_avail_w;
 
 // wires between MUL and ALIGN modules
 wire [2*GROUP_SIZE*DATA_WIDTH-1:0]          mul2align_data_w[NUM_LANES-1:0];
@@ -101,13 +111,13 @@ wire [2*GROUP_SIZE*DATA_WIDTH-1:0]          align2acc_data_w[NUM_LANES-1:0];
 wire [NUM_LANES-1:0]                        align2acc_valid_w;
 wire [NUM_LANES-1:0]                        align2acc_avail_w;
 
-// wires between ACC and DISTRIBUTE_IN modules
+// wires between ACC and DISTRIBUTE_OUT modules
 wire [2*GROUP_SIZE*DATA_WIDTH-1:0]          acc2distr_data_w[NUM_LANES-1:0];
 wire [NUM_LANES-1:0]                        acc2distr_valid_w;
 wire [NUM_LANES-1:0]                        acc2distr_avail_w;
 wire [NUM_LANES*2*GROUP_SIZE*DATA_WIDTH-1:0]acc2distr_combined_data_w;
 
-// wires between DISTRIBUTE_IN and WRITE modules
+// wires between DISTRIBUTE_OUT and WRITE modules
 wire [NUM_OUTPUTS*2*GROUP_SIZE*DATA_WIDTH-1:0] distr2write_data_w;
 wire [NUM_OUTPUTS-1:0]                         distr2write_valid_w;
 wire [NUM_OUTPUTS-1:0]                         distr2write_avail_w;
@@ -137,8 +147,8 @@ generate
 // combined data and valid signal between READ and DISTRIBUTE_IN modules
 generate
   for (i=0; i<NUM_INPUTS; i=i+1) begin
-    assign act_read2distr_combined_data_w[((i+1)*GROUP_SIZE*DATA_WIDTH)-1:i*GROUP_SIZE*DATA_WIDTH] = act_read2distr_data_w[i];
-    assign act_read2distr_combined_valid_w[i]                                                      = act_read2distr_valid_w[i];
+    assign act_repdet2distr_combined_data_w[(i+1)*(REP_DET_OUTPUT_WIDTH)-1:i*REP_DET_OUTPUT_WIDTH] = act_repdet2distr_data_w[i];
+    assign act_repdet2distr_combined_valid_w[i]                                                                          = act_repdet2distr_valid_w[i]; 
   end
 endgenerate
 
@@ -162,20 +172,46 @@ for ( i=0; i<NUM_INPUTS; i=i+1) begin
   ) act_read_m (
     .clk                    ( clk                           ),
     .rst                    ( rst                           ),
-    .configure              ( only_input_0_configured_w & (i!=0) ? 0 : configure                     ),
+    .configure              ( only_input_0_configured_w & (i!=0) ? 1'b0 : configure ),
     .num_iters              ( num_iters                     ),
     .num_reads_per_iter     ( num_reads_per_iter            ),
     .base_address           ( read_address                  ),
     .valid_in               ( act_valid[i]                  ),
     .data_in                ( act_data[((i+1)*GROUP_SIZE*DATA_WIDTH)-1:i*GROUP_SIZE*DATA_WIDTH] ),
     .address_out            ( act_addr[((i+1)*LOG_MAX_ADDRESS)-1:i*LOG_MAX_ADDRESS]             ),
-    .request                ( act_read[i]                   ),
-    .avail_in               ( act_read2distr_avail_w[i]     ),
-    .valid_out              ( act_read2distr_valid_w[i]     ),
-    .data_out               ( act_read2distr_data_w[i]      )
+    .request                ( act_read[i]                    ),
+    .avail_in               ( act_read2repdet_avail_w[i]     ), 
+    .valid_out              ( act_read2repdet_valid_w[i]     ),
+    .data_out               ( act_read2repdet_data_w[i]      ) 
   );
 end
 endgenerate  
+
+// repetition_detector  module
+generate
+for ( i=0; i<NUM_INPUTS; i=i+1) begin
+
+  repetition_detector #(
+   .GROUP_SIZE             ( GROUP_SIZE              ),
+   .DATA_WIDTH             ( DATA_WIDTH              ),
+   .LOG_MAX_ITERS          ( LOG_MAX_ITERS           ),
+   .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER  )
+  ) repetition_detector_m (
+   .clk                    ( clk                             ),
+   .rst                    ( rst                             ),
+   .configure              ( configure                       ),
+   .num_iters              ( num_iters                       ),
+   .num_reads_per_iter     ( num_reads_per_iter              ),
+   .data_in                ( act_read2repdet_data_w[i]       ),
+   .valid_in               ( act_read2repdet_valid_w[i]      ),
+   .avail_out              ( act_read2repdet_avail_w[i]      ), 
+   .data_out               ( act_repdet2distr_data_w[i]      ),
+   .valid_out              ( act_repdet2distr_valid_w[i]     ),
+   .avail_in               ( act_repdet2distr_avail_w[i]     )  
+  );
+end
+endgenerate  
+
 
 // weight READ module
 READ #(
@@ -200,39 +236,40 @@ READ #(
   .data_out               ( weight_read2distr_data_w      )
 );
 
+
 // DISTRIBUTE_IN module
 DISTRIBUTE_IN #(
- .NUM_DATA_INPUTS        ( NUM_INPUTS             ),
- .GROUP_SIZE             ( GROUP_SIZE             ),
- .DATA_WIDTH             ( DATA_WIDTH             ),
- .NUM_DATA_OUTPUTS       ( NUM_LANES              ),
- .LOG_MAX_ITERS          ( LOG_MAX_ITERS          ),
- .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER )
+ .NUM_DATA_INPUTS        ( NUM_INPUTS              ),
+ .GROUP_SIZE             ( GROUP_SIZE              ),
+ .DATA_WIDTH             ( DATA_WIDTH              ),
+ .NUM_DATA_OUTPUTS       ( NUM_LANES               ),
+ .LOG_MAX_ITERS          ( LOG_MAX_ITERS           ),
+ .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER  )
 ) distribute_in_m (
- .clk                    ( clk                             ),
- .rst                    ( rst                             ),
- .configure              ( configure                       ),
- .conf_mode              ( conf_mode_in                    ),
- .num_iters              ( num_iters                       ),
- .num_reads_per_iter     ( num_reads_per_iter              ),
- .act_data_in            ( act_read2distr_combined_data_w  ),
- .act_valid_in           ( act_read2distr_combined_valid_w ),
- .act_avail_out          ( act_read2distr_avail_w          ),
- .weights_data_in        ( weight_read2distr_data_w        ),
- .weights_valid_in       ( weight_read2distr_valid_w       ),
- .weights_avail_out      ( weight_read2distr_avail_w       ),
- .data_out               ( act_distr2mul_data_w            ),
- .valid_out              ( act_distr2mul_valid_w           ),
- .avail_in               ( act_distr2mul_avail_w           ),
- .weights_data_out       ( weight_distr2mul_data_w         ),
- .weights_valid_out      ( weight_distr2mul_valid_w        ),
- .weights_avail_in       ( weight_distr2mul_avail_w        )
+ .clk                    ( clk                               ),
+ .rst                    ( rst                               ),
+ .configure              ( configure                         ),
+ .conf_mode              ( conf_mode_in                      ),
+ .num_iters              ( num_iters                         ),
+ .num_reads_per_iter     ( num_reads_per_iter                ),
+ .act_data_in            ( act_repdet2distr_combined_data_w  ), 
+ .act_valid_in           ( act_repdet2distr_combined_valid_w ),
+ .act_avail_out          ( act_repdet2distr_avail_w          ),
+ .weights_data_in        ( weight_read2distr_data_w          ),
+ .weights_valid_in       ( weight_read2distr_valid_w         ),
+ .weights_avail_out      ( weight_read2distr_avail_w         ),
+ .data_out               ( act_distr2mul_data_w              ),
+ .valid_out              ( act_distr2mul_valid_w             ),
+ .avail_in               ( act_distr2mul_avail_w             ),
+ .weights_data_out       ( weight_distr2mul_data_w           ),
+ .weights_valid_out      ( weight_distr2mul_valid_w          ),
+ .weights_avail_in       ( weight_distr2mul_avail_w          )
 );
 
 // MUL, ALIGN, ACC modules
 generate
   for (i=0; i<NUM_LANES; i=i+1) begin
-    MUL #(
+  MUL_BATCH #(
       .GROUP_SIZE             ( GROUP_SIZE ),
       .DATA_WIDTH             ( DATA_WIDTH ),
       .LOG_MAX_ITERS          ( LOG_MAX_ITERS ),
@@ -243,15 +280,15 @@ generate
       .configure              ( configure            ),
       .num_iters              ( num_iters            ),
       .num_reads_per_iter     ( num_reads_per_iter   ),
-      .act_data_in            ( act_distr2mul_data_w[((i+1)*GROUP_SIZE*DATA_WIDTH)-1:i*GROUP_SIZE*DATA_WIDTH] ),
-      .act_valid_in           ( act_distr2mul_valid_w[i]                                                      ),
-      .act_avail_out          ( act_distr2mul_avail_w[i]                                                      ),
-      .weight_data_in         ( weight_distr2mul_data_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH]                    ),
-      .weight_valid_in        ( weight_distr2mul_valid_w[i]                                                   ),
-      .weight_avail_out       ( weight_distr2mul_avail_w[i]                                                   ),
-      .data_out               ( mul2align_data_w[i]                                                           ),
-      .valid_out              ( mul2align_valid_w[i]                                                          ),
-      .avail_in               ( mul2align_avail_w[i]                                                          )
+      .act_data_in            ( act_distr2mul_data_w[((i+1)*REP_DET_OUTPUT_WIDTH)-1:i*REP_DET_OUTPUT_WIDTH] ),
+      .act_valid_in           ( act_distr2mul_valid_w[i]                                                    ),
+      .act_avail_out          ( act_distr2mul_avail_w[i]                                                    ),
+      .weight_data_in         ( weight_distr2mul_data_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH]                  ),
+      .weight_valid_in        ( weight_distr2mul_valid_w[i]                                                 ),
+      .weight_avail_out       ( weight_distr2mul_avail_w[i]                                                 ),
+      .data_out               ( mul2align_data_w[i]                                                         ),
+      .valid_out              ( mul2align_valid_w[i]                                                        ),
+      .avail_in               ( mul2align_avail_w[i]                                                        )
     );
 
     ALIGN #(

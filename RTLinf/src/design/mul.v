@@ -17,62 +17,71 @@ module MUL #(
   parameter GROUP_SIZE             = 4,                          // group size
   parameter DATA_WIDTH             = 8,                          // input data width (output is 2x input width)
   parameter LOG_MAX_ITERS          = 16,                         // number of bits for max iters register
-  parameter LOG_MAX_READS_PER_ITER = 16                          // number of bits for max reads per iter
+  parameter LOG_MAX_READS_PER_ITER = 16,                         // number of bits for max reads per iter
+  localparam REP_INFO              = GROUP_SIZE*GROUP_SIZE,      // number of bits for repetition detectoor
+  localparam INPUT_WIDTH           = 2 * DATA_WIDTH + REP_INFO,  // number of bits for input (activation + weight + rep. info)
+  localparam OUTPUT_WIDTH          = 2 * DATA_WIDTH + REP_INFO   // number of bits for output ( result (2*data width) +  rep. info)
+
 )(
   input clk,
   input rst,
 
-  input                                    configure,               // CONFIGURE interface:: configure signal
-  input [LOG_MAX_ITERS-1:0]                num_iters,               // CONFIGURE interface:: number of iterations for reads
-  input [LOG_MAX_READS_PER_ITER-1:0]       num_reads_per_iter,      // CONFIGURE interface:: number of reads per iteration
+  input                                     configure,               // CONFIGURE interface:: configure signal
+  input [LOG_MAX_ITERS - 1 : 0]             num_iters,               // CONFIGURE interface:: number of iterations for reads
+  input [LOG_MAX_READS_PER_ITER - 1 : 0]    num_reads_per_iter,      // CONFIGURE interface:: number of reads per iteration
 
-  input [GROUP_SIZE * DATA_WIDTH - 1 : 0]  act_data_in,             // ACTIVATION interface:: activations data
-  input                                    act_valid_in,            // ACTIVATION interface:: activation valid in
-  output                                   act_avail_out,           // ACTIVATION interface:: avail
+  input [INPUT_WIDTH - 1 : 0]               data_in,                 // ACTIVATION & WEIGHT interface:: activ ations data
+  input                                     valid_in,                // ACTIVATION & WEIGHT interface:: activ ation valid in
+  output                                    avail_out,               // ACTIVATION & WEIGHT interface:: avail 
 
-  input [DATA_WIDTH-1 : 0]                 weight_data_in,          // WEIGHT interface:: weight data
-  input                                    weight_valid_in,         // WEIGHT interface:: weight valid in
-  output                                   weight_avail_out,        // WEIGHT interface:: avail
-
-  output [GROUP_SIZE*2*DATA_WIDTH-1:0]     data_out,                // OUT interface: data
-  output                                   valid_out,               // OUT interface: valid
-  input                                    avail_in                 // OUT interface: avail
+  output [OUTPUT_WIDTH - 1 : 0]             data_out,                // OUT interface: data
+  output                                    valid_out,               // OUT interface: valid
+  input                                     avail_in                 // OUT interface: avail
 );
 
 // wires
-wire [GROUP_SIZE * DATA_WIDTH - 1: 0] data_write_w;                      // data to write to FIFO
-wire                                  write_w;                           // write signal to FIFO
-wire                                  full_w;                            // full signal from FIFO
-wire                                  almost_full_w;                     // almost_full signal from FIFO
-wire [GROUP_SIZE * DATA_WIDTH - 1: 0] data_read_w;                       // data read from FIFO
-wire                                  next_read_w;                       // next_read signal to FIFO
-wire                                  empty_w;                           // empty signal from FIFO
-wire                                  perform_operation_w;               // whether we perform a "read" operation in this cycle
+wire [INPUT_WIDTH - 1: 0]          data_write_w;                      // data to write to FIFO
+wire                               write_w;                           // write signal to FIFO
+wire                               full_w;                            // full signal from FIFO
+wire                               almost_full_w;                     // almost_full signal from FIFO
+wire [INPUT_WIDTH- 1: 0]           data_read_w;                       // data read from FIFO
+wire                               next_read_w;                       // next_read signal to FIFO
+wire                               empty_w;                           // empty signal from FIFO
+wire                               perform_operation_w;               // whether we perform a "read" operation in this cycle
 
+wire [ DATA_WIDTH - 1: 0]          act_data_in;                       // Activation value    
+wire [ DATA_WIDTH - 1: 0]          weight_data_in;                    // Weight value
+wire [ REP_INFO - 1: 0]            rep_info;                          // Repetition information
+wire [2 * DATA_WIDTH - 1 : 0]      result;                            // Result
 // registers
 reg [LOG_MAX_ITERS-1:0]          num_iters_r;               // FIFO
 reg [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter_r;      // number of reads per iteration (down counter)
 reg [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter_copy_r; // copy of number of reads per iteration
 reg                              module_enabled_r;          // module enabled
-reg [DATA_WIDTH-1:0]             weight_r;                  // weight
 
 genvar i;
 
 // combinational logic
-assign weight_avail_out = 1'b1;                                         // always ready
-assign perform_operation_w = module_enabled_r & (~empty_w) & avail_in;
-generate
-  for (i=0; i<GROUP_SIZE; i=i+1) begin
-    assign data_out[((i+1)*2*DATA_WIDTH)-1:i*2*DATA_WIDTH] = data_read_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] * weight_r;
-  end
-endgenerate
-assign valid_out = perform_operation_w;
+assign perform_operation_w = /*module_enabled_r &*/ (~empty_w) & avail_in;
+
+//Extract input from FIFO
+assign act_data_in = data_read_w[DATA_WIDTH - 1 : 0];
+assign weight_data_in = data_read_w[ 2 * DATA_WIDTH - 1 : DATA_WIDTH];
+assign rep_info = data_read_w[ INPUT_WIDTH - 1 : 2 * DATA_WIDTH];
+
+//Output
+assign result                                       = act_data_in * weight_data_in;
+assign data_out[2 * DATA_WIDTH - 1 : 0 ]            =  result;
+assign data_out[OUTPUT_WIDTH - 1 : 2 * DATA_WIDTH ] =  rep_info;
+assign valid_out                                    = perform_operation_w;
+
+//Get input 
 
 // FIFO write and read
-assign data_write_w = act_data_in;
-assign write_w = act_valid_in;
-assign act_avail_out = ~almost_full_w & ~full_w;
-assign next_read_w = perform_operation_w;
+assign data_write_w = data_in;
+assign write_w      = valid_in;
+assign avail_out    = ~almost_full_w & ~full_w;
+assign next_read_w  = perform_operation_w;
 
 // modules
 
@@ -80,7 +89,7 @@ assign next_read_w = perform_operation_w;
 FIFO #(
   .NUM_SLOTS     ( 4                       ),
   .LOG_NUM_SLOTS ( 2                       ),
-  .DATA_WIDTH    ( GROUP_SIZE * DATA_WIDTH )
+  .DATA_WIDTH    ( INPUT_WIDTH             )
 ) fifo_in (
   .clk           ( clk                     ),
   .rst           ( rst                     ),
@@ -94,15 +103,6 @@ FIFO #(
 );
 
 // sequential logic
-
-// weight register
-always @ (posedge clk) begin
-  if (~rst) begin
-    weight_r <= 0;
-  end else begin
-    if (weight_valid_in) weight_r <= weight_data_in;
-  end
-end
 
 // configuration and iterations
 // whenever we perform a "read" operation we decrement the number of reads per iteration
@@ -152,7 +152,7 @@ end
   always @ (posedge clk) begin
     if (~rst) tics <= 0;
     else begin
-      if (perform_operation_w) $display("MUL: cycle %d, output data %x", tics, data_out);
+      if (perform_operation_w) $display("MUL: cycle %d, output data %x", tics, data_out[2 * DATA_WIDTH - 1 : 0 ]);
       tics <= tics + 1;
     end
   end
