@@ -11,20 +11,20 @@
 // Any other configuration needing a different memory configuration is not currently supported
 
 
-`define NUM_ADDRESSES         4096
-`define LOG_MAX_ADDRESS         12
+`define NUM_ADDRESSES         1024
+`define LOG_MAX_ADDRESS         10
 
 `define GROUP_SIZE               4
 `define DATA_WIDTH               8
 
-`define NUM_KERNELS              8
-`define LOG_NUM_KERNELS          3
+`define NUM_KERNELS              2
+`define LOG_NUM_KERNELS          1
 
-`define NUM_ACT_MEMORIES         8
-`define LOG_NUM_ACT_MEMORIES     3
+`define NUM_ACT_MEMORIES         2
+`define LOG_NUM_ACT_MEMORIES     1
 
-`define NUM_WEIGHT_MEMORIES      8
-`define LOG_NUM_WEIGHT_MEMORIES  3
+`define NUM_WEIGHT_MEMORIES      2
+`define LOG_NUM_WEIGHT_MEMORIES  1
 
 `define NUM_INPUTS               1
 `define NUM_LANES                9
@@ -238,7 +238,15 @@ initial begin
 
   // we wait long for the finish of the kernels
   #1000
+
+  // we unassign activation memory {0} from read port {0} and write port {0}
+  cmd_act_unassign_r <= 1; cmd_act_read_port_r <= 0; cmd_act_write_port_r <= 0; cmd_act_memory_r <= 0; #10
+  cmd_act_unassign_r <= 0;
   
+  // we unassign activation memory {1} from read port {1} and write port {1}
+  cmd_act_unassign_r <= 1; cmd_act_read_port_r <= 1; cmd_act_write_port_r <= 1; cmd_act_memory_r <= 1; #10
+  cmd_act_unassign_r <= 0;  
+ 
   // we now read every activation memory
   for (m=0; m<`NUM_ACT_MEMORIES; m=m+1) begin
     cmd_act_assign_r <= 1; cmd_act_read_port_r <= `NUM_KERNELS; cmd_act_write_port_r <= `NUM_KERNELS; cmd_act_memory_r <= m; #10

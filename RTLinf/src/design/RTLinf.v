@@ -345,19 +345,19 @@ endmodule
 module RTLinf #(
   parameter GROUP_SIZE             = 4,    // group size (data is read in groups of GROUP SIZE items)
   parameter DATA_WIDTH             = 8,    // data width (each data and weight item data width)
-  parameter NUM_KERNELS            = 8,    // number of kernels
-  parameter LOG_NUM_KERNELS        = 3,    // number of bits to encode a kernel id
-  parameter NUM_ACT_MEMORIES       = 8,    // number of activation memories
-  parameter LOG_NUM_ACT_MEMORIES   = 3,    // number of bits to encode an activation memory id
-  parameter NUM_WEIGHT_MEMORIES    = 8,    // number of weight memories
-  parameter LOG_NUM_WEIGHT_MEMORIES= 3,    // number of bits to encode a weight memory id
+  parameter NUM_KERNELS            = 64,    // number of kernels
+  parameter LOG_NUM_KERNELS        = 6,    // number of bits to encode a kernel id
+  parameter NUM_ACT_MEMORIES       = 64,    // number of activation memories
+  parameter LOG_NUM_ACT_MEMORIES   = 6,    // number of bits to encode an activation memory id
+  parameter NUM_WEIGHT_MEMORIES    = 64,    // number of weight memories
+  parameter LOG_NUM_WEIGHT_MEMORIES= 6,    // number of bits to encode a weight memory id
   parameter NUM_INPUTS             = 1,    // number of inputs of each kernel
   parameter NUM_LANES              = 9,    // number of lanes of each kernel
   parameter NUM_OUTPUTS            = 1,    // number of outputs of each kernel
   parameter LOG_MAX_ITERS          = 16,   // number of bits for max iters
   parameter LOG_MAX_READS_PER_ITER = 16,   // number of bits for reads_per_iter
-  parameter LOG_MAX_ADDRESS        = 12,   // number of bits for addresses
-  parameter NUM_ADDRESSES          = 4096, // number of addresses in memories
+  parameter NUM_ADDRESSES          = 1024, // number of addresses in memories
+  parameter LOG_MAX_ADDRESS        = 10,   // number of bits for addresses
   //
   localparam WIDTH_ACT_READ_SELECTS     = (NUM_ACT_MEMORIES * (LOG_NUM_KERNELS+1)),
   localparam WIDTH_ACT_WRITE_SELECTS    = (NUM_ACT_MEMORIES * (LOG_NUM_KERNELS+1)),

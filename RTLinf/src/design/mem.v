@@ -222,6 +222,39 @@ generate
         .data_read  ( data_read  ),
         .read       ( read       )
       );
+  end else if (DATA_WIDTH == 32 && NUM_ADDRESSES == 1024) begin
+    MEM_1Kx32 mem_1kx32_m (
+      .clk        ( clk        ),
+      .rst        ( rst        ),
+      .data_write ( data_write ),
+      .addr_write ( addr_write ),
+      .write      ( write      ),
+      .addr_read  ( addr_read  ),
+      .data_read  ( data_read  ),
+      .read       ( read       )
+    );
+  end else if (DATA_WIDTH == 72 && NUM_ADDRESSES == 1024) begin
+      MEM_1Kx72 mem_1kx72_m (
+        .clk        ( clk        ),
+        .rst        ( rst        ),
+        .data_write ( data_write ),
+        .addr_write ( addr_write ),
+        .write      ( write      ),
+        .addr_read  ( addr_read  ),
+        .data_read  ( data_read  ),
+        .read       ( read       )
+      );
+  end else if (DATA_WIDTH == 64 && NUM_ADDRESSES == 1024) begin
+      MEM_1Kx64 mem_1kx64_m (
+        .clk        ( clk        ),
+        .rst        ( rst        ),
+        .data_write ( data_write ),
+        .addr_write ( addr_write ),
+        .write      ( write      ),
+        .addr_read  ( addr_read  ),
+        .data_read  ( data_read  ),
+        .read       ( read       )
+      );
     end else begin
       initial $display("memory geometry not supported %d x %d", NUM_ADDRESSES, DATA_WIDTH);
     end
@@ -479,5 +512,185 @@ module MEM_4Kx32 #(
        );
      end
    endgenerate
+   
+ endmodule
+ 
+// -------------------------------------------------------------------------------------------
+// 1Kx72 memory implemented as 2 512x72 memories 
+//
+ 
+module MEM_1Kx72 #(
+    localparam DATA_WIDTH      = 72,        // data width
+    localparam NUM_ADDRESSES   = 1024,      // number of addresses
+    localparam LOG_MAX_ADDRESS = 10         // number of bits for addresses
+)(
+  input clk,                                // clock input
+  input rst,                                // needed for debug
+
+  input [DATA_WIDTH-1:0]        data_write, // WRITE interface:: data
+  input [LOG_MAX_ADDRESS-1:0]   addr_write, // WRITE interface:: address
+  input                         write,      // WRITE interface:: write signal
+
+  input [LOG_MAX_ADDRESS-1:0]   addr_read,  // READ interface:: address
+  output [DATA_WIDTH-1:0]       data_read,  // READ interface:: data
+  input                         read
+);
+
+  wire [71:0] data_read_bram[1:0];
+  wire [1:0]  write_bram;
+  wire [1:0]  read_bram;
+  
+  genvar i;
+  
+  generate
+    for (i=0; i<2; i=i+1) begin
+      assign write_bram[i] = write & (addr_write[9] == i);
+      assign read_bram[i] = read & (addr_read[9] == i);
+    end
+  endgenerate
+  
+  assign data_read = data_read_bram[addr_read[9]];
+  
+  generate
+    for (i=0; i<2; i=i+1) begin
+      BRAM_SDP_MACRO #(
+        .BRAM_SIZE     ( "36Kb"    ), // Target BRAM, "18Kb" or "36Kb" 
+        .DEVICE        ( "7SERIES" ), // Target device: "7SERIES" 
+        .WRITE_WIDTH   ( 72        ), // Valid values are 1-72 (37-72 only valid when BRAM_SIZE="36Kb")
+        .READ_WIDTH    ( 72        ), // Valid values are 1-72 (37-72 only valid when BRAM_SIZE="36Kb")
+        .DO_REG        ( 0         ), // Optional output register (0 or 1)
+        .INIT_FILE     ( "NONE"    ),
+        .SIM_COLLISION_CHECK ( "ALL"                  ), // Collision check enable "ALL", "WARNING_ONLY", "GENERATE_X_ONLY" or "NONE" 
+        .SRVAL               ( 72'h000000000000000000 ), // Set/Reset value for port output
+        .WRITE_MODE          ( "READ_FIRST"           )  // Specify "READ_FIRST" for same clock or synchronous clocks, Specify "WRITE_FIRST for asynchronous clocks on ports
+     ) BRAM_SDP_MACRO_inst_0 (
+        .DO            ( data_read_bram[i]  ), // Output read data port, width defined by READ_WIDTH parameter
+        .DI            ( data_write         ), // Input write data port, width defined by WRITE_WIDTH parameter
+        .RDADDR        ( addr_read[8:0]     ), // Input read address, width defined by read port depth
+        .RDCLK         ( clk                ), // 1-bit input read clock
+        .RDEN          ( read_bram[i]       ), // 1-bit input read port enable
+        .REGCE         ( 0                  ), // 1-bit input read output register enable
+        .RST           ( ~rst               ), // 1-bit input reset
+        .WE            ( 9'b111111111       ), // Input write enable, width defined by write port depth
+        .WRADDR        ( addr_write[8:0]    ), // Input write address, width defined by write port depth
+        .WRCLK         ( clk                ), // 1-bit input write clock
+        .WREN          ( write_bram[i]      )  // 1-bit input write port enable
+     );
+   end
+  endgenerate
+      
+ endmodule
+
+// -------------------------------------------------------------------------------------------
+// 1Kx64 memory implemented with 2 512x72 memories
+//
+module MEM_1Kx64 #(
+    localparam DATA_WIDTH      = 64,        // data width
+    localparam NUM_ADDRESSES   = 1024,      // number of addresses
+    localparam LOG_MAX_ADDRESS = 10         // number of bits for addresses
+)(
+  input clk,                                // clock input
+  input rst,                                // needed for debug
+
+  input [DATA_WIDTH-1:0]        data_write, // WRITE interface:: data
+  input [LOG_MAX_ADDRESS-1:0]   addr_write, // WRITE interface:: address
+  input                         write,      // WRITE interface:: write signal
+
+  input [LOG_MAX_ADDRESS-1:0]   addr_read,  // READ interface:: address
+  output [DATA_WIDTH-1:0]       data_read,  // READ interface:: data
+  input                         read        // READ interface:: read signal
+);
+
+  wire [71:0] data_read_bram[7:0];
+  wire [1:0]  write_bram;
+  wire [1:0]  read_bram;
+  
+  genvar i;
+  
+  generate
+    for (i=0; i<2; i=i+1) begin
+      assign read_bram[i] = read & (addr_read[9] == i);
+      assign write_bram[i] = write & (addr_write[9] == i);
+    end
+  endgenerate
+  
+  assign data_read = data_read_bram[ addr_read[9] ];
+  
+  generate
+   for (i=0; i<2; i=i+1) begin
+       BRAM_SDP_MACRO #(
+        .BRAM_SIZE     ( "36Kb"    ), // Target BRAM, "18Kb" or "36Kb" 
+        .DEVICE        ( "7SERIES" ), // Target device: "7SERIES" 
+        .WRITE_WIDTH   ( 72        ), // Valid values are 1-72 (37-72 only valid when BRAM_SIZE="36Kb")
+        .READ_WIDTH    ( 72        ), // Valid values are 1-72 (37-72 only valid when BRAM_SIZE="36Kb")
+        .DO_REG        ( 0         ), // Optional output register (0 or 1)
+        .INIT_FILE     ( "NONE"    ),
+        .SIM_COLLISION_CHECK ( "NONE"                  ), // Collision check enable "ALL", "WARNING_ONLY", "GENERATE_X_ONLY" or "NONE" 
+        .SRVAL               ( 72'h000000000000000000 ), // Set/Reset value for port output
+        .INIT                ( 72'h000000000000000000 ), // Initial values on output port
+        .WRITE_MODE          ( "WRITE_FIRST"          )  // Specify "READ_FIRST" for same clock or synchronous clocks, Specify "WRITE_FIRST for asynchronous clocks on ports
+       ) BRAM_SDP_MACRO_inst_0 (
+        .DO            ( data_read_bram[i]  ), // Output read data port, width defined by READ_WIDTH parameter
+        .DI            ( data_write         ), // Input write data port, width defined by WRITE_WIDTH parameter
+        .RDADDR        ( addr_read[8:0]     ), // Input read address, width defined by read port depth
+        .RDCLK         ( clk                ), // 1-bit input read clock
+        .RDEN          ( read_bram[i]       ), // 1-bit input read port enable
+        .REGCE         ( 0                  ), // 1-bit input read output register enable
+        .RST           ( ~rst               ), // 1-bit input reset
+        .WE            ( 8'b11111111        ), // Input write enable, width defined by write port depth
+        .WRADDR        ( addr_write[8:0]    ), // Input write address, width defined by write port depth
+        .WRCLK         ( clk                ), // 1-bit input write clock
+        .WREN          ( write_bram[i]      )  // 1-bit input write port enable
+       );
+     end
+   endgenerate
+   
+ endmodule
+   
+// -------------------------------------------------------------------------------------------
+// memory 1K addresses with 32 bit datawidth
+//
+// Implemented as 1 BRAM SDP (simple dual port)
+module MEM_1Kx32 #(
+    localparam DATA_WIDTH      = 32,        // data width
+    localparam NUM_ADDRESSES   = 1024,      // number of addresses
+    localparam LOG_MAX_ADDRESS = 10         // number of bits for addresses
+)(
+  input clk,                                // clock input
+  input rst,                                // needed for debug
+
+  input [DATA_WIDTH-1:0]        data_write, // WRITE interface:: data
+  input [LOG_MAX_ADDRESS-1:0]   addr_write, // WRITE interface:: address
+  input                         write,      // WRITE interface:: write signal
+
+  input [LOG_MAX_ADDRESS-1:0]   addr_read,  // READ interface:: address
+  output [DATA_WIDTH-1:0]       data_read,  // READ interface:: data
+  input                         read        // READ interface:: read
+);
+
+  BRAM_SDP_MACRO #(
+    .BRAM_SIZE     ( "36Kb"    ), // Target BRAM, "18Kb" or "36Kb" 
+    .DEVICE        ( "7SERIES" ), // Target device: "7SERIES" 
+    .WRITE_WIDTH   ( 32        ), // Valid values are 1-72 (37-72 only valid when BRAM_SIZE="36Kb")
+    .READ_WIDTH    ( 32        ), // Valid values are 1-72 (37-72 only valid when BRAM_SIZE="36Kb")
+    .DO_REG        ( 0         ), // Optional output register (0 or 1)
+    .INIT_FILE     ( "NONE"    ),
+    .SIM_COLLISION_CHECK ( "ALL"                           ), // Collision check enable "ALL", "WARNING_ONLY", "GENERATE_X_ONLY" or "NONE" 
+    .SRVAL               ( 72'h000000000000000000          ), // Set/Reset value for port output
+    .INIT                ( 72'h000000000000000000          ), // Initial values on output port
+    .WRITE_MODE          ( "READ_FIRST"                    ) // Specify "READ_FIRST" for same clock or synchronous clocks, Specify "WRITE_FIRST" for asynchronous clocks on ports
+  ) BRAM_SDP_MACRO_inst_0 (
+    .DO            ( data_read          ), // Output read data port, width defined by READ_WIDTH parameter
+    .DI            ( data_write         ), // Input write data port, width defined by WRITE_WIDTH parameter
+    .RDADDR        ( addr_read          ), // Input read address, width defined by read port depth
+    .RDCLK         ( clk                ), // 1-bit input read clock
+    .RDEN          ( read               ), // 1-bit input read port enable
+    .REGCE         ( 0                  ), // 1-bit input read output register enable
+    .RST           ( ~rst               ), // 1-bit input reset
+    .WE            ( 4'b1111            ), // Input write enable, width defined by write port depth
+    .WRADDR        ( addr_write         ), // Input write address, width defined by write port depth
+    .WRCLK         ( clk                ), // 1-bit input write clock
+    .WREN          ( write              )  // 1-bit input write port enable
+  );
    
  endmodule

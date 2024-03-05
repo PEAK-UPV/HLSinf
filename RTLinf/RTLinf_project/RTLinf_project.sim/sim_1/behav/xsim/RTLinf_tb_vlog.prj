@@ -1,5 +1,5 @@
 # compile verilog/system verilog design source files
-verilog xil_defaultlib  \
+verilog xil_defaultlib  --include "../../../../../src/design" \
 "../../../../../src/design/RTLinf.v" \
 "../../../../../src/design/acc.v" \
 "../../../../../src/design/align.v" \

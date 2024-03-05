@@ -66,8 +66,8 @@ assign valid_out           = perform_operation_w;
 
 // input fifo
 FIFO #(
-  .NUM_SLOTS     ( 4                       ),
-  .LOG_NUM_SLOTS ( 2                       ),
+  .NUM_SLOTS     ( 2                       ),
+  .LOG_NUM_SLOTS ( 1                       ),
   .DATA_WIDTH    ( GROUP_SIZE * DATA_WIDTH )
 ) fifo_in (
   .clk           ( clk                     ),

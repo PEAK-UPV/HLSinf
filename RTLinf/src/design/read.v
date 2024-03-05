@@ -79,8 +79,8 @@ assign perform_operation_w = ~empty_w & avail_in;                      // contro
 
 // input fifo
 FIFO #(
-  .NUM_SLOTS     ( 4               ),
-  .LOG_NUM_SLOTS ( 2               ),
+  .NUM_SLOTS     ( 2               ),
+  .LOG_NUM_SLOTS ( 1               ),
   .DATA_WIDTH    ( DATA_WIDTH      )
 ) fifo_in (
   .clk           ( clk             ),

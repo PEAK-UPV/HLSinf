@@ -38,7 +38,7 @@ reg [LOG_NUM_SLOTS:0]   counter;
 
 // cobinational logic
 assign full        = counter == NUM_SLOTS;
-assign almost_full = counter == NUM_SLOTS-1;
+assign almost_full = (counter == NUM_SLOTS-1) & ~next_read;
 assign empty       = counter == 0;
 assign data_read   = counter==0? 0 : fifo[read_ptr];
 

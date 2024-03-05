@@ -135,8 +135,8 @@ endgenerate
 generate
   for (i=0; i<NUM_DATA_INPUTS; i=i+1) begin
     FIFO #(
-      .NUM_SLOTS     ( 4               ),
-      .LOG_NUM_SLOTS ( 2               ),
+      .NUM_SLOTS     ( 2               ),
+      .LOG_NUM_SLOTS ( 1               ),
       .DATA_WIDTH    ( GROUP_SIZE*DATA_WIDTH      )
     ) fifo_in_data (
       .clk           ( clk             ),
@@ -154,8 +154,8 @@ endgenerate
 
 // All input weights are stored in the same FIFO
 FIFO #(
-  .NUM_SLOTS         ( 4                           ),
-  .LOG_NUM_SLOTS     ( 2                           ),
+  .NUM_SLOTS         ( 2                           ),
+  .LOG_NUM_SLOTS     ( 1                           ),
   .DATA_WIDTH        ( NUM_DATA_OUTPUTS*DATA_WIDTH )
 ) fifo_in_weights (
   .clk               ( clk                         ),
@@ -326,8 +326,8 @@ endgenerate
 generate
   for (i=0; i<NUM_DATA_INPUTS; i=i+1) begin
     FIFO #(
-      .NUM_SLOTS     ( 4               ),
-      .LOG_NUM_SLOTS ( 2               ),
+      .NUM_SLOTS     ( 2               ),
+      .LOG_NUM_SLOTS ( 1               ),
       .DATA_WIDTH    ( GROUP_SIZE*DATA_WIDTH      )
     ) fifo_in_data (
       .clk           ( clk             ),
