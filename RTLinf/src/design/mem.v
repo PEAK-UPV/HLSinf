@@ -138,8 +138,8 @@ module MEM_4Kx72 #(
         .DI            ( data_write         ), // Input write data port, width defined by WRITE_WIDTH parameter
         .RDADDR        ( addr_read[8:0]     ), // Input read address, width defined by read port depth
         .RDCLK         ( clk                ), // 1-bit input read clock
-        .RDEN          ( read                  ), // 1-bit input read port enable
-        .REGCE         ( 0                  ), // 1-bit input read output register enable
+        .RDEN          ( read               ), // 1-bit input read port enable
+        .REGCE         ( 1'b0               ), // 1-bit input read output register enable
         .RST           ( ~rst               ), // 1-bit input reset
         .WE            ( 8'b00000000        ), // Input write enable, width defined by write port depth
         .WRADDR        ( addr_write[8:0]    ), // Input write address, width defined by write port depth
@@ -167,12 +167,12 @@ module MEM_4Kx72 #(
     .RDADDR        ( addr_read[11:0]    ), // Input read address, width defined by read port depth
     .RDCLK         ( clk                ), // 1-bit input read clock
     .RDEN          ( read               ), // 1-bit input read port enable
-    .REGCE         ( 0                  ), // 1-bit input read output register enable
+    .REGCE         ( 1'b0               ), // 1-bit input read output register enable
     .RST           ( ~rst               ), // 1-bit input reset
     .WE            ( 1'b0               ), // Input write enable, width defined by write port depth
     .WRADDR        ( addr_write[11:0]   ), // Input write address, width defined by write port depth
     .WRCLK         ( clk                ), // 1-bit input write clock
-    .WREN          ( 0                  )  // 1-bit input write port enable
+    .WREN          ( 1'b0               )  // 1-bit input write port enable
   );
     
  endmodule
@@ -448,7 +448,7 @@ module MEM_4Kx32 #(
         .RDADDR        ( addr_read[9:0]     ), // Input read address, width defined by read port depth
         .RDCLK         ( clk                ), // 1-bit input read clock
         .RDEN          ( read_bram[i]       ), // 1-bit input read port enable
-        .REGCE         ( 0                  ), // 1-bit input read output register enable
+        .REGCE         ( 1'b0               ), // 1-bit input read output register enable
         .RST           ( ~rst               ), // 1-bit input reset
         .WE            ( 4'b1111            ), // Input write enable, width defined by write port depth
         .WRADDR        ( addr_write[9:0]    ), // Input write address, width defined by write port depth
