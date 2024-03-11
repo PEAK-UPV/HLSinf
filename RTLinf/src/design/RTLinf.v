@@ -41,7 +41,8 @@ module RTLinf #(
   parameter LOG_MAX_ADDRESS        = 12,   // number of bits for addresses
   parameter NUM_ADDRESSES          = 4096,  // number of addresses in memories
   localparam REP_INFO              = GROUP_SIZE*GROUP_SIZE, // bits of repetition information
-  localparam REP_DET_OUTPUT_WIDTH  = (GROUP_SIZE * DATA_WIDTH + REP_INFO)
+  localparam ZERO_INFO             = GROUP_SIZE,             //  
+  localparam REP_DET_OUTPUT_WIDTH  = (GROUP_SIZE * DATA_WIDTH + REP_INFO + ZERO_INFO)
 )(
   input                                   clk,                // clock input
   input                                   rst,                // reset input

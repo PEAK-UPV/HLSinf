@@ -11,9 +11,10 @@ module DISPATCHER #(
   parameter DATA_WIDTH             = 8,                                   // input data width (output is 2x input width)
   parameter LOG_MAX_ITERS          = 16,                                  // number of bits for max iters register
   parameter LOG_MAX_READS_PER_ITER = 16,                                  // number of bits for max reads per iter
-  localparam REP_INFO               = GROUP_SIZE*GROUP_SIZE,               // number of bits for repetition detector
-  localparam INPUT_WIDTH            = GROUP_SIZE * DATA_WIDTH + REP_INFO,  // number of bits for input (activation + weight + rep. info)
-  localparam OUTPUT_WIDTH           = 2 * DATA_WIDTH + REP_INFO                // number of bits for output ( result + weight + rep. info)
+  localparam REP_INFO               = GROUP_SIZE*GROUP_SIZE,              // number of bits for repetition detector
+  localparam ZERO_INFO              = GROUP_SIZE,                         //  
+  localparam INPUT_WIDTH            = GROUP_SIZE * DATA_WIDTH + REP_INFO + ZERO_INFO,  // number of bits for input (activation + weight + rep. info)
+  localparam OUTPUT_WIDTH           = 2 * DATA_WIDTH + REP_INFO + ZERO_INFO            // number of bits for output ( result + weight + rep. info)
 )( 
   input clk,
   input rst,
@@ -56,6 +57,9 @@ wire                        weight_empty_w;             // WEIGHT FIFO :: empty 
 
 wire                        perform_operation_w;                  // whether we perform a "read" operation in this cycle
 wire [REP_INFO - 1 : 0]     rep_info;                             // matrix with condensed repetition detection information
+wire [ZERO_INFO - 1 : 0]    zer_info;                             // vextor of zeros
+wire [REP_INFO - 1 : 0]     rep_info_filtered;                    // matrix with condensed repetition detection + zeros information
+
 wire [DATA_WIDTH - 1 : 0]   act_data_in_unpacked[GROUP_SIZE-1:0]; // two dimentional data read from FIFO
 wire [DATA_WIDTH - 1 : 0]   act_out;                              // Activation to send
 // registers
@@ -70,6 +74,7 @@ reg [DATA_WIDTH-1:0]             send_next;                 // Next element to s
 reg [DATA_WIDTH-1:0]             left_elements;             // Number of elements from batch to send
 reg                              first_iter;                // Indicates if is the first batch and don't need to activate read_next
 reg                              one_un_v;                  //indicates if the batch only have one unique element and the next_read needs to be selected
+reg [DATA_WIDTH-1:0]             first_to_send;             //indicates the first element to send
 
 genvar i;
 integer j;
@@ -82,7 +87,8 @@ assign valid_out = perform_operation_w;
 assign act_out                                      = act_data_in_unpacked[send_next]; 
 assign data_out[DATA_WIDTH - 1 : 0]                 = act_out;                //Activation
 assign data_out[2 * DATA_WIDTH - 1 : DATA_WIDTH]    = weight_data_read_fifo;                           // Weight
-assign data_out[OUTPUT_WIDTH- 1 : 2 * DATA_WIDTH]   = rep_info;//[send_next * REP_INFO]; //Rep info
+assign data_out[2 * DATA_WIDTH + REP_INFO - 1 : 2 * DATA_WIDTH]  = rep_info;//[send_next * REP_INFO]; //Rep info
+assign data_out[OUTPUT_WIDTH- 1 : 2 * DATA_WIDTH + REP_INFO] = zer_info;//[send_next * REP_INFO]; //Rep info
 
 // ACT FIFO :: write and read
 assign act_data_write_w  = act_data_in;
@@ -100,8 +106,10 @@ assign weight_next_read_w   = perform_operation_w  && (num_reads_per_iter_r == 1
 for(i = 0; i < GROUP_SIZE; i = i + 1) begin
     //Unpack activation input data
     assign act_data_in_unpacked[i] = act_data_read_fifo[i * DATA_WIDTH +: DATA_WIDTH];
+    assign rep_info_filtered[i*GROUP_SIZE+GROUP_SIZE-1:i*GROUP_SIZE] = zer_info[i]? {GROUP_SIZE{1'b0}} :  rep_info[i*GROUP_SIZE+GROUP_SIZE-1:i*GROUP_SIZE];
 end
-assign rep_info = act_data_read_fifo[INPUT_WIDTH - 1 : GROUP_SIZE * DATA_WIDTH] ;
+assign rep_info = act_data_read_fifo[GROUP_SIZE * DATA_WIDTH + REP_INFO - 1 : GROUP_SIZE * DATA_WIDTH] ;
+assign zer_info = act_data_read_fifo[INPUT_WIDTH - 1 : GROUP_SIZE * DATA_WIDTH + REP_INFO] ;
 
 //Combinational circuits
 
@@ -109,7 +117,11 @@ assign rep_info = act_data_read_fifo[INPUT_WIDTH - 1 : GROUP_SIZE * DATA_WIDTH] 
 //with the minor index.
 always @ (*) 
 begin: send_next_always
-    send_next = 0;
+    first_to_send = 0;
+    for(j = GROUP_SIZE - 1; j >= 0; j = j - 1) begin
+        first_to_send = (!zer_info[j])? j : first_to_send;
+    end
+    send_next = first_to_send;
     for(j = GROUP_SIZE - 1; j >= 0; j = j - 1) begin
         send_next = (enable[j])? j : send_next;
     end 
@@ -120,7 +132,7 @@ always @ (*)
 begin: one_un_v_always
     one_un_v = 1;
     for(j = 1; j < GROUP_SIZE; j = j + 1) begin
-        if(rep_info[j * GROUP_SIZE + j]) one_un_v = 0;
+        if(rep_info_filtered[j * GROUP_SIZE + j]) one_un_v = 0;
     end 
 end
 
@@ -135,49 +147,13 @@ begin: left_elements_always
   end
 end
 
-// modules
-
-// ACT fifo
-FIFO #(
-  .NUM_SLOTS     ( 4                  ),
-  .LOG_NUM_SLOTS ( 2                  ),
-  .DATA_WIDTH    ( INPUT_WIDTH        )
-) fifo_in_act (
-  .clk           ( clk                ),
-  .rst           ( rst                ),
-  .data_write    ( act_data_write_w   ),
-  .write         ( act_write_w        ),
-  .full          ( act_full_w         ),
-  .almost_full   ( act_almost_full_w  ),
-  .data_read     ( act_data_read_fifo ),
-  .next_read     ( act_next_read_w    ),
-  .empty         ( act_empty_w        )
-);
-
-
-// input fifo
-FIFO #(
-  .NUM_SLOTS     ( 4          ),
-  .LOG_NUM_SLOTS ( 2          ),
-  .DATA_WIDTH    ( DATA_WIDTH )
-) fifo_in_weight (
-  .clk           ( clk                    ),
-  .rst           ( rst                    ),
-  .data_write    ( weight_data_write_w    ),
-  .write         ( weight_write_w         ),
-  .full          ( weight_full_w          ),
-  .almost_full   ( weight_almost_full_w   ),
-  .data_read     ( weight_data_read_fifo  ),
-  .next_read     ( weight_next_read_w     ),
-  .empty         ( weight_empty_w         )
-);
 // sequential logic
 
 //Get the elements that we need to send from the current batch
 always @ (posedge clk) 
 begin: enables_clk
   if(~rst) begin
-    enable = {GROUP_SIZE{1'b1}};
+    enable <= {GROUP_SIZE{1'b1}};
     first_iter <= 1;
   end else
     begin
@@ -190,8 +166,9 @@ begin: enables_clk
          //If is the first batch iteration iteration reset the enable
         if(first_iter) begin
           for(j = 0; j < GROUP_SIZE; j = j + 1) begin
-            enable [j] = rep_info[j * GROUP_SIZE + j];
+            enable [j] <= rep_info_filtered[j * GROUP_SIZE + j];
           end 
+          enable [send_next] <= 0;
         end
       end //End perform_operation_w
     end
@@ -234,9 +211,47 @@ end
 // in this module whenever a "read" cycle is performed the associated information is shown as debug
 //
 
+
+// modules
+
+// ACT fifo
+FIFO #(
+  .NUM_SLOTS     ( 4                  ),
+  .LOG_NUM_SLOTS ( 2                  ),
+  .DATA_WIDTH    ( INPUT_WIDTH        )
+) fifo_in_act (
+  .clk           ( clk                ),
+  .rst           ( rst                ),
+  .data_write    ( act_data_write_w   ),
+  .write         ( act_write_w        ),
+  .full          ( act_full_w         ),
+  .almost_full   ( act_almost_full_w  ),
+  .data_read     ( act_data_read_fifo ),
+  .next_read     ( act_next_read_w    ),
+  .empty         ( act_empty_w        )
+);
+
+
+// input fifo
+FIFO #(
+  .NUM_SLOTS     ( 4          ),
+  .LOG_NUM_SLOTS ( 2          ),
+  .DATA_WIDTH    ( DATA_WIDTH )
+) fifo_in_weight (
+  .clk           ( clk                    ),
+  .rst           ( rst                    ),
+  .data_write    ( weight_data_write_w    ),
+  .write         ( weight_write_w         ),
+  .full          ( weight_full_w          ),
+  .almost_full   ( weight_almost_full_w   ),
+  .data_read     ( weight_data_read_fifo  ),
+  .next_read     ( weight_next_read_w     ),
+  .empty         ( weight_empty_w         )
+);
+
 // synthesis translate_off
 
-`ifdef DEBUG_DISPATCHER 
+//`ifdef DEBUG_DISPATCHER 
   reg [15:0] tics;
     integer k,l;
   always @ (posedge clk) begin
@@ -253,17 +268,23 @@ end
         $display("\n--Repetition info");
         for(k = 0; k < GROUP_SIZE; k = k + 1) begin
           for(l = 0; l < GROUP_SIZE; l = l + 1) begin   
-              $write("%d ", rep_info[k*GROUP_SIZE + l]);
+              $write("%d ", rep_info_filtered[k*GROUP_SIZE + l]);
           end
            $write("\n");
         end
+        
+        $display("\n--Zero info");
+        for(k = 0; k < GROUP_SIZE; k = k + 1) begin
+              $write("%d ", zer_info[k]);
+        end
+        $write("\n");
 
-        if(valid_out)$display("---Output data : \n Act: %d Weight %d", tics, data_out[DATA_WIDTH-1:0], data_out[DATA_WIDTH+DATA_WIDTH-1:DATA_WIDTH]);
+        if(valid_out)$display("---Output data : \n Act: %d Weight %d", data_out[DATA_WIDTH-1:0], data_out[DATA_WIDTH+DATA_WIDTH-1:DATA_WIDTH]);
       end
       tics <= tics + 1;
     end
   end
-`endif
+//`endif
 
 // synthesis translate_on
 

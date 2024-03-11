@@ -13,7 +13,8 @@ module AGRUPATE#(
   parameter LOG_MAX_ITERS          = 16,                         // number of bits for max iters register
   parameter LOG_MAX_READS_PER_ITER = 16,                         // number of bits for max reads per iter
   localparam REP_INFO              = GROUP_SIZE*GROUP_SIZE,      // number of bits for repetition detectoor
-  localparam INPUT_WIDTH           = DATA_WIDTH + REP_INFO,      // input data width (activation + weight + rep. info)
+  localparam ZERO_INFO             = GROUP_SIZE,                 //    
+  localparam INPUT_WIDTH           = DATA_WIDTH + REP_INFO + ZERO_INFO, // input data width (activation + weight + rep. info)
   localparam OUTPUT_WIDTH          = GROUP_SIZE * DATA_WIDTH     // output data width ( result (2*data width) +  rep. info)
 
 )(
@@ -45,10 +46,13 @@ wire                               perform_operation_w;               // whether
 
 wire [ DATA_WIDTH - 1: 0]          value_in;                         // Result value extracted from FIFO   
 wire [ REP_INFO - 1: 0]            rep_info;                         // Repetition info extracted from FIFO
+wire [ZERO_INFO - 1 : 0]           zer_info;                             // vextor of zeros
+wire [REP_INFO - 1 : 0]            rep_info_filtered;                    // matrix with condensed repetition detection + zeros information
+
 wire [ GROUP_SIZE - 1: 0]          processed_elements;               // Indicates the stored elements + elements that will be stored
 wire [ GROUP_SIZE - 1: 0]          writing;                          // Indicates the elements that will be stored in the current cycle
 wire [ GROUP_SIZE - 1: 0]          diagonal;                         // Diagonal of the rep_info
-wire                                 send;            //TODO
+wire                               send;            //TODO
 
 // registers
 reg [LOG_MAX_ITERS-1:0]          num_iters_r;               // FIFO
@@ -64,6 +68,7 @@ reg [LOG_GROUP_SIZE : 0]         row;                                   // Indic
 reg [DATA_WIDTH - 1: 0]          output_values[GROUP_SIZE - 1 : 0];     // Unpacked output values
 reg                              first_iter;                            //Indicates if we are on the first iteration of a batch
 reg                              send_r;                                //Registered version of send variable
+reg [DATA_WIDTH-1:0]             first_to_send;             //indicates the first element to send
 
 genvar i;
 integer j;
@@ -79,7 +84,8 @@ assign next_read_w = perform_operation_w;
 
 // Extract input from FIFO
 assign value_in  = data_read_w[DATA_WIDTH - 1 : 0];
-assign rep_info  = data_read_w[INPUT_WIDTH - 1 : DATA_WIDTH];
+assign rep_info  = data_read_w[DATA_WIDTH + REP_INFO - 1 : DATA_WIDTH];
+assign zer_info  = data_read_w[INPUT_WIDTH - 1 : DATA_WIDTH + REP_INFO];
 
 // Assign Output
 for(i = 0; i < GROUP_SIZE; i = i + 1) begin
@@ -92,16 +98,22 @@ assign send = &processed_elements;
 
 //Get the elements to write in this cycle.
 for(i = 0; i < GROUP_SIZE; i = i + 1) begin
-    assign writing[i] = rep_info[row * GROUP_SIZE + i];
-    assign processed_elements[i] = stored[i] + writing[i];
-    assign diagonal[i] = rep_info[i * GROUP_SIZE + i];
+    assign rep_info_filtered[i*GROUP_SIZE+GROUP_SIZE-1:i*GROUP_SIZE] = zer_info[i]? {GROUP_SIZE{1'b0}} :  rep_info[i*GROUP_SIZE+GROUP_SIZE-1:i*GROUP_SIZE];
+    assign writing[i] = rep_info_filtered[row * GROUP_SIZE + i];
+    assign processed_elements[i] = stored[i] || writing[i];
+    assign diagonal[i] = rep_info_filtered[i * GROUP_SIZE + i];
 end
 
 //See which element has to be stored next. The next element to store needs to be the one
 //with the minor index.
 always @ (*) 
 begin:row_always
-    row = 0;
+    first_to_send = 0;
+    for(j = GROUP_SIZE - 1; j >= 0; j = j - 1) begin
+        first_to_send = (!zer_info[j])? j : first_to_send;
+    end
+    
+    row = first_to_send;
     for(j = GROUP_SIZE - 1; j >= 0; j = j - 1) begin
         row = (enable[j])? j : row;
     end 
@@ -123,6 +135,7 @@ begin
             send_r <= send;
 
             for(j = 0; j < GROUP_SIZE; j =  j + 1) begin
+                if(zer_info[j]) output_values[j] <= 0;
                 if(writing[j]) begin
                     output_values[j] <= value_in;
                     //stored[j] <= 1;
@@ -138,9 +151,13 @@ begin
                 first_iter <= 0; 
                 
                 for(j = 0; j < GROUP_SIZE; j =  j + 1) begin
-                    if(writing[j]) begin
-                        output_values[j] <= value_in;
+                    if(zer_info[j]) begin
                         stored[j] <= 1;
+                        output_values[j] <= 0;
+                    end
+                    if(writing[j]) begin
+                        stored[j] <= 1;
+                        output_values[j] <= value_in;
                     end // End if writing
                 end // End for j       
             end // End else 
@@ -226,5 +243,41 @@ FIFO #(
   .empty         ( empty_w                 )
 );
 
+//`ifdef DEBUG_AGRUPATE
+  reg [15:0] tics;
+    integer k,l;
+  always @ (posedge clk) begin
+    if (~rst) tics <= 0;
+    else begin
+      if (perform_operation_w) begin
+        $display("\nREP: cycle %d", tics);
+
+        $display("--Value_in:");
+        $write("%d \n", value_in);
+
+        $display("--Repetition info");
+        for(k = 0; k < GROUP_SIZE; k = k + 1) begin
+          for(l = 0; l < GROUP_SIZE; l = l + 1) begin   
+              $write("%d ", rep_info_filtered[k*GROUP_SIZE + l]);
+          end
+           $write("\n");
+        end
+        
+        $display("\n--Zero info");
+        for(k = 0; k < GROUP_SIZE; k = k + 1) begin
+              $write("%d ", zer_info[k]);
+        end
+        $write("\n");
+        if(valid_out)begin
+            $display("[SENDING]---Output data : ");        
+            for(k = 0; k < GROUP_SIZE; k = k + 1) begin
+                $write("%d ", output_values[k]);
+            end
+        end
+      end
+      tics <= tics + 1;
+    end
+  end
+//`endif
 
 endmodule

@@ -12,7 +12,10 @@ module repetition_detector#(
     parameter DATA_WIDTH             = 8,                      // input and output data width
     parameter LOG_MAX_ITERS          = 16,                     // number of bits for max iters register
     parameter LOG_MAX_READS_PER_ITER = 16,                     // number of bits for max reads per iter
-    localparam REP_INFO              = GROUP_SIZE*GROUP_SIZE   // number of bits for repetition detectoor
+    localparam REP_INFO              = GROUP_SIZE*GROUP_SIZE,  // number of bits for repetition detector
+    localparam ZERO_INFO             = GROUP_SIZE,             //
+    localparam INPUT_WIDTH           = GROUP_SIZE*DATA_WIDTH,  // number of bits for input (activation + weight + rep. info)
+    localparam OUTPUT_WIDTH          = INPUT_WIDTH + REP_INFO +  ZERO_INFO // number of bits for output ( result + weight + rep. info)    
 )(
   input clk,
   input rst,
@@ -21,29 +24,30 @@ module repetition_detector#(
   input [LOG_MAX_ITERS-1:0]           num_iters,           // CONFIGURE interface:: number of iterations for reads
   input [LOG_MAX_READS_PER_ITER-1:0]  num_reads_per_iter,  // CONFIGURE interface:: number of reads per iteration  
 
-  input [GROUP_SIZE*DATA_WIDTH-1:0]           data_in,     // ACTIVATION interface:: data
-  input                                       valid_in,    // ACTIVATION interface:: valid
-  output                                      avail_out,   // ACTIVATION interface:: avail
+  input [INPUT_WIDTH-1:0]             data_in,     // ACTIVATION interface:: data
+  input                               valid_in,    // ACTIVATION interface:: valid
+  output                              avail_out,   // ACTIVATION interface:: avail
 
-  output [GROUP_SIZE*DATA_WIDTH+REP_INFO-1:0] data_out,    // OUT1 interface:: data
-  output                                      valid_out,   // OUT1 interface:: valid
-  input                                       avail_in     // OUT1 interface:: avail
+  output [OUTPUT_WIDTH-1:0]           data_out,    // OUT1 interface:: data
+  output                              valid_out,   // OUT1 interface:: valid
+  input                               avail_in     // OUT1 interface:: avail
 
 );
 
 
 // wires
-wire [GROUP_SIZE * DATA_WIDTH - 1: 0]  data_write_w;                      // data to write to FIFO
+wire [INPUT_WIDTH - 1: 0]              data_write_w;                      // data to write to FIFO
 wire                                   write_enb_w;                       // write signal to FIFO
 wire                                   full_w;                            // full signal from FIFO
 wire                                   almost_full_w;                     // almost_full signal from FIFO
-wire [GROUP_SIZE * DATA_WIDTH - 1 : 0] data_read_fifo;                    // data read from FIFO
+wire [INPUT_WIDTH - 1 : 0]             data_read_fifo;                    // data read from FIFO
 wire                                   read_enb_w;                        // next_read signal to FIFO
 wire                                   empty_w;                           // empty signal from FIFO
 wire                                   perform_operation_w;
 
-wire [GROUP_SIZE * GROUP_SIZE - 1 : 0] equivalences;                      // matrix of equivalences between the values of the GS elements
-wire [GROUP_SIZE * GROUP_SIZE - 1 : 0] rep_info;                          // matrix with condensed repetition detection information
+wire [REP_INFO - 1 : 0]                equivalences;                      // matrix of equivalences between the values of the GS elements
+wire [REP_INFO - 1 : 0]                rep_info;                          // matrix with condensed repetition detection information
+wire [ZERO_INFO - 1 : 0]               zer_info;                          // vector of zero elements
 wire [DATA_WIDTH - 1 : 0]              data_in_unpacked[GROUP_SIZE-1:0];  // two dimentional data read from FIFO
 
 // registers
@@ -61,6 +65,7 @@ integer l;
 // combinational logic
 assign data_out[GROUP_SIZE * DATA_WIDTH - 1:0] = data_read_fifo;
 assign data_out[GROUP_SIZE * DATA_WIDTH + REP_INFO - 1 : GROUP_SIZE * DATA_WIDTH] = rep_info;
+assign data_out[OUTPUT_WIDTH - 1 : GROUP_SIZE * DATA_WIDTH + REP_INFO] = zer_info;
 
 assign data_write_w  = data_in;                                         // data to FIFO
 assign write_enb_w   = valid_in;                                        // write signal to FIFO
@@ -72,6 +77,7 @@ assign perform_operation_w = module_enabled_r & (~empty_w) & avail_in;
 
 
 for(i = 0; i < GROUP_SIZE; i = i + 1) begin
+    assign zer_info[i] = data_in_unpacked[i] == 0;
     assign data_in_unpacked[i] = data_read_fifo[i * DATA_WIDTH +: DATA_WIDTH];
 end
 

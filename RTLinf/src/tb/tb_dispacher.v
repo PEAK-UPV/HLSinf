@@ -32,13 +32,15 @@ parameter DATA_WIDTH             = 8;
 parameter GROUP_SIZE             = 4;
 parameter LOG_MAX_ITERS          = 16;                     // number of bits for max iters register
 parameter LOG_MAX_READS_PER_ITER = 16;                     // number of bits for max reads per iter
+parameter ZERO_INFO              = GROUP_SIZE;  // number of bits for repetition detectoor
 parameter REP_INFO               = GROUP_SIZE*GROUP_SIZE;  // number of bits for repetition detectoor
 
 parameter HALF_CYCLE             = 25;
 parameter CYCLE                  = HALF_CYCLE*2;
 parameter DELTA                  = 2;
 parameter CYCLE_AND_DELTA        = CYCLE+DELTA;
-
+localparam INPUT_WIDTH            = GROUP_SIZE * DATA_WIDTH + REP_INFO + ZERO_INFO;  // number of bits for input (activation + weight + rep. info)
+localparam OUTPUT_WIDTH           = 2 * DATA_WIDTH + REP_INFO + ZERO_INFO;           // number of bits for output ( result + weight + rep. info)
 
 //input to dispacher
 reg                                              clk;
@@ -49,14 +51,16 @@ reg                                              weight_valid_in;
 reg                                              configure;
 reg [LOG_MAX_ITERS-1:0]                          num_iters;
 reg [LOG_MAX_READS_PER_ITER-1:0]                 num_reads_per_iter;
-wire [DATA_WIDTH * GROUP_SIZE - 1 + REP_INFO: 0] data_in;
+wire [INPUT_WIDTH - 1: 0]                        data_in;
 reg  [DATA_WIDTH - 1 : 0]                        weight_data_in;
 reg [DATA_WIDTH * GROUP_SIZE - 1 : 0]            value_in;
-reg [GROUP_SIZE * GROUP_SIZE - 1 : 0]            rep_info_matrix;
+reg [REP_INFO  - 1 : 0]                          rep_info_matrix;
+reg [ZERO_INFO - 1 : 0]                          zer_info_matrix;
+
 //output
 wire                                             valid_out;
 wire                                             ready_out;
-wire [DATA_WIDTH + REP_INFO-1:0]                 data_out;
+wire [OUTPUT_WIDTH -1:0]                         data_out;
 wire [DATA_WIDTH - 1 : 0]                        value_out;
 wire                                             weight_ready_out;
 wire [DATA_WIDTH - 1 : 0]                        weight_out;
@@ -76,6 +80,7 @@ genvar k;
 //input to dispatcher
 assign data_in[GROUP_SIZE * DATA_WIDTH - 1 : 0] = value_in;
 assign data_in[GROUP_SIZE * DATA_WIDTH + REP_INFO - 1: GROUP_SIZE * DATA_WIDTH] = rep_info_matrix;
+assign data_in[INPUT_WIDTH - 1: GROUP_SIZE * DATA_WIDTH + REP_INFO] = zer_info_matrix;
 
 //output
 assign value_out = data_out[0+:DATA_WIDTH];
@@ -138,8 +143,10 @@ initial begin // Activations
                 value_in [2*DATA_WIDTH+:DATA_WIDTH] = i + 1;
                 value_in [3*DATA_WIDTH+:DATA_WIDTH] = i + 1;
                 rep_info_matrix = 0;
+                zer_info_matrix=0;
                 for(j = 0; j < GROUP_SIZE ; j = j + 1) begin
                     rep_info_matrix[j] = 1;
+                    if(value_in [j*DATA_WIDTH +: DATA_WIDTH] == 0)zer_info_matrix[j]=1;
                 end        
 
              end //End ready out
@@ -154,16 +161,18 @@ initial begin // Activations
         if(ready_out) begin 
             valid_in = 1;
     
-            value_in [0+:DATA_WIDTH] = 1+i;
+            value_in [0+:DATA_WIDTH] = 0;
             value_in [1*DATA_WIDTH+:DATA_WIDTH] = 2+i;
             value_in [2*DATA_WIDTH+:DATA_WIDTH] = 1+i;
-            value_in [3*DATA_WIDTH+:DATA_WIDTH] = 3+i;
+            value_in [3*DATA_WIDTH+:DATA_WIDTH] = 0+i;
             rep_info_matrix = 0;
-            for(j = 0; j < GROUP_SIZE ; j = j + 1) begin
-                rep_info_matrix[j*GROUP_SIZE+j] = 1;
-            end
-            rep_info_matrix[2] = 1;
-            rep_info_matrix[2*GROUP_SIZE+2] = 0;
+            zer_info_matrix = 0;
+                for(j = 0; j < GROUP_SIZE ; j = j + 1) begin
+                    rep_info_matrix[j*GROUP_SIZE+j] = 1;
+                    if(value_in [j*DATA_WIDTH +: DATA_WIDTH] == 0)zer_info_matrix[j]=1;
+                end 
+            rep_info_matrix[0] = 0;
+                
         end
         else valid_in = 0;
     end
@@ -174,7 +183,7 @@ initial begin // Activations
     $finish;
 end
 
-DISPACHER dispacher_m(
+DISPATCHER dispacher_m(
     .clk                 (clk),
     .rst                 (rst),
     .configure           (configure),

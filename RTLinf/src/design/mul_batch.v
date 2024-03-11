@@ -12,9 +12,10 @@ module MUL_BATCH #(
   parameter LOG_MAX_ITERS          = 16,                                      // number of bits for max iters register
   parameter LOG_MAX_READS_PER_ITER = 16,                                      // number of bits for max reads per iter
   localparam REP_INFO              = GROUP_SIZE * GROUP_SIZE,                 // number of bits for repetition detector
-  localparam INPUT                 = GROUP_SIZE * DATA_WIDTH + REP_INFO,      // MUL_BATCH input number of bits
-  localparam DISPATCH_OUTPUT       = 2 * DATA_WIDTH + REP_INFO,               // DISPATCHER  module output number of bits
-  localparam MUL_OUTPUT            = 2 * DATA_WIDTH + REP_INFO,               // MUL module output number of bits
+  localparam ZERO_INFO             = GROUP_SIZE,                              //
+  localparam DISPATCH_OUTPUT       = 2 * DATA_WIDTH + REP_INFO + ZERO_INFO,   // DISPATCHER  module output number of bits
+  localparam MUL_OUTPUT            = 2 * DATA_WIDTH + REP_INFO + ZERO_INFO,   // MUL module output number of bits
+  localparam INPUT                 = GROUP_SIZE * DATA_WIDTH + REP_INFO + ZERO_INFO,      // MUL_BATCH input number of bits
   localparam OUTPUT                = GROUP_SIZE * 2 * DATA_WIDTH              // MUL_BATCH output number of bits
 )(
   input clk,
