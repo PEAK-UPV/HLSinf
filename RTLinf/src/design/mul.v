@@ -18,9 +18,9 @@ module MUL #(
   parameter DATA_WIDTH             = 8,                          // input data width (output is 2x input width)
   parameter LOG_MAX_ITERS          = 16,                         // number of bits for max iters register
   parameter LOG_MAX_READS_PER_ITER = 16,                         // number of bits for max reads per iter
-  localparam REP_INFO              = GROUP_SIZE*GROUP_SIZE,      // number of bits for repetition detectoor
-  localparam INPUT_WIDTH           = 2 * DATA_WIDTH + REP_INFO,  // number of bits for input (activation + weight + rep. info)
-  localparam OUTPUT_WIDTH          = 2 * DATA_WIDTH + REP_INFO   // number of bits for output ( result (2*data width) +  rep. info)
+  localparam ZERO_INFO             = GROUP_SIZE,      // number of bits for repetition detectoor
+  localparam INPUT_WIDTH           = 2 * DATA_WIDTH + ZERO_INFO,  // number of bits for input (activation + weight + rep. info)
+  localparam OUTPUT_WIDTH          = 2 * DATA_WIDTH + ZERO_INFO   // number of bits for output ( result (2*data width) +  rep. info)
 
 )(
   input clk,
@@ -51,7 +51,7 @@ wire                               perform_operation_w;               // whether
 
 wire [ DATA_WIDTH - 1: 0]          act_data_in;                       // Activation value    
 wire [ DATA_WIDTH - 1: 0]          weight_data_in;                    // Weight value
-wire [ REP_INFO - 1: 0]            rep_info;                          // Repetition information
+wire [ ZERO_INFO - 1: 0]           zero_info;                          // Repetition information
 wire [2 * DATA_WIDTH - 1 : 0]      result;                            // Result
 // registers
 reg [LOG_MAX_ITERS-1:0]          num_iters_r;               // FIFO
@@ -67,12 +67,12 @@ assign perform_operation_w = /*module_enabled_r &*/ (~empty_w) & avail_in;
 //Extract input from FIFO
 assign act_data_in = data_read_w[DATA_WIDTH - 1 : 0];
 assign weight_data_in = data_read_w[ 2 * DATA_WIDTH - 1 : DATA_WIDTH];
-assign rep_info = data_read_w[ INPUT_WIDTH - 1 : 2 * DATA_WIDTH];
+assign zero_info = data_read_w[ INPUT_WIDTH - 1 : 2 * DATA_WIDTH];
 
 //Output
 assign result                                       = act_data_in * weight_data_in;
 assign data_out[2 * DATA_WIDTH - 1 : 0 ]            =  result;
-assign data_out[OUTPUT_WIDTH - 1 : 2 * DATA_WIDTH ] =  rep_info;
+assign data_out[OUTPUT_WIDTH - 1 : 2 * DATA_WIDTH ] =  zero_info;
 assign valid_out                                    = perform_operation_w;
 
 //Get input 

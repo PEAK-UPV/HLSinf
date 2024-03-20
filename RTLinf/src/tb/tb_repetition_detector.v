@@ -31,7 +31,7 @@ parameter DATA_WIDTH             = 8;
 parameter GROUP_SIZE             = 4;
 parameter LOG_MAX_ITERS          = 16;                     // number of bits for max iters register
 parameter LOG_MAX_READS_PER_ITER = 16;                     // number of bits for max reads per iter
-parameter REP_INFO_BITS          = GROUP_SIZE*GROUP_SIZE;  // number of bits for repetition detectoor
+parameter ZERO_INFO              = GROUP_SIZE;             // number of bits for repetition detectoor
 
 parameter HALF_CYCLE             = 25;
 parameter CYCLE                  = HALF_CYCLE*2;
@@ -52,9 +52,9 @@ reg [DATA_WIDTH * GROUP_SIZE - 1 : 0] value_in;
 //output
 wire                                           valid_out;
 wire                                           ready_out;
-wire [GROUP_SIZE*DATA_WIDTH+REP_INFO_BITS-1:0] data_out;
+wire [GROUP_SIZE*DATA_WIDTH+ZERO_INFO-1:0]     data_out;
 wire [DATA_WIDTH - 1 : 0] value_out_unpacked [GROUP_SIZE - 1 : 0];
-wire [GROUP_SIZE * GROUP_SIZE - 1 : 0]         rep_info;
+wire [ZERO_INFO - 1 : 0]         zero_info_a;
 
 
 //internal
@@ -72,7 +72,7 @@ for(k = 0; k < GROUP_SIZE; k = k + 1) begin
         assign value_out_unpacked[k] = data_out[k*DATA_WIDTH +: DATA_WIDTH];
 end
 
-assign rep_info = data_out[GROUP_SIZE * DATA_WIDTH + REP_INFO_BITS - 1 : GROUP_SIZE * DATA_WIDTH];
+assign zero_info_a = data_out[GROUP_SIZE * DATA_WIDTH + ZERO_INFO - 1 : GROUP_SIZE * DATA_WIDTH];
 
 //Function that assigns unique values to the input
 function  [DATA_WIDTH * GROUP_SIZE - 1 : 0] create_values;
@@ -143,10 +143,8 @@ initial begin //Check loops
             for(kk = 0; kk < GROUP_SIZE; kk = kk + 1) $write("%d ", value_out_unpacked[kk]);
         
             $display("\n--Repetition info matrix");
-            for(kk = 0; kk < GROUP_SIZE; kk = kk + 1) begin
-                for(ll = 0; ll < GROUP_SIZE; ll = ll + 1)  $write("%d ", rep_info[kk*GROUP_SIZE + ll]);
-                $write("\n");
-            end
+            for(ll = 0; ll < GROUP_SIZE; ll = ll + 1)  $write("%d ", zero_info_a[ll]);
+            $write("\n");
         end //End if II=0 
     end
 

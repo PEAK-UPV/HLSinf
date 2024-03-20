@@ -12,7 +12,9 @@ module repetition_detector#(
     parameter DATA_WIDTH             = 8,                      // input and output data width
     parameter LOG_MAX_ITERS          = 16,                     // number of bits for max iters register
     parameter LOG_MAX_READS_PER_ITER = 16,                     // number of bits for max reads per iter
-    localparam REP_INFO              = GROUP_SIZE*GROUP_SIZE   // number of bits for repetition detectoor
+    localparam ZERO_INFO             = GROUP_SIZE,             // number of bits for repetition detector
+    localparam INPUT                 = GROUP_SIZE*DATA_WIDTH,
+    localparam OUTPUT                = GROUP_SIZE*DATA_WIDTH+ZERO_INFO 
 )(
   input clk,
   input rst,
@@ -21,37 +23,34 @@ module repetition_detector#(
   input [LOG_MAX_ITERS-1:0]           num_iters,           // CONFIGURE interface:: number of iterations for reads
   input [LOG_MAX_READS_PER_ITER-1:0]  num_reads_per_iter,  // CONFIGURE interface:: number of reads per iteration  
 
-  input [GROUP_SIZE*DATA_WIDTH-1:0]           data_in,     // ACTIVATION interface:: data
-  input                                       valid_in,    // ACTIVATION interface:: valid
-  output                                      avail_out,   // ACTIVATION interface:: avail
+  input [INPUT - 1:0]                 data_in,     // ACTIVATION interface:: data
+  input                               valid_in,    // ACTIVATION interface:: valid
+  output                              avail_out,   // ACTIVATION interface:: avail
 
-  output [GROUP_SIZE*DATA_WIDTH+REP_INFO-1:0] data_out,    // OUT1 interface:: data
-  output                                      valid_out,   // OUT1 interface:: valid
-  input                                       avail_in     // OUT1 interface:: avail
+  output [OUTPUT-1:0]                 data_out,    // OUT1 interface:: data
+  output                              valid_out,   // OUT1 interface:: valid
+  input                               avail_in     // OUT1 interface:: avail
 
 );
 
 
 // wires
-wire [GROUP_SIZE * DATA_WIDTH - 1: 0]  data_write_w;                      // data to write to FIFO
-wire                                   write_enb_w;                       // write signal to FIFO
-wire                                   full_w;                            // full signal from FIFO
-wire                                   almost_full_w;                     // almost_full signal from FIFO
-wire [GROUP_SIZE * DATA_WIDTH - 1 : 0] data_read_fifo;                    // data read from FIFO
-wire                                   read_enb_w;                        // next_read signal to FIFO
-wire                                   empty_w;                           // empty signal from FIFO
-wire                                   perform_operation_w;
+wire [INPUT - 1: 0]    data_write_w;                      // data to write to FIFO
+wire                   write_enb_w;                       // write signal to FIFO
+wire                   full_w;                            // full signal from FIFO
+wire                   almost_full_w;                     // almost_full signal from FIFO
+wire [INPUT - 1 : 0]   data_read_fifo;                    // data read from FIFO
+wire                   read_enb_w;                        // next_read signal to FIFO
+wire                   empty_w;                           // empty signal from FIFO
+wire                   perform_operation_w;
+wire [ZERO_INFO - 1:0] zero_info;
 
-wire [GROUP_SIZE * GROUP_SIZE - 1 : 0] equivalences;                      // matrix of equivalences between the values of the GS elements
-wire [GROUP_SIZE * GROUP_SIZE - 1 : 0] rep_info;                          // matrix with condensed repetition detection information
-wire [DATA_WIDTH - 1 : 0]              data_in_unpacked[GROUP_SIZE-1:0];  // two dimentional data read from FIFO
 
 // registers
 reg [LOG_MAX_ITERS - 1 : 0]            num_iters_r;               // FIFO
 reg [LOG_MAX_READS_PER_ITER - 1 : 0]   num_reads_per_iter_r;      // number of reads per iteration (down counter)
 reg [LOG_MAX_READS_PER_ITER - 1 : 0]   num_reads_per_iter_copy_r; // copy of number of reads per iteration
 reg                                    module_enabled_r;          // module enabled
-reg [GROUP_SIZE-1:0]                   diag;                      // diagonal of the rep info matrix
 
 genvar i;
 genvar j;
@@ -60,7 +59,7 @@ integer l;
 
 // combinational logic
 assign data_out[GROUP_SIZE * DATA_WIDTH - 1:0] = data_read_fifo;
-assign data_out[GROUP_SIZE * DATA_WIDTH + REP_INFO - 1 : GROUP_SIZE * DATA_WIDTH] = rep_info;
+assign data_out[OUTPUT - 1 : GROUP_SIZE * DATA_WIDTH] = zero_info;
 
 assign data_write_w  = data_in;                                         // data to FIFO
 assign write_enb_w   = valid_in;                                        // write signal to FIFO
@@ -70,61 +69,8 @@ assign valid_out     = perform_operation_w;                             // valid
 //
 assign perform_operation_w = module_enabled_r & (~empty_w) & avail_in;
 
-
 for(i = 0; i < GROUP_SIZE; i = i + 1) begin
-    assign data_in_unpacked[i] = data_read_fifo[i * DATA_WIDTH +: DATA_WIDTH];
-end
-
-/*Repetition information calculation*/
-//Calculation of the repetition information performed in several steps.
-// The output represents a matrix of GS x GS, where each row i represents the equivalence of the 
-//element i by the element j. There will be only GS ones. 
-// E.g., 3 2 3 3 will result on:
-// 1 0 1 1
-// 0 1 0 0
-// 0 0 0 0
-// 0 0 0 0
-
-
-//--Step 1: calculate the equivalences.
-// E.g., 3 2 3 3 will result on: 
-// 1 0 1 1
-// 0 1 0 0
-// 0 0 1 1
-// 0 0 0 1
-for(i = 0; i < GROUP_SIZE; i = i + 1) begin
-  for(j = 0; j < GROUP_SIZE; j = j + 1) begin
-        /*EQUIVALENCES*/
-        //First we build the upper part of the matrix checking if all elements are equal or not. For this, we compare the actual element selected with
-        //the following values, and then we create a bit matrix where each row are related to an element. 
-        //E.g., For A B A the maxtrix would be: // x 0 1 // 0 x 0 // 0 x 0
-        if(i == j) assign equivalences[i*GROUP_SIZE+j] = 1;                             //diagonal
-        if(j > i)  assign equivalences[i*GROUP_SIZE+j] = !(data_in_unpacked[i] ^ data_in_unpacked[j]);  //upper part
-        if(j < i)  assign equivalences[i*GROUP_SIZE+j] = 0;                             //lower part
-    end
-end
-
-//--Step 2: calculate the diagonal of the matrix.
-// E.g., 3 2 3 3 will result on:
-// 1 0 0 0
-// 0 1 0 0
-// 0 0 0 0
-// 0 0 0 0
-always @ (*) begin
-  diag = {GROUP_SIZE{1'b1}}; ;
-  for(k = 1; k < GROUP_SIZE; k = k + 1) begin
-    for(l = 0; l < k; l = l + 1) begin   
-      diag[k] = diag[k] & !equivalences[l*GROUP_SIZE+k];
-    end
-  end
-end
-
-//--Step 3: bind step 1 and step 2
-for(i = 0; i < GROUP_SIZE; i = i + 1) begin
-  for(j = 0; j < GROUP_SIZE; j = j + 1) begin
-        if(j >= i) assign rep_info[i*GROUP_SIZE+j] = diag[i] && equivalences[i*GROUP_SIZE+j];  //upper part
-        if(j < i)  assign rep_info[i*GROUP_SIZE+j] = 0;                                        //lower part
-    end
+    assign zero_info[i] = data_read_fifo[i * DATA_WIDTH +: DATA_WIDTH]==0;
 end
 
 // sequential logic

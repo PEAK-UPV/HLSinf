@@ -12,8 +12,8 @@ module AGRUPATE#(
   parameter DATA_WIDTH             = (2 * 8),                    // input value width (output is 2x input width)
   parameter LOG_MAX_ITERS          = 16,                         // number of bits for max iters register
   parameter LOG_MAX_READS_PER_ITER = 16,                         // number of bits for max reads per iter
-  localparam REP_INFO              = GROUP_SIZE*GROUP_SIZE,      // number of bits for repetition detectoor
-  localparam INPUT_WIDTH           = DATA_WIDTH + REP_INFO,      // input data width (activation + weight + rep. info)
+  localparam ZERO_INFO             = GROUP_SIZE*GROUP_SIZE,      // number of bits for repetition detectoor
+  localparam INPUT_WIDTH           = DATA_WIDTH + ZERO_INFO,      // input data width (activation + weight + rep. info)
   localparam OUTPUT_WIDTH          = GROUP_SIZE * DATA_WIDTH     // output data width ( result (2*data width) +  rep. info)
 
 )(
@@ -44,10 +44,10 @@ wire                               empty_w;                           // empty s
 wire                               perform_operation_w;               // whether we perform a "read" operation in this cycle
 
 wire [ DATA_WIDTH - 1: 0]          value_in;                         // Result value extracted from FIFO   
-wire [ REP_INFO - 1: 0]            rep_info;                         // Repetition info extracted from FIFO
+wire [ ZERO_INFO - 1: 0]            zero_info;                         // Repetition info extracted from FIFO
 wire [ GROUP_SIZE - 1: 0]          processed_elements;               // Indicates the stored elements + elements that will be stored
 wire [ GROUP_SIZE - 1: 0]          writing;                          // Indicates the elements that will be stored in the current cycle
-wire [ GROUP_SIZE - 1: 0]          diagonal;                         // Diagonal of the rep_info
+wire [ GROUP_SIZE - 1: 0]          diagonal;                         // Diagonal of the zero_info
 wire                                 send;            //TODO
 
 // registers
@@ -79,7 +79,7 @@ assign next_read_w = perform_operation_w;
 
 // Extract input from FIFO
 assign value_in  = data_read_w[DATA_WIDTH - 1 : 0];
-assign rep_info  = data_read_w[INPUT_WIDTH - 1 : DATA_WIDTH];
+assign zero_info  = data_read_w[INPUT_WIDTH - 1 : DATA_WIDTH];
 
 // Assign Output
 for(i = 0; i < GROUP_SIZE; i = i + 1) begin
@@ -92,9 +92,8 @@ assign send = &processed_elements;
 
 //Get the elements to write in this cycle.
 for(i = 0; i < GROUP_SIZE; i = i + 1) begin
-    assign writing[i] = rep_info[row * GROUP_SIZE + i];
+    assign writing[i] = zero_info[i];
     assign processed_elements[i] = stored[i] + writing[i];
-    assign diagonal[i] = rep_info[i * GROUP_SIZE + i];
 end
 
 //See which element has to be stored next. The next element to store needs to be the one
@@ -162,7 +161,7 @@ begin:enable_calculation
         if(perform_operation_w) begin
             for(j = 1; j < GROUP_SIZE; j =  j + 1) begin
                 if(first_iter) begin
-                    enable[j] <= diagonal[j]; 
+                    enable[j] <= !zero_info[j]; 
                 end
                 else begin
                     if(writing[j]) enable[j] <= 0;   

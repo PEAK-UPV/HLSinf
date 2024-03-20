@@ -11,9 +11,9 @@ module DISPATCHER #(
   parameter DATA_WIDTH             = 8,                                   // input data width (output is 2x input width)
   parameter LOG_MAX_ITERS          = 16,                                  // number of bits for max iters register
   parameter LOG_MAX_READS_PER_ITER = 16,                                  // number of bits for max reads per iter
-  localparam REP_INFO               = GROUP_SIZE*GROUP_SIZE,               // number of bits for repetition detector
-  localparam INPUT_WIDTH            = GROUP_SIZE * DATA_WIDTH + REP_INFO,  // number of bits for input (activation + weight + rep. info)
-  localparam OUTPUT_WIDTH           = 2 * DATA_WIDTH + REP_INFO                // number of bits for output ( result + weight + rep. info)
+  localparam ZERO_INFO             = GROUP_SIZE,               // number of bits for repetition detector
+  localparam INPUT_WIDTH           = GROUP_SIZE * DATA_WIDTH + ZERO_INFO,  // number of bits for input (activation + weight + rep. info)
+  localparam OUTPUT_WIDTH          = 2 * DATA_WIDTH + ZERO_INFO                // number of bits for output ( result + weight + rep. info)
 )( 
   input clk,
   input rst,
@@ -55,7 +55,7 @@ wire                        weight_next_read_w;         // WEIGHT FIFO :: next_r
 wire                        weight_empty_w;             // WEIGHT FIFO :: empty signal from FIFO
 
 wire                        perform_operation_w;                  // whether we perform a "read" operation in this cycle
-wire [REP_INFO - 1 : 0]     rep_info;                             // matrix with condensed repetition detection information
+wire [ZERO_INFO - 1 : 0]    zer_info;                             // matrix with condensed repetition detection information
 wire [DATA_WIDTH - 1 : 0]   act_data_in_unpacked[GROUP_SIZE-1:0]; // two dimentional data read from FIFO
 wire [DATA_WIDTH - 1 : 0]   act_out;                              // Activation to send
 // registers
@@ -70,6 +70,7 @@ reg [DATA_WIDTH-1:0]             send_next;                 // Next element to s
 reg [DATA_WIDTH-1:0]             left_elements;             // Number of elements from batch to send
 reg                              first_iter;                // Indicates if is the first batch and don't need to activate read_next
 reg                              one_un_v;                  //indicates if the batch only have one unique element and the next_read needs to be selected
+reg [DATA_WIDTH-1:0]             first_to_send;             //indicates the first element to send
 
 genvar i;
 integer j;
@@ -82,7 +83,7 @@ assign valid_out = perform_operation_w;
 assign act_out                                      = act_data_in_unpacked[send_next]; 
 assign data_out[DATA_WIDTH - 1 : 0]                 = act_out;                //Activation
 assign data_out[2 * DATA_WIDTH - 1 : DATA_WIDTH]    = weight_data_read_fifo;                           // Weight
-assign data_out[OUTPUT_WIDTH- 1 : 2 * DATA_WIDTH]   = rep_info;//[send_next * REP_INFO]; //Rep info
+assign data_out[OUTPUT_WIDTH- 1 : 2 * DATA_WIDTH]   = zer_info;//[send_next * REP_INFO]; //Rep info
 
 // ACT FIFO :: write and read
 assign act_data_write_w  = act_data_in;
@@ -101,7 +102,7 @@ for(i = 0; i < GROUP_SIZE; i = i + 1) begin
     //Unpack activation input data
     assign act_data_in_unpacked[i] = act_data_read_fifo[i * DATA_WIDTH +: DATA_WIDTH];
 end
-assign rep_info = act_data_read_fifo[INPUT_WIDTH - 1 : GROUP_SIZE * DATA_WIDTH] ;
+assign zer_info = act_data_read_fifo[INPUT_WIDTH - 1 : GROUP_SIZE * DATA_WIDTH] ;
 
 //Combinational circuits
 
@@ -109,7 +110,11 @@ assign rep_info = act_data_read_fifo[INPUT_WIDTH - 1 : GROUP_SIZE * DATA_WIDTH] 
 //with the minor index.
 always @ (*) 
 begin: send_next_always
-    send_next = 0;
+    first_to_send = 0;
+    for(j = GROUP_SIZE - 1; j >= 0; j = j - 1) begin
+        first_to_send = (!zer_info[j])? j : first_to_send;
+    end
+    send_next = first_to_send;
     for(j = GROUP_SIZE - 1; j >= 0; j = j - 1) begin
         send_next = (enable[j])? j : send_next;
     end 
@@ -120,7 +125,7 @@ always @ (*)
 begin: one_un_v_always
     one_un_v = 1;
     for(j = 1; j < GROUP_SIZE; j = j + 1) begin
-        if(rep_info[j * GROUP_SIZE + j]) one_un_v = 0;
+        if(!zer_info[j]) one_un_v = 0;
     end 
 end
 
@@ -190,7 +195,7 @@ begin: enables_clk
          //If is the first batch iteration iteration reset the enable
         if(first_iter) begin
           for(j = 0; j < GROUP_SIZE; j = j + 1) begin
-            enable [j] = rep_info[j * GROUP_SIZE + j];
+            enable [j] = !zer_info[j];
           end 
         end
       end //End perform_operation_w
