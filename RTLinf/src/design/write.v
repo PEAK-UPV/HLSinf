@@ -35,14 +35,6 @@ module WRITE #(
 );
 
 // wires
-wire [GROUP_SIZE*DATA_WIDTH - 1: 0] data_write_w;           // data to write to FIFO
-wire                     write_w;                           // write signal to FIFO
-wire                     full_w;                            // full signal from FIFO
-wire                     almost_full_w;                     // almost_full signal from FIFO
-wire [GROUP_SIZE*DATA_WIDTH - 1: 0] data_read_w;                       // data read from FIFO
-wire                     next_read_w;                       // next_read signal to FIFO
-wire                     empty_w;                           // empty signal from FIFO
-// 
 wire                     perform_operation_w;               // whether an operation is performed
 
 // registers
@@ -52,12 +44,9 @@ reg [OUTPUT_DATA_WIDTH-1:0]      max_clip_r;                // max clip value
 reg [LOG_MAX_ADDRESS-1:0]        offset_address_r;          // offset address counter
 
 // combinational logic
-assign avail_out    = ~full_w & ~almost_full_w;
-assign perform_operation_w = ~empty_w;                             // perform operation if data available at the input
+assign avail_out    = 1'b1;                                        // always available
+assign perform_operation_w = valid_in;                             // perform operation if data available at the input
 assign address_out  = base_address_r + offset_address_r;           // address to downstream
-assign data_write_w = data_in;                                     // data to FIFO
-assign write_w      = valid_in;                                    // write signal to FIFO
-assign next_read_w  = perform_operation_w;
 assign valid_out    = perform_operation_w;                         // valid signal to downstream module (no avail signal needed as mem is always ready)
 //
 
@@ -66,30 +55,13 @@ genvar i;
 generate
   for (i=0; i<GROUP_SIZE; i=i+1) begin
     assign data_out[((i+1)*OUTPUT_DATA_WIDTH)-1:i*OUTPUT_DATA_WIDTH] = 
-	                                                     data_read_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] > max_clip_r ? max_clip_r : 
-                                                         data_read_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] < min_clip_r ? min_clip_r :
-                                                         data_read_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH]; // data to downstream module
+	                                                     data_in[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] > max_clip_r ? max_clip_r : 
+                                                         data_in[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] < min_clip_r ? min_clip_r :
+                                                         data_in[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH]; // data to downstream module
   end
 endgenerate
 
 // modules
-
-// input fifo
-FIFO #(
-  .NUM_SLOTS     ( 2               ),
-  .LOG_NUM_SLOTS ( 1               ),
-  .DATA_WIDTH    ( GROUP_SIZE * DATA_WIDTH      )
-) fifo_in (
-  .clk           ( clk             ),
-  .rst           ( rst             ),
-  .data_write    ( data_write_w    ),
-  .write         ( write_w         ),
-  .full          ( full_w          ),
-  .almost_full   ( almost_full_w   ),
-  .data_read     ( data_read_w     ),
-  .next_read     ( next_read_w     ),
-  .empty         ( empty_w         )
-);
 
 // sequential logic
 

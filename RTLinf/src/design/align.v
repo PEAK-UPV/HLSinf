@@ -23,10 +23,6 @@ module ALIGN #(
     input                                   clk,                     // clock signal
     input                                   rst,                     // reset signal
   
-    input                                   configure,               // CONFIGURE interface:: configure signal
-    input [LOG_MAX_ITERS-1:0]               num_iters,               // CONFIGURE interface:: number of iterations for reads
-    input [LOG_MAX_READS_PER_ITER-1:0]      num_reads_per_iter,      // CONFIGURE interface:: number of reads per iteration
-  
     input [GROUP_SIZE * DATA_WIDTH - 1 : 0] data_in,                 // IN interface:: data
     input                                   valid_in,                // IN interface:: valid in
     output                                  avail_out,               // IN interface:: avail
@@ -35,85 +31,34 @@ module ALIGN #(
     output                                  valid_out,               // OUT interface: valid
     input                                   avail_in                 // OUT interface: avail
   );
+
+// regs
+reg [GROUP_SIZE * DATA_WIDTH - 1 : 0] data_r;
+reg                                   data_in_r;
   
 // wires
-wire [GROUP_SIZE * DATA_WIDTH - 1: 0] data_write_w;                      // data to write to FIFO
-wire                                  write_w;                           // write signal to FIFO
-wire                                  full_w;                            // full signal from FIFO
-wire                                  almost_full_w;                     // almost_full signal from FIFO
-wire [GROUP_SIZE * DATA_WIDTH - 1: 0] data_read_w;                       // data read from FIFO
-wire                                  next_read_w;                       // next_read signal to FIFO
-wire                                  empty_w;                           // empty signal from FIFO
-wire                                  perform_operation_w;               // whether we perform a "read" operation in this cycle
+wire                             perform_operation_w;       // whether we perform a "read" operation in this cycle
 
-// registers
-reg [LOG_MAX_ITERS-1:0]          num_iters_r;               // FIFO
-reg [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter_r;      // number of reads per iteration (down counter)
-reg [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter_copy_r; // copy of number of reads per iteration
-reg                              module_enabled_r;          // module enabled
 
 // combinational logic
-assign data_write_w        = data_in;
-assign write_w             = valid_in;
-assign avail_out           = ~almost_full_w & ~full_w;
-assign next_read_w         = perform_operation_w;
-assign perform_operation_w = module_enabled_r & (~empty_w) & avail_in;
-assign data_out            = data_read_w;  // for the moment no alignment
+assign perform_operation_w = avail_in & data_in_r;
+assign data_out            = data_r;  // for the moment no alignment
 assign valid_out           = perform_operation_w;
+assign avail_out           = 1'b1;
 
-
-// modules
-
-// input fifo
-FIFO #(
-  .NUM_SLOTS     ( 2                       ),
-  .LOG_NUM_SLOTS ( 1                       ),
-  .DATA_WIDTH    ( GROUP_SIZE * DATA_WIDTH )
-) fifo_in (
-  .clk           ( clk                     ),
-  .rst           ( rst                     ),
-  .data_write    ( data_write_w            ),
-  .write         ( write_w                 ),
-  .full          ( full_w                  ),
-  .almost_full   ( almost_full_w           ),
-  .data_read     ( data_read_w             ),
-  .next_read     ( next_read_w             ),
-  .empty         ( empty_w                 )
-);
 
 // sequential logic
-
-// configuration and iterations
-// whenever we perform a "read" operation we decrement the number of reads per iteration
-// When the reads per iteration reaches zero we decrement number of iterations and restore
-// the reads per iteration. If number of iterations reaches zero
-// then we disable the module. 
-//
 always @ (posedge clk) begin
   if (~rst) begin
-    num_iters_r          <= 0;
-    num_reads_per_iter_r <= 0;
-    module_enabled_r     <= 1'b0;
+    data_in_r <= 1'b0;
   end else begin
-    if (configure) begin
-      num_iters_r          <= num_iters;
-      num_reads_per_iter_r <= num_reads_per_iter;
-      num_reads_per_iter_copy_r <= num_reads_per_iter;
-      module_enabled_r     <= 1'b1;
+    if (valid_in) begin
+      data_r <= data_in;
+      data_in_r <= 1'b1;
     end else begin
-      if (perform_operation_w) begin
-        if (num_reads_per_iter_r == 1) begin
-          if (num_iters_r == 1) module_enabled_r <= 0;
-          else begin
-            num_iters_r <= num_iters_r - 1;
-            num_reads_per_iter_r <= num_reads_per_iter_copy_r;
-          end
-        end else begin
-          num_reads_per_iter_r <= num_reads_per_iter_r - 1;
-        end
-      end
+      data_in_r <= 1'b0;
     end
-  end 
+  end
 end
 
 // debug support. When enabled (through the DEBUG define) the module will generate

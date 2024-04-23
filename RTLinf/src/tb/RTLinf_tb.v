@@ -35,6 +35,8 @@
 `define NUM_OPS_PER_ITER        16
 `define LOG_MAX_READS_PER_ITER   8
 
+`define REPETITION_DETECTION     "no"
+
 module RTLinf_tb;
 
   // inputs
@@ -90,7 +92,8 @@ module RTLinf_tb;
     .LOG_MAX_ITERS          ( `LOG_MAX_ITERS          ),
     .LOG_MAX_READS_PER_ITER ( `LOG_MAX_READS_PER_ITER ),
     .LOG_MAX_ADDRESS        ( `LOG_MAX_ADDRESS        ),
-    .NUM_ADDRESSES          ( `NUM_ADDRESSES          )
+    .NUM_ADDRESSES          ( `NUM_ADDRESSES          ),
+    .REPETITION_DETECTION   ( `REPETITION_DETECTION   )
 
   ) RTLinf_m (
     .clk                    ( clk_r                   ),
@@ -178,22 +181,22 @@ initial begin
     cmd_act_assign_r <= 1; cmd_act_read_port_r <= `NUM_KERNELS; cmd_act_write_port_r <= `NUM_KERNELS; cmd_act_memory_r <= m; #10
     cmd_act_assign_r <= 0;
     //
-    act_write_r <= 1; act_write_addr_r = 0; act_write_data_r <= 32'h03_02_01_00; #10;
-    act_write_r <= 1; act_write_addr_r = 1; act_write_data_r <= 32'h07_06_05_04; #10;
-    act_write_r <= 1; act_write_addr_r = 2; act_write_data_r <= 32'h0b_0a_09_08; #10;
-    act_write_r <= 1; act_write_addr_r = 3; act_write_data_r <= 32'h0f_0e_0d_0c; #10;
-    act_write_r <= 1; act_write_addr_r = 4; act_write_data_r <= 32'h13_12_11_10; #10;
-    act_write_r <= 1; act_write_addr_r = 5; act_write_data_r <= 32'h17_16_15_14; #10;
-    act_write_r <= 1; act_write_addr_r = 6; act_write_data_r <= 32'h1b_1a_19_18; #10;
-    act_write_r <= 1; act_write_addr_r = 7; act_write_data_r <= 32'h1f_1e_1d_1c; #10;
-    act_write_r <= 1; act_write_addr_r = 8; act_write_data_r <= 32'h23_22_21_20; #10;
-    act_write_r <= 1; act_write_addr_r = 9; act_write_data_r <= 32'h27_26_25_24; #10;
-    act_write_r <= 1; act_write_addr_r =10; act_write_data_r <= 32'h2b_2a_29_28; #10;
-    act_write_r <= 1; act_write_addr_r =11; act_write_data_r <= 32'h2f_2e_2d_2c; #10;
-    act_write_r <= 1; act_write_addr_r =12; act_write_data_r <= 32'h33_32_31_30; #10;
-    act_write_r <= 1; act_write_addr_r =13; act_write_data_r <= 32'h37_36_35_34; #10;
-    act_write_r <= 1; act_write_addr_r =14; act_write_data_r <= 32'h3b_3a_39_38; #10;
-    act_write_r <= 1; act_write_addr_r =15; act_write_data_r <= 32'h3f_3e_3d_3c; #10;
+    act_write_r <= 1; act_write_addr_r = 0; act_write_data_r <= 32'h01_01_01_01; #10;
+    act_write_r <= 1; act_write_addr_r = 1; act_write_data_r <= 32'h04_04_04_04; #10;
+    act_write_r <= 1; act_write_addr_r = 2; act_write_data_r <= 32'h08_08_08_08; #10;
+    act_write_r <= 1; act_write_addr_r = 3; act_write_data_r <= 32'h0c_0c_0c_0c; #10;
+    act_write_r <= 1; act_write_addr_r = 4; act_write_data_r <= 32'h10_10_10_10; #10;
+    act_write_r <= 1; act_write_addr_r = 5; act_write_data_r <= 32'h14_14_14_14; #10;
+    act_write_r <= 1; act_write_addr_r = 6; act_write_data_r <= 32'h18_18_18_18; #10;
+    act_write_r <= 1; act_write_addr_r = 7; act_write_data_r <= 32'h1c_1c_1c_1c; #10;
+    act_write_r <= 1; act_write_addr_r = 8; act_write_data_r <= 32'h20_20_20_20; #10;
+    act_write_r <= 1; act_write_addr_r = 9; act_write_data_r <= 32'h24_24_24_24; #10;
+    act_write_r <= 1; act_write_addr_r =10; act_write_data_r <= 32'h28_28_28_28; #10;
+    act_write_r <= 1; act_write_addr_r =11; act_write_data_r <= 32'h2c_2c_2c_2c; #10;
+    act_write_r <= 1; act_write_addr_r =12; act_write_data_r <= 32'h30_30_30_30; #10;
+    act_write_r <= 1; act_write_addr_r =13; act_write_data_r <= 32'h34_34_34_34; #10;
+    act_write_r <= 1; act_write_addr_r =14; act_write_data_r <= 32'h38_38_38_38; #10;
+    act_write_r <= 1; act_write_addr_r =15; act_write_data_r <= 32'h3c_3c_3c_3c; #10;
     act_write_r <= 0;
     //
     // unasign the ports/memory
@@ -207,7 +210,7 @@ initial begin
     #10 cmd_weight_assign_r <= 0;
     
     weight_write_r <= 1; weight_write_addr_r = 0; weight_write_data_r <= 72'h00_00_00_00_00_00_00_00_01; #10;
-    weight_write_r <= 1; weight_write_addr_r = 1; weight_write_data_r <= 72'h00_00_01_00_00_00_00_00_00; #10;
+    weight_write_r <= 1; weight_write_addr_r = 1; weight_write_data_r <= 72'h00_00_01_00_00_00_00_01_00; #10;
     weight_write_r <= 0;
  
     // unasign the ports/memory
@@ -237,7 +240,7 @@ initial begin
   #10 configure_r[0] <= 1'b0; configure_r[1] <= 1'b0;
 
   // we wait long for the finish of the kernels
-  #1000
+  #8000
 
   // we unassign activation memory {0} from read port {0} and write port {0}
   cmd_act_unassign_r <= 1; cmd_act_read_port_r <= 0; cmd_act_write_port_r <= 0; cmd_act_memory_r <= 0; #10

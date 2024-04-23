@@ -33,14 +33,6 @@ module ACC #(
     input                                   avail_in                 // OUT interface: avail
   );
   
-// wires (fifo)
-wire [GROUP_SIZE * DATA_WIDTH - 1: 0] data_write_w;                      // data to write to FIFO
-wire                                  write_w;                           // write signal to FIFO
-wire                                  full_w;                            // full signal from FIFO
-wire                                  almost_full_w;                     // almost_full signal from FIFO
-wire [GROUP_SIZE * DATA_WIDTH - 1: 0] data_read_w;                       // data read from FIFO
-wire                                  next_read_w;                       // next_read signal to FIFO
-wire                                  empty_w;                           // empty signal from FIFO
 // wires (operation and iterations)
 wire                                  perform_operation_w;               // whether we perform a "read" operation in this cycle
 wire                                  first_iteration_w;                 // whether we are in the first iteration
@@ -82,12 +74,9 @@ genvar i;
 
 // combinational logic 
 // to upstream module (via FIFO)
-assign data_write_w        = data_in;
-assign write_w             = valid_in;
-assign avail_out           = ~almost_full_w & ~full_w;                   // avail out to upstream module
-assign next_read_w         = perform_operation_w;
+assign avail_out           = 1'b1;                                       // always available
 // module and iterations
-assign perform_operation_w = module_enabled_r & (~empty_w) & avail_in;   // perform operation when enabled, with input data and output available
+assign perform_operation_w = valid_in & module_enabled_r & avail_in;     // perform operation when enabled, with input data and output available
 assign first_iteration_w   = num_iters_r == num_iters_copy_r;            // is this first iteration?
 assign last_iteration_w    = num_iters_r == 1;                           // is this last iteration?
 // to downstream module
@@ -103,23 +92,6 @@ generate
 endgenerate
 
 // modules
-
-// input fifo
-FIFO #(
-  .NUM_SLOTS     ( 2                       ),
-  .LOG_NUM_SLOTS ( 1                       ),
-  .DATA_WIDTH    ( GROUP_SIZE * DATA_WIDTH )
-) fifo_in (
-  .clk           ( clk                     ),
-  .rst           ( rst                     ),
-  .data_write    ( data_write_w            ),
-  .write         ( write_w                 ),
-  .full          ( full_w                  ),
-  .almost_full   ( almost_full_w           ),
-  .data_read     ( data_read_w             ),
-  .next_read     ( next_read_w             ),
-  .empty         ( empty_w                 )
-);
 
 // memory (unregistered output)
 MEM #(
@@ -162,7 +134,7 @@ always @ (posedge clk) begin
       // pipelined operations: READ -> ADD -> WRITE
       read_r                 <= perform_operation_w;      // read cycle
       read_addr_r            <= num_reads_per_iter_r;     // address is the current iteration cycle
-      read_data_fifo_r       <= data_read_w;              // we capture the input data for the next stage (add)
+      read_data_fifo_r       <= data_in;              // we capture the input data for the next stage (add)
       read_first_iteration_r <= first_iteration_w;        // first iteration
       read_last_iteration_r  <= last_iteration_w;         // last iteration
       //

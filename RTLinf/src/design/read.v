@@ -75,12 +75,17 @@ assign data_out     = data_read_w;                                     // data t
 //
 assign perform_operation_w = ~empty_w & avail_in;                      // control signal to indicate when to perform a forward operation
 
+reg valid_out_r;
+always @ (posedge clk) begin
+  valid_out_r <= valid_out;
+end
+
 // modules
 
 // input fifo
 FIFO #(
-  .NUM_SLOTS     ( 2               ),
-  .LOG_NUM_SLOTS ( 1               ),
+  .NUM_SLOTS     ( 4               ),
+  .LOG_NUM_SLOTS ( 2               ),
   .DATA_WIDTH    ( DATA_WIDTH      )
 ) fifo_in (
   .clk           ( clk             ),

@@ -236,9 +236,6 @@ generate
     ) mul_m (
       .clk                    ( clk                  ),
       .rst                    ( rst                  ),
-      .configure              ( configure            ),
-      .num_iters              ( num_iters            ),
-      .num_reads_per_iter     ( num_reads_per_iter   ),
       .act_data_in            ( act_distr2mul_data_w[((i+1)*GROUP_SIZE*DATA_WIDTH)-1:i*GROUP_SIZE*DATA_WIDTH] ),
       .act_valid_in           ( act_distr2mul_valid_w[i]                                                      ),
       .act_avail_out          ( act_distr2mul_avail_w[i]                                                      ),
@@ -258,9 +255,6 @@ generate
   ) align_m (
     .clk                    ( clk                  ),
     .rst                    ( rst                  ),
-    .configure              ( configure            ),
-    .num_iters              ( num_iters            ),
-    .num_reads_per_iter     ( num_reads_per_iter   ),
     .data_in                ( mul2align_data_w[i]  ),
     .valid_in               ( mul2align_valid_w[i] ),
     .avail_out              ( mul2align_avail_w[i] ),
@@ -358,6 +352,7 @@ module RTLinf #(
   parameter LOG_MAX_READS_PER_ITER = 16,   // number of bits for reads_per_iter
   parameter NUM_ADDRESSES          = 1024, // number of addresses in memories
   parameter LOG_MAX_ADDRESS        = 10,   // number of bits for addresses
+  parameter REPETITION_DETECTION   = "no", // whether we implement a kernel with repetition detection or not
   //
   localparam WIDTH_ACT_READ_SELECTS     = (NUM_ACT_MEMORIES * (LOG_NUM_KERNELS+1)),
   localparam WIDTH_ACT_WRITE_SELECTS    = (NUM_ACT_MEMORIES * (LOG_NUM_KERNELS+1)),
@@ -446,6 +441,7 @@ assign weight_write_data_w = weight_write_data;
 // kernels
 generate
   for (i=0; i<NUM_KERNELS; i=i+1) begin
+    if (REPETITION_DETECTION == "no") begin
     KERNEL #(
       .GROUP_SIZE             ( GROUP_SIZE             ),
       .DATA_WIDTH             ( DATA_WIDTH             ),
@@ -484,6 +480,46 @@ generate
       .addr_out               ( act_write_addr_w[((i+1)*LOG_MAX_ADDRESS)-1 -: LOG_MAX_ADDRESS]               ),
       .valid_out              ( act_write_w[i]                                                               )
     );
+    end else begin
+    KERNEL_RD #(
+      .GROUP_SIZE             ( GROUP_SIZE             ),
+      .DATA_WIDTH             ( DATA_WIDTH             ),
+      .NUM_INPUTS             ( NUM_INPUTS             ),
+      .NUM_LANES              ( NUM_LANES              ),
+      .NUM_OUTPUTS            ( NUM_OUTPUTS            ),
+      .LOG_MAX_ITERS          ( LOG_MAX_ITERS          ),
+      .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER ),
+      .LOG_MAX_ADDRESS        ( LOG_MAX_ADDRESS        ),
+      .NUM_ADDRESSES          ( NUM_ADDRESSES          )
+    ) kernel_m (
+      .clk                    ( clk                    ),
+      .rst                    ( rst                    ),
+      //
+      .act_addr               ( act_read_addr_w[((i+1)*LOG_MAX_ADDRESS)-1 -: LOG_MAX_ADDRESS]                ),
+      .act_read               ( act_read_w[i]                                                                ),
+      .act_data               ( act_read_data_w[((i+1)*(GROUP_SIZE*DATA_WIDTH))-1 -: GROUP_SIZE*DATA_WIDTH]  ),
+      .act_valid              ( act_read_valid_w[i]                                                          ),
+      //
+      .weight_addr            ( weight_read_addr_w[((i+1)*LOG_MAX_ADDRESS)-1 -: LOG_MAX_ADDRESS]             ),
+      .weight_read            ( weight_read_w[i]                                                             ),
+      .weight_data            ( weight_read_data_w[((i+1)*(NUM_LANES*DATA_WIDTH))-1 -: NUM_LANES*DATA_WIDTH] ),
+      .weight_valid           ( weight_read_valid_w[i]                                                       ),
+      //
+      .configure              ( configure[i]           ),
+      .num_iters              ( num_iters              ),
+      .num_reads_per_iter     ( num_reads_per_iter     ),
+      .read_address           ( 0                      ),  // TODO
+      .write_address          ( 0                      ),  // TODO
+      .min_clip               ( min_clip               ),
+      .max_clip               ( max_clip               ),
+      .conf_mode_in           ( conf_mode_in           ),
+      .conf_mode_out          ( conf_mode_out          ),
+      //
+      .data_out               ( act_write_data_w[((i+1)*(GROUP_SIZE*DATA_WIDTH))-1 -: GROUP_SIZE*DATA_WIDTH] ),
+      .addr_out               ( act_write_addr_w[((i+1)*LOG_MAX_ADDRESS)-1 -: LOG_MAX_ADDRESS]               ),
+      .valid_out              ( act_write_w[i]                                                               )
+    );
+    end
   end
   
   // Activation memory bank
