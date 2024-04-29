@@ -68,7 +68,7 @@ assign avail_out     = ~almost_full_w & ~full_w;                        // avail
 assign read_enb_w    = perform_operation_w;                             // next_read signal to FIFO
 assign valid_out     = perform_operation_w;                             // valid signal to downstream module
 //
-assign perform_operation_w = module_enabled_r & (~empty_w) & avail_in;
+assign perform_operation_w = (~empty_w) & avail_in;
 
 
 for(i = 0; i < GROUP_SIZE; i = i + 1) begin
@@ -111,7 +111,7 @@ end
 // 0 0 0 0
 // 0 0 0 0
 always @ (*) begin
-  diag = {GROUP_SIZE{1'b1}}; ;
+  diag = {GROUP_SIZE{1'b1}};
   for(k = 1; k < GROUP_SIZE; k = k + 1) begin
     for(l = 0; l < k; l = l + 1) begin   
       diag[k] = diag[k] & !equivalences[l*GROUP_SIZE+k];
@@ -127,35 +127,6 @@ for(i = 0; i < GROUP_SIZE; i = i + 1) begin
     end
 end
 
-// sequential logic
-always @ (posedge clk) 
-begin: ITEARATION_CONTROL
-  if (~rst) begin
-    num_iters_r          <= 0;
-    num_reads_per_iter_r <= 0;
-    module_enabled_r     <= 1'b0;
-  end else begin
-    if (configure) begin
-      num_iters_r          <= num_iters;
-      num_reads_per_iter_r <= num_reads_per_iter;
-      num_reads_per_iter_copy_r <= num_reads_per_iter;
-      module_enabled_r     <= 1'b1;
-    end else begin
-      if (perform_operation_w) begin   // when we trigger a read to bram update the counters for iteration control
-        if (num_reads_per_iter_r == 1) begin
-          if (num_iters_r == 1) begin
-            module_enabled_r <= 0; 
-          end else begin
-            num_iters_r <= num_iters_r - 1;
-            num_reads_per_iter_r <= num_reads_per_iter_copy_r;
-          end
-        end else begin
-          num_reads_per_iter_r <= num_reads_per_iter_r - 1;
-        end
-      end
-    end
-  end 
-end
 
 
 /* Modules */

@@ -58,13 +58,9 @@ wire                        perform_operation_w;                  // whether we 
 wire [REP_INFO - 1 : 0]     rep_info;                             // matrix with condensed repetition detection information
 wire [DATA_WIDTH - 1 : 0]   act_data_in_unpacked[GROUP_SIZE-1:0]; // two dimentional data read from FIFO
 wire [DATA_WIDTH - 1 : 0]   act_out;                              // Activation to send
+
+
 // registers
-reg [LOG_MAX_ITERS-1:0]          num_iters_r;               // 
-reg [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter_r;      // number of reads per iteration (down counter)
-reg [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter_copy_r; // copy of number of reads per iteration
-reg                              module_enabled_r;          // module enabled
-
-
 reg [GROUP_SIZE-1:0]             enable;                    // Indicates if element i is an unique value and needs to be proccesed or not 
 reg [DATA_WIDTH-1:0]             send_next;                 // Next element to send. 
 reg [DATA_WIDTH-1:0]             left_elements;             // Number of elements from batch to send
@@ -95,7 +91,7 @@ assign act_next_read_w   = perform_operation_w && (one_un_v || (~first_iter && (
 assign weight_data_write_w  = weight_data_in;
 assign weight_write_w       = weight_valid_in;
 assign weight_avail_out     = ~weight_almost_full_w && ~weight_full_w;
-assign weight_next_read_w   = perform_operation_w  && (num_reads_per_iter_r == 1);
+assign weight_next_read_w   = perform_operation_w;
 
 for(i = 0; i < GROUP_SIZE; i = i + 1) begin
     //Unpack activation input data
@@ -129,7 +125,7 @@ always @ (*)
 begin: left_elements_always
   left_elements = 0;
   if(!first_iter) begin
-    for(j = GROUP_SIZE; j > 0; j = j - 1) begin
+    for(j = GROUP_SIZE -1; j > 0; j = j - 1) begin
       if(enable[j]) left_elements = left_elements + 1;
     end 
   end
@@ -177,7 +173,7 @@ FIFO #(
 always @ (posedge clk) 
 begin: enables_clk
   if(~rst) begin
-    enable = {GROUP_SIZE{1'b1}};
+    enable <= {GROUP_SIZE{1'b1}};
     first_iter <= 1;
   end else
     begin
@@ -190,42 +186,14 @@ begin: enables_clk
          //If is the first batch iteration iteration reset the enable
         if(first_iter) begin
           for(j = 0; j < GROUP_SIZE; j = j + 1) begin
-            enable [j] = rep_info[j * GROUP_SIZE + j];
+            enable [j] <= rep_info[j * GROUP_SIZE + j];
           end 
         end
       end //End perform_operation_w
     end
 end
 
-// configuration and iterations
-// then we disable the module. 
-//
-always @ (posedge clk) begin
-  if (~rst) begin
-    num_iters_r          <= 0;
-    num_reads_per_iter_r <= 0;
-    module_enabled_r     <= 1'b0;
-  end else begin
-    if (configure) begin
-      num_iters_r          <= num_iters;
-      num_reads_per_iter_r <= num_reads_per_iter;
-      num_reads_per_iter_copy_r <= num_reads_per_iter;
-      module_enabled_r     <= 1'b1;
-    end else begin
-      if (perform_operation_w) begin
-        if (num_reads_per_iter_r == 1) begin
-          if (num_iters_r == 1) module_enabled_r <= 0;
-          else begin
-            num_iters_r <= num_iters_r - 1;
-            num_reads_per_iter_r <= num_reads_per_iter_copy_r;
-          end
-        end else begin
-          if(left_elements <= 1) num_reads_per_iter_r <= num_reads_per_iter_r - 1;
-        end
-      end
-    end
-  end 
-end
+
 
 // debug support. When enabled (through the DEBUG define) the module will generate
 // debug information on every specific cycle, depending on the debug conditions implemented
