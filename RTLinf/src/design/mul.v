@@ -53,16 +53,11 @@ wire [ DATA_WIDTH - 1: 0]          act_data_in;                       // Activat
 wire [ DATA_WIDTH - 1: 0]          weight_data_in;                    // Weight value
 wire [ REP_INFO - 1: 0]            rep_info;                          // Repetition information
 wire [2 * DATA_WIDTH - 1 : 0]      result;                            // Result
-// registers
-reg [LOG_MAX_ITERS-1:0]          num_iters_r;               // FIFO
-reg [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter_r;      // number of reads per iteration (down counter)
-reg [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter_copy_r; // copy of number of reads per iteration
-reg                              module_enabled_r;          // module enabled
 
 genvar i;
 
 // combinational logic
-assign perform_operation_w = /*module_enabled_r &*/ (~empty_w) & avail_in;
+assign perform_operation_w = (~empty_w) & avail_in;
 
 //Extract input from FIFO
 assign act_data_in = data_read_w[DATA_WIDTH - 1 : 0];
@@ -103,39 +98,6 @@ FIFO #(
 );
 
 // sequential logic
-
-// configuration and iterations
-// whenever we perform a "read" operation we decrement the number of reads per iteration
-// When the reads per iteration reaches zero we decrement number of iterations and restore
-// the reads per iteration. If number of iterations reaches zero
-// then we disable the module. 
-//
-always @ (posedge clk) begin
-  if (~rst) begin
-    num_iters_r          <= 0;
-    num_reads_per_iter_r <= 0;
-    module_enabled_r     <= 1'b0;
-  end else begin
-    if (configure) begin
-      num_iters_r          <= num_iters;
-      num_reads_per_iter_r <= num_reads_per_iter;
-      num_reads_per_iter_copy_r <= num_reads_per_iter;
-      module_enabled_r     <= 1'b1;
-    end else begin
-      if (perform_operation_w) begin
-        if (num_reads_per_iter_r == 1) begin
-          if (num_iters_r == 1) module_enabled_r <= 0;
-          else begin
-            num_iters_r <= num_iters_r - 1;
-            num_reads_per_iter_r <= num_reads_per_iter_copy_r;
-          end
-        end else begin
-          num_reads_per_iter_r <= num_reads_per_iter_r - 1;
-        end
-      end
-    end
-  end 
-end
 
 // debug support. When enabled (through the DEBUG define) the module will generate
 // debug information on every specific cycle, depending on the debug conditions implemented
