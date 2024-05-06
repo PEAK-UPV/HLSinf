@@ -263,7 +263,7 @@ generate
     MUL_BATCH #(
       .GROUP_SIZE             ( GROUP_SIZE ),
       .DATA_WIDTH             ( DATA_WIDTH ),
-      .LOG_MAX_ITERS          ( LOG_MAX_ITERS ),
+      .LOG_MAX_ITERS          ( LOG_MAX_ITERS          ),
       .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER )
     ) mul_m (
       .clk                    ( clk                  ),

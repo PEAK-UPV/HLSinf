@@ -21,14 +21,14 @@ module repetition_detector#(
   input [LOG_MAX_ITERS-1:0]           num_iters,           // CONFIGURE interface:: number of iterations for reads
   input [LOG_MAX_READS_PER_ITER-1:0]  num_reads_per_iter,  // CONFIGURE interface:: number of reads per iteration  
 
-  input [GROUP_SIZE*DATA_WIDTH-1:0]           data_in,     // ACTIVATION interface:: data
-  input                                       valid_in,    // ACTIVATION interface:: valid
-  output                                      avail_out,   // ACTIVATION interface:: avail
+  input [GROUP_SIZE*DATA_WIDTH-1:0]   data_in,     // ACTIVATION interface:: data
+  input                               valid_in,    // ACTIVATION interface:: valid
+  output                              avail_out,   // ACTIVATION interface:: avail
 
-  output [GROUP_SIZE*DATA_WIDTH-1:0]          data_out,    // OUT1 interface:: data
-  output [GROUP_SIZE*GROUP_SIZE-1:0]          rdata_out,   // OUT1 interface:: rdata
-  output                                      valid_out,   // OUT1 interface:: valid
-  input                                       avail_in     // OUT1 interface:: avail
+  output [GROUP_SIZE*DATA_WIDTH-1:0]  data_out,    // OUT1 interface:: data
+  output [GROUP_SIZE*GROUP_SIZE-1:0]  rdata_out,   // OUT1 interface:: rdata
+  output                              valid_out,   // OUT1 interface:: valid
+  input                               avail_in     // OUT1 interface:: avail
 
 );
 

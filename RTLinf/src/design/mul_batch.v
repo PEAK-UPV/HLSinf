@@ -51,21 +51,13 @@ wire                          mul2agr_avail_w;
 
 DISPATCHER  #(
   .GROUP_SIZE             ( GROUP_SIZE ),
-  .DATA_WIDTH             ( DATA_WIDTH ),
-  .LOG_MAX_ITERS          ( LOG_MAX_ITERS ),
-  .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER )
+  .DATA_WIDTH             ( DATA_WIDTH )
 ) dispatch_m (
   .clk                    ( clk                  ),  //From top
   .rst                    ( rst                  ),  //From top
-  .configure              ( configure            ),  //From top
-  .num_iters              ( num_iters            ),  //From top
-  .num_reads_per_iter     ( num_reads_per_iter   ),  //From top
   .act_data_in            ( {act_rdata_in,act_data_in} ),  //From top
   .act_valid_in           ( act_valid_in         ),  //From top 
   .act_avail_out          ( act_avail_out        ),  //From top 
-  .weight_data_in         ( weight_data_in       ),  //From top 
-  .weight_valid_in        ( weight_valid_in      ),  //From top 
-  .weight_avail_out       ( weight_avail_out     ),  //To top 
   .data_out               ( dis2mul_data_w       ),  //DISPATCHER  to MUL 
   .valid_out              ( dis2mul_valid_w      ),  //DISPATCHER  to MUL 
   .avail_in               ( dis2mul_avail_w      )   //MUL to DISPATCHER  
@@ -73,16 +65,24 @@ DISPATCHER  #(
 
 MUL_RD #(
   .GROUP_SIZE             ( GROUP_SIZE ),
-  .DATA_WIDTH             ( DATA_WIDTH )
+  .DATA_WIDTH             ( DATA_WIDTH ),
+  .LOG_MAX_ITERS          ( LOG_MAX_ITERS ),
+  .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER )
 ) mul_m (
-  .clk                    ( clk                  ), //From top
-  .rst                    ( rst                  ), //From top
-  .data_in                ( dis2mul_data_w       ), //DISPATCHER  to MUL
-  .valid_in               ( dis2mul_valid_w      ), //DISPATCHER  to MUL  
-  .avail_out              ( dis2mul_avail_w      ), //DISPATCHER  to MUL 
+  .clk                    ( clk                  ),  //From top
+  .rst                    ( rst                  ),  //From top
+  .configure              ( configure            ),  //From top
+  .num_iters              ( num_iters            ),  //From top
+  .num_reads_per_iter     ( num_reads_per_iter   ),  //From top  
+  .act_data_in            ( dis2mul_data_w       ), //DISPATCHER  to MUL
+  .act_valid_in           ( dis2mul_valid_w      ), //DISPATCHER  to MUL  
+  .act_avail_out          ( dis2mul_avail_w      ), //DISPATCHER  to MUL 
   .data_out               ( mul2agr_data_w       ), //MUL to AGRUPATE 
   .valid_out              ( mul2agr_valid_w      ), //MUL to AGRUPATE
-  .avail_in               ( mul2agr_avail_w      )  //AGRUPATE to MUL
+  .avail_in               ( mul2agr_avail_w      ), //AGRUPATE to MUL
+  .weight_data_in         ( weight_data_in       ), //From top 
+  .weight_valid_in        ( weight_valid_in      ), //From top 
+  .weight_avail_out       ( weight_avail_out     )  //To top 
 );
 
 AGRUPATE #(
