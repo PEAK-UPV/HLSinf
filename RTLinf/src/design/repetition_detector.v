@@ -9,10 +9,14 @@
 
 module repetition_detector#(
     parameter GROUP_SIZE             = 4,                      // group size
+    parameter LOG_GS                 = 2,
     parameter DATA_WIDTH             = 8,                      // input and output data width
     parameter LOG_MAX_ITERS          = 16,                     // number of bits for max iters register
     parameter LOG_MAX_READS_PER_ITER = 16,                     // number of bits for max reads per iter
-    localparam REP_INFO              = GROUP_SIZE*GROUP_SIZE   // number of bits for repetition detectoor
+    localparam INPUT_WIDTH           = GROUP_SIZE*DATA_WIDTH,  // input width
+    localparam REP_INFO              = GROUP_SIZE*GROUP_SIZE            // row of equivalences + is_last
+    //localparam INPUT_WIDTH           = GROUP_SIZE*DATA_WIDTH,  // input width
+    //localparam REP_INFO              = GROUP_SIZE+1            // row of equivalences + is_last
 )(
   input clk,
   input rst,
@@ -21,24 +25,31 @@ module repetition_detector#(
   input [LOG_MAX_ITERS-1:0]           num_iters,           // CONFIGURE interface:: number of iterations for reads
   input [LOG_MAX_READS_PER_ITER-1:0]  num_reads_per_iter,  // CONFIGURE interface:: number of reads per iteration  
 
-  input [GROUP_SIZE*DATA_WIDTH-1:0]   data_in,     // ACTIVATION interface:: data
+  input [INPUT_WIDTH-1:0]             data_in,     // ACTIVATION interface:: data
   input                               valid_in,    // ACTIVATION interface:: valid
   output                              avail_out,   // ACTIVATION interface:: avail
 
-  output [GROUP_SIZE*DATA_WIDTH-1:0]  data_out,    // OUT1 interface:: data
-  output [GROUP_SIZE*GROUP_SIZE-1:0]  rdata_out,   // OUT1 interface:: rdata
+  output [INPUT_WIDTH-1:0]             data_out,    // OUT1 interface:: data
+  output [REP_INFO-1:0]               rdata_out,   // OUT1 interface:: rdata
   output                              valid_out,   // OUT1 interface:: valid
   input                               avail_in     // OUT1 interface:: avail
 
 );
 
+wire [DATA_WIDTH-1:0] actual_activation; //TODO
+reg [LOG_GS:0] element_actual; //ROW
+wire  [GROUP_SIZE+1-1:0]               TODOrdata_out; //TODO
+assign TODOrdata_out[GROUP_SIZE-1:0] = equivalence_row;  //TODO
+assign TODOrdata_out[GROUP_SIZE] = is_last;  //TODO
+wire [GROUP_SIZE-1:0] equivalence_row;
+wire is_last; //TODO
 
 // wires
-wire [GROUP_SIZE * DATA_WIDTH - 1: 0]  data_write_w;                      // data to write to FIFO
+wire [INPUT_WIDTH - 1: 0]              data_write_w;                      // data to write to FIFO
 wire                                   write_enb_w;                       // write signal to FIFO
 wire                                   full_w;                            // full signal from FIFO
 wire                                   almost_full_w;                     // almost_full signal from FIFO
-wire [GROUP_SIZE * DATA_WIDTH - 1 : 0] data_read_fifo;                    // data read from FIFO
+wire [INPUT_WIDTH - 1 : 0]              data_read_fifo;                    // data read from FIFO
 wire                                   read_enb_w;                        // next_read signal to FIFO
 wire                                   empty_w;                           // empty signal from FIFO
 wire                                   perform_operation_w;
@@ -47,7 +58,6 @@ wire [GROUP_SIZE * GROUP_SIZE - 1 : 0] equivalences;                      // mat
 wire [GROUP_SIZE * GROUP_SIZE - 1 : 0] rep_info;                          // matrix with condensed repetition detection information
 wire [DATA_WIDTH - 1 : 0]              data_in_unpacked[GROUP_SIZE-1:0];  // two dimentional data read from FIFO
 
-wire [2:0]                             num_cycles_needed_w;               // number of expected cycles needed for the group
 
 // registers
 reg [LOG_MAX_ITERS - 1 : 0]            num_iters_r;               // FIFO
@@ -55,7 +65,7 @@ reg [LOG_MAX_READS_PER_ITER - 1 : 0]   num_reads_per_iter_r;      // number of r
 reg [LOG_MAX_READS_PER_ITER - 1 : 0]   num_reads_per_iter_copy_r; // copy of number of reads per iteration
 reg                                    module_enabled_r;          // module enabled
 reg [GROUP_SIZE-1:0]                   diag;                      // diagonal of the rep info matrix
-reg [2:0]                              num_cycles_needed_r;       // number of expected cycles needed for the group (down counter)
+reg [LOG_GS+1:0]                       num_cycles_needed_w;               // number of expected cycles needed for the group
 
 genvar i;
 genvar j;
@@ -69,30 +79,21 @@ assign rdata_out = rep_info;
 assign data_write_w  = data_in;                                         // data to FIFO
 assign write_enb_w   = valid_in;                                        // write signal to FIFO
 assign avail_out     = ~almost_full_w & ~full_w;                        // avail signal from FIFO       
-assign read_enb_w    = perform_operation_w & (num_cycles_needed_r == 0);                             // next_read signal to FIFO
-assign valid_out     = perform_operation_w & (num_cycles_needed_r == 0);                             // valid signal to downstream module
+assign read_enb_w    = perform_operation_w & (is_last);                             // next_read signal to FIFO
+assign valid_out     = perform_operation_w & (is_last);                             // valid signal to downstream module
 //
 assign perform_operation_w = module_enabled_r & (~empty_w) & avail_in;
 
-assign num_cycles_needed_w = rep_info[0] + rep_info[5] + rep_info[10] + rep_info[15] - 1;
-
-always @ (posedge clk) begin
-  if (~rst) begin
-    num_cycles_needed_r <= 0;
-  end else begin
-    if (perform_operation_w) begin
-      if (num_cycles_needed_r == 0) begin
-        num_cycles_needed_r <= num_cycles_needed_w;
-      end else begin
-        num_cycles_needed_r <= num_cycles_needed_r - 1;
-      end
-    end
-  end
-end
-
-
 for(i = 0; i < GROUP_SIZE; i = i + 1) begin
     assign data_in_unpacked[i] = data_read_fifo[i * DATA_WIDTH +: DATA_WIDTH];
+end
+
+always @ (*) 
+begin: COMB_CYCLES_NEEDED
+  num_cycles_needed_w = 0;
+  for(k = 0; k < GROUP_SIZE; k = k + 1) begin
+    num_cycles_needed_w = num_cycles_needed_w + diag[k];
+  end
 end
 
 /*Repetition information calculation*/
@@ -146,6 +147,60 @@ for(i = 0; i < GROUP_SIZE; i = i + 1) begin
         if(j < i)  assign rep_info[i*GROUP_SIZE+j] = 0;                                        //lower part
     end
 end
+
+
+
+///////////
+
+assign actual_activation = data_in_unpacked[element_actual];
+assign equivalence_row = rep_info[element_actual * GROUP_SIZE +: GROUP_SIZE];
+assign is_last = element_actual >= last_element;
+
+/*Get next activation in each cycle*/
+reg [LOG_GS:0] last_element;
+reg [LOG_GS:0] next_element;
+//Get last element to send
+always @ (*) 
+begin: COMB_LAST_ELEMENT
+    last_element = 0;
+    for(k = 0; k < GROUP_SIZE; k = k + 1) begin
+        last_element = (diag[k])? k : last_element;
+    end 
+end
+
+always @ (*) 
+begin: COMB_NEXT_ELEMENT
+    next_element = 0;
+    for(k = GROUP_SIZE - 1; k >= 0; k = k - 1) begin
+        next_element = k > element_actual? ( diag[k] ? k : next_element) : next_element;
+    end 
+end
+
+//Sequential
+//Get element actual
+always @ (posedge clk) begin
+  if (~rst) begin
+    element_actual <= 0;
+  end else begin
+    if (perform_operation_w) begin
+      if (element_actual == last_element) begin
+        element_actual <= 0;
+      end else begin
+        element_actual <= next_element;
+      end
+    end
+  end
+end
+//wire [DATA_WIDTH-1:0] actual_activation; //TODO
+//wire [LOG_GS:0] row; //ROW
+//wire  [GROUP_SIZE+1-1:0]               TODOrdata_out; //TODO
+//assign TODOrdata_out[GROUP_SIZE-1:0] = equivalence_row;  //TODO
+//assign TODOrdata_out[GROUP_SIZE] = is_last;  //TODO
+//wire [GROUP_SIZE-1:0] equivalence_row;
+//wire is_last; //TODO
+
+
+
 
 // sequential logic
 always @ (posedge clk) 

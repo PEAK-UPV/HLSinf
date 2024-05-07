@@ -35,7 +35,7 @@
 `define NUM_OPS_PER_ITER        16
 `define LOG_MAX_READS_PER_ITER   8
 
-`define REPETITION_DETECTION     "no"
+`define REPETITION_DETECTION     "yes"
 
 module RTLinf_tb;
 

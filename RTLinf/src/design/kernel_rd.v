@@ -29,7 +29,8 @@ module KERNEL_RD #(
   parameter LOG_MAX_ITERS          = 16,   // number of bits for max iters
   parameter LOG_MAX_READS_PER_ITER = 16,   // number of bits for reads_per_iter
   parameter LOG_MAX_ADDRESS        = 12,   // number of bits for addresses
-  parameter NUM_ADDRESSES          = 4096  // number of addresses in memories
+  parameter NUM_ADDRESSES          = 4096,  // number of addresses in memories
+  localparam REP_INFO              = GROUP_SIZE*GROUP_SIZE
 )(
   input                                   clk,                // clock input
   input                                   rst,                // reset input
@@ -76,18 +77,18 @@ wire [NUM_INPUTS-1:0]                       act_read2rd_combined_valid_w;
 // wires between RD and DISTRIBUTE_IN modules
 wire [NUM_INPUTS-1:0]                       act_rd2distr_valid_w;
 wire [GROUP_SIZE*DATA_WIDTH-1:0]            act_rd2distr_data_w[NUM_INPUTS-1:0];
-wire [GROUP_SIZE*GROUP_SIZE-1:0]            act_rd2distr_rdata_w[NUM_INPUTS-1:0];
+wire [REP_INFO-1:0]            act_rd2distr_rdata_w[NUM_INPUTS-1:0];
 wire [NUM_INPUTS-1:0]                       act_rd2distr_avail_w;
 wire                                        weight_read2distr_valid_w;
 wire [NUM_LANES*DATA_WIDTH-1:0]             weight_read2distr_data_w;
 wire                                        weight_read2distr_avail_w;
 wire [NUM_INPUTS*GROUP_SIZE*DATA_WIDTH-1:0] act_rd2distr_combined_data_w;
-wire [NUM_INPUTS*GROUP_SIZE*GROUP_SIZE-1:0] act_rd2distr_combined_rdata_w;
+wire [NUM_INPUTS*REP_INFO-1:0] act_rd2distr_combined_rdata_w;
 wire [NUM_INPUTS-1:0]                       act_rd2distr_combined_valid_w;
 
 // wires between DISTRIBUTE_IN and MUL modules
 wire [NUM_LANES*GROUP_SIZE*DATA_WIDTH-1:0]  act_distr2mul_data_w;
-wire [NUM_LANES*GROUP_SIZE*GROUP_SIZE-1:0]  act_distr2mul_rdata_w;
+wire [NUM_LANES*REP_INFO-1:0]  act_distr2mul_rdata_w;
 wire [NUM_LANES-1:0]                        act_distr2mul_valid_w;
 wire [NUM_LANES-1:0]                        act_distr2mul_avail_w; 
 wire [NUM_LANES*DATA_WIDTH-1:0]             weight_distr2mul_data_w;
@@ -137,7 +138,7 @@ generate
 generate
   for (i=0; i<NUM_INPUTS; i=i+1) begin
     assign act_rd2distr_combined_data_w[((i+1)*GROUP_SIZE*DATA_WIDTH)-1:i*GROUP_SIZE*DATA_WIDTH]  = act_rd2distr_data_w[i];
-    assign act_rd2distr_combined_rdata_w[((i+1)*GROUP_SIZE*GROUP_SIZE)-1:i*GROUP_SIZE*GROUP_SIZE] = act_rd2distr_rdata_w[i];
+    assign act_rd2distr_combined_rdata_w[((i+1)*REP_INFO)-1:i*REP_INFO] = act_rd2distr_rdata_w[i];
     assign act_rd2distr_combined_valid_w[i]                                                       = act_rd2distr_valid_w[i];
   end
 endgenerate
@@ -272,7 +273,7 @@ generate
       .num_iters              ( num_iters                       ),
       .num_reads_per_iter     ( num_reads_per_iter              ),
       .act_data_in            ( act_distr2mul_data_w[((i+1)*GROUP_SIZE*DATA_WIDTH)-1:i*GROUP_SIZE*DATA_WIDTH] ),
-      .act_rdata_in           ( act_distr2mul_rdata_w[((i+1)*GROUP_SIZE*GROUP_SIZE)-1:i*GROUP_SIZE*GROUP_SIZE]),
+      .act_rdata_in           ( act_distr2mul_rdata_w[((i+1)*REP_INFO)-1:i*REP_INFO]),
       .act_valid_in           ( act_distr2mul_valid_w[i]                                                      ),
       .act_avail_out          ( act_distr2mul_avail_w[i]                                                      ),
       .weight_data_in         ( weight_distr2mul_data_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH]                    ),
