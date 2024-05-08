@@ -22,6 +22,7 @@
 
 module KERNEL_RD #(
   parameter GROUP_SIZE             = 4,    // group size
+  parameter LOG_GS                 = 2,
   parameter DATA_WIDTH             = 8,    // data width
   parameter NUM_INPUTS             = 9,    // number of inputs
   parameter NUM_LANES              = 9,    // number of lanes
@@ -30,7 +31,7 @@ module KERNEL_RD #(
   parameter LOG_MAX_READS_PER_ITER = 16,   // number of bits for reads_per_iter
   parameter LOG_MAX_ADDRESS        = 12,   // number of bits for addresses
   parameter NUM_ADDRESSES          = 4096,  // number of addresses in memories
-  localparam REP_INFO              = GROUP_SIZE*GROUP_SIZE
+  localparam REP_INFO              = GROUP_SIZE + 1
 )(
   input                                   clk,                // clock input
   input                                   rst,                // reset input
@@ -76,18 +77,18 @@ wire [NUM_INPUTS-1:0]                       act_read2rd_combined_valid_w;
 
 // wires between RD and DISTRIBUTE_IN modules
 wire [NUM_INPUTS-1:0]                       act_rd2distr_valid_w;
-wire [GROUP_SIZE*DATA_WIDTH-1:0]            act_rd2distr_data_w[NUM_INPUTS-1:0];
-wire [REP_INFO-1:0]            act_rd2distr_rdata_w[NUM_INPUTS-1:0];
+wire [DATA_WIDTH-1:0]                       act_rd2distr_data_w[NUM_INPUTS-1:0];
+wire [REP_INFO-1:0]                         act_rd2distr_rdata_w[NUM_INPUTS-1:0];
 wire [NUM_INPUTS-1:0]                       act_rd2distr_avail_w;
 wire                                        weight_read2distr_valid_w;
 wire [NUM_LANES*DATA_WIDTH-1:0]             weight_read2distr_data_w;
 wire                                        weight_read2distr_avail_w;
-wire [NUM_INPUTS*GROUP_SIZE*DATA_WIDTH-1:0] act_rd2distr_combined_data_w;
+wire [NUM_INPUTS*DATA_WIDTH-1:0]            act_rd2distr_combined_data_w;
 wire [NUM_INPUTS*REP_INFO-1:0] act_rd2distr_combined_rdata_w;
 wire [NUM_INPUTS-1:0]                       act_rd2distr_combined_valid_w;
 
 // wires between DISTRIBUTE_IN and MUL modules
-wire [NUM_LANES*GROUP_SIZE*DATA_WIDTH-1:0]  act_distr2mul_data_w;
+wire [NUM_LANES*DATA_WIDTH-1:0]  act_distr2mul_data_w;
 wire [NUM_LANES*REP_INFO-1:0]  act_distr2mul_rdata_w;
 wire [NUM_LANES-1:0]                        act_distr2mul_valid_w;
 wire [NUM_LANES-1:0]                        act_distr2mul_avail_w; 
@@ -137,7 +138,7 @@ generate
 // combined data and valid signal between RD and DISTRIBUTE_IN modules
 generate
   for (i=0; i<NUM_INPUTS; i=i+1) begin
-    assign act_rd2distr_combined_data_w[((i+1)*GROUP_SIZE*DATA_WIDTH)-1:i*GROUP_SIZE*DATA_WIDTH]  = act_rd2distr_data_w[i];
+    assign act_rd2distr_combined_data_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH]  = act_rd2distr_data_w[i];
     assign act_rd2distr_combined_rdata_w[((i+1)*REP_INFO)-1:i*REP_INFO] = act_rd2distr_rdata_w[i];
     assign act_rd2distr_combined_valid_w[i]                                                       = act_rd2distr_valid_w[i];
   end
@@ -183,6 +184,7 @@ generate
 for ( i=0; i<NUM_INPUTS; i=i+1) begin
   repetition_detector #(
     .GROUP_SIZE             ( GROUP_SIZE                    ),
+    .LOG_GS                 ( LOG_GS                        ),
     .DATA_WIDTH             ( DATA_WIDTH                    ),
     .LOG_MAX_ITERS          ( LOG_MAX_ITERS                 ),
     .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER        )
@@ -215,7 +217,7 @@ READ #(
   .clk                    ( clk                           ),
   .rst                    ( rst                           ),
   .configure              ( configure                     ),
-  .num_iters              ( 1                             ),   // weights are read, one per iteration (thus, only one iteration)
+  .num_iters              ( 8'b00000001                   ),   // weights are read, one per iteration (thus, only one iteration)
   .num_reads_per_iter     ( num_iters                     ),
   .base_address           ( read_address                  ),
   .valid_in               ( weight_valid                  ),
@@ -234,7 +236,8 @@ DISTRIBUTE_IN_RD #(
  .DATA_WIDTH             ( DATA_WIDTH             ),
  .NUM_DATA_OUTPUTS       ( NUM_LANES              ),
  .LOG_MAX_ITERS          ( LOG_MAX_ITERS          ),
- .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER )
+ .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER ),
+ .REP_INFO               ( GROUP_SIZE + 1)
 ) distribute_in_m (
  .clk                    ( clk                             ),
  .rst                    ( rst                             ),
@@ -265,14 +268,15 @@ generate
       .GROUP_SIZE             ( GROUP_SIZE ),
       .DATA_WIDTH             ( DATA_WIDTH ),
       .LOG_MAX_ITERS          ( LOG_MAX_ITERS          ),
-      .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER )
+      .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER ),
+      .REP_INFO               ( GROUP_SIZE + 1)
     ) mul_m (
       .clk                    ( clk                  ),
       .rst                    ( rst                  ),
       .configure              ( configure                       ),
       .num_iters              ( num_iters                       ),
       .num_reads_per_iter     ( num_reads_per_iter              ),
-      .act_data_in            ( act_distr2mul_data_w[((i+1)*GROUP_SIZE*DATA_WIDTH)-1:i*GROUP_SIZE*DATA_WIDTH] ),
+      .act_data_in            ( act_distr2mul_data_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] ),
       .act_rdata_in           ( act_distr2mul_rdata_w[((i+1)*REP_INFO)-1:i*REP_INFO]),
       .act_valid_in           ( act_distr2mul_valid_w[i]                                                      ),
       .act_avail_out          ( act_distr2mul_avail_w[i]                                                      ),

@@ -14,9 +14,7 @@ module repetition_detector#(
     parameter LOG_MAX_ITERS          = 16,                     // number of bits for max iters register
     parameter LOG_MAX_READS_PER_ITER = 16,                     // number of bits for max reads per iter
     localparam INPUT_WIDTH           = GROUP_SIZE*DATA_WIDTH,  // input width
-    localparam REP_INFO              = GROUP_SIZE*GROUP_SIZE            // row of equivalences + is_last
-    //localparam INPUT_WIDTH           = GROUP_SIZE*DATA_WIDTH,  // input width
-    //localparam REP_INFO              = GROUP_SIZE+1            // row of equivalences + is_last
+    localparam REP_INFO              = GROUP_SIZE + 1            // row of equivalences + index_element sending + is_last
 )(
   input clk,
   input rst,
@@ -29,20 +27,14 @@ module repetition_detector#(
   input                               valid_in,    // ACTIVATION interface:: valid
   output                              avail_out,   // ACTIVATION interface:: avail
 
-  output [INPUT_WIDTH-1:0]             data_out,    // OUT1 interface:: data
+  output [DATA_WIDTH-1:0]             data_out,    // OUT1 interface:: data
   output [REP_INFO-1:0]               rdata_out,   // OUT1 interface:: rdata
   output                              valid_out,   // OUT1 interface:: valid
   input                               avail_in     // OUT1 interface:: avail
 
 );
 
-wire [DATA_WIDTH-1:0] actual_activation; //TODO
-reg [LOG_GS:0] element_actual; //ROW
-wire  [GROUP_SIZE+1-1:0]               TODOrdata_out; //TODO
-assign TODOrdata_out[GROUP_SIZE-1:0] = equivalence_row;  //TODO
-assign TODOrdata_out[GROUP_SIZE] = is_last;  //TODO
-wire [GROUP_SIZE-1:0] equivalence_row;
-wire is_last; //TODO
+
 
 // wires
 wire [INPUT_WIDTH - 1: 0]              data_write_w;                      // data to write to FIFO
@@ -55,8 +47,10 @@ wire                                   empty_w;                           // emp
 wire                                   perform_operation_w;
 
 wire [GROUP_SIZE * GROUP_SIZE - 1 : 0] equivalences;                      // matrix of equivalences between the values of the GS elements
+wire [GROUP_SIZE - 1 : 0]              equivalence_row;                   // vector of equivalences between the element actual and the rest
 wire [GROUP_SIZE * GROUP_SIZE - 1 : 0] rep_info;                          // matrix with condensed repetition detection information
 wire [DATA_WIDTH - 1 : 0]              data_in_unpacked[GROUP_SIZE-1:0];  // two dimentional data read from FIFO
+wire                                   is_last;                           // indicates if is the last element of the group
 
 
 // registers
@@ -65,16 +59,20 @@ reg [LOG_MAX_READS_PER_ITER - 1 : 0]   num_reads_per_iter_r;      // number of r
 reg [LOG_MAX_READS_PER_ITER - 1 : 0]   num_reads_per_iter_copy_r; // copy of number of reads per iteration
 reg                                    module_enabled_r;          // module enabled
 reg [GROUP_SIZE-1:0]                   diag;                      // diagonal of the rep info matrix
-reg [LOG_GS+1:0]                       num_cycles_needed_w;               // number of expected cycles needed for the group
+reg [LOG_GS : 0]                       element_actual;            // element being processed in this cycle
+reg [LOG_GS : 0]                       last_element;              // element to process in last cycle
+reg [LOG_GS : 0]                       next_element;              // element to process in next cycle
 
 genvar i;
 genvar j;
 integer k;
 integer l;
 
+
 // combinational logic
-assign data_out = data_read_fifo;
-assign rdata_out = rep_info;
+assign data_out = data_in_unpacked[element_actual];
+assign rdata_out[GROUP_SIZE-1:0] = equivalence_row;
+assign rdata_out[REP_INFO-1] = is_last;
 
 assign data_write_w  = data_in;                                         // data to FIFO
 assign write_enb_w   = valid_in;                                        // write signal to FIFO
@@ -88,13 +86,8 @@ for(i = 0; i < GROUP_SIZE; i = i + 1) begin
     assign data_in_unpacked[i] = data_read_fifo[i * DATA_WIDTH +: DATA_WIDTH];
 end
 
-always @ (*) 
-begin: COMB_CYCLES_NEEDED
-  num_cycles_needed_w = 0;
-  for(k = 0; k < GROUP_SIZE; k = k + 1) begin
-    num_cycles_needed_w = num_cycles_needed_w + diag[k];
-  end
-end
+assign equivalence_row = rep_info[element_actual * GROUP_SIZE +: GROUP_SIZE];
+assign is_last = element_actual >= last_element;
 
 /*Repetition information calculation*/
 //Calculation of the repetition information performed in several steps.
@@ -148,18 +141,10 @@ for(i = 0; i < GROUP_SIZE; i = i + 1) begin
     end
 end
 
+/* DISPATCHER PART */ 
 
 
-///////////
-
-assign actual_activation = data_in_unpacked[element_actual];
-assign equivalence_row = rep_info[element_actual * GROUP_SIZE +: GROUP_SIZE];
-assign is_last = element_actual >= last_element;
-
-/*Get next activation in each cycle*/
-reg [LOG_GS:0] last_element;
-reg [LOG_GS:0] next_element;
-//Get last element to send
+//Get last element from group
 always @ (*) 
 begin: COMB_LAST_ELEMENT
     last_element = 0;
@@ -168,6 +153,7 @@ begin: COMB_LAST_ELEMENT
     end 
 end
 
+//Get next activation
 always @ (*) 
 begin: COMB_NEXT_ELEMENT
     next_element = 0;
@@ -191,16 +177,6 @@ always @ (posedge clk) begin
     end
   end
 end
-//wire [DATA_WIDTH-1:0] actual_activation; //TODO
-//wire [LOG_GS:0] row; //ROW
-//wire  [GROUP_SIZE+1-1:0]               TODOrdata_out; //TODO
-//assign TODOrdata_out[GROUP_SIZE-1:0] = equivalence_row;  //TODO
-//assign TODOrdata_out[GROUP_SIZE] = is_last;  //TODO
-//wire [GROUP_SIZE-1:0] equivalence_row;
-//wire is_last; //TODO
-
-
-
 
 // sequential logic
 always @ (posedge clk) 
@@ -216,7 +192,7 @@ begin: ITEARATION_CONTROL
       num_reads_per_iter_copy_r <= num_reads_per_iter;
       module_enabled_r     <= 1'b1;
     end else begin
-      if (perform_operation_w & (num_cycles_needed_r == 0)) begin   // when we trigger a read to bram update the counters for iteration control
+      if (perform_operation_w & (is_last)) begin   // when we trigger a read to bram update the counters for iteration control
         if (num_reads_per_iter_r == 1) begin
           if (num_iters_r == 1) begin
             module_enabled_r <= 0; 

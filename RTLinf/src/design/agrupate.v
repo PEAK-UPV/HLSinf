@@ -8,11 +8,10 @@
 
 module AGRUPATE#(
   parameter GROUP_SIZE             = 4,                          // group size
-  parameter LOG_GROUP_SIZE         = 2,                          // number of bits forgroup size
   parameter DATA_WIDTH             = (2 * 8),                    // input value width (output is 2x input width)
   parameter LOG_MAX_ITERS          = 16,                         // number of bits for max iters register
   parameter LOG_MAX_READS_PER_ITER = 16,                         // number of bits for max reads per iter
-  localparam REP_INFO              = GROUP_SIZE*GROUP_SIZE,      // number of bits for repetition detectoor
+  parameter REP_INFO               = GROUP_SIZE + 1,             // number of bits for repetition detectoor
   localparam INPUT_WIDTH           = DATA_WIDTH + REP_INFO,      // input data width (activation + weight + rep. info)
   localparam OUTPUT_WIDTH          = GROUP_SIZE * DATA_WIDTH     // output data width ( result (2*data width) +  rep. info)
 
@@ -20,136 +19,61 @@ module AGRUPATE#(
   input clk,
   input rst,
 
-  input [INPUT_WIDTH - 1 : 0]               data_in,                 // ACTIVATION & WEIGHT interface:: activ ations data
-  input                                     valid_in,                // ACTIVATION & WEIGHT interface:: activ ation valid in
-  output                                    avail_out,               // ACTIVATION & WEIGHT interface:: avail 
+  input [INPUT_WIDTH - 1 : 0]     data_in,                 // ACTIVATION & WEIGHT interface:: activ ations data
+  input                           valid_in,                // ACTIVATION & WEIGHT interface:: activ ation valid in
+  output                          avail_out,               // ACTIVATION & WEIGHT interface:: avail 
 
-  output [OUTPUT_WIDTH - 1 : 0]             data_out,                // OUT interface: data
-  output                                    valid_out,               // OUT interface: valid
-  input                                     avail_in                 // OUT interface: avail
+  output [OUTPUT_WIDTH - 1 : 0]   data_out,                // OUT interface: data
+  output                          valid_out,               // OUT interface: valid
+  input                           avail_in                 // OUT interface: avail
 );
 
 // wires
-wire                               perform_operation_w;               // whether we perform a "read" operation in this cycle
+wire                      perform_operation_w;                // whether we perform a "read" operation in this cycle
 
-wire [ DATA_WIDTH - 1: 0]          value_in;                         // Result value extracted from FIFO   
-wire [ REP_INFO - 1: 0]            rep_info;                         // Repetition info extracted from FIFO
-wire [ GROUP_SIZE - 1: 0]          processed_elements;               // Indicates the stored elements + elements that will be stored
-wire [ GROUP_SIZE - 1: 0]          writing;                          // Indicates the elements that will be stored in the current cycle
-wire [ GROUP_SIZE - 1: 0]          diagonal;                         // Diagonal of the rep_info
-wire                                 send;            //TODO
+wire [ DATA_WIDTH - 1: 0] value_in;                           // Result value extracted from FIFO   
+wire [ GROUP_SIZE - 1: 0] rep_info;                           // Repetition info extracted from FIFO
+wire                      send;                               // Send if is last
 
 // registers
-reg [GROUP_SIZE - 1 : 0]         stored;                                // Indicate the stored elements
-reg [GROUP_SIZE - 1 : 0]         enable;                                // Each bit indicates if the element needs to be stored or has already been stored
+reg [DATA_WIDTH - 1: 0]   output_values[GROUP_SIZE - 1 : 0];    // Unpacked output values
+reg                       send_r;                               //Registered version of send variable
 
-reg [GROUP_SIZE - 1 : 0]         enable_r;                                // Each bit indicates if the element needs to be stored or has already been stored
-reg [LOG_GROUP_SIZE : 0]         row;                                   // Indicates the row actual to process
-reg [DATA_WIDTH - 1: 0]          output_values[GROUP_SIZE - 1 : 0];     // Unpacked output values
-reg                              first_iter;                            //Indicates if we are on the first iteration of a batch
-reg                              send_r;                                //Registered version of send variable
-
-genvar i;
+genvar  i;
 integer j;
 
 // ** Combinational logic **
-assign perform_operation_w = valid_in; ///*module_enabled_r &*/(~empty_w || (|enable_r)) & avail_in;
+assign perform_operation_w = valid_in;
 assign avail_out = 1'b1; // always available
 
-// Extract input
-assign value_in  = data_in[DATA_WIDTH-1:0];
-assign rep_info  = data_in[INPUT_WIDTH - 1 : DATA_WIDTH];
+assign value_in        = data_in[DATA_WIDTH-1:0];
+assign rep_info        = data_in[DATA_WIDTH + GROUP_SIZE - 1 : DATA_WIDTH];
+assign send            = data_in[INPUT_WIDTH - 1]; //last bit of input indicates if we have received the last element of the group
 
-// Assign Output
+assign valid_out = perform_operation_w & send_r; 
+
 for(i = 0; i < GROUP_SIZE; i = i + 1) begin
     assign data_out[i * DATA_WIDTH +: DATA_WIDTH ] = output_values[i]; 
 end
-assign valid_out = perform_operation_w & send_r; 
-
-// if all the elements are stored in this cycle it means that we need to send the batch
-assign send = &processed_elements; 
-
-//Get the elements to write in this cycle.
-for(i = 0; i < GROUP_SIZE; i = i + 1) begin
-    assign writing[i] = rep_info[row * GROUP_SIZE + i];
-    assign processed_elements[i] = stored[i] + writing[i];
-    assign diagonal[i] = rep_info[i * GROUP_SIZE + i];
-end
-
-//See which element has to be stored next. The next element to store needs to be the one
-//with the minor index.
-always @ (*) 
-begin:row_always
-    row = 0;
-    for(j = GROUP_SIZE - 1; j >= 0; j = j - 1) begin
-        row = (enable[j])? j : row;
-    end 
-end
-
 
 // **Sequential logic**
 
 always @ (posedge clk) 
 begin
     if (~rst) begin
-        stored <= 0;
-        first_iter <= 1;
         send_r <= 0;
-        enable_r <= 0;
     end else begin
         if(perform_operation_w)begin
-            enable_r <= enable;
             send_r <= send;
 
             for(j = 0; j < GROUP_SIZE; j =  j + 1) begin
-                if(writing[j]) begin
+                if(rep_info[j]) begin
                     output_values[j] <= value_in;
-                    //stored[j] <= 1;
                 end // End if writing
             end // End for j      
-
-            if(send) begin
-                first_iter <= 1;
-                stored <= 0;
-            end // End send
-
-            else begin
-                first_iter <= 0; 
-                
-                for(j = 0; j < GROUP_SIZE; j =  j + 1) begin
-                    if(writing[j]) begin
-                        output_values[j] <= value_in;
-                        stored[j] <= 1;
-                    end // End if writing
-                end // End for j       
-            end // End else 
         end // End if perform_operation_w
+        else send_r <= 0;
     end // End if else reset
 end
-
-// *Enable calculation*
-// Enable indicates which elements are still enable to process. On the first iteration of
-// a batch, we need to redefine the enable to the diagonal of the rep_info (which indicates 
-// which elements have an unique value). Then, if we have stored an elements, we need to deactivate
-// that element.
-//
-always @ (posedge clk) 
-begin:enable_calculation
-    if (~rst) begin
-        enable <= 0;
-    end else begin
-        if(perform_operation_w) begin
-            for(j = 1; j < GROUP_SIZE; j =  j + 1) begin
-                if(first_iter) begin
-                    enable[j] <= diagonal[j]; 
-                end
-                else begin
-                    if(writing[j]) enable[j] <= 0;   
-                end
-            end // End for j
-        end // End if perform_operation_w
-    end // End if else reset
-end
-
 
 endmodule

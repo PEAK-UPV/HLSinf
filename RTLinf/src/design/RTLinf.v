@@ -508,8 +508,8 @@ generate
       .configure              ( configure[i]           ),
       .num_iters              ( num_iters              ),
       .num_reads_per_iter     ( num_reads_per_iter     ),
-      .read_address           ( 0                      ),  // TODO
-      .write_address          ( 0                      ),  // TODO
+      .read_address           ( {LOG_MAX_ADDRESS{1'b0}}),
+      .write_address          ( {LOG_MAX_ADDRESS{1'b0}}),  // TODO
       .min_clip               ( min_clip               ),
       .max_clip               ( max_clip               ),
       .conf_mode_in           ( conf_mode_in           ),
