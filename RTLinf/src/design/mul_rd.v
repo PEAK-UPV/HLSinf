@@ -52,16 +52,16 @@ wire [DATA_WIDTH -1 : 0]    weight_data_read_fifo;      // WEIGHT FIFO :: data r
 wire                        weight_next_read_w;         // WEIGHT FIFO :: next_read signal to FIFO
 wire                        weight_empty_w;             // WEIGHT FIFO :: empty signal from FIFO
 
-
 // wires
-wire                               perform_operation_w;               // whether we perform a "read" operation in this cycle
-wire [DATA_WIDTH-1:0] act_w;
-wire [2 * DATA_WIDTH - 1 : 0]      result;                            // Result
+wire                            perform_operation_w;   // whether we perform a "read" operation in this cycle
+wire [DATA_WIDTH-1:0]           act_w;
+wire [2 * DATA_WIDTH - 1 : 0]   result;                // Result
+wire                            is_last;               // Indicates if is last element from group
 
 // WEIGHT FIFO :: write and read
 // next read to the fifo
 wire next_read_w;
-assign next_read_w = perform_operation_w & only_one_w;
+assign next_read_w = perform_operation_w & is_last;
 assign weight_data_write_w  = weight_data_in;
 assign weight_write_w       = weight_valid_in;
 assign weight_avail_out     = ~weight_almost_full_w && ~weight_full_w;
@@ -80,7 +80,7 @@ reg                              module_enabled_r;          // module enabled
 // combinational logic
 assign perform_operation_w                          = act_valid_r;
 assign act_w                                        = data_r[DATA_WIDTH-1:0];
-assign only_one_w                                   = data_r[INPUT_WIDTH-1];
+assign is_last                                      = data_r[INPUT_WIDTH-1];
 assign result                                       = act_w * weight_data_read_fifo;
 assign data_out[2 * DATA_WIDTH - 1 : 0 ]            = result;
 assign data_out[OUTPUT_WIDTH - 1 : 2 * DATA_WIDTH ] = data_r[DATA_WIDTH + REP_INFO - 1 : DATA_WIDTH];
