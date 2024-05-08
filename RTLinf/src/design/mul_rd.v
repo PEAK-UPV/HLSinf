@@ -57,15 +57,7 @@ wire                            perform_operation_w;   // whether we perform a "
 wire [DATA_WIDTH-1:0]           act_w;
 wire [2 * DATA_WIDTH - 1 : 0]   result;                // Result
 wire                            is_last;               // Indicates if is last element from group
-
-// WEIGHT FIFO :: write and read
-// next read to the fifo
-wire next_read_w;
-assign next_read_w = perform_operation_w & is_last;
-assign weight_data_write_w  = weight_data_in;
-assign weight_write_w       = weight_valid_in;
-assign weight_avail_out     = ~weight_almost_full_w && ~weight_full_w;
-assign weight_next_read_w   = perform_operation_w  & (num_reads_per_iter_r == 1) & next_read_w;
+wire                            next_read_w;
 
 
 // registers
@@ -76,6 +68,13 @@ reg [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter_r;      // number of reads p
 reg [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter_copy_r; // copy of number of reads per iteration
 reg                              module_enabled_r;          // module enabled
 
+// WEIGHT FIFO :: write and read
+// next read to the fifo
+assign next_read_w = perform_operation_w & is_last;
+assign weight_data_write_w  = weight_data_in;
+assign weight_write_w       = weight_valid_in;
+assign weight_avail_out     = ~weight_almost_full_w && ~weight_full_w;
+assign weight_next_read_w   = perform_operation_w  & (num_reads_per_iter_r == 1) & next_read_w;
 
 // combinational logic
 assign perform_operation_w                          = act_valid_r;
