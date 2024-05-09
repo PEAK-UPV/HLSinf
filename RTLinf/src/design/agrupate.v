@@ -61,7 +61,7 @@ end
 always @ (posedge clk) 
 begin
     if (~rst) begin
-        send_r <= 0;
+        send_r <= 1'b0;
     end else begin
         if(perform_operation_w)begin
             send_r <= send;
@@ -72,7 +72,7 @@ begin
                 end // End if writing
             end // End for j      
         end // End if perform_operation_w
-        else send_r <= 0;
+        else send_r <= 1'b0;
     end // End if else reset
 end
 

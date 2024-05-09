@@ -59,9 +59,9 @@ reg [LOG_MAX_READS_PER_ITER - 1 : 0]   num_reads_per_iter_r;      // number of r
 reg [LOG_MAX_READS_PER_ITER - 1 : 0]   num_reads_per_iter_copy_r; // copy of number of reads per iteration
 reg                                    module_enabled_r;          // module enabled
 reg [GROUP_SIZE-1:0]                   diag;                      // diagonal of the rep info matrix
-reg [LOG_GS : 0]                       element_actual;            // element being processed in this cycle
-reg [LOG_GS : 0]                       last_element;              // element to process in last cycle
-reg [LOG_GS : 0]                       next_element;              // element to process in next cycle
+reg [LOG_GS - 1 : 0]                   element_actual;            // element being processed in this cycle
+reg [LOG_GS - 1 : 0]                   last_element;              // element to process in last cycle
+reg [LOG_GS - 1 : 0]                   next_element;              // element to process in next cycle
 
 genvar i;
 genvar j;
@@ -112,9 +112,9 @@ for(i = 0; i < GROUP_SIZE; i = i + 1) begin
         //First we build the upper part of the matrix checking if all elements are equal or not. For this, we compare the actual element selected with
         //the following values, and then we create a bit matrix where each row are related to an element. 
         //E.g., For A B A the maxtrix would be: // x 0 1 // 0 x 0 // 0 x 0
-        if(i == j) assign equivalences[i*GROUP_SIZE+j] = 1;                             //diagonal
+        if(i == j) assign equivalences[i*GROUP_SIZE+j] = 1'b1;                             //diagonal
         if(j > i)  assign equivalences[i*GROUP_SIZE+j] = !(data_in_unpacked[i] ^ data_in_unpacked[j]);  //upper part
-        if(j < i)  assign equivalences[i*GROUP_SIZE+j] = 0;                             //lower part
+        if(j < i)  assign equivalences[i*GROUP_SIZE+j] = 1'b0;                             //lower part
     end
 end
 
@@ -137,7 +137,7 @@ end
 for(i = 0; i < GROUP_SIZE; i = i + 1) begin
   for(j = 0; j < GROUP_SIZE; j = j + 1) begin
         if(j >= i) assign rep_info[i*GROUP_SIZE+j] = diag[i] && equivalences[i*GROUP_SIZE+j];  //upper part
-        if(j < i)  assign rep_info[i*GROUP_SIZE+j] = 0;                                        //lower part
+        if(j < i)  assign rep_info[i*GROUP_SIZE+j] = 1'b0;                                        //lower part
     end
 end
 
@@ -147,18 +147,18 @@ end
 //Get last element from group
 always @ (*) 
 begin: COMB_LAST_ELEMENT
-    last_element = 0;
+    last_element = {LOG_GS{1'b0}};
     for(k = 0; k < GROUP_SIZE; k = k + 1) begin
-        last_element = (diag[k])? k : last_element;
+        last_element = (diag[k])? k[LOG_GS-1:0] : last_element;
     end 
 end
 
 //Get next activation
 always @ (*) 
 begin: COMB_NEXT_ELEMENT
-    next_element = 0;
+    next_element = {LOG_GS{1'b0}};
     for(k = GROUP_SIZE - 1; k >= 0; k = k - 1) begin
-        next_element = k > element_actual? ( diag[k] ? k : next_element) : next_element;
+        next_element = k[LOG_GS-1:0] > element_actual? ( diag[k] ? k[LOG_GS-1:0] : next_element) : next_element;
     end 
 end
 
@@ -166,11 +166,11 @@ end
 //Get element actual
 always @ (posedge clk) begin
   if (~rst) begin
-    element_actual <= 0;
+    element_actual <= {LOG_GS{1'b0}};
   end else begin
     if (perform_operation_w) begin
       if (element_actual == last_element) begin
-        element_actual <= 0;
+        element_actual <= {LOG_GS{1'b0}};
       end else begin
         element_actual <= next_element;
       end
