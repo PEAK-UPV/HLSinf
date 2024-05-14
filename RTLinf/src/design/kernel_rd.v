@@ -97,7 +97,7 @@ wire [NUM_LANES-1:0]                        weight_distr2mul_valid_w;
 wire [NUM_LANES-1:0]                        weight_distr2mul_avail_w;
 
 // wires between MUL and ALIGN modules
-wire [2*GROUP_SIZE*DATA_WIDTH-1:0]          mul2align_data_w[NUM_LANES-1:0];
+wire [2 * DATA_WIDTH + REP_INFO - 1:0]      mul2align_data_w[NUM_LANES-1:0];
 wire [NUM_LANES-1:0]                        mul2align_valid_w;
 wire [NUM_LANES-1:0]                        mul2align_avail_w;
 
@@ -264,7 +264,7 @@ DISTRIBUTE_IN_RD #(
 // MUL, ALIGN, ACC modules
 generate
   for (i=0; i<NUM_LANES; i=i+1) begin
-    MUL_BATCH #(
+    MUL_RD #(
       .GROUP_SIZE             ( GROUP_SIZE ),
       .DATA_WIDTH             ( DATA_WIDTH ),
       .LOG_MAX_ITERS          ( LOG_MAX_ITERS          ),
@@ -276,8 +276,7 @@ generate
       .configure              ( configure                       ),
       .num_iters              ( num_iters                       ),
       .num_reads_per_iter     ( num_reads_per_iter              ),
-      .act_data_in            ( act_distr2mul_data_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] ),
-      .act_rdata_in           ( act_distr2mul_rdata_w[((i+1)*REP_INFO)-1:i*REP_INFO]),
+      .act_data_in            ( {act_distr2mul_rdata_w[((i+1)*REP_INFO)-1:i*REP_INFO], act_distr2mul_data_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH]} ),
       .act_valid_in           ( act_distr2mul_valid_w[i]                                                      ),
       .act_avail_out          ( act_distr2mul_avail_w[i]                                                      ),
       .weight_data_in         ( weight_distr2mul_data_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH]                    ),
@@ -289,8 +288,8 @@ generate
     );
 
     ALIGN #(
-      .GROUP_SIZE             ( GROUP_SIZE ),
-      .DATA_WIDTH             ( 2*DATA_WIDTH ),
+      .GROUP_SIZE             ( 1 ),
+      .DATA_WIDTH             ( 2 * DATA_WIDTH + REP_INFO ),
       .LOG_MAX_ITERS          ( LOG_MAX_ITERS ),
       .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER )
   ) align_m (
@@ -304,7 +303,7 @@ generate
     .avail_in               ( align2acc_avail_w[i] )
   );  
 
-  ACC #(
+  ACC_RD #(
     .GROUP_SIZE             ( GROUP_SIZE             ),
     .DATA_WIDTH             ( 2*DATA_WIDTH           ),
     .NUM_ADDRESSES          ( NUM_ADDRESSES          ),

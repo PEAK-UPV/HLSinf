@@ -5,7 +5,7 @@
 
 `include "RTLinf.vh"
 
-
+////***************DEPRECATED
 module AGRUPATE#(
   parameter GROUP_SIZE             = 4,                          // group size
   parameter DATA_WIDTH             = (2 * 8),                    // input value width (output is 2x input width)

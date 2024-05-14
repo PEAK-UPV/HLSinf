@@ -6,6 +6,7 @@
 
 //`include "RTLinf.vh"
 
+//******** DEPRECATED
 module MUL_BATCH #(
   parameter GROUP_SIZE             = 4,                                       // group size
   parameter DATA_WIDTH             = 8,                                       // input data width (output is 2x input width)
