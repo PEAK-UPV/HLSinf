@@ -8,13 +8,15 @@
 
 
 module repetition_detector#(
+    parameter UNZV_mode              = 0, 
     parameter GROUP_SIZE             = 4,                      // group size
     parameter LOG_GS                 = 2,
     parameter DATA_WIDTH             = 8,                      // input and output data width
     parameter LOG_MAX_ITERS          = 16,                     // number of bits for max iters register
     parameter LOG_MAX_READS_PER_ITER = 16,                     // number of bits for max reads per iter
-    localparam INPUT_WIDTH           = GROUP_SIZE*DATA_WIDTH,  // input width
-    localparam REP_INFO              = GROUP_SIZE + 1            // row of equivalences + index_element sending + is_last
+    localparam ZERO_INFO             = GROUP_SIZE,             
+    localparam REP_INFO              = UNZV_mode ? (GROUP_SIZE + ZERO_INFO + 1)  : (GROUP_SIZE + 1),         // row of equivalences + index_element sending + is_last    
+    localparam INPUT_WIDTH           = GROUP_SIZE*DATA_WIDTH   // number of bits for input (activation + weight + rep. info)
 )(
   input clk,
   input rst,
@@ -35,246 +37,48 @@ module repetition_detector#(
 );
 
 
-
-// wires
-wire [INPUT_WIDTH - 1: 0]              data_write_w;                      // data to write to FIFO
-wire                                   write_enb_w;                       // write signal to FIFO
-wire                                   full_w;                            // full signal from FIFO
-wire                                   almost_full_w;                     // almost_full signal from FIFO
-wire [INPUT_WIDTH - 1 : 0]              data_read_fifo;                    // data read from FIFO
-wire                                   read_enb_w;                        // next_read signal to FIFO
-wire                                   empty_w;                           // empty signal from FIFO
-wire                                   perform_operation_w;
-
-wire [GROUP_SIZE * GROUP_SIZE - 1 : 0] equivalences;                      // matrix of equivalences between the values of the GS elements
-wire [GROUP_SIZE - 1 : 0]              equivalence_row;                   // vector of equivalences between the element actual and the rest
-wire [GROUP_SIZE * GROUP_SIZE - 1 : 0] rep_info;                          // matrix with condensed repetition detection information
-wire [DATA_WIDTH - 1 : 0]              data_in_unpacked[GROUP_SIZE-1:0];  // two dimentional data read from FIFO
-wire                                   is_last;                           // indicates if is the last element of the group
-
-
-// registers
-reg [LOG_MAX_ITERS - 1 : 0]            num_iters_r;               // FIFO
-reg [LOG_MAX_READS_PER_ITER - 1 : 0]   num_reads_per_iter_r;      // number of reads per iteration (down counter)
-reg [LOG_MAX_READS_PER_ITER - 1 : 0]   num_reads_per_iter_copy_r; // copy of number of reads per iteration
-reg                                    module_enabled_r;          // module enabled
-reg [GROUP_SIZE-1:0]                   diag;                      // diagonal of the rep info matrix
-reg [LOG_GS - 1 : 0]                   element_actual;            // element being processed in this cycle
-reg [LOG_GS - 1 : 0]                   last_element;              // element to process in last cycle
-reg [LOG_GS - 1 : 0]                   next_element;              // element to process in next cycle
-
-genvar i;
-genvar j;
-integer k;
-integer l;
-
-
-// combinational logic
-assign data_out = data_in_unpacked[element_actual];
-assign rdata_out[GROUP_SIZE-1:0] = equivalence_row;
-assign rdata_out[REP_INFO-1] = is_last;
-
-assign data_write_w  = data_in;                                         // data to FIFO
-assign write_enb_w   = valid_in;                                        // write signal to FIFO
-assign avail_out     = ~almost_full_w & ~full_w;                        // avail signal from FIFO       
-assign read_enb_w    = perform_operation_w & (is_last);                             // next_read signal to FIFO
-assign valid_out     = perform_operation_w & (is_last);                             // valid signal to downstream module
-//
-assign perform_operation_w = module_enabled_r & (~empty_w) & avail_in;
-
-for(i = 0; i < GROUP_SIZE; i = i + 1) begin
-    assign data_in_unpacked[i] = data_read_fifo[i * DATA_WIDTH +: DATA_WIDTH];
+if (UNZV_mode) begin
+    repetition_detector_unzv #(
+      .GROUP_SIZE             ( GROUP_SIZE               ),
+      .LOG_GS                 ( LOG_GS                   ),
+      .DATA_WIDTH             ( DATA_WIDTH               ),
+      .LOG_MAX_ITERS          ( LOG_MAX_ITERS            ),
+      .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER   )
+    ) repetition_detector_unzv_m (
+      .clk                    ( clk                      ),
+      .rst                    ( rst                      ),
+      .configure              ( configure                ),
+      .num_iters              ( num_iters                ),
+      .num_reads_per_iter     ( num_reads_per_iter       ),
+      .valid_in               ( valid_in                 ),
+      .data_in                ( data_in                  ),
+      .avail_in               ( avail_in                 ),
+      .valid_out              ( valid_out                ),
+      .data_out               ( data_out                 ),
+      .avail_out              ( avail_out                ),
+      .rdata_out              ( rdata_out                )
+    );
+end else begin
+    repetition_detector_uv #(
+      .GROUP_SIZE             ( GROUP_SIZE               ),
+      .LOG_GS                 ( LOG_GS                   ),
+      .DATA_WIDTH             ( DATA_WIDTH               ),
+      .LOG_MAX_ITERS          ( LOG_MAX_ITERS            ),
+      .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER   )
+    ) repetition_detector_uv_m (
+      .clk                    ( clk                      ),
+      .rst                    ( rst                      ),
+      .configure              ( configure                ),
+      .num_iters              ( num_iters                ),
+      .num_reads_per_iter     ( num_reads_per_iter       ),
+      .valid_in               ( valid_in                 ),
+      .data_in                ( data_in                  ),
+      .avail_in               ( avail_in                 ),
+      .valid_out              ( valid_out                ),
+      .data_out               ( data_out                 ),
+      .avail_out              ( avail_out                ),
+      .rdata_out              ( rdata_out                )
+    );
 end
-
-assign equivalence_row = rep_info[element_actual * GROUP_SIZE +: GROUP_SIZE];
-assign is_last = element_actual >= last_element;
-
-/*Repetition information calculation*/
-//Calculation of the repetition information performed in several steps.
-// The output represents a matrix of GS x GS, where each row i represents the equivalence of the 
-//element i by the element j. There will be only GS ones. 
-// E.g., 3 2 3 3 will result on:
-// 1 0 1 1
-// 0 1 0 0
-// 0 0 0 0
-// 0 0 0 0
-
-
-//--Step 1: calculate the equivalences.
-// E.g., 3 2 3 3 will result on: 
-// 1 0 1 1
-// 0 1 0 0
-// 0 0 1 1
-// 0 0 0 1
-for(i = 0; i < GROUP_SIZE; i = i + 1) begin
-  for(j = 0; j < GROUP_SIZE; j = j + 1) begin
-        /*EQUIVALENCES*/
-        //First we build the upper part of the matrix checking if all elements are equal or not. For this, we compare the actual element selected with
-        //the following values, and then we create a bit matrix where each row are related to an element. 
-        //E.g., For A B A the maxtrix would be: // x 0 1 // 0 x 0 // 0 x 0
-        if(i == j) assign equivalences[i*GROUP_SIZE+j] = 1'b1;                             //diagonal
-        if(j > i)  assign equivalences[i*GROUP_SIZE+j] = !(data_in_unpacked[i] ^ data_in_unpacked[j]);  //upper part
-        if(j < i)  assign equivalences[i*GROUP_SIZE+j] = 1'b0;                             //lower part
-    end
-end
-
-//--Step 2: calculate the diagonal of the matrix.
-// E.g., 3 2 3 3 will result on:
-// 1 0 0 0
-// 0 1 0 0
-// 0 0 0 0
-// 0 0 0 0
-always @ (*) begin
-  diag = {GROUP_SIZE{1'b1}};
-  for(k = 1; k < GROUP_SIZE; k = k + 1) begin
-    for(l = 0; l < k; l = l + 1) begin   
-      diag[k] = diag[k] & !equivalences[l*GROUP_SIZE+k];
-    end
-  end
-end
-
-//--Step 3: bind step 1 and step 2
-for(i = 0; i < GROUP_SIZE; i = i + 1) begin
-  for(j = 0; j < GROUP_SIZE; j = j + 1) begin
-        if(j >= i) assign rep_info[i*GROUP_SIZE+j] = diag[i] && equivalences[i*GROUP_SIZE+j];  //upper part
-        if(j < i)  assign rep_info[i*GROUP_SIZE+j] = 1'b0;                                        //lower part
-    end
-end
-
-/* DISPATCHER PART */ 
-
-
-//Get last element from group
-always @ (*) 
-begin: COMB_LAST_ELEMENT
-    last_element = {LOG_GS{1'b0}};
-    for(k = 0; k < GROUP_SIZE; k = k + 1) begin
-        last_element = (diag[k])? k[LOG_GS-1:0] : last_element;
-    end 
-end
-
-//Get next activation
-always @ (*) 
-begin: COMB_NEXT_ELEMENT
-    next_element = {LOG_GS{1'b0}};
-    for(k = GROUP_SIZE - 1; k >= 0; k = k - 1) begin
-        next_element = k[LOG_GS-1:0] > element_actual? ( diag[k] ? k[LOG_GS-1:0] : next_element) : next_element;
-    end 
-end
-
-//Sequential
-//Get element actual
-always @ (posedge clk) begin
-  if (~rst) begin
-    element_actual <= {LOG_GS{1'b0}};
-  end else begin
-    if (perform_operation_w) begin
-      if (element_actual == last_element) begin
-        element_actual <= {LOG_GS{1'b0}};
-      end else begin
-        element_actual <= next_element;
-      end
-    end
-  end
-end
-
-// sequential logic
-always @ (posedge clk) 
-begin: ITEARATION_CONTROL
-  if (~rst) begin
-    num_iters_r          <= 0;
-    num_reads_per_iter_r <= 0;
-    module_enabled_r     <= 1'b0;
-  end else begin
-    if (configure) begin
-      num_iters_r          <= num_iters;
-      num_reads_per_iter_r <= num_reads_per_iter;
-      num_reads_per_iter_copy_r <= num_reads_per_iter;
-      module_enabled_r     <= 1'b1;
-    end else begin
-      if (perform_operation_w & (is_last)) begin   // when we trigger a read to bram update the counters for iteration control
-        if (num_reads_per_iter_r == 1) begin
-          if (num_iters_r == 1) begin
-            module_enabled_r <= 0; 
-          end else begin
-            num_iters_r <= num_iters_r - 1;
-            num_reads_per_iter_r <= num_reads_per_iter_copy_r;
-          end
-        end else begin
-          num_reads_per_iter_r <= num_reads_per_iter_r - 1;
-        end
-      end
-    end
-  end 
-end
-
-
-/* Modules */
-
-// FIFO
-FIFO #(
-  .NUM_SLOTS     ( 4                       ),
-  .LOG_NUM_SLOTS ( 2                       ),
-  .DATA_WIDTH    ( DATA_WIDTH * GROUP_SIZE )
-) fifo_in (
-  .clk           ( clk             ),
-  .rst           ( rst             ),
-  .data_write    ( data_write_w    ),
-  .write         ( write_enb_w     ),
-  .full          ( full_w          ),
-  .almost_full   ( almost_full_w   ),
-  .data_read     ( data_read_fifo  ),
-  .next_read     ( read_enb_w      ),
-  .empty         ( empty_w         )
-);
-
-
-// debug support. When enabled (through the DEBUG define) the module will generate
-// debug information on every specific cycle, depending on the debug conditions implemented
-// the module has a tics counter register to keep up with current cycle
-//
-// in this module whenever a "read" cycle is performed the associated information is shown as debug
-//
-
-
-`ifdef DEBUG_REP
-  reg [15:0] tics;
-
-  always @ (posedge clk) begin
-    if (~rst) tics <= 0;
-    else begin
-      if (perform_operation_w) begin
-        $display("REP: cycle %d output data %x", tics, data_out);
-
-        $display("--Values:");
-        for(k = 0; k < GROUP_SIZE; k = k + 1) begin
-              $write("%d ", data_in_unpacked[k]);
-        end
-
-        $display("\n--Step one, equivalences matrix");
-        for(k = 0; k < GROUP_SIZE; k = k + 1) begin
-          for(l = 0; l < GROUP_SIZE; l = l + 1) begin   
-              $write("%d ", equivalences[k*GROUP_SIZE + l]);
-          end
-           $write("\n");
-        end
-
-        $display("--Step two, diagonal");
-        for(k = 0; k < GROUP_SIZE; k = k + 1) begin
-              $write("%d ", diag[k]);
-        end
-
-        $display("\n--Step three, final info");
-        for(k = 0; k < GROUP_SIZE; k = k + 1) begin
-          for(l = 0; l < GROUP_SIZE; l = l + 1) begin   
-              $write("%d ", rep_info[k*GROUP_SIZE + l]);
-          end
-           $write("\n");
-        end
-      end
-      tics <= tics + 1;
-    end
-  end
-`endif
 
 endmodule

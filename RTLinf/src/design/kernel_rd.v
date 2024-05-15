@@ -31,7 +31,10 @@ module KERNEL_RD #(
   parameter LOG_MAX_READS_PER_ITER = 16,   // number of bits for reads_per_iter
   parameter LOG_MAX_ADDRESS        = 12,   // number of bits for addresses
   parameter NUM_ADDRESSES          = 4096,  // number of addresses in memories
-  localparam REP_INFO              = GROUP_SIZE + 1
+  parameter REPETITION_DETECTION   = "UV",  // // options: no, UV, or UNZV 
+  localparam UNZV_mode             =  (REPETITION_DETECTION =="UNZV") ? 1 : 0,
+  localparam ZERO_INFO             = GROUP_SIZE,
+  localparam REP_INFO              = UNZV_mode ?  GROUP_SIZE + ZERO_INFO + 1 :  GROUP_SIZE + 1
 )(
   input                                   clk,                // clock input
   input                                   rst,                // reset input
@@ -102,12 +105,12 @@ wire [NUM_LANES-1:0]                        mul2align_valid_w;
 wire [NUM_LANES-1:0]                        mul2align_avail_w;
 
 // wires between ALIGN and ACC modules
-wire [2*GROUP_SIZE*DATA_WIDTH-1:0]          align2acc_data_w[NUM_LANES-1:0];
+wire [2 * DATA_WIDTH + REP_INFO - 1:0]      align2acc_data_w[NUM_LANES-1:0];
 wire [NUM_LANES-1:0]                        align2acc_valid_w;
 wire [NUM_LANES-1:0]                        align2acc_avail_w;
 
 // wires between ACC and DISTRIBUTE_IN modules
-wire [2*GROUP_SIZE*DATA_WIDTH-1:0]          acc2distr_data_w[NUM_LANES-1:0];
+wire [GROUP_SIZE * 2 * DATA_WIDTH - 1:0]        acc2distr_data_w[NUM_LANES-1:0];
 wire [NUM_LANES-1:0]                        acc2distr_valid_w;
 wire [NUM_LANES-1:0]                        acc2distr_avail_w;
 wire [NUM_LANES*2*GROUP_SIZE*DATA_WIDTH-1:0]acc2distr_combined_data_w;
@@ -181,8 +184,9 @@ endgenerate
 
 // repetition detector modules
 generate
-for ( i=0; i<NUM_INPUTS; i=i+1) begin
+for ( i=0; i<NUM_INPUTS; i=i+1) begin 
   repetition_detector #(
+    .UNZV_mode              (UNZV_mode                      ),
     .GROUP_SIZE             ( GROUP_SIZE                    ),
     .LOG_GS                 ( LOG_GS                        ),
     .DATA_WIDTH             ( DATA_WIDTH                    ),
@@ -237,7 +241,7 @@ DISTRIBUTE_IN_RD #(
  .NUM_DATA_OUTPUTS       ( NUM_LANES              ),
  .LOG_MAX_ITERS          ( LOG_MAX_ITERS          ),
  .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER ),
- .REP_INFO               ( GROUP_SIZE + 1)
+ .REP_INFO               ( REP_INFO               )
 ) distribute_in_m (
  .clk                    ( clk                             ),
  .rst                    ( rst                             ),
@@ -269,7 +273,7 @@ generate
       .DATA_WIDTH             ( DATA_WIDTH ),
       .LOG_MAX_ITERS          ( LOG_MAX_ITERS          ),
       .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER ),
-      .REP_INFO               ( GROUP_SIZE + 1)
+      .REP_INFO               ( REP_INFO               )
     ) mul_m (
       .clk                    ( clk                  ),
       .rst                    ( rst                  ),
