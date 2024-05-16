@@ -9,7 +9,7 @@
 
 `include "RTLinf.vh"
 
-module ACC_RD #(
+module ACC_RD_UV #(
     parameter DATA_WIDTH             = 8,                            // input data width (output width = input width)
     parameter GROUP_SIZE             = 4,                            // group size
     parameter LOG_MAX_ITERS          = 16,                           // number of bits for max iters register

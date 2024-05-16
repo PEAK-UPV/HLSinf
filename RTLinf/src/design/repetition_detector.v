@@ -8,14 +8,16 @@
 
 
 module repetition_detector#(
-    parameter UNZV_mode              = 0, 
+    parameter REPETITION_DETECTION   = "UV",                   // options: no, UV, UNZV, NZV
     parameter GROUP_SIZE             = 4,                      // group size
     parameter LOG_GS                 = 2,
     parameter DATA_WIDTH             = 8,                      // input and output data width
     parameter LOG_MAX_ITERS          = 16,                     // number of bits for max iters register
     parameter LOG_MAX_READS_PER_ITER = 16,                     // number of bits for max reads per iter
+    localparam UNZV_mode             =  (REPETITION_DETECTION =="UNZV") ? 1 : 0,
+    localparam NZV_mode              =  (REPETITION_DETECTION =="NZV") ? 1 : 0,    
     localparam ZERO_INFO             = GROUP_SIZE,             
-    localparam REP_INFO              = UNZV_mode ? (GROUP_SIZE + ZERO_INFO + 1)  : (GROUP_SIZE + 1),         // row of equivalences + index_element sending + is_last    
+    localparam REP_INFO              = UNZV_mode ?  GROUP_SIZE + ZERO_INFO + 1 :  NZV_mode ? ZERO_INFO + LOG_GS + 1 : GROUP_SIZE + 1,
     localparam INPUT_WIDTH           = GROUP_SIZE*DATA_WIDTH   // number of bits for input (activation + weight + rep. info)
 )(
   input clk,
@@ -45,6 +47,27 @@ if (UNZV_mode) begin
       .LOG_MAX_ITERS          ( LOG_MAX_ITERS            ),
       .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER   )
     ) repetition_detector_unzv_m (
+      .clk                    ( clk                      ),
+      .rst                    ( rst                      ),
+      .configure              ( configure                ),
+      .num_iters              ( num_iters                ),
+      .num_reads_per_iter     ( num_reads_per_iter       ),
+      .valid_in               ( valid_in                 ),
+      .data_in                ( data_in                  ),
+      .avail_in               ( avail_in                 ),
+      .valid_out              ( valid_out                ),
+      .data_out               ( data_out                 ),
+      .avail_out              ( avail_out                ),
+      .rdata_out              ( rdata_out                )
+    );
+end else if (NZV_mode) begin
+  repetition_detector_nzv #(
+      .GROUP_SIZE             ( GROUP_SIZE               ),
+      .LOG_GS                 ( LOG_GS                   ),
+      .DATA_WIDTH             ( DATA_WIDTH               ),
+      .LOG_MAX_ITERS          ( LOG_MAX_ITERS            ),
+      .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER   )
+    ) repetition_detector_nzv_m (
       .clk                    ( clk                      ),
       .rst                    ( rst                      ),
       .configure              ( configure                ),

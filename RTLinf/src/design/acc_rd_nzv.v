@@ -9,15 +9,16 @@
 
 `include "RTLinf.vh"
 
-module ACC_RD_UNZV #(
+module ACC_RD_NZV #(
     parameter DATA_WIDTH             = 8,                            // input data width (output width = input width)
     parameter GROUP_SIZE             = 4,                            // group size
+    parameter LOG_GS                 = 2,
     parameter LOG_MAX_ITERS          = 16,                           // number of bits for max iters register
     parameter NUM_ADDRESSES          = 4096,                         // number of addresses
     parameter LOG_MAX_ADDRESS        = 12,                           // number of address bits
     parameter LOG_MAX_READS_PER_ITER = 12,                           // number of bits for max reads per iter
     localparam ZERO_INFO             = GROUP_SIZE,                   // number of bits for repetition detectoor
-    localparam REP_INFO               = GROUP_SIZE + 1 + ZERO_INFO,               // number of bits for repetition detectoor
+    localparam REP_INFO               = LOG_GS + ZERO_INFO + 1,               // number of bits for repetition detectoor
     localparam INPUT_WIDTH           = DATA_WIDTH + REP_INFO,        // input data width (activation + weight + rep. info)
     localparam OUTPUT_WIDTH          = GROUP_SIZE * DATA_WIDTH       // output data width ( result (2*data width) +  rep. info)
 
@@ -40,11 +41,11 @@ module ACC_RD_UNZV #(
 
 
 //wires 
-wire [ GROUP_SIZE - 1: 0]             rep_info;                           // Repetition info extracted from FIFO
 wire [ GROUP_SIZE - 1: 0]             zer_info;                          // Repetition info extracted from FIFO
 wire                                  is_last;
 wire [ DATA_WIDTH - 1: 0]             value_in;
-wire write_w;
+wire                                  write_w;
+wire [LOG_GS - 1 : 0]                 element_actual;            // element being processed in this cycle
 
 // wires (operation and iterations)
 wire                                  perform_operation_w;               // whether we perform a "read" operation in this cycle
@@ -53,6 +54,7 @@ wire                                  last_iteration_w;                  // whet
 
 // wires (data added)
 wire [GROUP_SIZE * DATA_WIDTH-1 : 0]  data_added_w;                      // contains the added values from mem and from input
+
 
 // pipeline (read -> add -> write stages)
 reg                                  read_r;
@@ -96,8 +98,8 @@ assign valid_out           = write_r & write_last_iteration_r;           // vali
 
 // get input
 assign value_in            = data_in[DATA_WIDTH-1:0];
-assign rep_info            = data_in[DATA_WIDTH + GROUP_SIZE - 1 : DATA_WIDTH];
-assign zer_info            = data_in[INPUT_WIDTH - 1 - 1 : DATA_WIDTH + GROUP_SIZE];
+assign zer_info            = data_in[DATA_WIDTH + ZERO_INFO - 1 : DATA_WIDTH];
+assign element_actual      = data_in[INPUT_WIDTH - 1 - 1 : DATA_WIDTH + ZERO_INFO];
 assign is_last             = data_in[INPUT_WIDTH - 1];            //last bit of input indicates if we have received the last element of the group
 
 // adders (one per item in the group size)
@@ -130,7 +132,7 @@ generate
 endgenerate 
 
 for (i=0; i<GROUP_SIZE; i=i+1) begin
-  assign write_w = rep_info[i] ? write_r : 1'b0;
+  assign write_w = element_actual ? 1'b1 : zer_info[i] ? write_r : 1'b0; 
 end
 // sequential logic
 

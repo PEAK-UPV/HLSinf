@@ -10,15 +10,21 @@
 `include "RTLinf.vh"
 
 module ACC_RD #(
-    parameter UNZV_mode              = 0, 
+    parameter REPETITION_DETECTION   = "UV",                         // options: no, UV, UNZV, NZV
     parameter DATA_WIDTH             = 8,                            // input data width (output width = input width)
+    parameter LOG_GS                 = 2,
     parameter GROUP_SIZE             = 4,                            // group size
     parameter LOG_MAX_ITERS          = 16,                           // number of bits for max iters register
     parameter NUM_ADDRESSES          = 4096,                         // number of addresses
     parameter LOG_MAX_ADDRESS        = 12,                           // number of address bits
     parameter LOG_MAX_READS_PER_ITER = 12,                           // number of bits for max reads per iter
+    localparam UNZV_mode             =  (REPETITION_DETECTION =="UNZV") ? 1 : 0,
+    localparam NZV_mode              =  (REPETITION_DETECTION =="NZV") ? 1 : 0,      
     localparam ZERO_INFO             = GROUP_SIZE,             
-    localparam REP_INFO              = UNZV_mode ? (GROUP_SIZE + ZERO_INFO + 1)  : (GROUP_SIZE + 1),         // row of equivalences + index_element sending + is_last    
+    localparam REP_INFO_UV           = GROUP_SIZE + 1,
+    localparam REP_INFO_NZV          = LOG_GS + ZERO_INFO + 1,
+    localparam REP_INFO_UNZV         = REP_INFO_UV + ZERO_INFO,
+    localparam REP_INFO              = UNZV_mode ? REP_INFO_UNZV :  NZV_mode ? REP_INFO_NZV : REP_INFO_UV,
     localparam INPUT_WIDTH           = DATA_WIDTH + REP_INFO,        // input data width (activation + weight + rep. info)
     localparam OUTPUT_WIDTH          = GROUP_SIZE * DATA_WIDTH       // output data width ( result (2*data width) +  rep. info)
 
@@ -42,7 +48,7 @@ module ACC_RD #(
 if (UNZV_mode) begin
   ACC_RD_UNZV #(
     .GROUP_SIZE             ( GROUP_SIZE             ),
-    .DATA_WIDTH             ( 2*DATA_WIDTH           ),
+    .DATA_WIDTH             ( DATA_WIDTH             ),
     .NUM_ADDRESSES          ( NUM_ADDRESSES          ),
     .LOG_MAX_ADDRESS        ( LOG_MAX_ADDRESS        ),
     .LOG_MAX_ITERS          ( LOG_MAX_ITERS          ),
@@ -60,10 +66,32 @@ if (UNZV_mode) begin
     .valid_out              ( valid_out              ),
     .avail_in               ( avail_in               )
   );
+end else if (NZV_mode) begin
+  ACC_RD_NZV #(
+    .GROUP_SIZE             ( GROUP_SIZE             ),
+    .LOG_GS                 ( LOG_GS                 ),
+    .DATA_WIDTH             ( DATA_WIDTH             ),
+    .NUM_ADDRESSES          ( NUM_ADDRESSES          ),
+    .LOG_MAX_ADDRESS        ( LOG_MAX_ADDRESS        ),
+    .LOG_MAX_ITERS          ( LOG_MAX_ITERS          ),
+    .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER )
+  ) acc_nzv_m (
+    .clk                    ( clk                    ),
+    .rst                    ( rst                    ),
+    .configure              ( configure              ),
+    .num_iters              ( num_iters              ),
+    .num_reads_per_iter     ( num_reads_per_iter     ),
+    .data_in                ( data_in                ),
+    .valid_in               ( valid_in               ),
+    .avail_out              ( avail_out              ),
+    .data_out               ( data_out               ),
+    .valid_out              ( valid_out              ),
+    .avail_in               ( avail_in               )
+  );
 end else begin
   ACC_RD_UV #(
     .GROUP_SIZE             ( GROUP_SIZE             ),
-    .DATA_WIDTH             ( 2*DATA_WIDTH           ),
+    .DATA_WIDTH             ( DATA_WIDTH             ),
     .NUM_ADDRESSES          ( NUM_ADDRESSES          ),
     .LOG_MAX_ADDRESS        ( LOG_MAX_ADDRESS        ),
     .LOG_MAX_ITERS          ( LOG_MAX_ITERS          ),

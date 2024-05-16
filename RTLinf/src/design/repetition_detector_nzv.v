@@ -7,14 +7,14 @@
 `include "RTLinf.vh"
 
 
-module repetition_detector_unzv#(
+module repetition_detector_nzv#(
     parameter GROUP_SIZE             = 4,                      // group size
     parameter LOG_GS                 = 2,
     parameter DATA_WIDTH             = 8,                      // input and output data width
     parameter LOG_MAX_ITERS          = 16,                     // number of bits for max iters register
     parameter LOG_MAX_READS_PER_ITER = 16,                     // number of bits for max reads per iter
     localparam ZERO_INFO             = GROUP_SIZE,             
-    localparam REP_INFO              = GROUP_SIZE + ZERO_INFO + 1 ,         // row of equivalences + index_element sending + is_last    
+    localparam REP_INFO              = ZERO_INFO + LOG_GS + 1,             // row of equivalences + index_element sending + is_last    
     localparam INPUT_WIDTH           = GROUP_SIZE*DATA_WIDTH   // number of bits for input (activation + weight + rep. info)
 )(
   input clk,
@@ -47,9 +47,6 @@ wire                                   read_enb_w;                        // nex
 wire                                   empty_w;                           // empty signal from FIFO
 wire                                   perform_operation_w;
 
-wire [GROUP_SIZE * GROUP_SIZE - 1 : 0] equivalences;                      // matrix of equivalences between the values of the GS elements
-wire [GROUP_SIZE - 1 : 0]              equivalence_row;                   // vector of equivalences between the element actual and the rest
-wire [GROUP_SIZE * GROUP_SIZE - 1 : 0] rep_info;                          // matrix with condensed repetition detection information
 wire [DATA_WIDTH - 1 : 0]              data_in_unpacked[GROUP_SIZE-1:0];  // two dimentional data read from FIFO
 wire                                   is_last;                           // indicates if is the last element of the group
 wire [ZERO_INFO - 1 : 0]               zer_info;                          // vector of zero elements
@@ -60,7 +57,7 @@ reg [LOG_MAX_ITERS - 1 : 0]            num_iters_r;               // FIFO
 reg [LOG_MAX_READS_PER_ITER - 1 : 0]   num_reads_per_iter_r;      // number of reads per iteration (down counter)
 reg [LOG_MAX_READS_PER_ITER - 1 : 0]   num_reads_per_iter_copy_r; // copy of number of reads per iteration
 reg                                    module_enabled_r;          // module enabled
-reg [GROUP_SIZE-1:0]                   diag;                      // diagonal of the rep info matrix
+
 reg [LOG_GS - 1 : 0]                   element_actual;            // element being processed in this cycle
 reg [LOG_GS - 1 : 0]                   last_element;              // element to process in last cycle
 reg [LOG_GS - 1 : 0]                   next_element;              // element to process in next cycle
@@ -72,10 +69,10 @@ integer l;
 
 
 // combinational logic
-assign data_out                                 = data_in_unpacked[element_actual];
-assign rdata_out[GROUP_SIZE-1:0]                = equivalence_row;
-assign rdata_out[REP_INFO - 1 - 1 : GROUP_SIZE] = zer_info;
-assign rdata_out[REP_INFO - 1]                  = is_last;
+assign data_out                                      = data_in_unpacked[element_actual];
+assign rdata_out[ZERO_INFO - 1 : 0]                  = zer_info;
+assign rdata_out[ZERO_INFO + LOG_GS - 1 : ZERO_INFO] = element_actual;
+assign rdata_out[REP_INFO - 1]                       = is_last;
 
 assign data_write_w  = data_in;                                         // data to FIFO
 assign write_enb_w   = valid_in;                                        // write signal to FIFO
@@ -90,60 +87,7 @@ for(i = 0; i < GROUP_SIZE; i = i + 1) begin
     assign data_in_unpacked[i] = data_read_fifo[i * DATA_WIDTH +: DATA_WIDTH];
 end
 
-assign equivalence_row = rep_info[element_actual * GROUP_SIZE +: GROUP_SIZE];
 assign is_last = element_actual >= last_element;
-
-/*Repetition information calculation*/
-//Calculation of the repetition information performed in several steps.
-// The output represents a matrix of GS x GS, where each row i represents the equivalence of the 
-//element i by the element j. There will be only GS ones. 
-// E.g., 3 2 3 3 will result on:
-// 1 0 1 1
-// 0 1 0 0
-// 0 0 0 0
-// 0 0 0 0
-
-
-//--Step 1: calculate the equivalences.
-// E.g., 3 2 3 3 will result on: 
-// 1 0 1 1
-// 0 1 0 0
-// 0 0 1 1
-// 0 0 0 1
-for(i = 0; i < GROUP_SIZE; i = i + 1) begin
-  for(j = 0; j < GROUP_SIZE; j = j + 1) begin
-        /*EQUIVALENCES*/
-        //First we build the upper part of the matrix checking if all elements are equal or not. For this, we compare the actual element selected with
-        //the following values, and then we create a bit matrix where each row are related to an element. 
-        //E.g., For A B A the maxtrix would be: // x 0 1 // 0 x 0 // 0 x 0
-        if(i == j) assign equivalences[i*GROUP_SIZE+j] = 1'b1;                             //diagonal
-        if(j > i)  assign equivalences[i*GROUP_SIZE+j] = !(data_in_unpacked[i] ^ data_in_unpacked[j]);  //upper part
-        if(j < i)  assign equivalences[i*GROUP_SIZE+j] = 1'b0;                             //lower part
-    end
-end
-
-//--Step 2: calculate the diagonal of the matrix.
-// E.g., 3 2 3 3 will result on:
-// 1 0 0 0
-// 0 1 0 0
-// 0 0 0 0
-// 0 0 0 0
-always @ (*) begin
-  diag = {GROUP_SIZE{1'b1}};
-  for(k = 1; k < GROUP_SIZE; k = k + 1) begin
-    for(l = 0; l < k; l = l + 1) begin   
-      diag[k] = zer_info[k]? 0 : diag[k] & !equivalences[l*GROUP_SIZE+k];
-    end
-  end
-end
-
-//--Step 3: bind step 1 and step 2
-for(i = 0; i < GROUP_SIZE; i = i + 1) begin
-  for(j = 0; j < GROUP_SIZE; j = j + 1) begin
-        if(j >= i) assign rep_info[i*GROUP_SIZE+j] = diag[i] && equivalences[i*GROUP_SIZE+j];  //upper part
-        if(j < i)  assign rep_info[i*GROUP_SIZE+j] = 1'b0;                                        //lower part
-    end
-end
 
 /* DISPATCHER PART */ 
 
@@ -153,7 +97,7 @@ always @ (*)
 begin: COMB_LAST_ELEMENT
     last_element = {LOG_GS{1'b0}};
     for(k = 0; k < GROUP_SIZE; k = k + 1) begin
-        last_element = (diag[k])? k[LOG_GS-1:0] : last_element;
+        last_element = (!zer_info[k])? k[LOG_GS-1:0] : last_element;
     end 
 end
 
@@ -162,7 +106,7 @@ always @ (*)
 begin: COMB_NEXT_ELEMENT
     next_element = {LOG_GS{1'b0}};
     for(k = GROUP_SIZE - 1; k >= 0; k = k - 1) begin
-        next_element = k[LOG_GS-1:0] > element_actual? ( diag[k] ? k[LOG_GS-1:0] : next_element) : next_element;
+        next_element = k[LOG_GS-1:0] > element_actual? ( !zer_info[k] ? k[LOG_GS-1:0] : next_element) : next_element;
     end 
 end
 

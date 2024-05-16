@@ -352,7 +352,7 @@ module RTLinf #(
   parameter LOG_MAX_READS_PER_ITER = 16,   // number of bits for reads_per_iter
   parameter NUM_ADDRESSES          = 1024, // number of addresses in memories
   parameter LOG_MAX_ADDRESS        = 10,   // number of bits for addresses
-  parameter REPETITION_DETECTION   = "UV", // options: no, UV, or UNZV
+  parameter REPETITION_DETECTION   = "NZV", // options: no, UV, or UNZV
   //
   localparam WIDTH_ACT_READ_SELECTS     = (NUM_ACT_MEMORIES * (LOG_NUM_KERNELS+1)),
   localparam WIDTH_ACT_WRITE_SELECTS    = (NUM_ACT_MEMORIES * (LOG_NUM_KERNELS+1)),
@@ -491,7 +491,8 @@ generate
       .LOG_MAX_ITERS          ( LOG_MAX_ITERS          ),
       .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER ),
       .LOG_MAX_ADDRESS        ( LOG_MAX_ADDRESS        ),
-      .NUM_ADDRESSES          ( NUM_ADDRESSES          )
+      .NUM_ADDRESSES          ( NUM_ADDRESSES          ),
+      .REPETITION_DETECTION   ( REPETITION_DETECTION   )
     ) kernel_m (
       .clk                    ( clk                    ),
       .rst                    ( rst                    ),

@@ -31,10 +31,14 @@ module KERNEL_RD #(
   parameter LOG_MAX_READS_PER_ITER = 16,   // number of bits for reads_per_iter
   parameter LOG_MAX_ADDRESS        = 12,   // number of bits for addresses
   parameter NUM_ADDRESSES          = 4096,  // number of addresses in memories
-  parameter REPETITION_DETECTION   = "UV",  // // options: no, UV, or UNZV 
+  parameter REPETITION_DETECTION   = "UV",  // // options: no, UV, UNZV, NZV
   localparam UNZV_mode             =  (REPETITION_DETECTION =="UNZV") ? 1 : 0,
+  localparam NZV_mode              =  (REPETITION_DETECTION =="NZV") ? 1 : 0,
   localparam ZERO_INFO             = GROUP_SIZE,
-  localparam REP_INFO              = UNZV_mode ?  GROUP_SIZE + ZERO_INFO + 1 :  GROUP_SIZE + 1
+  localparam REP_INFO_UV           = GROUP_SIZE + 1,
+  localparam REP_INFO_NZV          = LOG_GS + ZERO_INFO + 1,
+  localparam REP_INFO_UNZV         = REP_INFO_UV + ZERO_INFO,
+  localparam REP_INFO              = UNZV_mode ? REP_INFO_UNZV :  NZV_mode ? REP_INFO_NZV : REP_INFO_UV
 )(
   input                                   clk,                // clock input
   input                                   rst,                // reset input
@@ -186,7 +190,7 @@ endgenerate
 generate
 for ( i=0; i<NUM_INPUTS; i=i+1) begin 
   repetition_detector #(
-    .UNZV_mode              (UNZV_mode                      ),
+    .REPETITION_DETECTION   ( REPETITION_DETECTION          ),
     .GROUP_SIZE             ( GROUP_SIZE                    ),
     .LOG_GS                 ( LOG_GS                        ),
     .DATA_WIDTH             ( DATA_WIDTH                    ),
@@ -308,7 +312,9 @@ generate
   );  
 
   ACC_RD #(
+    .REPETITION_DETECTION   (REPETITION_DETECTION    ),
     .GROUP_SIZE             ( GROUP_SIZE             ),
+    .LOG_GS                 ( LOG_GS                 ),
     .DATA_WIDTH             ( 2*DATA_WIDTH           ),
     .NUM_ADDRESSES          ( NUM_ADDRESSES          ),
     .LOG_MAX_ADDRESS        ( LOG_MAX_ADDRESS        ),
