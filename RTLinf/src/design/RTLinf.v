@@ -352,7 +352,7 @@ module RTLinf #(
   parameter LOG_MAX_READS_PER_ITER = 16,   // number of bits for reads_per_iter
   parameter NUM_ADDRESSES          = 1024, // number of addresses in memories
   parameter LOG_MAX_ADDRESS        = 10,   // number of bits for addresses
-  parameter REPETITION_DETECTION   = "NZV", // options: no, UV, or UNZV
+  parameter REPETITION_DETECTION   = "NB", // options: no, UV, UNZV or NB
   //
   localparam WIDTH_ACT_READ_SELECTS     = (NUM_ACT_MEMORIES * (LOG_NUM_KERNELS+1)),
   localparam WIDTH_ACT_WRITE_SELECTS    = (NUM_ACT_MEMORIES * (LOG_NUM_KERNELS+1)),
@@ -470,8 +470,49 @@ generate
       .configure              ( configure[i]           ),
       .num_iters              ( num_iters              ),
       .num_reads_per_iter     ( num_reads_per_iter     ),
-      .read_address           ( 0                      ),  // TODO
-      .write_address          ( 0                      ),  // TODO
+      .read_address           ( {LOG_MAX_ADDRESS{1'b0}}),
+      .write_address          ( {LOG_MAX_ADDRESS{1'b0}}),
+      .min_clip               ( min_clip               ),
+      .max_clip               ( max_clip               ),
+      .conf_mode_in           ( conf_mode_in           ),
+      .conf_mode_out          ( conf_mode_out          ),
+      //
+      .data_out               ( act_write_data_w[((i+1)*(GROUP_SIZE*DATA_WIDTH))-1 -: GROUP_SIZE*DATA_WIDTH] ),
+      .addr_out               ( act_write_addr_w[((i+1)*LOG_MAX_ADDRESS)-1 -: LOG_MAX_ADDRESS]               ),
+      .valid_out              ( act_write_w[i]                                                               )
+    );
+    end else if(REPETITION_DETECTION == "NB")begin
+     KERNEL_NB #(
+      .GROUP_SIZE             ( GROUP_SIZE             ),
+      .DATA_WIDTH             ( DATA_WIDTH             ),
+      .NUM_INPUTS             ( NUM_INPUTS             ),
+      .NUM_LANES              ( NUM_LANES              ),
+      .NUM_OUTPUTS            ( NUM_OUTPUTS            ),
+      .LOG_MAX_ITERS          ( LOG_MAX_ITERS          ),
+      .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER ),
+      .LOG_MAX_ADDRESS        ( LOG_MAX_ADDRESS        ),
+      .NUM_ADDRESSES          ( NUM_ADDRESSES          ),
+      .HIGH_MODE              ( "UNZV"/*HIGH_MODE*/     ),
+      .LOW_MODE               ( "UNZV"/*LOW_MODE*/     )
+    ) kernel_m (
+      .clk                    ( clk                    ),
+      .rst                    ( rst                    ),
+      //
+      .act_addr               ( act_read_addr_w[((i+1)*LOG_MAX_ADDRESS)-1 -: LOG_MAX_ADDRESS]                ),
+      .act_read               ( act_read_w[i]                                                                ),
+      .act_data               ( act_read_data_w[((i+1)*(GROUP_SIZE*DATA_WIDTH))-1 -: GROUP_SIZE*DATA_WIDTH]  ),
+      .act_valid              ( act_read_valid_w[i]                                                          ),
+      //
+      .weight_addr            ( weight_read_addr_w[((i+1)*LOG_MAX_ADDRESS)-1 -: LOG_MAX_ADDRESS]             ),
+      .weight_read            ( weight_read_w[i]                                                             ),
+      .weight_data            ( weight_read_data_w[((i+1)*(NUM_LANES*DATA_WIDTH))-1 -: NUM_LANES*DATA_WIDTH] ),
+      .weight_valid           ( weight_read_valid_w[i]                                                       ),
+      //
+      .configure              ( configure[i]           ),
+      .num_iters              ( num_iters              ),
+      .num_reads_per_iter     ( num_reads_per_iter     ),
+      .read_address           ( {LOG_MAX_ADDRESS{1'b0}}),
+      .write_address          ( {LOG_MAX_ADDRESS{1'b0}}),
       .min_clip               ( min_clip               ),
       .max_clip               ( max_clip               ),
       .conf_mode_in           ( conf_mode_in           ),
@@ -511,7 +552,7 @@ generate
       .num_iters              ( num_iters              ),
       .num_reads_per_iter     ( num_reads_per_iter     ),
       .read_address           ( {LOG_MAX_ADDRESS{1'b0}}),
-      .write_address          ( {LOG_MAX_ADDRESS{1'b0}}),  // TODO
+      .write_address          ( {LOG_MAX_ADDRESS{1'b0}}),
       .min_clip               ( min_clip               ),
       .max_clip               ( max_clip               ),
       .conf_mode_in           ( conf_mode_in           ),

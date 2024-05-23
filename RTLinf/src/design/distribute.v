@@ -386,6 +386,7 @@ module DISTRIBUTE_IN_RD #(
     parameter NUM_DATA_INPUTS        = 9,                // number of data inputs
     parameter GROUP_SIZE             = 4,                // group size
     parameter DATA_WIDTH             = 8,                // input and output data width
+    parameter ACT_WIDTH              = DATA_WIDTH,      // input and output data width
     parameter NUM_DATA_OUTPUTS       = 9,                // number of data outputs
     parameter LOG_MAX_ITERS          = 16,               // number of bits for max iters register
     parameter LOG_MAX_READS_PER_ITER = 16,               // number of bits for max reads per iter
@@ -400,7 +401,7 @@ module DISTRIBUTE_IN_RD #(
   input [LOG_MAX_ITERS-1:0]                num_iters,                    // CONFIGURE interface:: number of iterations for reads
   input [LOG_MAX_READS_PER_ITER-1:0]       num_reads_per_iter,           // CONFIGURE interface:: number of reads per iteration  
 
-  input [(NUM_DATA_INPUTS*DATA_WIDTH)-1:0] act_data_in,     // ACTIVATION interface:: data
+  input [(NUM_DATA_INPUTS*ACT_WIDTH)-1:0]  act_data_in,     // ACTIVATION interface:: data
   input [(NUM_DATA_INPUTS*REP_INFO)-1:0]   act_rdata_in,    // ACTIVATION interface:: rdata
   input  [NUM_DATA_INPUTS-1:0]             act_valid_in,                 // ACTIVATION interface:: valid
   output [NUM_DATA_INPUTS-1:0]             act_avail_out,                // ACTIVATION interface:: avail
@@ -409,7 +410,7 @@ module DISTRIBUTE_IN_RD #(
   input                                    weights_valid_in,             // WEIGHTS interface:: valid
   output                                   weights_avail_out,            // WEIGHTS interface:: avail
 
-  output [(NUM_DATA_OUTPUTS*DATA_WIDTH)-1:0] data_out,        // OUT1 interface:: data
+  output [(NUM_DATA_OUTPUTS*ACT_WIDTH)-1:0] data_out,        // OUT1 interface:: data
   output [(NUM_DATA_OUTPUTS*REP_INFO)-1:0] rdata_out,       // OUT1 interface:: rdata
   output [NUM_DATA_OUTPUTS-1:0]            valid_out,                    // OUT1 interface:: valid
   input  [NUM_DATA_OUTPUTS-1:0]            avail_in,                     // OUT1 interface:: avail
@@ -421,11 +422,11 @@ module DISTRIBUTE_IN_RD #(
 );
 
 // wires
-wire [DATA_WIDTH + REP_INFO - 1: 0]   data_write_w[NUM_DATA_INPUTS-1:0]; // data to write to FIFO
+wire [ACT_WIDTH + REP_INFO - 1: 0]    data_write_w[NUM_DATA_INPUTS-1:0]; // data to write to FIFO
 wire [NUM_DATA_INPUTS-1:0]            write_w;                           // write signal to FIFO
 wire [NUM_DATA_INPUTS-1:0]            full_w;                            // full signal from FIFO
 wire [NUM_DATA_INPUTS-1:0]            almost_full_w;                     // almost_full signal from FIFO
-wire [DATA_WIDTH + REP_INFO - 1: 0]   data_read_w[NUM_DATA_INPUTS-1:0];  // data read from FIFO
+wire [ACT_WIDTH + REP_INFO - 1: 0]    data_read_w[NUM_DATA_INPUTS-1:0];  // data read from FIFO
 wire [NUM_DATA_INPUTS-1:0]            next_read_w;                       // next_read signal to FIFO
 wire [NUM_DATA_INPUTS-1:0]            empty_w;                           // empty signal from FIFO
 //
@@ -453,7 +454,7 @@ genvar i;
 // combinational logic (activation FIFOs)
 generate
   for (i=0; i<NUM_DATA_INPUTS; i=i+1) begin
-    assign data_write_w[i] = {act_rdata_in[((i+1)*REP_INFO)-1:i*REP_INFO],act_data_in[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH]};   // data to write to the FIFO
+    assign data_write_w[i] = {act_rdata_in[((i+1)*REP_INFO)-1:i*REP_INFO],act_data_in[((i+1)*ACT_WIDTH)-1:i*ACT_WIDTH]};   // data to write to the FIFO
     assign write_w[i]      = act_valid_in[i];                                  // FIFO write signal
     assign act_avail_out[i]= ~almost_full_w[i] & ~full_w[i];                   // avail signal from FIFO       
     assign next_read_w[i]  = perform_operation_w;
@@ -481,8 +482,8 @@ assign perform_operation_w = (conf_mode_r == `CONF_MODE_1) ? first_read_cycle_w 
 // in CONF_MODE_1 input i is forwarded to output i
 generate
   for (i=0; i<NUM_DATA_OUTPUTS;i=i+1) begin
-    assign data_out[((i+1)*DATA_WIDTH)-1 -: DATA_WIDTH] = (conf_mode_r == `CONF_MODE_0) ? data_read_w[0][DATA_WIDTH-1:0] : 0;  // for the moment only implemented mode 0 (broadcast)
-    assign rdata_out[((i+1)*REP_INFO)-1 -: REP_INFO] = (conf_mode_r == `CONF_MODE_0) ? data_read_w[0][(DATA_WIDTH+REP_INFO)-1:DATA_WIDTH] : 0; // idem
+    assign data_out[((i+1)*ACT_WIDTH)-1 -: ACT_WIDTH] = (conf_mode_r == `CONF_MODE_0) ? data_read_w[0][ACT_WIDTH-1:0] : 0;  // for the moment only implemented mode 0 (broadcast)
+    assign rdata_out[((i+1)*REP_INFO)-1 -: REP_INFO] = (conf_mode_r == `CONF_MODE_0) ? data_read_w[0][(ACT_WIDTH+REP_INFO)-1:ACT_WIDTH] : 0; // idem
     assign valid_out[i] = perform_operation_w;
   end
   assign weights_data_out = weights_data_read_w;
@@ -499,7 +500,7 @@ generate
     FIFO #(
       .NUM_SLOTS     ( 4               ),
       .LOG_NUM_SLOTS ( 2               ),
-      .DATA_WIDTH    ( (REP_INFO) + (DATA_WIDTH)      )
+      .DATA_WIDTH    ( (REP_INFO) + (ACT_WIDTH)      )
     ) fifo_in_data (
       .clk           ( clk             ),
       .rst           ( rst             ),

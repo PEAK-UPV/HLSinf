@@ -15,12 +15,14 @@
 
 module MUL_RD #(
   parameter DATA_WIDTH             = 8,                          // input data width (output is 2x input width)
+  parameter ACT_WIDTH              = DATA_WIDTH,
   parameter GROUP_SIZE             = 4,
-  parameter LOG_MAX_ITERS          = 16,                         // number of bits for max iters register
-  parameter LOG_MAX_READS_PER_ITER = 16,                         // number of bits for max reads per iter
-  parameter REP_INFO               = GROUP_SIZE + 1,    // number of bits for repetition detectoor
-  localparam INPUT_WIDTH           = DATA_WIDTH + REP_INFO,  // number of bits for input (activation + weight + rep. info)
-  localparam OUTPUT_WIDTH          = 2 * DATA_WIDTH + REP_INFO   // number of bits for output ( result (2*data width) +  rep. info)
+  parameter LOG_MAX_ITERS          = 16,                                     // number of bits for max iters register
+  parameter LOG_MAX_READS_PER_ITER = 16,                                     // number of bits for max reads per iter
+  parameter REP_INFO               = GROUP_SIZE + 1,                         // number of bits for repetition detectoor
+  localparam RESULT_WIDTH          = ACT_WIDTH + DATA_WIDTH,
+  localparam INPUT_WIDTH           = ACT_WIDTH + REP_INFO,              // number of bits for input (activation + weight + rep. info)
+  localparam OUTPUT_WIDTH          = RESULT_WIDTH + REP_INFO   // number of bits for output ( result (2*data width) +  rep. info)
 
 )(
   input clk,
@@ -53,16 +55,16 @@ wire                        weight_next_read_w;         // WEIGHT FIFO :: next_r
 wire                        weight_empty_w;             // WEIGHT FIFO :: empty signal from FIFO
 
 // wires
-wire                            perform_operation_w;   // whether we perform a "read" operation in this cycle
-wire [DATA_WIDTH-1:0]           act_w;
-wire [2 * DATA_WIDTH - 1 : 0]   result;                // Result
-wire                            is_last;               // Indicates if is last element from group
-wire                            next_read_w;
+wire                             perform_operation_w;   // whether we perform a "read" operation in this cycle
+wire [ACT_WIDTH-1:0]        act_w;
+wire [RESULT_WIDTH - 1 : 0]      result;                // Result
+wire                             is_last;               // Indicates if is last element from group
+wire                             next_read_w;
 
 
 // registers
-reg [INPUT_WIDTH-1:0]             data_r;                    // activations
-reg                               act_valid_r;               // activation valid flag
+reg [INPUT_WIDTH-1:0]            data_r;                    // activations
+reg                              act_valid_r;               // activation valid flag
 reg [LOG_MAX_ITERS-1:0]          num_iters_r;               // 
 reg [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter_r;      // number of reads per iteration (down counter)
 reg [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter_copy_r; // copy of number of reads per iteration
@@ -78,11 +80,11 @@ assign weight_next_read_w   = perform_operation_w  & (num_reads_per_iter_r == 1)
 
 // combinational logic
 assign perform_operation_w                          = act_valid_r;
-assign act_w                                        = data_r[DATA_WIDTH-1:0];
+assign act_w                                        = data_r[ACT_WIDTH-1:0];
 assign is_last                                      = data_r[INPUT_WIDTH-1];
 assign result                                       = act_w * weight_data_read_fifo;
-assign data_out[2 * DATA_WIDTH - 1 : 0 ]            = result;
-assign data_out[OUTPUT_WIDTH - 1 : 2 * DATA_WIDTH ] = data_r[DATA_WIDTH + REP_INFO - 1 : DATA_WIDTH];
+assign data_out[RESULT_WIDTH - 1 : 0 ]              = result;
+assign data_out[OUTPUT_WIDTH - 1 : RESULT_WIDTH ]   = data_r[ACT_WIDTH + REP_INFO - 1 : ACT_WIDTH];
 assign valid_out                                    = perform_operation_w;
 assign act_avail_out = 1'b1; // always ready
 
