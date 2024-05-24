@@ -9,7 +9,7 @@
 
 `include "RTLinf.vh"
 
-module ACC_RD #(
+module ACC_RD_UNZV #(
     parameter DATA_WIDTH             = 8,                            // input data width (output width = input width)
     parameter GROUP_SIZE             = 4,                            // group size
     parameter LOG_MAX_ITERS          = 16,                           // number of bits for max iters register
@@ -58,13 +58,13 @@ wire [GROUP_SIZE * DATA_WIDTH-1 : 0]  data_added_w;                      // cont
 reg                                  read_r;
 reg  [LOG_MAX_ADDRESS-1 : 0]         read_addr_r;
 wire [GROUP_SIZE * DATA_WIDTH-1 : 0] read_data_w;
-reg  [DATA_WIDTH-1 : 0]              read_data_fifo_r;
+reg  [INPUT_WIDTH - 1 : 0]           read_data_fifo_r;
 reg                                  read_first_iteration_r;
 reg                                  read_last_iteration_r;
 //
 reg                                  add_r;
 reg [LOG_MAX_ADDRESS-1 : 0]          add_addr_r;
-reg [DATA_WIDTH-1 : 0]               add_data_fifo_r;
+reg [INPUT_WIDTH - 1 : 0]            add_data_fifo_r;
 reg                                  add_first_iteration_r;
 reg                                  add_last_iteration_r;
 
@@ -95,15 +95,15 @@ assign data_out            = write_data_r;                               // outp
 assign valid_out           = write_r & write_last_iteration_r;           // valid out to downstream module
 
 // get input
-assign value_in            = data_in[DATA_WIDTH-1:0];
-assign rep_info            = data_in[DATA_WIDTH + GROUP_SIZE - 1 : DATA_WIDTH];
-assign zer_info            = data_in[INPUT_WIDTH - 1 - 1 : DATA_WIDTH + GROUP_SIZE];
+assign value_in            = add_data_fifo_r[DATA_WIDTH-1:0];
+assign rep_info            = add_data_fifo_r[DATA_WIDTH + GROUP_SIZE - 1 : DATA_WIDTH];
+assign zer_info            = add_data_fifo_r[INPUT_WIDTH - 1 - 1 : DATA_WIDTH + GROUP_SIZE];
 assign is_last             = data_in[INPUT_WIDTH - 1];            //last bit of input indicates if we have received the last element of the group
 
 // adders (one per item in the group size)
 generate
   for (i=0; i<GROUP_SIZE; i=i+1) begin
-    assign data_added_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] = add_first_iteration_r ? ( zer_info[i] ? 0 : add_data_fifo_r ) : ( zer_info[i] ? read_data_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] : add_data_fifo_r + read_data_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH]);
+    assign data_added_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] = add_first_iteration_r ? ( zer_info[i] ? 0 : value_in ) : ( zer_info[i] ? read_data_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] : value_in + read_data_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH]);
   end
 endgenerate
 
@@ -144,7 +144,7 @@ always @ (posedge clk) begin
   // pipelined operations: READ -> ADD -> WRITE
   read_r                 <= perform_operation_w;      // read cycle
   read_addr_r            <= num_reads_per_iter_r;     // address is the current iteration cycle
-  read_data_fifo_r       <= value_in;              // we capture the input data for the next stage (add)
+  read_data_fifo_r       <= data_in;              // we capture the input data for the next stage (add)
   read_first_iteration_r <= first_iteration_w;        // first iteration
   read_last_iteration_r  <= last_iteration_w;         // last iteration
   //
@@ -216,5 +216,3 @@ end
 // synthesis translate_on
   
 endmodule
-  
-  

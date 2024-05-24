@@ -320,7 +320,7 @@ generate
     .LOG_MAX_ADDRESS        ( LOG_MAX_ADDRESS        ),
     .LOG_MAX_ITERS          ( LOG_MAX_ITERS          ),
     .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER )
-  ) acc_m (
+  ) acc_t_m (
     .clk                    ( clk                    ),
     .rst                    ( rst                    ),
     .configure              ( configure              ),
