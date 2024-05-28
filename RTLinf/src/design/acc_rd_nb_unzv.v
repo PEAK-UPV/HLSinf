@@ -49,7 +49,7 @@ end
 // get input
 assign value_in  = add_data_fifo_r[DATA_WIDTH-1:0];
 assign rep_info  = add_data_fifo_r[DATA_WIDTH + GROUP_SIZE - 1 : DATA_WIDTH];
-assign zer_info  = add_data_fifo_r[INPUT_WIDTH - 1 - 1 : DATA_WIDTH + GROUP_SIZE];
+assign zer_info  = add_data_fifo_r[INPUT_WIDTH - 1 : DATA_WIDTH + GROUP_SIZE];
 
 always @ (posedge clk) 
 begin: control_logic

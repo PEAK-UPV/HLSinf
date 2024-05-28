@@ -236,7 +236,7 @@ if (HIGH_MODE == "UNZV") begin
   ) acc_rd_nb_unzv_high_m (
     .clk           ( clk                 ),
     .rst           ( rst                 ),
-    .data_in       ( data_in_high        ),
+    .data_in       ( data_in_high[0 +: INPUT_WIDTH_HIGH - 1]        ),
     .data_out      ( data_to_join_high_w )
   );
 end else begin
@@ -261,7 +261,7 @@ if (LOW_MODE == "UNZV") begin
   ) acc_rd_nb_unzv_low_m (
     .clk           ( clk                ),
     .rst           ( rst                ),
-    .data_in       ( data_in_low        ),
+    .data_in       ( data_in_low[0 +: INPUT_WIDTH_LOW - 1]        ),
     .data_out      ( data_to_join_low_w )
   );
 end else begin

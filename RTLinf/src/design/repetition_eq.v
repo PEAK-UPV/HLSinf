@@ -34,7 +34,7 @@ module repetition_eq#(
       repetition_eq_unzv #(
         .GROUP_SIZE             ( GROUP_SIZE               ),
         .DATA_WIDTH             ( DATA_WIDTH               )
-      ) repetition_eq_high_m (
+      ) repetition_eq_unzv_high_m (
         .data_in                ( data_in_high             ),
         .rdata_out              ( rdata_high_out           )
       );
@@ -42,7 +42,7 @@ module repetition_eq#(
     repetition_eq_nzv #(
         .GROUP_SIZE             ( GROUP_SIZE               ),
         .DATA_WIDTH             ( DATA_WIDTH               )
-      ) repetition_eq_high_m (
+    ) repetition_eq_nzv_high_m (
         .data_in                ( data_in_high             ),
         .rdata_out              ( rdata_high_out           )
       );
@@ -50,7 +50,7 @@ module repetition_eq#(
       repetition_eq_uv #(
         .GROUP_SIZE             ( GROUP_SIZE               ),
         .DATA_WIDTH             ( DATA_WIDTH               )
-      ) repetition_eq_high_m (
+      ) repetition_eq_uv_high_m (
         .data_in                ( data_in_high             ),
         .rdata_out              ( rdata_high_out           )
       );
@@ -62,7 +62,7 @@ module repetition_eq#(
       repetition_eq_unzv #(
         .GROUP_SIZE             ( GROUP_SIZE               ),
         .DATA_WIDTH             ( DATA_WIDTH               )
-      ) repetition_eq_low_m (
+      ) repetition_eq_unzv_low_m (
         .data_in                ( data_in_low              ),
         .rdata_out              ( rdata_low_out            )
       );
@@ -70,7 +70,7 @@ module repetition_eq#(
     repetition_eq_nzv #(
         .GROUP_SIZE             ( GROUP_SIZE               ),
         .DATA_WIDTH             ( DATA_WIDTH               )
-      ) repetition_eq_low_m (
+    ) repetition_eq_nzv_low_m (
         .data_in                ( data_in_low              ),
         .rdata_out              ( rdata_low_out            )
       );
@@ -78,7 +78,7 @@ module repetition_eq#(
       repetition_eq_uv #(
         .GROUP_SIZE             ( GROUP_SIZE               ),
         .DATA_WIDTH             ( DATA_WIDTH               )
-      ) repetition_eq_low_m (
+      ) repetition_eq_uv_low_m (
         .data_in                ( data_in_low              ),
         .rdata_out              ( rdata_low_out            )
       );

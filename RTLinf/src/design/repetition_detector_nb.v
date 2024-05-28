@@ -132,7 +132,7 @@ DISPATCHER #(
   .GROUP_SIZE             ( GROUP_SIZE            ),
   .LOG_GS                 ( LOG_GS                ),
   .DATA_WIDTH             ( ACT_WIDTH             ),
-  .MODE                   ( HIGH_MODE             )
+  .MODE                   ( LOW_MODE             )
 ) dispatcher_low_m (
   .clk                    ( clk                   ),
   .rst                    ( rst                   ),  

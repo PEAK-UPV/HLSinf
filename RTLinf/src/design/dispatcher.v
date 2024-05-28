@@ -50,7 +50,8 @@ if(MODE == "UNZV") begin
   .rdata_in               ( rdata_in             ),
   .data_out               ( data_out             ),
   .rdata_out              ( rdata_out            ),
-  .valid_out              ( valid_out            )
+  .valid_out              ( valid_out            ),
+  .next_read              ( next_read            )
 );
 end else begin
   DISPATCHER_NZV#(
@@ -93,7 +94,8 @@ module DISPATCHER_UNZV #(
     input [REP_INFO_IN - 1 : 0]         rdata_in,            // IN interface:: repetition info
     output [DATA_WIDTH - 1 : 0]         data_out,            // OUT interface:: activation
     output [REP_INFO_OUT - 1 : 0]       rdata_out,           // OUT interface:: repetition info
-    output                              valid_out           // OUT1 interface:: valid
+    output                              valid_out,           // OUT1 interface:: valid
+    output                              next_read
   );
 
 
