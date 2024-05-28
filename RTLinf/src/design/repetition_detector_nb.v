@@ -88,6 +88,8 @@ assign valid_out     = perform_operation_w & (valid_high_out | valid_low_out);  
 //
 assign perform_operation_w = module_enabled_r & ~empty_w & avail_in_low & avail_in_high;
 
+assign next_read_high = rdata_high_out[REP_INFO_HIGH_OUT-1];
+assign next_read_low = rdata_low_out[REP_INFO_LOW_OUT-1];
 
 //Split data in high and low bits
 for(i = 0; i < GROUP_SIZE; i = i + 1) begin
@@ -123,8 +125,7 @@ DISPATCHER #(
   .rdata_in               ( rdata_eq_dis_high     ),
   .data_out               ( data_high_out         ),
   .rdata_out              ( rdata_high_out        ),
-  .valid_out              ( valid_high_out        ),
-  .next_read              ( next_read_high        )
+  .valid_out              ( valid_high_out        )
 );
 
 //LOW
@@ -142,8 +143,7 @@ DISPATCHER #(
   .rdata_in               ( rdata_eq_dis_low      ),
   .data_out               ( data_low_out          ),
   .rdata_out              ( rdata_low_out         ), 
-  .valid_out              ( valid_low_out         ),
-  .next_read              ( next_read_low         )
+  .valid_out              ( valid_low_out         )
 );
 
 

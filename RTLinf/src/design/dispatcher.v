@@ -32,8 +32,7 @@ module DISPATCHER #(
 
   output [DATA_WIDTH - 1 : 0]             data_out,            // OUT interface:: activation
   output [REP_INFO_OUT - 1 : 0]           rdata_out,           // OUT interface:: repetition info
-  output                                  valid_out,           // OUT1 interface:: valid
-  output                                  next_read
+  output                                  valid_out           // OUT1 interface:: valid
 );
 
 if(MODE == "UNZV") begin
@@ -50,8 +49,7 @@ if(MODE == "UNZV") begin
   .rdata_in               ( rdata_in             ),
   .data_out               ( data_out             ),
   .rdata_out              ( rdata_out            ),
-  .valid_out              ( valid_out            ),
-  .next_read              ( next_read            )
+  .valid_out              ( valid_out            )
 );
 end else begin
   DISPATCHER_NZV#(
@@ -67,8 +65,7 @@ end else begin
   .rdata_in               ( rdata_in             ),
   .data_out               ( data_out             ),
   .rdata_out              ( rdata_out            ),
-  .valid_out              ( valid_out            ),
-  .next_read              ( next_read            )
+  .valid_out              ( valid_out            )
 );  
 end
 endmodule
@@ -94,8 +91,7 @@ module DISPATCHER_UNZV #(
     input [REP_INFO_IN - 1 : 0]         rdata_in,            // IN interface:: repetition info
     output [DATA_WIDTH - 1 : 0]         data_out,            // OUT interface:: activation
     output [REP_INFO_OUT - 1 : 0]       rdata_out,           // OUT interface:: repetition info
-    output                              valid_out,           // OUT1 interface:: valid
-    output                              next_read
+    output                              valid_out           // OUT1 interface:: valid
   );
 
 
@@ -109,37 +105,28 @@ module DISPATCHER_UNZV #(
 
   // registers 
   reg                                    new_group_r;            // element being processed in this cycle
-  reg [DATA_WIDTH - 1 : 0]               data_out_r;
-  reg [REP_INFO_IN - 1 : 0]              rdata_in_r;
-
-  reg [LOG_GS - 1 : 0]                   element_actual;            // element being processed in this cycle
+  reg [LOG_GS - 1 : 0]                   previous_element;            // element being processed in this cycle
   reg [LOG_GS - 1 : 0]                   last_element;              // element to process in last cycle
-  reg [LOG_GS - 1 : 0]                   next_element;              // element to process in next cycle
-  reg                                    valid_out_r;
-
-  reg                                     is_last_r;
+  reg [LOG_GS - 1 : 0]                   actual_element;              // element to process in next cycle
 
   genvar i;
   genvar j;
   integer k;
 
   // combinational logic
-  assign valid_out = valid_out_r;
-
+  assign valid_out = perform_operation & (new_group_r || (previous_element < actual_element));
 
   assign rep_info = rdata_in[GROUP_SIZE * GROUP_SIZE - 1 : 0];
   assign zer_info = rdata_in[REP_INFO_IN - 1 : GROUP_SIZE * GROUP_SIZE];
 
-  assign data_out = data_out_r;
-  assign equivalence_row = rep_info[GROUP_SIZE*element_actual +: GROUP_SIZE];
+  assign data_out = data_in;
+  assign equivalence_row = rep_info[GROUP_SIZE*previous_element +: GROUP_SIZE];
 
-  assign rdata_out[ GROUP_SIZE - 1: 0]        =  rdata_in_r[GROUP_SIZE*element_actual +: GROUP_SIZE];
-  assign rdata_out[ GROUP_SIZE +: GROUP_SIZE] =  rdata_in_r[REP_INFO_IN - 1 : GROUP_SIZE * GROUP_SIZE];
-  assign rdata_out[ REP_INFO_OUT - 1]         =  is_last_r;
-
-  assign next_read                            =  is_last;
+  assign rdata_out[ GROUP_SIZE - 1: 0]        =  rdata_in[GROUP_SIZE*previous_element +: GROUP_SIZE];
+  assign rdata_out[ GROUP_SIZE +: GROUP_SIZE] =  rdata_in[REP_INFO_IN - 1 : GROUP_SIZE * GROUP_SIZE];
+  assign rdata_out[ REP_INFO_OUT - 1]         =  is_last;
   
-  assign is_last = next_element >= last_element;
+  assign is_last = actual_element >= last_element;
 
   for(i = 0; i < GROUP_SIZE; i = i + 1) begin
       assign diag[i] = rep_info[i*GROUP_SIZE+i];
@@ -156,12 +143,12 @@ module DISPATCHER_UNZV #(
   //Get next activation
   always @ (*) 
   begin: COMB_NEXT_ELEMENT
-      next_element = {LOG_GS{1'b0}};
+      actual_element = {LOG_GS{1'b0}};
       for(k = GROUP_SIZE - 1; k >= 0; k = k - 1) begin
-        if(new_group_r || k[LOG_GS-1:0] > element_actual) begin
-          next_element =  diag[k] ? k[LOG_GS-1:0] : next_element;
+        if(new_group_r || k[LOG_GS-1:0] > previous_element) begin
+          actual_element =  diag[k] ? k[LOG_GS-1:0] : actual_element;
         end else begin
-          next_element = next_element;
+          actual_element = actual_element;
         end
       end 
   end
@@ -171,16 +158,11 @@ module DISPATCHER_UNZV #(
   always @ (posedge clk) begin
     if (~rst) begin
       new_group_r <= 1'b1;
-      element_actual <= {LOG_GS{1'b0}};
-      is_last_r <= 1'b0;
+      previous_element <= {LOG_GS{1'b0}};
     end else begin
-      valid_out_r <= perform_operation & (new_group_r || (element_actual < next_element));
       if (perform_operation) begin
-        is_last_r <= is_last;
         new_group_r <= new_group;
-        rdata_in_r <= rdata_in;
-        data_out_r <= data_in[DATA_WIDTH*next_element +: DATA_WIDTH];
-        element_actual <= next_element;
+        previous_element <= actual_element;
       end
     end
   end
@@ -204,8 +186,7 @@ module DISPATCHER_NZV #(
     input [REP_INFO_IN - 1 : 0]             rdata_in,            // IN interface:: repetition info
     output [DATA_WIDTH - 1 : 0]             data_out,            // OUT interface:: activation
     output [REP_INFO_OUT - 1 : 0]           rdata_out,           // OUT interface:: repetition info
-    output                                  valid_out,           // OUT1 interface:: valid
-    output                                  next_read
+    output                                  valid_out            // OUT1 interface:: valid
   );
 
 
@@ -216,31 +197,25 @@ module DISPATCHER_NZV #(
 
   // registers 
   reg                                    new_group_r;            // element being processed in this cycle
-  reg [DATA_WIDTH - 1 : 0]               data_out_r;
-  reg [REP_INFO_IN - 1 : 0]              rdata_in_r;
-
-  reg [LOG_GS - 1 : 0]                   element_actual;            // element being processed in this cycle
+  reg [LOG_GS - 1 : 0]                   previous_element;            // element being processed in this cycle
   reg [LOG_GS - 1 : 0]                   last_element;              // element to process in last cycle
-  reg [LOG_GS - 1 : 0]                   next_element;              // element to process in next cycle
-  reg                                    valid_out_r;
-  reg                                    is_last_r;
+  reg [LOG_GS - 1 : 0]                   actual_element;              // element to process in next cycle
 
   genvar i;
   genvar j;
   integer k;
 
   // combinational logic
-  assign valid_out = valid_out_r;
+  assign valid_out = perform_operation & (new_group_r || (previous_element < actual_element));
+
   assign zer_info = rdata_in[REP_INFO_IN - 1 : 0];
 
+  assign data_out = data_in;
 
-  assign data_out = data_out_r;
-
-  assign rdata_out[0 +: ZERO_INFO]        =  rdata_in_r[0 +: ZERO_INFO];
-  assign rdata_out[ZERO_INFO +: LOG_GS]   =  element_actual;
-  assign rdata_out[REP_INFO_OUT - 1]      =  is_last_r;
-  assign next_read                        =  is_last;
-  assign is_last = next_element >= last_element;
+  assign rdata_out[0 +: ZERO_INFO]        =  rdata_in[0 +: ZERO_INFO];
+  assign rdata_out[ZERO_INFO +: LOG_GS]   =  actual_element;
+  assign rdata_out[REP_INFO_OUT - 1]      =  is_last;
+  assign is_last = actual_element >= last_element;
 
   //Get last element from group
   always @ (*) 
@@ -254,9 +229,9 @@ module DISPATCHER_NZV #(
   //Get next activation
   always @ (*) 
   begin: COMB_NEXT_ELEMENT
-      next_element = {LOG_GS{1'b0}};
+      actual_element = {LOG_GS{1'b0}};
       for(k = GROUP_SIZE - 1; k >= 0; k = k - 1) begin
-          next_element = (new_group_r || (k[LOG_GS-1:0] > element_actual))? ( !zer_info[k] ? k[LOG_GS-1:0] : next_element) : next_element;
+          actual_element = (new_group_r || (k[LOG_GS-1:0] > previous_element))? ( !zer_info[k] ? k[LOG_GS-1:0] : actual_element) : actual_element;
       end 
   end
 
@@ -266,16 +241,11 @@ module DISPATCHER_NZV #(
   always @ (posedge clk) begin
     if (~rst) begin
       new_group_r <= 1'b1;
-      element_actual <= {LOG_GS{1'b0}};
-      is_last_r <= 1'b0;
+      previous_element <= {LOG_GS{1'b0}};
     end else begin
-      valid_out_r <= perform_operation & (new_group_r || (element_actual < next_element));
       if (perform_operation) begin
-        is_last_r <= is_last;
         new_group_r <= new_group;
-        rdata_in_r <= rdata_in;
-        data_out_r <= data_in[DATA_WIDTH*next_element +: DATA_WIDTH];
-        element_actual <= next_element;
+        previous_element <= actual_element;
       end
     end
   end
