@@ -206,12 +206,7 @@ FIFO #(
           end
            $write("\n");
         end
-
-        $display("--Step two, diagonal");
-        for(k = 0; k < GROUP_SIZE; k = k + 1) begin
-              $write("%d ", diag[k]);
-        end
-
+        
         $display("\n--Step three, final info");
         for(k = 0; k < GROUP_SIZE; k = k + 1) begin
           for(l = 0; l < GROUP_SIZE; l = l + 1) begin   

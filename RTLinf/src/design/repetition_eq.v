@@ -9,7 +9,6 @@
 //ALL combinational
 module repetition_eq#(
     parameter GROUP_SIZE             = 4,                      // group size
-    parameter LOG_GS                 = 2,
     parameter DATA_WIDTH             = 8,                      // input and output data width
     parameter HIGH_MODE              = "UV", // options: UV, UNZV, NZV
     parameter LOW_MODE               = "UV", // options: UV, UNZV, NZV
@@ -34,7 +33,6 @@ module repetition_eq#(
   if (HIGH_MODE=="UNZV") begin
       repetition_eq_unzv #(
         .GROUP_SIZE             ( GROUP_SIZE               ),
-        .LOG_GS                 ( LOG_GS                   ),
         .DATA_WIDTH             ( DATA_WIDTH               )
       ) repetition_eq_high_m (
         .data_in                ( data_in_high             ),
@@ -43,7 +41,6 @@ module repetition_eq#(
   end else if (HIGH_MODE=="NZV") begin
     repetition_eq_nzv #(
         .GROUP_SIZE             ( GROUP_SIZE               ),
-        .LOG_GS                 ( LOG_GS                   ),
         .DATA_WIDTH             ( DATA_WIDTH               )
       ) repetition_eq_high_m (
         .data_in                ( data_in_high             ),
@@ -52,7 +49,6 @@ module repetition_eq#(
   end else begin
       repetition_eq_uv #(
         .GROUP_SIZE             ( GROUP_SIZE               ),
-        .LOG_GS                 ( LOG_GS                   ),
         .DATA_WIDTH             ( DATA_WIDTH               )
       ) repetition_eq_high_m (
         .data_in                ( data_in_high             ),
@@ -65,7 +61,6 @@ module repetition_eq#(
   if (LOW_MODE=="UNZV") begin
       repetition_eq_unzv #(
         .GROUP_SIZE             ( GROUP_SIZE               ),
-        .LOG_GS                 ( LOG_GS                   ),
         .DATA_WIDTH             ( DATA_WIDTH               )
       ) repetition_eq_low_m (
         .data_in                ( data_in_low              ),
@@ -74,7 +69,6 @@ module repetition_eq#(
   end else if (LOW_MODE=="NZV") begin
     repetition_eq_nzv #(
         .GROUP_SIZE             ( GROUP_SIZE               ),
-        .LOG_GS                 ( LOG_GS                   ),
         .DATA_WIDTH             ( DATA_WIDTH               )
       ) repetition_eq_low_m (
         .data_in                ( data_in_low              ),
@@ -83,7 +77,6 @@ module repetition_eq#(
   end else begin
       repetition_eq_uv #(
         .GROUP_SIZE             ( GROUP_SIZE               ),
-        .LOG_GS                 ( LOG_GS                   ),
         .DATA_WIDTH             ( DATA_WIDTH               )
       ) repetition_eq_low_m (
         .data_in                ( data_in_low              ),
@@ -97,7 +90,6 @@ endmodule
 // matrix with the equivalences
 module repetition_eq_unzv#(
     parameter GROUP_SIZE             = 4,                      // group size
-    parameter LOG_GS                 = 2,
     parameter DATA_WIDTH             = 4,                      // input and output data width
     localparam INPUT_WIDTH           = GROUP_SIZE*DATA_WIDTH,   // number of bits for input (activation + weight + rep. info)
     localparam ZERO_INFO             = GROUP_SIZE,
@@ -189,7 +181,6 @@ endmodule
 // matrix with the equivalences
 module repetition_eq_nzv#(
     parameter GROUP_SIZE             = 4,                      // group size
-    parameter LOG_GS                 = 2,
     parameter DATA_WIDTH             = 4,                      // input and output data width
     localparam INPUT_WIDTH           = GROUP_SIZE*DATA_WIDTH,   // number of bits for input (activation + weight + rep. info)
     localparam ZERO_INFO             = GROUP_SIZE
@@ -198,21 +189,15 @@ module repetition_eq_nzv#(
     output [ZERO_INFO-1:0]              rdata_out    // OUT1 interface:: rdata
   );
 
-
-  wire [DATA_WIDTH - 1 : 0]                 data_in_unpacked[GROUP_SIZE-1:0];  // two dimentional data read from FIFO
   wire [ZERO_INFO - 1 : 0]                  zer_info;                          // vector of zero elements
 
   genvar i;
-  genvar j;
-  integer k;
-  integer l;
-
 
   // combinational logic
   assign rdata_out[GROUP_SIZE-1:0] = zer_info;
 
   for(i = 0; i < GROUP_SIZE; i = i + 1) begin
-      assign zer_info[i] = data_in_unpacked[i] == 0;
+      assign zer_info[i] = data_in[i * DATA_WIDTH +: DATA_WIDTH] == 0;
   end
 endmodule
 
@@ -220,7 +205,6 @@ endmodule
 // matrix with the equivalences
 module repetition_eq_uv#(
   parameter GROUP_SIZE             = 4,                      // group size
-  parameter LOG_GS                 = 2,
   parameter DATA_WIDTH             = 4,                      // input and output data width
   localparam INPUT_WIDTH           = GROUP_SIZE*DATA_WIDTH,  // number of bits for input (activation + weight + rep. info)
   localparam REP_INFO              = GROUP_SIZE*GROUP_SIZE

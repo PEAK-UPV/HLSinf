@@ -9,6 +9,7 @@
 
 `include "RTLinf.vh"
 
+//TODO: posbile error. parece que el write esta demasiado tarde
 module ACC_RD_NB #(
     parameter DATA_WIDTH             = 4,                            // input data width (output width = input width)
     parameter OUT_DATA_WIDTH         = 8,
@@ -51,6 +52,20 @@ module ACC_RD_NB #(
     input                                   avail_in                 // OUT interface: avail
   );
 
+
+
+//[high] wires 
+wire [ GROUP_SIZE - 1: 0]             rep_info_high;                           // Repetition info extracted from FIFO
+wire [ GROUP_SIZE - 1: 0]             zer_info_high;                          // Repetition info extracted from FIFO
+wire                                  is_last_high;
+wire [ DATA_WIDTH - 1: 0]             value_in_high;
+
+//[low] wires
+wire [ GROUP_SIZE - 1: 0]             rep_info_low;                           // Repetition info extracted from FIFO
+wire [ GROUP_SIZE - 1: 0]             zer_info_low;                          // Repetition info extracted from FIFO
+wire                                  is_last_low;
+wire [ DATA_WIDTH - 1: 0]             value_in_low;
+
 // wires (operation and iterations)
 wire                                  perform_operation_w;               // whether we perform a "read" operation in this cycle
 wire                                  perform_operation_high_w;               // whether we perform a "read" operation in this cycle
@@ -59,38 +74,41 @@ wire                                  perform_operation_low_w;               // 
 wire                                  first_iteration_w;                 // whether we are in the first iteration
 wire                                  last_iteration_w;                  // whether we are in the last iteration
 
-wire                                  is_last;
-wire                                  is_last_high;
-wire                                  is_last_low;
-
 // wires (data added)
-wire [OUT_DATA_WIDTH - 1 : 0]               data_shifted_w_high[GROUP_SIZE - 1 : 0];                      // contains the added values from mem and from input
-wire [GROUP_SIZE * OUT_DATA_WIDTH-1 : 0]  data_added_w;                      // contains the added values from mem and from input
+wire [OUT_DATA_WIDTH-1 : 0]           data_shifted_w_high[GROUP_SIZE - 1 : 0];                      // contains the added values from mem and from input
+wire [GROUP_SIZE * OUT_DATA_WIDTH-1 : 0]    data_added_w;                      // contains the added values from mem and from input
 
-// data pipeline (read -> add -> write stages)
+//[Common] pipeline (read -> add -> write stages)
 reg                                        read_r;
 reg  [LOG_MAX_ADDRESS-1 : 0]               read_addr_r;
+reg [INPUT_WIDTH_HIGH - 1 : 0]             read_data_fifo_high_r;
+reg [INPUT_WIDTH_HIGH - 1 : 0]             read_data_fifo_low_r;
 reg                                        read_first_iteration_r;
 reg                                        read_last_iteration_r;
 wire [GROUP_SIZE * OUT_DATA_WIDTH -1 : 0]  read_data_w;
 
-//
-reg                                        add_r;
-reg [LOG_MAX_ADDRESS-1 : 0]                add_addr_r;
+// data pipeline (read -> add -> write stages)
 
 //
-wire [DATA_WIDTH * GROUP_SIZE - 1 : 0]     data_to_join_high_w;
-wire [DATA_WIDTH * GROUP_SIZE - 1 : 0]     data_to_join_low_w;
-wire [OUT_DATA_WIDTH - 1 : 0]              data_joined_w[GROUP_SIZE - 1 : 0];
-wire valid_in;
-reg                                        add_first_iteration_r;
-reg                                        add_last_iteration_r;
+reg                              add_r;
+reg [LOG_MAX_ADDRESS-1 : 0]      add_addr_r;
+reg [INPUT_WIDTH_HIGH - 1 : 0]   add_data_fifo_high_r;
+reg [INPUT_WIDTH_HIGH - 1 : 0]   add_data_fifo_low_r;
 
-//
+wire [DATA_WIDTH - 1 : 0]        data_to_join_high_w[GROUP_SIZE - 1 : 0];
+wire [DATA_WIDTH - 1 : 0]        data_to_join_low_w[GROUP_SIZE - 1 : 0];
+wire [OUT_DATA_WIDTH - 1 : 0]    data_joined_w[GROUP_SIZE - 1 : 0];
+
+
+reg                              add_first_iteration_r;
+reg                              add_last_iteration_r;
+
 reg                                        write_r;
 reg [LOG_MAX_ADDRESS-1 : 0]                write_addr_r;
 reg [GROUP_SIZE * OUT_DATA_WIDTH - 1 : 0]  write_data_r;
 reg                                        write_last_iteration_r;
+//
+
 
 //data pipeline
 reg [LOG_MAX_ITERS-1:0]              num_iters_r;                        // number of iterations (down counter)
@@ -99,47 +117,48 @@ reg [LOG_MAX_READS_PER_ITER-1:0]     num_reads_per_iter_r;               // numb
 reg [LOG_MAX_READS_PER_ITER-1:0]     num_reads_per_iter_copy_r;          // copy of number of reads per iteration
 reg                                  module_enabled_r;                   // module enabled
 
-reg                                  read_is_last;
-reg                                  add_is_last;
-reg                                  write_is_last;
-
-reg                                  read_valid_in;
-reg                                  add_valid_in;
-reg                                  write_valid_in;
 genvar i;
-
 // combinational logic 
 
-assign valid_in       = valid_in_high || valid_in_low;
-assign processing     = valid_in || read_valid_in || add_valid_in || write_valid_in;
-
 // to upstream module (via FIFO)
-assign avail_out_high = 1'b1;    // always available
-assign avail_out_low  = 1'b1;    // always available
+assign avail_out_high = 1'b1;                                       // always available
+assign avail_out_low  = 1'b1;                                       // always available
 
 // module and iterations
-assign perform_operation_w = processing & module_enabled_r & avail_in;   // perform operation when enabled, with input data and output available
+
+assign perform_operation_w    = perform_operation_high_w | perform_operation_low_w;     // perform operation when enabled, with input data and output available
+assign perform_operation_high_w = valid_in_high & module_enabled_r & avail_in;     // perform operation when enabled, with input data and output available
+assign perform_operation_low_w  = valid_in_low & module_enabled_r & avail_in;     // perform operation when enabled, with input data and output available
 
 assign first_iteration_w   = num_iters_r == num_iters_copy_r;            // is this first iteration?
 assign last_iteration_w    = num_iters_r == 1;                           // is this last iteration?
 
 // to downstream module
-assign data_out            = write_data_r;                                       // output data
-assign valid_out           = write_r & write_last_iteration_r & write_is_last;   // valid out to downstream module
+assign data_out            = write_data_r;                               // output data
+assign valid_out           = write_r & write_last_iteration_r;           // valid out to downstream module
 
-assign is_last        = is_last_high & is_last_low;
-assign is_last_high   = data_in_high[INPUT_WIDTH_HIGH - 1];           //last bit of input indicates if we have received the last element of the group
-assign is_last_low    = data_in_low[INPUT_WIDTH_LOW - 1];             //last bit of input indicates if we have received the last element of the group
+// get input
+assign value_in_high  = add_data_fifo_high_r[DATA_WIDTH-1:0];
+assign rep_info_high  = add_data_fifo_high_r[DATA_WIDTH + GROUP_SIZE - 1 : DATA_WIDTH];
+assign zer_info_high  = add_data_fifo_high_r[INPUT_WIDTH_HIGH - 1 - 1 : DATA_WIDTH + GROUP_SIZE];
+assign is_last_high   = add_data_fifo_high_r[INPUT_WIDTH_HIGH - 1];            //last bit of input indicates if we have received the last element of the group
+//TODO: esto esta mal hay que registrar TODO el input, no solo el valor
+assign value_in_low   = add_data_fifo_low_r[DATA_WIDTH-1:0];
+assign rep_info_low   = add_data_fifo_low_r[DATA_WIDTH + GROUP_SIZE - 1 : DATA_WIDTH];
+assign zer_info_low   = add_data_fifo_low_r[INPUT_WIDTH_LOW - 1 - 1 : DATA_WIDTH + GROUP_SIZE];
+assign is_last_low    = data_in_low[INPUT_WIDTH_LOW - 1];            //last bit of input indicates if we have received the last element of the group
 
 // adders (one per item in the group size)
 for (i=0; i<GROUP_SIZE; i=i+1) begin
-  assign data_shifted_w_high[i] = {data_to_join_high_w[i * DATA_WIDTH +: DATA_WIDTH],{4'b0}};
+  assign data_to_join_high_w[i] =  rep_info_high[i] ? value_in_high : 0;
+  assign data_to_join_low_w[i]  =  rep_info_low[i]  ? value_in_low   : 0;
 
-  assign data_joined_w[i] = data_shifted_w_high[i] + data_to_join_low_w[i * DATA_WIDTH +: DATA_WIDTH];
+  assign data_shifted_w_high[i] = {data_to_join_high_w[i],{4'b0}};
 
+  assign data_joined_w[i] = data_shifted_w_high[i] + data_to_join_low_w[i];
+  //TODO: hay que registrarlo para que la suma se haga cuando toca. Testear
   assign data_added_w[((i+1)*OUT_DATA_WIDTH)-1:i*OUT_DATA_WIDTH] = add_first_iteration_r ?  data_joined_w[i] : data_joined_w[i] + read_data_w[((i+1)*OUT_DATA_WIDTH)-1:i*OUT_DATA_WIDTH]; 
 end
-
 // modules
 
 // memory (unregistered output)
@@ -154,7 +173,7 @@ generate
       .rst             ( rst                                                  ),
       .data_write      ( write_data_r[i*OUT_DATA_WIDTH +: OUT_DATA_WIDTH] ),
       .addr_write      ( write_addr_r                                         ), 
-      .write           ( write_is_last                                            ),
+      .write           ( write_r                                              ),
       .addr_read       ( read_addr_r                                          ),
       .data_read       ( read_data_w[i*OUT_DATA_WIDTH +: OUT_DATA_WIDTH]  ),
       .read            ( read_r                                               )
@@ -175,25 +194,23 @@ endgenerate
 always @ (posedge clk) 
 begin: control_logic
   // pipelined operations: READ -> ADD -> WRITE
-  read_valid_in          <= valid_in;
-  read_is_last           <= is_last;
   read_r                 <= perform_operation_w;      // read cycle
   read_addr_r            <= num_reads_per_iter_r;     // address is the current iteration cycle
+  read_data_fifo_high_r  <= data_in_high;            // we capture the input data for the next stage (add)
+  read_data_fifo_low_r   <= data_in_low;             // we capture the input data for the next stage (add)
   read_first_iteration_r <= first_iteration_w;        // first iteration
   read_last_iteration_r  <= last_iteration_w;         // last iteration
   //
-  add_is_last            <= read_is_last;
-  add_valid_in           <= read_valid_in;
   add_r                  <= read_r;                   // add cycle (one cycle after read cycle)
   add_addr_r             <= read_addr_r;              // we keep the address for the next stage (write)
+  add_data_fifo_high_r   <= read_data_fifo_high_r;            // we keep the data from the fifo to this stage (add)
+  add_data_fifo_low_r    <= read_data_fifo_low_r;             // we keep the data from the fifo to this stage (add)
   add_first_iteration_r  <= read_first_iteration_r;   // first iteration
   add_last_iteration_r   <= read_last_iteration_r;    // last iteration
   //
-  write_is_last          <= add_is_last;
-  write_valid_in         <= add_valid_in;
-  write_r                <= add_r;                    // write cycle (one cycle after add cycle)
-  write_addr_r           <= add_addr_r;               // write address comes from previous stage
-  write_data_r           <= data_added_w;             // data to write comes from the logic (data_added_w)
+  write_r      <= add_r;                              // write cycle (one cycle after add cycle)
+  write_addr_r <= add_addr_r;                         // write address comes from previous stage
+  write_data_r <= data_added_w;                       // data to write comes from the logic (data_added_w)
   write_last_iteration_r <= add_last_iteration_r;     // last iteration
   // end
 end
@@ -212,7 +229,7 @@ always @ (posedge clk) begin
       module_enabled_r          <= 1'b1;
     end else begin
       
-      if (perform_operation_w  & is_last) begin
+      if (perform_operation_w  & (is_last_low)) begin
         if (num_reads_per_iter_r == 1) begin
           if (num_iters_r == 1) module_enabled_r <= 0;
           else begin
@@ -227,56 +244,7 @@ always @ (posedge clk) begin
   end 
 end
 
-/* Modules */
-if (HIGH_MODE == "UNZV") begin
-  // ACC_HIGH
-  ACC_RD_NB_UNZV #(
-      .DATA_WIDTH   ( DATA_WIDTH  ),
-      .GROUP_SIZE   ( GROUP_SIZE  )
-  ) acc_rd_nb_unzv_high_m (
-    .clk           ( clk                 ),
-    .rst           ( rst                 ),
-    .data_in       ( data_in_high        ),
-    .data_out      ( data_to_join_high_w )
-  );
-end else begin
-// ACC_LOW
-  ACC_RD_NB_NZV #(
-      .DATA_WIDTH   ( DATA_WIDTH  ),
-      .LOG_GS       ( LOG_GS      ),
-      .GROUP_SIZE   ( GROUP_SIZE  )
-  ) acc_rd_nb_nz_high_m (
-    .clk           ( clk                 ),
-    .rst           ( rst                 ),
-    .data_in       ( data_in_high[0 +: INPUT_WIDTH_HIGH - 1] ),
-    .data_out      ( data_to_join_high_w )
-  );
-end
 
-if (LOW_MODE == "UNZV") begin
-  // ACC_HIGH
-  ACC_RD_NB_UNZV #(
-      .DATA_WIDTH   ( DATA_WIDTH  ),
-      .GROUP_SIZE   ( GROUP_SIZE  )
-  ) acc_rd_nb_unzv_low_m (
-    .clk           ( clk                ),
-    .rst           ( rst                ),
-    .data_in       ( data_in_low        ),
-    .data_out      ( data_to_join_low_w )
-  );
-end else begin
-// ACC_LOW
-  ACC_RD_NB_NZV #(
-      .DATA_WIDTH   ( DATA_WIDTH  ),
-      .LOG_GS       ( LOG_GS      ),
-      .GROUP_SIZE   ( GROUP_SIZE  )
-  ) acc_rd_nb_nz_low_m (
-    .clk           ( clk                ),
-    .rst           ( rst                ),
-    .data_in       ( data_in_low[0 +: INPUT_WIDTH_LOW - 1]),
-    .data_out      ( data_to_join_low_w )
-  );
-end
 // debug support. When enabled (through the DEBUG define) the module will generate
 // debug information on every specific cycle, depending on the debug conditions implemented
 // the module has a tics counter register to keep up with current cycle

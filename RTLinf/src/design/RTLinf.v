@@ -353,6 +353,8 @@ module RTLinf #(
   parameter NUM_ADDRESSES          = 1024, // number of addresses in memories
   parameter LOG_MAX_ADDRESS        = 10,   // number of bits for addresses
   parameter REPETITION_DETECTION   = "NB", // options: no, UV, UNZV or NB
+  parameter HIGH_MODE              = "NZV", // options: UNZV, NZV (UV not implemented yet)
+  parameter LOW_MODE               = "NZV", // options: UNZV, NZV (UV not implemented yet)
   //
   localparam WIDTH_ACT_READ_SELECTS     = (NUM_ACT_MEMORIES * (LOG_NUM_KERNELS+1)),
   localparam WIDTH_ACT_WRITE_SELECTS    = (NUM_ACT_MEMORIES * (LOG_NUM_KERNELS+1)),
@@ -492,8 +494,8 @@ generate
       .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER ),
       .LOG_MAX_ADDRESS        ( LOG_MAX_ADDRESS        ),
       .NUM_ADDRESSES          ( NUM_ADDRESSES          ),
-      .HIGH_MODE              ( "UNZV"/*HIGH_MODE*/     ),
-      .LOW_MODE               ( "UNZV"/*LOW_MODE*/     )
+      .HIGH_MODE              ( HIGH_MODE              ),
+      .LOW_MODE               ( LOW_MODE               )
     ) kernel_m (
       .clk                    ( clk                    ),
       .rst                    ( rst                    ),
