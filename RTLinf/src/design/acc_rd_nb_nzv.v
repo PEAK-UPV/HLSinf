@@ -33,31 +33,26 @@ wire [ DATA_WIDTH - 1: 0]     value_in;
 wire [LOG_GS - 1 : 0]         element_actual;            // element being processed in this cycle
 
 // pipeline (read -> add -> write stages)
-reg [INPUT_WIDTH - 1 : 0]    read_data_fifo_r;
-reg [INPUT_WIDTH - 1 : 0]    add_data_fifo_r;
+reg [INPUT_WIDTH - 1 : 0]                read_data_fifo_r;
+reg [DATA_WIDTH * GROUP_SIZE - 1 : 0]    data_to_join_r;
 
-wire [DATA_WIDTH - 1 : 0]    data_to_join[GROUP_SIZE - 1 : 0];
-
-genvar i;
+integer i;
 
 // combinational logic 
-for (i=0; i<GROUP_SIZE; i=i+1) begin
-    assign data_out [i * DATA_WIDTH +: DATA_WIDTH] = data_to_join[i];
-    assign data_to_join[i] =  element_actual==i ? value_in : zer_info[i] ? 0 : data_to_join[i];
-end
-
+assign data_out  = data_to_join_r;
 
 // get input
-assign value_in        = add_data_fifo_r[DATA_WIDTH-1:0];
-assign zer_info        = add_data_fifo_r[DATA_WIDTH + GROUP_SIZE - 1 : DATA_WIDTH];
-assign element_actual  = add_data_fifo_r[INPUT_WIDTH - 1 : DATA_WIDTH + GROUP_SIZE];
+assign value_in        = read_data_fifo_r[DATA_WIDTH-1:0];
+assign zer_info        = read_data_fifo_r[DATA_WIDTH + GROUP_SIZE - 1 : DATA_WIDTH];
+assign element_actual  = read_data_fifo_r[INPUT_WIDTH - 1 : DATA_WIDTH + GROUP_SIZE];
 
 always @ (posedge clk) 
 begin: control_logic
   // pipelined operations: READ -> ADD -> WRITE
-  read_data_fifo_r  <= data_in;            // we capture the input data for the next stage (add)
-  add_data_fifo_r   <= read_data_fifo_r;            // we keep the data from the fifo to this stage (add)
-  // end
+  read_data_fifo_r  <= data_in;
+  for (i=0; i<GROUP_SIZE; i=i+1) begin
+    data_to_join_r[i * DATA_WIDTH +: DATA_WIDTH]  <=  element_actual==i ? value_in : zer_info[i] ? 0 : data_to_join_r[i];
+  end
 end
 endmodule
   

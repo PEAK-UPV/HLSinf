@@ -53,8 +53,6 @@ module ACC_RD_NB #(
 
 // wires (operation and iterations)
 wire                                  perform_operation_w;               // whether we perform a "read" operation in this cycle
-wire                                  perform_operation_high_w;               // whether we perform a "read" operation in this cycle
-wire                                  perform_operation_low_w;               // whether we perform a "read" operation in this cycle
 
 wire                                  first_iteration_w;                 // whether we are in the first iteration
 wire                                  last_iteration_w;                  // whether we are in the last iteration
@@ -118,7 +116,7 @@ assign avail_out_high = 1'b1;    // always available
 assign avail_out_low  = 1'b1;    // always available
 
 // module and iterations
-assign perform_operation_w = processing & module_enabled_r & avail_in;   // perform operation when enabled, with input data and output available
+assign perform_operation_w = is_last & module_enabled_r & avail_in;   // perform operation when enabled, with input data and output available
 
 assign first_iteration_w   = num_iters_r == num_iters_copy_r;            // is this first iteration?
 assign last_iteration_w    = num_iters_r == 1;                           // is this last iteration?
@@ -212,7 +210,7 @@ always @ (posedge clk) begin
       module_enabled_r          <= 1'b1;
     end else begin
       
-      if (perform_operation_w  & is_last) begin
+      if (perform_operation_w) begin
         if (num_reads_per_iter_r == 1) begin
           if (num_iters_r == 1) module_enabled_r <= 0;
           else begin
