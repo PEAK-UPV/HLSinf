@@ -16,8 +16,7 @@ module ACC_RD_UNZV #(
     parameter NUM_ADDRESSES          = 4096,                         // number of addresses
     parameter LOG_MAX_ADDRESS        = 12,                           // number of address bits
     parameter LOG_MAX_READS_PER_ITER = 12,                           // number of bits for max reads per iter
-    localparam ZERO_INFO             = GROUP_SIZE,                   // number of bits for repetition detectoor
-    localparam REP_INFO               = GROUP_SIZE + 1 + ZERO_INFO,               // number of bits for repetition detectoor
+    localparam REP_INFO               = GROUP_SIZE + 1,               // number of bits for repetition detectoor
     localparam INPUT_WIDTH           = DATA_WIDTH + REP_INFO,        // input data width (activation + weight + rep. info)
     localparam OUTPUT_WIDTH          = GROUP_SIZE * DATA_WIDTH       // output data width ( result (2*data width) +  rep. info)
 
@@ -41,7 +40,6 @@ module ACC_RD_UNZV #(
 
 //wires 
 wire [ GROUP_SIZE - 1: 0]             rep_info;                           // Repetition info extracted from FIFO
-wire [ GROUP_SIZE - 1: 0]             zer_info;                          // Repetition info extracted from FIFO
 wire                                  is_last;
 wire [ DATA_WIDTH - 1: 0]             value_in;
 wire write_w;
@@ -97,13 +95,12 @@ assign valid_out           = write_r & write_last_iteration_r;           // vali
 // get input
 assign value_in            = add_data_fifo_r[DATA_WIDTH-1:0];
 assign rep_info            = add_data_fifo_r[DATA_WIDTH + GROUP_SIZE - 1 : DATA_WIDTH];
-assign zer_info            = add_data_fifo_r[INPUT_WIDTH - 1 - 1 : DATA_WIDTH + GROUP_SIZE];
 assign is_last             = data_in[INPUT_WIDTH - 1];            //last bit of input indicates if we have received the last element of the group
 
 // adders (one per item in the group size)
 generate
   for (i=0; i<GROUP_SIZE; i=i+1) begin
-    assign data_added_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] = add_first_iteration_r ? ( zer_info[i] ? 0 : value_in ) : ( zer_info[i] ? read_data_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] : value_in + read_data_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH]);
+    assign data_added_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] = add_first_iteration_r ? value_in : value_in + read_data_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH];
   end
 endgenerate
 

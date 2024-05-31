@@ -13,8 +13,7 @@ module repetition_detector_unzv#(
     parameter DATA_WIDTH             = 8,                      // input and output data width
     parameter LOG_MAX_ITERS          = 16,                     // number of bits for max iters register
     parameter LOG_MAX_READS_PER_ITER = 16,                     // number of bits for max reads per iter
-    localparam ZERO_INFO             = GROUP_SIZE,             
-    localparam REP_INFO              = GROUP_SIZE + ZERO_INFO + 1 ,         // row of equivalences + index_element sending + is_last    
+    localparam REP_INFO              = GROUP_SIZE + 1 ,         // row of equivalences + index_element sending + is_last    
     localparam INPUT_WIDTH           = GROUP_SIZE*DATA_WIDTH   // number of bits for input (activation + weight + rep. info)
 )(
   input clk,
@@ -52,7 +51,7 @@ wire [GROUP_SIZE - 1 : 0]              equivalence_row;                   // vec
 wire [GROUP_SIZE * GROUP_SIZE - 1 : 0] rep_info;                          // matrix with condensed repetition detection information
 wire [DATA_WIDTH - 1 : 0]              data_in_unpacked[GROUP_SIZE-1:0];  // two dimentional data read from FIFO
 wire                                   is_last;                           // indicates if is the last element of the group
-wire [ZERO_INFO - 1 : 0]               zer_info;                          // vector of zero elements
+wire [GROUP_SIZE - 1 : 0]              zer_info;                          // vector of zero elements
 
 
 // registers
@@ -74,7 +73,6 @@ integer l;
 // combinational logic
 assign data_out                                 = data_in_unpacked[element_actual];
 assign rdata_out[GROUP_SIZE-1:0]                = equivalence_row;
-assign rdata_out[REP_INFO - 1 - 1 : GROUP_SIZE] = zer_info;
 assign rdata_out[REP_INFO - 1]                  = is_last;
 
 assign data_write_w  = data_in;                                         // data to FIFO

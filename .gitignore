@@ -63,3 +63,8 @@ RTLinf/RTLinf_project/project_4/project_4.sim/sim_1/behav/xsim/xsim.dir/RTLinf_t
 RTLinf/RTLinf_project/project_5/project_5.sim/sim_1/behav/xsim/xsim.dir/tb_repetition_detector_behav/TempBreakPointFile.txt
 RTLinf/RTLinf_project/project_5/project_5.sim/sim_1/behav/xsim/xsim.dir/RTLinf_tb_behav/TempBreakPointFile.txt
 RTLinf/RTLinf_project/project_5/project_5.sim/sim_1/behav/xsim/xsim.dir/RTLinf_tb_behav/Compile_Options.txt
+RTLinf/RTLinf_project/project_5/project_5.sim/sim_1/behav/xsim/xsim.dir/tb_acc_nb_behav/Compile_Options.txt
+RTLinf/RTLinf_project/project_5/project_5.sim/sim_1/behav/xsim/xsim.dir/tb_acc_nb_behav/TempBreakPointFile.txt
+RTLinf/RTLinf_project/project_5/project_5.sim/sim_1/behav/xsim/xsim.dir/tb_repetition_detector_nb_behav/Compile_Options.txt
+RTLinf/RTLinf_project/project_5/project_5.sim/sim_1/behav/xsim/xsim.dir/tb_repetition_detector_nb_behav/TempBreakPointFile.txt
+RTLinf/RTLinf_project/project_5/project_5.sim/sim_1/behav/xsim/glbl.v

@@ -16,8 +16,7 @@ module repetition_detector#(
     parameter LOG_MAX_READS_PER_ITER = 16,                     // number of bits for max reads per iter
     localparam UNZV_mode             =  (REPETITION_DETECTION =="UNZV") ? 1 : 0,
     localparam NZV_mode              =  (REPETITION_DETECTION =="NZV") ? 1 : 0,    
-    localparam ZERO_INFO             = GROUP_SIZE,             
-    localparam REP_INFO              = UNZV_mode ?  GROUP_SIZE + ZERO_INFO + 1 :  NZV_mode ? ZERO_INFO + LOG_GS + 1 : GROUP_SIZE + 1,
+    localparam REP_INFO              = GROUP_SIZE + 1,
     localparam INPUT_WIDTH           = GROUP_SIZE*DATA_WIDTH   // number of bits for input (activation + weight + rep. info)
 )(
   input clk,

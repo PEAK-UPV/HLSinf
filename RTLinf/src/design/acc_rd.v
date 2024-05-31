@@ -20,11 +20,7 @@ module ACC_RD #(
     parameter LOG_MAX_READS_PER_ITER = 12,                           // number of bits for max reads per iter
     localparam UNZV_mode             =  (REPETITION_DETECTION =="UNZV") ? 1 : 0,
     localparam NZV_mode              =  (REPETITION_DETECTION =="NZV") ? 1 : 0,      
-    localparam ZERO_INFO             = GROUP_SIZE,             
-    localparam REP_INFO_UV           = GROUP_SIZE + 1,
-    localparam REP_INFO_NZV          = LOG_GS + ZERO_INFO + 1,
-    localparam REP_INFO_UNZV         = REP_INFO_UV + ZERO_INFO,
-    localparam REP_INFO              = UNZV_mode ? REP_INFO_UNZV :  NZV_mode ? REP_INFO_NZV : REP_INFO_UV,
+    localparam REP_INFO              = GROUP_SIZE + 1,
     localparam INPUT_WIDTH           = DATA_WIDTH + REP_INFO,        // input data width (activation + weight + rep. info)
     localparam OUTPUT_WIDTH          = GROUP_SIZE * DATA_WIDTH       // output data width ( result (2*data width) +  rep. info)
 

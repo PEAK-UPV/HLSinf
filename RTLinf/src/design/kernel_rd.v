@@ -34,11 +34,7 @@ module KERNEL_RD #(
   parameter REPETITION_DETECTION   = "UV",  // // options: no, UV, UNZV, NZV
   localparam UNZV_mode             =  (REPETITION_DETECTION =="UNZV") ? 1 : 0,
   localparam NZV_mode              =  (REPETITION_DETECTION =="NZV") ? 1 : 0,
-  localparam ZERO_INFO             = GROUP_SIZE,
-  localparam REP_INFO_UV           = GROUP_SIZE + 1,
-  localparam REP_INFO_NZV          = LOG_GS + ZERO_INFO + 1,
-  localparam REP_INFO_UNZV         = REP_INFO_UV + ZERO_INFO,
-  localparam REP_INFO              = UNZV_mode ? REP_INFO_UNZV :  NZV_mode ? REP_INFO_NZV : REP_INFO_UV
+  localparam REP_INFO              = GROUP_SIZE + 1
 )(
   input                                   clk,                // clock input
   input                                   rst,                // reset input

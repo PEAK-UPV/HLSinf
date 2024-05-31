@@ -51,7 +51,7 @@ begin: control_logic
   // pipelined operations: READ -> ADD -> WRITE
   read_data_fifo_r  <= data_in;
   for (i=0; i<GROUP_SIZE; i=i+1) begin
-    data_to_join_r[i * DATA_WIDTH +: DATA_WIDTH]  <=  element_actual==i ? value_in : zer_info[i] ? 0 : data_to_join_r[i];
+    data_to_join_r[i * DATA_WIDTH +: DATA_WIDTH]  <=  element_actual==i ? value_in : zer_info[i] ? 0 : data_to_join_r[i * DATA_WIDTH +: DATA_WIDTH];
   end
 end
 endmodule
