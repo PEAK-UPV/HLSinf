@@ -13,8 +13,7 @@ module repetition_detector_nzv#(
     parameter DATA_WIDTH             = 8,                      // input and output data width
     parameter LOG_MAX_ITERS          = 16,                     // number of bits for max iters register
     parameter LOG_MAX_READS_PER_ITER = 16,                     // number of bits for max reads per iter
-    localparam ZERO_INFO             = GROUP_SIZE,             
-    localparam REP_INFO              = ZERO_INFO + LOG_GS + 1,             // row of equivalences + index_element sending + is_last    
+    localparam REP_INFO              = GROUP_SIZE + 1,             // row of equivalences + index_element sending + is_last    
     localparam INPUT_WIDTH           = GROUP_SIZE*DATA_WIDTH   // number of bits for input (activation + weight + rep. info)
 )(
   input clk,
@@ -49,7 +48,8 @@ wire                                   perform_operation_w;
 
 wire [DATA_WIDTH - 1 : 0]              data_in_unpacked[GROUP_SIZE-1:0];  // two dimentional data read from FIFO
 wire                                   is_last;                           // indicates if is the last element of the group
-wire [ZERO_INFO - 1 : 0]               zer_info;                          // vector of zero elements
+wire [GROUP_SIZE - 1 : 0]              zer_info;                          // vector of zero elements
+wire [GROUP_SIZE - 1 : 0]              rep_info;                          // indicates to which element correspond
 
 
 // registers
@@ -69,10 +69,9 @@ integer l;
 
 
 // combinational logic
-assign data_out                                      = data_in_unpacked[element_actual];
-assign rdata_out[ZERO_INFO - 1 : 0]                  = zer_info;
-assign rdata_out[ZERO_INFO + LOG_GS - 1 : ZERO_INFO] = element_actual;
-assign rdata_out[REP_INFO - 1]                       = is_last;
+assign data_out                      = data_in_unpacked[element_actual];
+assign rdata_out[0 +: GROUP_SIZE]    = rep_info;
+assign rdata_out[REP_INFO - 1]       = is_last;
 
 assign data_write_w  = data_in;                                         // data to FIFO
 assign write_enb_w   = valid_in;                                        // write signal to FIFO
@@ -83,6 +82,7 @@ assign valid_out     = perform_operation_w & (is_last);                         
 assign perform_operation_w = module_enabled_r & (~empty_w) & avail_in;
 
 for(i = 0; i < GROUP_SIZE; i = i + 1) begin
+    assign rep_info[i] = element_actual == i;
     assign zer_info[i] = data_in_unpacked[i] == 0;
     assign data_in_unpacked[i] = data_read_fifo[i * DATA_WIDTH +: DATA_WIDTH];
 end
