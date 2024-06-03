@@ -47,7 +47,6 @@ module ACC_RD_NB #(
 
 // wires (operation and iterations)
 wire                                  perform_operation_w;               // whether we perform a "read" operation in this cycle
-
 wire                                  first_iteration_w;                 // whether we are in the first iteration
 wire                                  last_iteration_w;                  // whether we are in the last iteration
 
@@ -56,6 +55,8 @@ wire                                  is_last_high;
 wire                                  is_last_low;
 
 // wires (data added)
+reg is_last_r;
+
 wire [OUT_DATA_WIDTH - 1 : 0]             value_high_shifted;                      // contains the added values from mem and from input
 wire [GROUP_SIZE * OUT_DATA_WIDTH-1 : 0]  data_added_w;                      // contains the added values from mem and from input
 
@@ -88,7 +89,7 @@ reg                                        add_first_iteration_r;
 reg                                        add_last_iteration_r;
 
 //
-reg                                        write_r;
+reg [GROUP_SIZE - 1 : 0]                   write_r;
 reg [LOG_MAX_ADDRESS-1 : 0]                write_addr_r;
 reg [GROUP_SIZE * OUT_DATA_WIDTH - 1 : 0]  write_data_r;
 reg                                        write_last_iteration_r;
@@ -105,7 +106,7 @@ reg                                  add_is_last;
 reg                                  write_is_last;
 
 genvar i;
-
+integer j;
 // combinational logic 
 
 assign valid_in       = valid_in_high || valid_in_low;
@@ -115,14 +116,19 @@ assign avail_out_high = 1'b1;    // always available
 assign avail_out_low  = 1'b1;    // always available
 
 // module and iterations
-assign perform_operation_w = write_is_last & module_enabled_r & avail_in;   // perform operation when enabled, with input data and output available
+//TODO: l
+//assign perform_operation_w = write_is_last & module_enabled_r & avail_in;   // perform operation when enabled, with input data and output available
+assign perform_operation_w = valid_in & module_enabled_r & avail_in;   // perform operation when enabled, with input data and output available
 
 assign first_iteration_w   = num_iters_r == num_iters_copy_r;            // is this first iteration?
 assign last_iteration_w    = num_iters_r == 1;                           // is this last iteration?
 
 // to downstream module
-assign data_out            = write_data_r;                                       // output data
-assign valid_out           = write_r & write_last_iteration_r & write_is_last;   // valid out to downstream module
+assign data_out            = write_data_r;                               // output data
+//TODO: l
+assign valid_out           =  (|write_r) & is_last_r & write_last_iteration_r;           // valid out to downstream module
+//assign valid_out           = write_r & write_last_iteration_r & write_is_last;   // valid out to downstream module
+
 
 assign is_last        = is_last_high & is_last_low;
 assign is_last_high   = data_in_high[INPUT_WIDTH - 1];           //last bit of input indicates if we have received the last element of the group
@@ -159,7 +165,7 @@ generate
       .rst             ( rst                                                  ),
       .data_write      ( write_data_r[i*OUT_DATA_WIDTH +: OUT_DATA_WIDTH] ),
       .addr_write      ( write_addr_r                                         ), 
-      .write           ( write_is_last                                            ),
+      .write           ( write_r[i]                                          ), //TODO check
       .addr_read       ( read_addr_r                                          ),
       .data_read       ( read_data_w[i*OUT_DATA_WIDTH +: OUT_DATA_WIDTH]  ),
       .read            ( read_r                                               )
@@ -167,9 +173,6 @@ generate
   end
 endgenerate 
 
-for (i=0; i<GROUP_SIZE; i=i+1) begin
-  assign write_w = (rep_info_high[i]  || rep_info_low[i])? write_r : 1'b0;
-end
 // sequential logic
 
 // configuration and iterations
@@ -181,6 +184,9 @@ end
 
 always @ (posedge clk) 
 begin: control_logic
+
+  is_last_r <= (add_data_fifo_high_r[INPUT_WIDTH - 1] & add_data_fifo_low_r[INPUT_WIDTH - 1]);
+
   // pipelined operations: READ -> ADD -> WRITE
   read_is_last           <= is_last;
   read_r                 <= perform_operation_w;      // read cycle
@@ -198,10 +204,11 @@ begin: control_logic
   add_last_iteration_r   <= read_last_iteration_r;    // last iteration
   add_data_fifo_high_r   <= read_data_fifo_high_r;         // we keep the data from the fifo to this stage (add)
   add_data_fifo_low_r    <= read_data_fifo_low_r;         // we keep the data from the fifo to this stage (add)
-
+  for(j = 0; j < GROUP_SIZE; j = j + 1) begin
+    write_r[j] <= (rep_info_high[j]  || rep_info_low[j]) ? add_r : 1'b0;
+  end
   //
   write_is_last          <= add_is_last;
-  write_r                <= add_r;                    // write cycle (one cycle after add cycle)
   write_addr_r           <= add_addr_r;               // write address comes from previous stage
   write_data_r           <= data_added_w;             // data to write comes from the logic (data_added_w)
   write_last_iteration_r <= add_last_iteration_r;     // last iteration
@@ -222,7 +229,7 @@ always @ (posedge clk) begin
       module_enabled_r          <= 1'b1;
     end else begin
       
-      if (perform_operation_w) begin
+      if (perform_operation_w  & (is_last)) begin
         if (num_reads_per_iter_r == 1) begin
           if (num_iters_r == 1) module_enabled_r <= 0;
           else begin
