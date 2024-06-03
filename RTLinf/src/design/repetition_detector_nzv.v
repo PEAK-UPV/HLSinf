@@ -63,9 +63,7 @@ reg [LOG_GS - 1 : 0]                   last_element;              // element to 
 reg [LOG_GS - 1 : 0]                   next_element;              // element to process in next cycle
 
 genvar i;
-genvar j;
 integer k;
-integer l;
 
 
 // combinational logic
@@ -77,7 +75,7 @@ assign data_write_w  = data_in;                                         // data 
 assign write_enb_w   = valid_in;                                        // write signal to FIFO
 assign avail_out     = ~almost_full_w & ~full_w;                        // avail signal from FIFO       
 assign read_enb_w    = perform_operation_w & (is_last);                             // next_read signal to FIFO
-assign valid_out     = perform_operation_w & (is_last);                             // valid signal to downstream module
+assign valid_out     = perform_operation_w;                             // valid signal to downstream module
 //
 assign perform_operation_w = module_enabled_r & (~empty_w) & avail_in;
 

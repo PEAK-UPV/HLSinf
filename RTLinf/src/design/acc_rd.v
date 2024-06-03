@@ -42,7 +42,6 @@ module ACC_RD #(
 wire [ GROUP_SIZE - 1: 0]             rep_info;                           // Repetition info extracted from FIFO
 wire                                  is_last;
 wire [ DATA_WIDTH - 1: 0]             value_in;
-wire write_w;
 
 // wires (operation and iterations)
 wire                                  perform_operation_w;               // whether we perform a "read" operation in this cycle
@@ -50,12 +49,13 @@ wire                                  first_iteration_w;                 // whet
 wire                                  last_iteration_w;                  // whether we are in the last iteration
 
 // wires (data added)
-wire [GROUP_SIZE * DATA_WIDTH-1 : 0]  data_added_w;                      // contains the added values from mem and from input
+wire [DATA_WIDTH - 1 : 0]            data_added_w [GROUP_SIZE - 1 : 0];
 
+reg is_last_r;
 // pipeline (read -> add -> write stages)
 reg                                  read_r;
 reg  [LOG_MAX_ADDRESS-1 : 0]         read_addr_r;
-wire [GROUP_SIZE * DATA_WIDTH-1 : 0] read_data_w;
+wire [DATA_WIDTH - 1 : 0]            read_data_w [GROUP_SIZE - 1 : 0];
 reg  [INPUT_WIDTH - 1 : 0]           read_data_fifo_r;
 reg                                  read_first_iteration_r;
 reg                                  read_last_iteration_r;
@@ -66,7 +66,7 @@ reg [INPUT_WIDTH - 1 : 0]            add_data_fifo_r;
 reg                                  add_first_iteration_r;
 reg                                  add_last_iteration_r;
 
-reg                                  write_r;
+reg [GROUP_SIZE - 1 : 0]             write_r;
 reg [LOG_MAX_ADDRESS-1 : 0]          write_addr_r;
 reg [GROUP_SIZE * DATA_WIDTH-1 : 0]  write_data_r;
 reg                                  write_last_iteration_r;
@@ -79,6 +79,7 @@ reg [LOG_MAX_READS_PER_ITER-1:0] num_reads_per_iter_copy_r;              // copy
 reg                              module_enabled_r;                       // module enabled
 
 genvar i;
+integer j;
 // combinational logic 
 
 // to upstream module (via FIFO)
@@ -90,17 +91,18 @@ assign last_iteration_w    = num_iters_r == 1;                           // is t
 
 // to downstream module
 assign data_out            = write_data_r;                               // output data
-assign valid_out           = write_r & write_last_iteration_r;           // valid out to downstream module
+assign valid_out           =  (|write_r) & is_last_r & write_last_iteration_r;           // valid out to downstream module
 
 // get input
 assign value_in            = add_data_fifo_r[DATA_WIDTH-1:0];
 assign rep_info            = add_data_fifo_r[DATA_WIDTH + GROUP_SIZE - 1 : DATA_WIDTH];
 assign is_last             = data_in[INPUT_WIDTH - 1];            //last bit of input indicates if we have received the last element of the group
 
+
 // adders (one per item in the group size)
 generate
   for (i=0; i<GROUP_SIZE; i=i+1) begin
-    assign data_added_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH] = add_first_iteration_r ? value_in : value_in + read_data_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH];
+    assign data_added_w[i] = add_first_iteration_r ? value_in : value_in + read_data_w[i];
   end
 endgenerate
 
@@ -118,17 +120,14 @@ generate
       .rst             ( rst                                      ),
       .data_write      ( write_data_r[i*DATA_WIDTH +: DATA_WIDTH] ),
       .addr_write      ( write_addr_r                             ), 
-      .write           ( write_r                                  ),
+      .write           ( write_r[i]                               ),
       .addr_read       ( read_addr_r                              ),
-      .data_read       ( read_data_w[i*DATA_WIDTH +: DATA_WIDTH]  ),
+      .data_read       ( read_data_w[i]  ),
       .read            ( read_r                                   )
     );
   end
 endgenerate 
 
-for (i=0; i<GROUP_SIZE; i=i+1) begin
-  assign write_w = rep_info[i] ? write_r : 1'b0;
-end
 // sequential logic
 
 // configuration and iterations
@@ -151,9 +150,15 @@ always @ (posedge clk) begin
   add_first_iteration_r  <= read_first_iteration_r;   // first iteration
   add_last_iteration_r   <= read_last_iteration_r;    // last iteration
   //
-  write_r      <= add_r;                              // write cycle (one cycle after add cycle)
+  for(j = 0; j < GROUP_SIZE; j = j + 1) begin
+    write_r[j] <= rep_info[j] ? add_r : 1'b0;
+  end
+  is_last_r <= add_data_fifo_r[INPUT_WIDTH - 1];
   write_addr_r <= add_addr_r;                         // write address comes from previous stage
-  write_data_r <= data_added_w;                       // data to write comes from the logic (data_added_w)
+  
+  for(j = 0; j < GROUP_SIZE; j = j + 1) begin
+   write_data_r[j*DATA_WIDTH +: DATA_WIDTH] <= rep_info[j] ? data_added_w[j] : write_data_r[j*DATA_WIDTH +: DATA_WIDTH];
+  end
   write_last_iteration_r <= add_last_iteration_r;     // last iteration
   // end
 end

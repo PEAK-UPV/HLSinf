@@ -17,10 +17,7 @@ module DISPATCHER #(
   localparam REP_INFO_NZV_IN       = ZERO_INFO,
   localparam REP_INFO_UNZV_IN      = REP_INFO_UV_IN + ZERO_INFO,
   localparam REP_INFO_IN           = (MODE=="UNZV") ? REP_INFO_UNZV_IN :  (MODE=="NZV") ? REP_INFO_NZV_IN : REP_INFO_UV_IN,    
-  localparam REP_INFO_UV_OUT       = GROUP_SIZE + 1,
-  localparam REP_INFO_NZV_OUT      = LOG_GS + ZERO_INFO + 1,
-  localparam REP_INFO_UNZV_OUT     = REP_INFO_UV_OUT + ZERO_INFO,
-  localparam REP_INFO_OUT          = (MODE=="UNZV") ? REP_INFO_UNZV_OUT :  (MODE=="NZV") ? REP_INFO_NZV_OUT : REP_INFO_UV_OUT  
+  localparam REP_INFO_OUT          =  GROUP_SIZE + 1  
 )( 
 
   input clk,
@@ -79,7 +76,7 @@ module DISPATCHER_UNZV #(
     parameter LOG_GS                  = 2,
     localparam ZERO_INFO              = GROUP_SIZE,                          // number of bits for the zero detection
     localparam REP_INFO_IN            = GROUP_SIZE*GROUP_SIZE+ZERO_INFO,     // number of bits for the repetition info
-    localparam REP_INFO_OUT           = GROUP_SIZE + ZERO_INFO +  1,          // number of bits for the out repetition info
+    localparam REP_INFO_OUT          =  GROUP_SIZE + 1,
     localparam INPUT_WIDTH            = GROUP_SIZE * DATA_WIDTH             // number of bits for input activation 
   )( 
 
@@ -123,7 +120,6 @@ module DISPATCHER_UNZV #(
   assign equivalence_row = rep_info[GROUP_SIZE*previous_element +: GROUP_SIZE];
 
   assign rdata_out[ GROUP_SIZE - 1: 0]        =  rdata_in[GROUP_SIZE*previous_element +: GROUP_SIZE];
-  assign rdata_out[ GROUP_SIZE +: GROUP_SIZE] =  rdata_in[REP_INFO_IN - 1 : GROUP_SIZE * GROUP_SIZE];
   assign rdata_out[ REP_INFO_OUT - 1]         =  is_last;
   
   assign is_last = actual_element >= last_element;
@@ -174,7 +170,7 @@ module DISPATCHER_NZV #(
     parameter LOG_GS                  = 2,
     localparam ZERO_INFO              = GROUP_SIZE,                          // number of bits for the zero detection
     localparam REP_INFO_IN            = ZERO_INFO,     // number of bits for the repetition info
-    localparam REP_INFO_OUT           = LOG_GS + ZERO_INFO +  1,          // number of bits for the out repetition info
+    localparam REP_INFO_OUT           = GROUP_SIZE +  1,          // number of bits for the out repetition info
     localparam INPUT_WIDTH            = GROUP_SIZE * DATA_WIDTH             // number of bits for input activation 
   )( 
 
@@ -192,6 +188,7 @@ module DISPATCHER_NZV #(
 
   // wires
   wire [ZERO_INFO - 1 : 0]               zer_info;                          // vector of zero elements
+  wire [GROUP_SIZE - 1 : 0]              rep_info;                          // vector of zero elements
   wire                                   is_last;                           // indicates if is the last element of the group
 
 
@@ -211,12 +208,15 @@ module DISPATCHER_NZV #(
   assign zer_info = rdata_in[REP_INFO_IN - 1 : 0];
 
   assign data_out = data_in;
+  assign rdata_out[0 +: GROUP_SIZE]   =  rep_info;
+  assign rdata_out[REP_INFO_OUT - 1]  =  is_last;
 
-  assign rdata_out[0 +: ZERO_INFO]        =  rdata_in[0 +: ZERO_INFO];
-  assign rdata_out[ZERO_INFO +: LOG_GS]   =  actual_element;
-  assign rdata_out[REP_INFO_OUT - 1]      =  is_last;
   assign is_last = actual_element >= last_element;
 
+  for(i = 0; i < GROUP_SIZE; i = i + 1) begin
+    assign rep_info[i] = actual_element == i;
+  end
+  
   //Get last element from group
   always @ (*) 
   begin: COMB_LAST_ELEMENT

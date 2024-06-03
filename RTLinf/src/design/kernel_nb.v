@@ -34,12 +34,7 @@ module KERNEL_NB #(
   parameter NUM_ADDRESSES          = 4096, // number of addresses in memories
   parameter HIGH_MODE              = "UV", // options: UV, UNZV, NZV
   parameter LOW_MODE               = "UV", // options: UV, UNZV, NZV
-  localparam ZERO_INFO             = GROUP_SIZE,
-  localparam REP_INFO_UV           = GROUP_SIZE + 1,
-  localparam REP_INFO_NZV          = LOG_GS + ZERO_INFO + 1,
-  localparam REP_INFO_UNZV         = REP_INFO_UV + ZERO_INFO,
-  localparam REP_INFO_HIGH         = (HIGH_MODE=="UNZV") ? REP_INFO_UNZV :  (HIGH_MODE=="NZV") ? REP_INFO_NZV : REP_INFO_UV,
-  localparam REP_INFO_LOW          = (LOW_MODE=="UNZV") ? REP_INFO_UNZV :  (LOW_MODE=="NZV") ? REP_INFO_NZV : REP_INFO_UV
+  localparam REP_INFO             = GROUP_SIZE + 1
 
 )(
   input                                   clk,                // clock input
@@ -90,9 +85,9 @@ wire                                        weight_read2distr_avail_w;
 wire [NUM_INPUTS-1:0]                       act_rd2distr_valid_high_w;
 wire [NUM_INPUTS-1:0]                       act_rd2distr_avail_high_w; 
 wire [4-1:0]                                act_rd2distr_data_high_w[NUM_INPUTS-1:0];
-wire [REP_INFO_HIGH-1:0]                    act_rd2distr_rdata_high_w[NUM_INPUTS-1:0];
+wire [REP_INFO-1:0]                         act_rd2distr_rdata_high_w[NUM_INPUTS-1:0];
 wire [NUM_INPUTS*4-1:0]                     act_rd2distr_combined_data_high_w;
-wire [NUM_INPUTS*REP_INFO_HIGH-1:0]         act_rd2distr_combined_rdata_high_w;
+wire [NUM_INPUTS*REP_INFO-1:0]              act_rd2distr_combined_rdata_high_w;
 wire [NUM_INPUTS-1:0]                       act_rd2distr_combined_valid_high_w;
 
 
@@ -100,15 +95,15 @@ wire [NUM_INPUTS-1:0]                       act_rd2distr_combined_valid_high_w;
 wire [NUM_INPUTS-1:0]                       act_rd2distr_valid_low_w;
 wire [NUM_INPUTS-1:0]                       act_rd2distr_avail_low_w; 
 wire [4-1:0]                                act_rd2distr_data_low_w[NUM_INPUTS-1:0];
-wire [REP_INFO_LOW-1:0]                     act_rd2distr_rdata_low_w[NUM_INPUTS-1:0];
+wire [REP_INFO-1:0]                         act_rd2distr_rdata_low_w[NUM_INPUTS-1:0];
 wire [NUM_INPUTS*4-1:0]                     act_rd2distr_combined_data_low_w;
-wire [NUM_INPUTS*REP_INFO_LOW-1:0]          act_rd2distr_combined_rdata_low_w;
+wire [NUM_INPUTS*REP_INFO-1:0]              act_rd2distr_combined_rdata_low_w;
 wire [NUM_INPUTS-1:0]                       act_rd2distr_combined_valid_low_w;
 
 
 //[high] wires between DISTRIBUTE_IN and MUL modules
 wire [NUM_LANES*ACT_WIDTH-1:0]              act_distr2mul_data_high_w;
-wire [NUM_LANES*REP_INFO_HIGH-1:0]          act_distr2mul_rdata_high_w;
+wire [NUM_LANES*REP_INFO-1:0]               act_distr2mul_rdata_high_w;
 wire [NUM_LANES-1:0]                        act_distr2mul_valid_high_w;
 wire [NUM_LANES-1:0]                        act_distr2mul_avail_high_w; 
 wire [NUM_LANES*DATA_WIDTH-1:0]             weight_distr2mul_data_high_w;
@@ -117,7 +112,7 @@ wire [NUM_LANES-1:0]                        weight_distr2mul_avail_high_w;
 
 //[low] wires between DISTRIBUTE_IN and MUL modules
 wire [NUM_LANES*ACT_WIDTH-1:0]              act_distr2mul_data_low_w;
-wire [NUM_LANES*REP_INFO_LOW-1:0]           act_distr2mul_rdata_low_w;
+wire [NUM_LANES*REP_INFO-1:0]               act_distr2mul_rdata_low_w;
 wire [NUM_LANES-1:0]                        act_distr2mul_valid_low_w;
 wire [NUM_LANES-1:0]                        act_distr2mul_avail_low_w; 
 wire [NUM_LANES*DATA_WIDTH-1:0]             weight_distr2mul_data_low_w;
@@ -125,22 +120,22 @@ wire [NUM_LANES-1:0]                        weight_distr2mul_valid_low_w;
 wire [NUM_LANES-1:0]                        weight_distr2mul_avail_low_w;
 
 //[high] wires between MUL and ALIGN modules
-wire [(ACT_WIDTH + DATA_WIDTH) + REP_INFO_HIGH - 1:0]   mul2align_data_high_w[NUM_LANES-1:0];
+wire [(ACT_WIDTH + DATA_WIDTH) + REP_INFO - 1:0]   mul2align_data_high_w[NUM_LANES-1:0];
 wire [NUM_LANES-1:0]                                    mul2align_valid_high_w;
 wire [NUM_LANES-1:0]                                    mul2align_avail_high_w;
 
 //[low] wires between MUL and ALIGN modules
-wire [(ACT_WIDTH + DATA_WIDTH) + REP_INFO_LOW - 1:0]  mul2align_data_low_w[NUM_LANES-1:0];
+wire [(ACT_WIDTH + DATA_WIDTH) + REP_INFO - 1:0]  mul2align_data_low_w[NUM_LANES-1:0];
 wire [NUM_LANES-1:0]                                  mul2align_valid_low_w;
 wire [NUM_LANES-1:0]                                  mul2align_avail_low_w;
 
 //[high]  wires between ALIGN and ACC modules
-wire [(ACT_WIDTH + DATA_WIDTH) + REP_INFO_HIGH - 1:0] align2acc_data_high_w[NUM_LANES-1:0];
+wire [(ACT_WIDTH + DATA_WIDTH) + REP_INFO - 1:0] align2acc_data_high_w[NUM_LANES-1:0];
 wire [NUM_LANES-1:0]                                  align2acc_valid_high_w;
 wire [NUM_LANES-1:0]                                  align2acc_avail_high_w;
 
 //[low] wires between ALIGN and ACC modules
-wire [(ACT_WIDTH + DATA_WIDTH) + REP_INFO_LOW - 1:0]  align2acc_data_low_w[NUM_LANES-1:0];
+wire [(ACT_WIDTH + DATA_WIDTH) + REP_INFO - 1:0]  align2acc_data_low_w[NUM_LANES-1:0];
 wire [NUM_LANES-1:0]                                  align2acc_valid_low_w;
 wire [NUM_LANES-1:0]                                  align2acc_avail_low_w;
 
@@ -178,10 +173,10 @@ generate
   for (i=0; i<NUM_INPUTS; i=i+1) begin
     assign act_rd2distr_combined_data_high_w[((i+1)*4)-1:i*4]  = act_rd2distr_data_high_w[i];
     assign act_rd2distr_combined_data_low_w[((i+1)*4)-1:i*4]   = act_rd2distr_data_low_w[i];
-    assign act_rd2distr_combined_rdata_high_w[((i+1)*REP_INFO_HIGH)-1:i*REP_INFO_HIGH] = act_rd2distr_rdata_high_w[i];
-    assign act_rd2distr_combined_rdata_low_w[((i+1)*REP_INFO_LOW)-1:i*REP_INFO_LOW]    = act_rd2distr_rdata_low_w[i];
-    assign act_rd2distr_combined_valid_high_w[i]                                       = act_rd2distr_valid_high_w[i];
-    assign act_rd2distr_combined_valid_low_w[i]                                        = act_rd2distr_valid_low_w[i];
+    assign act_rd2distr_combined_rdata_high_w[((i+1)*REP_INFO)-1:i*REP_INFO] = act_rd2distr_rdata_high_w[i];
+    assign act_rd2distr_combined_rdata_low_w[((i+1)*REP_INFO)-1:i*REP_INFO]  = act_rd2distr_rdata_low_w[i];
+    assign act_rd2distr_combined_valid_high_w[i]                                     = act_rd2distr_valid_high_w[i];
+    assign act_rd2distr_combined_valid_low_w[i]                                      = act_rd2distr_valid_low_w[i];
   end
 endgenerate
 
@@ -247,7 +242,7 @@ READ #(
 // repetition detector modules
 generate
 for ( i=0; i<NUM_INPUTS; i=i+1) begin 
-  repetition_detector_nb #( //TODO signals
+  repetition_detector_nb #(
     .HIGH_MODE              ( HIGH_MODE                     ),
     .LOW_MODE               ( LOW_MODE                      ),
     .GROUP_SIZE             ( GROUP_SIZE                    ),
@@ -287,7 +282,7 @@ DISTRIBUTE_IN_RD #(
  .NUM_DATA_OUTPUTS       ( NUM_LANES              ),
  .LOG_MAX_ITERS          ( LOG_MAX_ITERS          ),
  .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER ),
- .REP_INFO               ( REP_INFO_HIGH          )
+ .REP_INFO               ( REP_INFO           )
 ) distribute_in_high_m (
  .clk                    ( clk                                ),
  .rst                    ( rst                                ),
@@ -317,17 +312,17 @@ generate
     MUL_RD #(
       .GROUP_SIZE             ( GROUP_SIZE             ),
       .DATA_WIDTH             ( DATA_WIDTH             ),
-      .ACT_WIDTH              ( ACT_WIDTH                ),
+      .ACT_WIDTH              ( ACT_WIDTH              ),
       .LOG_MAX_ITERS          ( LOG_MAX_ITERS          ),
       .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER ),
-      .REP_INFO               ( REP_INFO_HIGH          )
+      .REP_INFO               ( REP_INFO           )
     ) mul_high_m (
       .clk                    ( clk                   ),
       .rst                    ( rst                   ),
       .configure              ( configure             ),
       .num_iters              ( num_iters             ),
       .num_reads_per_iter     ( num_reads_per_iter    ),
-      .act_data_in            ( {act_distr2mul_rdata_high_w[((i+1)*REP_INFO_HIGH)-1:i*REP_INFO_HIGH], act_distr2mul_data_high_w[((i+1)*4)-1:i*4]} ),
+      .act_data_in            ( {act_distr2mul_rdata_high_w[((i+1)*REP_INFO)-1:i*REP_INFO], act_distr2mul_data_high_w[((i+1)*4)-1:i*4]} ),
       .act_valid_in           ( act_distr2mul_valid_high_w[i]                                                      ),
       .act_avail_out          ( act_distr2mul_avail_high_w[i]                                                      ),
       .weight_data_in         ( weight_distr2mul_data_high_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH]                    ),
@@ -340,7 +335,7 @@ generate
 
     ALIGN #(
       .GROUP_SIZE             ( 1                              ),
-      .DATA_WIDTH             ( REP_INFO_HIGH + ACT_WIDTH + DATA_WIDTH ),
+      .DATA_WIDTH             ( REP_INFO + ACT_WIDTH + DATA_WIDTH ),
       .LOG_MAX_ITERS          ( LOG_MAX_ITERS                  ),
       .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER         )
   ) align_high_m (
@@ -367,7 +362,7 @@ DISTRIBUTE_IN_RD #(
  .NUM_DATA_OUTPUTS       ( NUM_LANES              ),
  .LOG_MAX_ITERS          ( LOG_MAX_ITERS          ),
  .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER ),
- .REP_INFO               ( REP_INFO_LOW           )
+ .REP_INFO               ( REP_INFO           )
 ) distribute_in_low_m (
  .clk                    ( clk                                ),
  .rst                    ( rst                                ),
@@ -401,14 +396,14 @@ generate
       .ACT_WIDTH         (   4                      ),
       .LOG_MAX_ITERS          ( LOG_MAX_ITERS          ),
       .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER ),
-      .REP_INFO               ( REP_INFO_LOW          )
+      .REP_INFO               ( REP_INFO          )
     ) mul_low_m (
       .clk                    ( clk                   ),
       .rst                    ( rst                   ),
       .configure              ( configure             ),
       .num_iters              ( num_iters             ),
       .num_reads_per_iter     ( num_reads_per_iter    ),
-      .act_data_in            ( {act_distr2mul_rdata_low_w[((i+1)*REP_INFO_LOW)-1:i*REP_INFO_LOW], act_distr2mul_data_low_w[(i+1)*4-1:i*4]} ),
+      .act_data_in            ( {act_distr2mul_rdata_low_w[((i+1)*REP_INFO)-1:i*REP_INFO], act_distr2mul_data_low_w[(i+1)*4-1:i*4]} ),
       .act_valid_in           ( act_distr2mul_valid_low_w[i]                                                      ),
       .act_avail_out          ( act_distr2mul_avail_low_w[i]                                                      ),
       .weight_data_in         ( weight_distr2mul_data_low_w[((i+1)*DATA_WIDTH)-1:i*DATA_WIDTH]                    ),
@@ -421,7 +416,7 @@ generate
 
     ALIGN #(
       .GROUP_SIZE             ( 1                              ),
-      .DATA_WIDTH             ( REP_INFO_LOW + 4 + DATA_WIDTH ),
+      .DATA_WIDTH             ( REP_INFO + 4 + DATA_WIDTH ),
       .LOG_MAX_ITERS          ( LOG_MAX_ITERS                  ),
       .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER         )
   ) align_low_m (

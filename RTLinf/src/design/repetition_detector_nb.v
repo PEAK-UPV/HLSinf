@@ -23,11 +23,7 @@ module repetition_detector_nb#(
     localparam REP_INFO_UNZV_MID     = REP_INFO_UV_MID + ZERO_INFO,
     localparam REP_INFO_HIGH_MID     = (HIGH_MODE=="UNZV") ? REP_INFO_UNZV_MID :  (HIGH_MODE=="NZV") ? REP_INFO_NZV_MID : REP_INFO_UV_MID,
     localparam REP_INFO_LOW_MID      = (LOW_MODE=="UNZV") ? REP_INFO_UNZV_MID :  (LOW_MODE=="NZV") ? REP_INFO_NZV_MID : REP_INFO_UV_MID,    
-    localparam REP_INFO_UV_OUT       = GROUP_SIZE + 1,
-    localparam REP_INFO_NZV_OUT      = LOG_GS + ZERO_INFO + 1,
-    localparam REP_INFO_UNZV_OUT     = REP_INFO_UV_OUT + ZERO_INFO,
-    localparam REP_INFO_HIGH_OUT     = (HIGH_MODE=="UNZV") ? REP_INFO_UNZV_OUT :  (HIGH_MODE=="NZV") ? REP_INFO_NZV_OUT : REP_INFO_UV_OUT,
-    localparam REP_INFO_LOW_OUT      = (LOW_MODE=="UNZV") ? REP_INFO_UNZV_OUT :  (LOW_MODE=="NZV") ? REP_INFO_NZV_OUT : REP_INFO_UV_OUT    
+    localparam REP_INFO_OUT          = GROUP_SIZE + 1
 )(
   input clk,
   input rst,
@@ -41,12 +37,12 @@ module repetition_detector_nb#(
   output                              avail_out,            // OUT1 interface:: avail
 
   output [ACT_WIDTH -1:0]             data_high_out,        // ACTIVATION interface:: data
-  output [REP_INFO_HIGH_OUT-1:0]      rdata_high_out,       // OUT1 interface:: rdata
+  output [REP_INFO_OUT-1:0]           rdata_high_out,       // OUT1 interface:: rdata
   output                              valid_high_out,  
   input                               avail_in_high,        // OUT1 interface:: avail
 
   output [ACT_WIDTH -1:0]             data_low_out,         // ACTIVATION interface:: data
-  output [REP_INFO_LOW_OUT-1:0]       rdata_low_out,        // OUT1 interface:: rdata
+  output [REP_INFO_OUT-1:0]           rdata_low_out,        // OUT1 interface:: rdata
   output                              valid_low_out,
   input                               avail_in_low          // OUT1 interface:: avail
 );
@@ -88,8 +84,8 @@ assign valid_out     = perform_operation_w & (valid_high_out | valid_low_out);  
 //
 assign perform_operation_w = module_enabled_r & ~empty_w & avail_in_low & avail_in_high;
 
-assign next_read_high = rdata_high_out[REP_INFO_HIGH_OUT-1];
-assign next_read_low = rdata_low_out[REP_INFO_LOW_OUT-1];
+assign next_read_high = rdata_high_out[REP_INFO_OUT - 1];
+assign next_read_low = rdata_low_out[REP_INFO_OUT - 1];
 
 //Split data in high and low bits
 for(i = 0; i < GROUP_SIZE; i = i + 1) begin

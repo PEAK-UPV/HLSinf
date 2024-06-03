@@ -308,15 +308,13 @@ generate
   );  
 
   ACC_RD #(
-    .REPETITION_DETECTION   (REPETITION_DETECTION    ),
     .GROUP_SIZE             ( GROUP_SIZE             ),
-    .LOG_GS                 ( LOG_GS                 ),
     .DATA_WIDTH             ( 2*DATA_WIDTH           ),
     .NUM_ADDRESSES          ( NUM_ADDRESSES          ),
     .LOG_MAX_ADDRESS        ( LOG_MAX_ADDRESS        ),
     .LOG_MAX_ITERS          ( LOG_MAX_ITERS          ),
     .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER )
-  ) acc_t_m (
+  ) acc_rd_m (
     .clk                    ( clk                    ),
     .rst                    ( rst                    ),
     .configure              ( configure              ),
