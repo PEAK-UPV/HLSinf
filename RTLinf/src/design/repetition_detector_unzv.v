@@ -1,11 +1,3 @@
-// Module repetition_detector
-//
-// This module implements the required logic to find the unique elements within a group
-// of activations.
-//
-
-`include "RTLinf.vh"
-
 
 module repetition_detector_unzv#(
     parameter GROUP_SIZE             = 4,                      // group size
@@ -35,7 +27,6 @@ module repetition_detector_unzv#(
 );
 
 
-
 // wires
 wire [INPUT_WIDTH - 1: 0]              data_write_w;                      // data to write to FIFO
 wire                                   write_enb_w;                       // write signal to FIFO
@@ -60,9 +51,9 @@ reg [LOG_MAX_READS_PER_ITER - 1 : 0]   num_reads_per_iter_r;      // number of r
 reg [LOG_MAX_READS_PER_ITER - 1 : 0]   num_reads_per_iter_copy_r; // copy of number of reads per iteration
 reg                                    module_enabled_r;          // module enabled
 reg [GROUP_SIZE-1:0]                   diag;                      // diagonal of the rep info matrix
-reg [LOG_GS - 1 : 0]                   element_actual;            // element being processed in this cycle
 reg [LOG_GS - 1 : 0]                   last_element;              // element to process in last cycle
 reg [LOG_GS - 1 : 0]                   next_element;              // element to process in next cycle
+reg [GROUP_SIZE-1:0]                   sended;                      // diagonal of the rep info matrix
 
 genvar i;
 genvar j;
@@ -71,15 +62,16 @@ integer l;
 
 
 // combinational logic
-assign data_out                                 = data_in_unpacked[element_actual];
-assign rdata_out[GROUP_SIZE-1:0]                = equivalence_row;
-assign rdata_out[REP_INFO - 1]                  = is_last;
+assign data_out                    = data_in_unpacked[next_element];
+assign rdata_out[GROUP_SIZE-1:0]   = equivalence_row;
+assign rdata_out[REP_INFO - 1]     = is_last;
 
 assign data_write_w  = data_in;                                         // data to FIFO
 assign write_enb_w   = valid_in;                                        // write signal to FIFO
 assign avail_out     = ~almost_full_w & ~full_w;                        // avail signal from FIFO       
 assign read_enb_w    = perform_operation_w & (is_last);                             // next_read signal to FIFO
-assign valid_out     = perform_operation_w & (is_last);      //TODO: is last?                       // valid signal to downstream module
+assign valid_out     = perform_operation_w & (is_last);                            // valid signal to downstream module
+
 //
 assign perform_operation_w = module_enabled_r & (~empty_w) & avail_in;
 
@@ -88,8 +80,8 @@ for(i = 0; i < GROUP_SIZE; i = i + 1) begin
     assign data_in_unpacked[i] = data_read_fifo[i * DATA_WIDTH +: DATA_WIDTH];
 end
 
-assign equivalence_row = rep_info[element_actual * GROUP_SIZE +: GROUP_SIZE];
-assign is_last = element_actual >= last_element;
+assign equivalence_row = rep_info[next_element * GROUP_SIZE +: GROUP_SIZE];
+assign is_last = next_element >= last_element;
 
 /*Repetition information calculation*/
 //Calculation of the repetition information performed in several steps.
@@ -128,9 +120,10 @@ end
 // 0 0 0 0
 always @ (*) begin
   diag = {GROUP_SIZE{1'b1}};
+  diag[0] = zer_info[0] == 0;
   for(k = 1; k < GROUP_SIZE; k = k + 1) begin
     for(l = 0; l < k; l = l + 1) begin   
-      diag[k] = zer_info[k]? 0 : diag[k] & !equivalences[l*GROUP_SIZE+k];
+      diag[k] = zer_info[k]? 0 : (diag[k] & !sended[k]) & !equivalences[l*GROUP_SIZE+k];
     end
   end
 end
@@ -160,26 +153,19 @@ always @ (*)
 begin: COMB_NEXT_ELEMENT
     next_element = {LOG_GS{1'b0}};
     for(k = GROUP_SIZE - 1; k >= 0; k = k - 1) begin
-        next_element = k[LOG_GS-1:0] > element_actual? ( diag[k] ? k[LOG_GS-1:0] : next_element) : next_element;
+        next_element = diag[k] ? k[LOG_GS-1:0] : next_element;
     end 
 end
 
 //Sequential
-//Get element actual
-always @ (posedge clk) begin
-  if (~rst) begin
-    element_actual <= {LOG_GS{1'b0}};
+always @ (posedge clk) 
+begin: SENDED_CONTROL
+  if (~rst | read_enb_w) begin
+    sended <= 0;
   end else begin
-    if (perform_operation_w) begin
-      if (element_actual == last_element) begin
-        element_actual <= {LOG_GS{1'b0}};
-      end else begin
-        element_actual <= next_element;
-      end
-    end
+    sended[next_element] <= 1;
   end
 end
-
 // sequential logic
 always @ (posedge clk) 
 begin: ITEARATION_CONTROL

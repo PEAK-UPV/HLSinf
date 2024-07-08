@@ -29,6 +29,7 @@
 module tb_repetition_detector;
 parameter DATA_WIDTH             = 8;
 parameter GROUP_SIZE             = 4;
+parameter LOG_GS                 = 2;
 parameter LOG_MAX_ITERS          = 16;                     // number of bits for max iters register
 parameter LOG_MAX_READS_PER_ITER = 16;                     // number of bits for max reads per iter
 parameter REP_INFO_BITS          = GROUP_SIZE*GROUP_SIZE;  // number of bits for repetition detectoor
@@ -37,7 +38,7 @@ parameter HALF_CYCLE             = 25;
 parameter CYCLE                  = HALF_CYCLE*2;
 parameter DELTA                  = 2;
 parameter CYCLE_AND_DELTA        = CYCLE+DELTA;
-
+parameter REPETITION_DETECTION   = "UNZV";
 
 //input to repetition detector
 reg                                   clk;
@@ -156,7 +157,14 @@ initial begin //Check loops
 
 end
 */
-repetition_detector repetition_detector_0(
+  repetition_detector #(
+    .REPETITION_DETECTION   ( REPETITION_DETECTION          ),
+    .GROUP_SIZE             ( GROUP_SIZE                    ),
+    .LOG_GS                 ( LOG_GS                        ),
+    .DATA_WIDTH             ( DATA_WIDTH                    ),
+    .LOG_MAX_ITERS          ( LOG_MAX_ITERS                 ),
+    .LOG_MAX_READS_PER_ITER ( LOG_MAX_READS_PER_ITER        )
+  ) repetition_detector_unzv_m (
     .clk                 (clk),
     .rst                 (rst),
     .configure           (configure),
